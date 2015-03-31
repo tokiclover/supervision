@@ -1,0 +1,31 @@
+#
+# $Header:  /etc/sv/@svc@/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+#SVC_CMD=
+#SVC_OPTS=
+#ENV_DIR=Enable
+
+#PRE_CMD=
+#PRE_OPTS=
+#FIN_CMD=
+#FIN_OPTS=
+
+#
+# Run set up
+#
+#pre()
+#{
+#}
+
+#
+# Finish set up
+#
+#post()
+#{
+#}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
