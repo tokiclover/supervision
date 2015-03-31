@@ -1,0 +1,37 @@
+#
+# $Header:  /etc/sv/dhcp/OPTIONS.dhcpcd                  Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Full-featured/lightweight Dynamic Host Configuration Protocol (DHCP) client'
+name=dhcpcd
+SVC_CONFIGFILE=/etc/${name}.conf
+SVC_COMMANDS=check_config
+SVC_LOGFILE=${LOGDIR}/${name}.log
+SVC_CMD=${name}
+SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_IFS}'
+SVC_USE=syslog
+
+pre()
+{
+	[ -z "${SVC_LOGFILE}" ] || DHCP_OPTS="${DHCP_OPTS} --logfile ${SVC_LOGFILE}"
+}
+
+check_config()
+{
+	if [ ! -f ${SVC_CONFIGFILE} ]; then
+		error "No config file found."
+		return 1
+	fi
+	if ! eval ${SVC_CMD} ${SVC_OPTS} -t >${NULL} 2>&1; then
+		error "Config syntax error."
+		return 2
+	fi
+	if [ ! -f /etc/${name}.duid ]; then
+		eval ${SVC_CMD} --duid || { error "ClientID error."; return 3; }
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

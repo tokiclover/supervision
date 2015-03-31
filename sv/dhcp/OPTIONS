@@ -1,0 +1,10 @@
+#
+# $Header:  /etc/sv/dhcp/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=dhcpcd
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

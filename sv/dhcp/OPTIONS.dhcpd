@@ -1,0 +1,39 @@
+#
+# $Header:  /etc/sv/dhcp/OPTIONS.dhcpd                   Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Dynamic Host Configuration Protocol (DHCP) client/server'
+
+name=dhcpd
+SVC_CONFIGFILE=/etc/dhcp/${name}.conf
+SVC_COMMANDS=check_config
+SVC_LIBDIR=/var/lib/dhcp
+SVC_LOGFILE=${LOGDIR}/${name}.log
+SVC_CMD=${name}
+SVC_OPTS='${DHCP_OPTS} -cf ${SVC_CONFIGFILE} -d -f -lf ${SVC_LIBDIR}/${name}.leases -q -user dhcp -group dhcp ${DHCP_IFS}'
+SVC_USE='syslog dns'
+
+pre()
+{
+	[ -n "${SVC_LOGFILE}" ] && DHCP_OPTS="${DHCP_OPTS} -tf ${SVC_LOGFILE}"
+	checkpath -q -d -o dhcp:dhcp /var/run/dhcp
+	checkpath -q -d -o dhcp:dhcp ${SVC_LIBDIR}
+	checkpath -q -f -o dhcp:dhcp ${SVC_LIBDIR}/dhcpd.leases
+}
+
+check_config()
+{
+	if [ ! -f ${SVC_CONFIGFILE} ]; then
+		error "No config file found."
+		return 1
+	fi
+	if ! eval ${SVC_CMD} ${SVC_OPTS} -t > ${NULL} 2>&1; then
+		error "Config syntax error."
+		return 2
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
