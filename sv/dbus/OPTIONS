@@ -1,0 +1,24 @@
+#
+# $Header:  /etc/sv/dbus/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_CMD=dbus-daemon
+SVC_OPTS='--system --nofork'
+
+SVC_SOCKET=/var/run/dbus/system_bus_socket
+
+pre()
+{
+	[ -d ${SVC_SOCKET%/*} ] || mkdir ${SVC_SOCKET%/*}
+	dbus-uuidgen --ensure=/etc/machine-id
+}
+
+post()
+{
+	[ -S ${SVC_SOCKET}    ] && rm -f ${SVC_SOCKET}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
