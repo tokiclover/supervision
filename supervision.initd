@@ -1,0 +1,66 @@
+#!/sbin/runscript
+#
+# $Header:  /etc/init.d/supervision                      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+:	${SV_BACKEND:=/etc/sv/.opt/sv-backend}
+if [ -f "${SV_BACKEND}" ]; then
+	source "${SV_BACKEND}"
+	svc_backend -i
+fi
+:	${SV_RUNDIR:=/run/service}
+:	${SV_SERVICE:=/etc/service}
+:	${SV_CMD:=$(type -p runsvdir)}
+:	${SV_OPTS:="${SV_RUNDIR} 'log: ............................................................'"}
+
+command="${SV_CMD}"
+command_args="${SV_OPTS:-${SV_RUNDIR}}"
+pidfile="/run/${SV_CMD##*/}.pid"
+command_background="Yes"
+description="Supervision Daemon Service"
+
+depend()
+{
+	need localmount
+}
+
+start_pre()
+{
+	local ret
+	#
+	# Handle read-only root-FS and/or static '/service/'.
+	#
+	ebegin "Setting up Supervision Service/"
+	if command -v tmp_service >/dev/null 2>&1; then
+		tmp_service; ret=$?
+		eend ${ret}; return ${ret}
+	fi
+	case "${SV_RUNDIR}" in
+		("${SV_SERVICE}") :;
+			;;
+		(*/run/*|*/tmp/*)
+			rm -f -r "${SV_RUNDIR}"
+			mkdir -p "${SV_RUNDIR}"
+			cp -LRTp "${SV_SERVICE}" "${SV_RUNDIR}"
+			;;
+	esac
+	rm -f -r "${SV_RUNDIR}"/.tmp
+	mkdir -p "${SV_RUNDIR}"/.tmp
+	ret=$?; eend ${ret}; return ${ret}
+}
+
+stop_pre()
+{
+	if [ -n "${SVCCMD}" ]; then
+		ebegin "Stopping Supervised Services"
+		eval ${SVCCMD} ${SVC_OPTS} ${SIGEXIT} "${SV_RUNDIR}"/*
+		eend "$?"
+	else
+		kill -HUP $(cat ${pidfile})
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=gentoo-init-d:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -1,0 +1,13 @@
+#
+# $Header:  /etc/conf.d/supervision                      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+#
+# Set extra (supervisor command) options
+#
+SVC_OPTS=
+
+#
+# vim:fenc=utf-8:ft=gentoo-conf-d:ci:pi:sts=0:sw=4:ts=4:
+#
