@@ -1,0 +1,424 @@
+.\"
+.\" CopyLeft (c) 2015 -tclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License
+.\"
+.pc
+.TH SUPERVISION 1 "2015-03-33" "30" "Supervision Scripts Framework"
+.SH NAME
+Supervision \- Supervision Scripts Framework
+.SH DESCRIPTION
+Supervision aim to provide an easy & efficient way to supervision;
+Deamontools[-encore], Runit & S6 backends are actually supported.
+Services use, by default, a single
+.I sv/SERVICE/OPTIONS
+file & \fI./{finish,run}\fR symlinked to \fIsv/.opt/cmd\fR.
+The same goes for the log directory.
+.I Envdir
+variant with a global \fIsv/.env\fR & local \fIsv/SERVICE/env\fR is also supported.
+.SH OVERVIEW
+.SS CONFIGURATION
+Global configuration can be done with
+.IR sv.conf
+file. Do note that, this will affect every service.
+Local, per service, configuration is done with
+.IR OPTIONS
+file. See
+.BR OPTIONS
+sub-section for more info.
+.SS COMMANDS
+.RB sv/.opt/svc
+has a LSB like commands {reload,start,status,stop} and extra
+{add,remove,cgroup_remove_service} commands support
+(see sv/.opt/svc --help) and those commands
+can be used with
+.RB sv/SERVICE/run\ CMD\ [OPTIONS]
+directly (plus desc command for description.)
+.SS SERVICE INSTANCE
+Service supporting many instances can be written in a short manner
+like a virtual service backend with specific
+.IR OPTIONS.instance
+file, e.g.
+.IR syslog
+with
+.IR socklog
+backend (suporting extra {inet,ucspi} instances),
+instead of duplicating unecessary directory and symbolic links;
+And then a single extra instance->service symlink would suffice.
+See also
+.IR getty
+for an example of multi-providers/instances with
+.I only
+a single symlink and a single service/OPTIONS file.
+.B WARNING:
+Making service instances with symlinks conflict with static /service/!
+Obviously using a single directory for many instances will not work at all,
+so make a copy of the whole directory instead.
+.SS VIRTUAL SERVICE
+Virtual service is done by making a symbolic link to a particular provider
+e.g.
+.IR net
+symlinked to
+.IR dhcp
+service.
+Second variant is made by using a single directly and a specific
+.IR OPTIONS.backend
+file for service that should be in a single instance mode, e.g. a logger (see
+.IR syslog
+service.)
+WARNING: Explicite usage of
+.IR name=CMD_NAME
+and
+.IR SVC_CMD=CMD_NAME
+in
+.IR OPTIONS[.backend]
+file is required.
+.SS USAGE
+If service dependencies matter, usage of Runit/S6 is recommanded.
+Use
+.IR add\ --service
+instead of LSB
+.IR start
+command to manualy start a service. This starting choice matters with
+.IR need
+style dependency because
+.IR supervise
+command is not used to start services and connot be used without races.
+Cold system boot should be fine because everything is started in parallele;
+so, services with dependencies would wait enough, or else, increase SV_TRY
+in the configuration file, to get the desired effect.
+.SH OPTIONS
+.SS ENVIRONMENT
+The following environment variables are supported (usually set in
+.I sv/SERVICE/OPTIONS
+if necessary). The default environment variables are defined in
+.I sv/.opt/SVC_OPTIONS.
+.TS
+tab (@);
+l lx.
+\fBSVC_CONFIGFILE\fR@T{
+Service configuration file
+T}
+\fBSVC_COMMANDS\fR@T{
+Extra service commands
+T}
+\fBSVC_REQ_FILES\fR@T{
+Service required file-s
+T}
+\fBSVC_DEBUG=Yes\fR@T{
+To enable debug mode
+T}
+\fBSVC_NAME\fR@T{
+Service name (default to SERVICE directory)
+T}
+\fBSVC_CMD\fR@T{
+Command name (default to SERVICE directory)
+T}
+\fBSVC_OPTS\fR@T{
+Command arguments
+T}
+\fBSVC_AFTER\fR@T{
+Start service after dependency services
+T}
+\fBSVC_USE\fR@T{
+Try-to-Start use dependency services if any
+T}
+\fBSVC_NEED\fR@T{
+Require need dependency services to be started
+T}
+\fBSVC_USER\fR@T{
+\fIUSER\fR to use to run commands
+T}
+\fBSVC_GROUP\fR@T{
+\fIGROUP\fR to use to run commands
+T}
+\fBRC_OPTS=Yes\fR@T{
+To enable OpenRC support mode
+T}
+\fBENV_DIR=Yes\fR@T{
+To enable \fIenvdir\fR support mode
+T}
+\fBENV_CMD\fR@T{
+Envdir command (default to [envdir sv/.env][envdir sv/SERVICE/env)
+T}
+\fBENV_OPTS\fR@T{
+Envdir arguments
+T}
+\fBPRE_CMD\fR@T{
+Pre-launch command
+T}
+\fBPRE_OPTS\fR@T{
+Pre-launch arguments
+T}
+\fBFIN_CMD\fR@T{
+Finish command
+T}
+\fBFIN_OPTS\fR@T{
+Finish arguments
+T}
+\fBLOG_CMD\fR@T{
+Log (run) command
+T}
+\fBLOG_OPTS\fR@T{
+Log (run) arguments
+T}
+\fBLOG_FIN_CMD\fR@T{
+Log (finish) command
+T}
+\fBLOG_FIN_OPTS\fR@T{
+Log (finish) arguments
+T}
+\fBLOG_SIZE\fR@T{
+File size limit for log rotation
+T}
+\fBLOG_PROC\fR@T{
+Processor command to use for log rotation
+T}
+.TE
+.SS FUNCTIONS
+.TS
+tab (@);
+l lx.
+\fBpre\fR@T{
+Set up ./run
+T}
+\fBpost\fR@T{
+Set up ./finish
+T}
+\fBlog_pre\fR@T{
+Setup (log) ./run
+T}
+\fBlog_post\fR@T{
+Set up (log) ./finish
+T}
+.TE
+
+See
+.R sv/.opt/SVC_OPTIONS
+for the default and
+.R OPTIONS
+file for services like
+.R acpid,
+.R cron,
+.R cgred,
+.R dbus,
+.R sshd
+for practical examples.
+.SH CONTROL GROUPS RESOURCE MANAGEMENT
+.SS OVERVIEW
+Supervision Scripts Framework support CGroup. CGroup support is autodected on
+start up on Linux. Just enable kernel CGroup support to benefit CGroup resource
+management. Or else, forcibly disable in
+.RB SVC_OPTIONS
+by setting
+.RB SV_CGROUP=No.
+Set
+.RB CGROUP_INHERIT=Yes
+to inherit other CGroups, and/or
+.RB CGROUP_CLEANUP=Yes
+to clean up child processes of a \fIgroup\fR or supervised process (in ./finish.)
+
+Global
+.RB (SVC_OPTIONS/sv.conf)
+& Local
+.RB (OPTIONS)
+Resource Management Settings is supported e.g.
+.RB CGROUP_CPU='cpu.shares\ 256'.
+Multi-value of a parameter is supported along with sets of multi-parameter-value.
+.SS ENVIRONMENT
+See the following table & Linux Documentation for more info on Resource Controllers.
+.TS
+tab (@);
+l lx.
+\fBCGROUP_BLKIO\fR@T{
+Use Block IO Controller to manage resource for service(s)
+T}
+\fBCGROUP_CPU\fR@T{
+Use CPU Controller to manage resource for service(s)
+T}
+\fBCGROUP_CPUACCT\fR@T{
+Use CPU Accounting Controller to manage resource for service(s)
+T}
+\fBCGROUP_CPUSET\fR@T{
+Use CPU Sets Controller to manage resource for service(s)
+T}
+\fBCGROUP_DEVICES\fR@T{
+Use Device Whitlist Controller to manage resource for service(s)
+T}
+\fBCGROUP_MEMORY\fR@T{
+Use Memory Controller to manage resource for service(s)
+T}
+\fBCGROUP_NET_CLS\fR@T{
+Use Network Classifier to manage resource for service(s)
+T}
+\fBCGROUP_NET_PRIO\fR@T{
+Use Network Priority to manage resource for service(s)
+T}
+.TE
+.SS SERVICE
+CGRED (CGroup Rules Engine Daemon) service is another alternative to CGroup
+with finely grained rules & automatic PIDs classification.
+However, libcgroup should be installed beforehand.
+
+Something like the following can be used to put supervisor processes in CGroup:
+.nf
+--[cgconfig.conf]--
+group supervisor {
+  "name=supervision" {
+  }
+}
+--[EOF]--
+--[cgrules.conf]--
+*:runsv  supervision   supervisor/
+--[EOF]--
+.fi
+Replace
+.IR runsv
+with
+.IR supervise
+for daemontools[-encore] or
+.IR s6-supervise
+for S6.
+See cgconfig.conf(5) & enable cgred service.
+
+This is only necessary if not using the bundled Init-Stage-2 which have CGroup
+support: child process (supervisor) will naturally inherit supervision CGroup.
+.SH FILES
+.SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
+.TP
+.RB .bin/
+.br
+checkpath
+  Simple & Cheap checkpath/mktemp script
+.br
+mdev-start-dev
+  Simple script to set up (BusyBox) mdev (Linux) device-manager.
+.br
+supervision-backend
+  Simple script to set up a specific Supervision Backend
+.br
+.br
+sv-shutdown
+  Simple script to handle system halt
+.br
+BIN_SYMLINKS
+  Extra backend binary symlinks; Refer to to the following supported list.
+
+.B BIN_SYMLINKS: \c
+.RB \| envdir \|\ \c
+.RB \| envuidgid \|\ \c
+.RB \| fghack \|\ \c
+.RB \| pgrphack \|\ \c
+.RB \| setlock \|\ \c
+.RB \| setuidgid \|\ \c
+.RB \| softlimit \|
+.TP
+.RB .opt/
+.br
+cmd
+  Default {,log/}{finish,run} commands
+.br
+svc
+  Simple helper to manage service e.g. SV_SVCDIR=sv sv/.opt/svc add --log SVC
+.br
+SVC_BACKEND
+  Specific Backend Environment variable
+.br
+SVC_OPTIONS
+  Default service OPTIONS
+.br
+cgroup-release-agent
+  CGroup Release Agent script
+.br
+cgroup-functions
+  CGroup Functions/helper library
+.br
+functions
+  Generic Functions/Helpers library
+.br
+supervision-functions
+  Supervision Functions/Helpers library
+.br
+sv.conf
+  Supervision configuration file
+.br
+sv-backend
+  Supervision backend configuration file
+.TP
+.RB SERVICES
+.br
+Optional services. (Active services are symlinked to '/service/'SERVICE.)
+
+.B SERVICES:\ \c
+.RB [\| acpid \|]\ \c
+.RB [\| atd \|]\ \c
+.RB [\| cgred \|]\ \c
+.RB [\| cron \|]\ \c
+.RB [\| cupsd \|]\ \c
+.RB [\| dhcp \|]\ \c
+.RB [\| dbus \|]\ \c
+.RB [\| dns \|]\ \c
+.RB [\| getty \|]\ \c
+.RB [\| git-daemon \|]\ \c
+.RB [\| gpm \|]\ \c
+.RB [\| hostapd \|]\ \c
+.RB [\| inetd \|]\ \c
+.RB [\| lighttpd \|]\ \c
+.RB [\| ntp \|]\ \c
+.RB [\| pcscd \|]\ \c
+.RB [\| rsync-daemon \|]\ \c
+.RB [\| saned \|]\ \c
+.RB [\| sshd \|]\ \c
+.RB [\| snmpd \|]\ \c
+.RB [\| syslog \|]\ \c
+.RB [\| udev \|]\ \c
+.RB [\| wpa_supplicant \|]
+.SS @SYSCONFDIR@/service/ (SV_SERVICE)
+Default supervision '/service/' directory
+.SS /run/service/ (SV_RUNDIR)
+Default run time '/service/' directory
+.SS @SYSCONFDIR@/runit/
+.TP
+.RB {1,2,3}
+.br
+OpenRC friendly Init-Stage-{1,2,3} files to handle system boot/shutdown & supervisor.
+.TP
+.RB ctrlaltdel
+.br
+C-ALT-DEL signal handler (shutdown/reboot)
+.SS @SYSCONFDIR@/s6/
+.TP
+.RB init-stage-1
+.br
+OpenRC firendly Init-Stage-{1,2} file to handle system boot
+.TP
+.RB {crash,finish}
+.br
+OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor crashes.
+.SS @SYSCONFDIR@/{conf,init}.d/supervision
+.TP
+Supervision init script service
+.SH "SEE ALSO"
+.br
+.B Shell:
+.BR sh (1p)
+.br
+.B Deamontools[-encore]:
+.BR \%svc (8),
+.BR \%multilog (8),
+.BR \%svscan (8).
+.br
+.B Runit:
+.BR \%sv (8),
+.BR \%svlogd (8),
+.BR \%runsvdir (8).
+.br
+.B S6:
+.BR \%s6-svc (8),
+.BR \%s6-log (8),
+.BR \%s6-svscan (8).
+.SH AUTHORS
+-tclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"
