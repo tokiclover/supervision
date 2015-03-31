@@ -1,0 +1,395 @@
+#
+# $Header:  /etc/sv/.opt/supervision-functions           Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 2.7 2015/03/28 21:09:26                      Exp $
+#
+
+#
+# @FUNCTION: Create (supervision) service
+# @ARG: [SVC_NAME]
+#
+svc_add()
+{
+	local cmd chk dwn log sym svc name dir
+	while [ $# -ge 1 ]; do
+		case "${1}" in
+			(-c|--check)   chk=0; shift;;
+			(-d|--down)    dwn=0; shift;;
+			(-l|--log)     log=0; shift;;
+			(-s|--service) svc=0; shift;;
+			(*) break;;
+		esac
+	done
+:	${name:=${1:-${SVC_NAME}}}
+:	${dir=${SV_SVCDIR}/${name}}
+	if [ -n "${chk}" ]; then
+		if ! type -p ${SVC_CMD:-${name}} >${NULL} 2>&1; then
+			error "Command not found."
+			return 1
+		fi
+	fi
+	[ -e "${SV_RUNDIR}/${name}"  ] && return 0
+	[ -n "${log}" ] && mkdir -p "${dir}"/log || mkdir -p "${dir}"
+
+	for cmd in finish run ${log:+log/run log/finish}; do
+		[ -x "${dir}/${cmd}" ] && continue
+		[ "${cmd#log/}" != "${cmd}" ] && log=0 || log=
+		ln -s ${log:+../}../.opt/cmd "${dir}/${cmd}"
+	done
+	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${name}|" \
+		${SV_SVCDIR}/.opt/OPTIONS.in >${dir}/OPTIONS
+	[ -n "${dwn}" ] && svc_down
+	[ -n "${svc}" ] || return 0
+
+	[ -e "${SV_SERVICE}/${name}" ] ||
+		ln -s "${SV_SVCDIR}/${name}" "${SV_SERVICE}/${name}"
+	yesno "${SV_RDO}" && cp -LRpu "${SV_SVCDIR}/${name}" "${SV_RUNDIR}" ||
+		ln -s "${SV_SVCDIR}/${name}" "${SV_RUNDIR}/${name}"
+}
+
+svc_down()
+{
+	case "${1}" in
+		(-r|--remove) rm -f "${SV_RUNDIR}/${SVC_NAME}"/down;;
+		(-d|--down|*) touch "${SV_RUNDIR}/${SVC_NAME}"/down;;
+	esac
+}
+
+svc_start()
+{
+	svc_add --service || return
+	local val
+	eval ${SVCCMD} ${SIGWTUP:-${SIGSTRT}} "${SV_RUNDIR}/${SVC_NAME}"
+	case ${?} in
+		(0) svc_mark --up -s ;;
+		(*) val=1;;
+	esac
+	svc_down --remove
+	return ${val}
+}
+
+svc_stop()
+{
+	local SIG val
+	for SIG in STOP TERM; do
+		eval ${SVCCMD} \${SIG${SIG}} "${SV_RUNDIR}/${SVC_NAME}"
+	done
+	val=${?}
+	[ ${val} -eq 0 ] && svc_mark -S
+	return ${val}
+}
+
+svc_status()
+{
+	eval ${CHKCMD} "${SV_RUNDIR}/${SVC_NAME}"
+}
+
+svc_reload()
+{
+	if [ -n "${SIGRLD}" ]; then
+		eval ${SVCCMD} ${SIGRLD} "${SV_RUNDIR}/${SVC_NAME}"
+	else
+		eval ${SVCCMD} ${SIGHUP:-${SIGEXIT}} "${SV_RUNDIR}/${SVC_NAME}"
+		svc_start
+	fi
+}
+
+svc_mark()
+{
+	local arg
+	for arg in ${@:--s}; do
+		case "${arg}" in
+			(-d|--down*)  touch "${SV_TMPDIR}/down/${SVC_NAME}";;
+			(-u|--up*)    rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
+			(-f|--failed) touch "${SV_TMPDIR}/fail/${SVC_NAME}";;
+			(-s|--start*) touch "${SV_TMPDIR}/star/${SVC_NAME}";;
+			(-S|--stoped) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
+		esac
+	done
+}
+
+svc_state()
+{
+	local arg ret
+	for arg in ${@:--r}; do
+		case "${arg}" in
+			(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
+			(-r|--runn*) [ -e "${SV_RUNDIR}/${SVC_NAME}" ];;
+			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
+			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
+			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
+		esac
+		ret=$((${ret} + ${?}))
+	done
+	return ${ret}
+}
+
+#
+# @FUNCTION: Pre-Run handler
+#
+svc_pre()
+{
+	local REMOVE_SVC file
+	REMOVE_SVC='{ svc_remove; die "Failed to setup ${SVC_NAME}"; };'
+
+	if [ -x ./RUN ]; then
+		SVC_CMD=./RUN
+	else
+		SVC_CMD=$(type -p ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
+	fi
+	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
+		error "Command not found."
+		eval ${REMOVE_SVC}
+	fi
+	for file in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
+		if [ ! -f "${file}" ]; then
+			error "${file} required file not found"
+			eval ${REMOVE_SVC}
+		fi
+	done
+	if command -v pre >${NULL} 2>&1; then
+		pre || eval ${REMOVE_SVC}
+	fi
+}
+svc_remove()
+{
+	begin "Removing ${SVC_NAME} service"
+	rm -fr "${SV_RUNDIR}/${SVC_NAME}"
+	end ${?}
+	rm -f "${SV_TMPDIR}/${SVC_NAME}_OPTIONS"
+	svc_mark --failed
+}
+
+#
+# @FUNCTION: Pre-Finish handler
+#
+svc_post()
+{
+	if yesno "${SV_CGROUP}"; then
+		cgroup_remove_service
+	fi
+	if command -v post >${NULL} 2>&1; then
+		post || error "Failed to exec post()"
+	fi
+	#
+	# Handle run return values
+	#
+	case "${cmd_args}" in
+		(0*)
+			;;
+		(*)
+			SVC_TRY=$((${SVC_TRY} + 1))
+			env_svc SVC_TRY
+			if [ ${SVC_TRY:-0} -ge ${SV_TRY:-3} ]; then
+				error "Maximum number of starting attempts reached."
+				svc_remove
+			fi
+			;;
+	esac
+}
+
+#
+# @FUNCTION: Handle service deps
+#
+svc_depend()
+{
+	local dep
+	for dep in use:USE need:NEED before:BEFORE after:AFTER; do
+		eval [ -n \"\${SVC_${dep#*:}}\" ] && command -v svc_${dep%:*} \
+			>${NULL} 2>&1 && svc_${dep%:*}
+	done
+}
+
+svc_after()
+{
+	local svc svc_name
+	svc_name=${SVC_NAME}
+	for svc in ${SVC_AFTER}; do
+		eval SVC_NAME="${svc}" svc_state -r && eval SVC_NAME="${svc}" svc_start
+	done
+	SVC_NAME=${svc_name}
+}
+
+svc_need()
+{
+	if ! SVC_USE="${SVC_NEED}" svc_use; then
+		die "Failed to set up service dependencies."
+	fi
+}
+svc_use()
+{
+	local ret svc svc_name
+	svc_name=${SVC_NAME}
+	for svc in ${SVC_USE}; do
+		eval SVC_NAME="${svc}" svc_state -f && ret=$((${ret} + 1)) ||
+			eval SVC_NAME="${svc}" svc_cmd start
+		ret=$((${ret} + ${?}))
+	done
+	SVC_NAME=${svc_name}
+	return ${ret}
+}
+
+#
+# @FUNCTION: Set persistent env between run/finish
+#
+set_env()
+{
+	local OPT env; OPT="${1}"
+	shift
+	for env; do
+		eval echo "${env}=\"'\$${env}'\""
+		shift
+	done >>"${SV_TMPDIR}/${OPT}"
+}
+env_svc()
+{
+	[ -n "${@}" ] && set_env "${SVC_NAME}_OPTIONS" "${@}"
+}
+env_sv()
+{
+	[ -n "${@}" ] && set_env "SV_OPTIONS" "${@}"
+}
+
+#
+# @FUNCTION: Set up CGroup
+#
+svc_cgroup()
+{
+	local ret
+	SOURCE "${SV_SVCDIR}"/.opt/cgroup-functions
+	ret=${?}
+	if [ -z "${SV_CGROUP}" ]; then
+		if [ ${ret} -eq 0 ]; then
+			cgroup_start_sys; ret=${?}
+		fi
+		case "${ret}" in
+			(0) SV_CGROUP=Yes;;
+			(*) SV_CGROUP=No ;;
+		esac
+		env_sv SV_CGROUP
+	fi
+	if yesno "${SV_CGROUP}"; then
+		cgroup_add_service; ret=${?}
+	fi
+	return ${ret}
+}
+
+svc_desc()
+{
+	if [ -n "${description}" ]; then
+		name=Description info "${description}"
+	else
+		info "No Description found"
+	fi
+}
+
+#
+# @FUNCTION: Handle extra service commands
+#
+svc_commands()
+{
+	if [ -z "${SVC_COMMANDS}" ]; then
+		error "No extra commands found."
+		return 1
+	elif [ "${SVC_COMMANDS/${@}}" = "${SVC_COMMANDS}" ]; then
+		error "${@} command not found."
+		return 2
+	fi
+	local cmd
+	for cmd in ${SVC_COMMANDS}; do
+		[ "${cmd}" = "${1}" ] || continue
+		if command -v ${cmd} >${NULL} 2>&1; then
+			begin "processing ${cmd} ..."
+			eval ${cmd}
+			end ${?}
+			break
+		else
+			error "${cmd} command not defined."
+			return 3
+		fi
+	done
+}
+
+svc_cmd()
+{
+	local act arg opt
+	for arg; do
+		case "${1}" in
+			(add|remove|desc|reload|start|stop|status) act="svc_${1}";;
+			(cgroup_remove_service)     act="${1}";;
+			(-[cdls]*|--[cdls]*) opt="${opt} ${1}";;
+			(-*) error "Invalid option"; return 3 ;;
+			([a-z]*) act="svc_commands" opt='"${@}"'; break;;
+		esac
+		shift
+	done
+	case "${act}" in
+		(remove|reload|stop|status|cgroup_remove_service)
+			svc_state -r || { error "Inactive service" ; return 1; };;
+		(desc|start)
+			svc_state -e || { error "Inexistent service"; return 2; };;
+	esac
+	begin "${act#svc_}:\n"
+	eval ${act} ${opt}
+	end "${?}"
+}
+
+svc_env()
+{
+	local dir file
+	for dir in ../.env env; do
+		[ -d "${SV_RUNDIR}/${dir}" ] && ENV_CMD="${ENV_CMD} envdir ${SV_RUNDIR}/${dir}"
+	done
+	for file in SVC_USER SVC_GROUP; do
+		[ -f "${SV_RUNDIR}/env/${file}" ] && eval ${file}=$(cat "${SV_RUNDIR}/env/${file}")
+	done
+	ENV_OPTS="${ENV_OPTS} ${SVC_USER:+envuidgid ${SVC_USER}${SVC_GROUP:+:}${SVC_GROUP}}"
+}
+
+svc_run()
+{
+	if [ ${#} -ge 1 ]; then
+		svc_cmd "${@}"
+		return
+	fi
+	if command -v svc_pre >${NULL} 2>&1; then
+		svc_pre
+	fi
+	svc_depend
+	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
+}
+
+svc_finish()
+{
+	svc_mark -S
+	if command -v svc_post >${NULL} 2>&1; then
+		svc_post
+	fi
+	[ -n "${FIN_CMD}" ] || return 0
+	eval exec ${FIN_CMD} ${FIN_OPTS}
+}
+
+log_run()
+{
+	checkpath -q -d ${LOG_MODE:+-m} ${LOG_MODE} \
+		${SVC_USER:+-o} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} ${SVC_LOGDIR}
+
+	if command -v log_pre >${NULL} 2>&1; then
+		log_pre
+	fi
+	exec ${PRE_CMD} ${PRE_OPTS} ${LOG_CMD} ${LOG_OPTS}
+}
+
+log_finish()
+{
+	if command -v log_post >${NULL} 2>&1; then
+		log_post
+	fi
+	[ -n "${LOG_FIN_CMD}" ] || return 0
+	exec ${LOG_FIN_CMD} ${LOG_FIN_OPTS}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
