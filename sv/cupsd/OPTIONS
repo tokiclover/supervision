@@ -1,0 +1,20 @@
+#
+# $Header:  /etc/sv/cupsd/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_OPTS=-f
+SVC_NEED='dbus'
+SVC_AFTER='syslog'
+
+pre()
+{
+	checkpath -q -d -m 0775 -o root:lp    /var/cache/cups
+	checkpath -q -d -m 0775 -o root:lp    /var/cache/cups/rss
+	checkpath -q -d -m 0755 -o root:lp    /var/run/cups
+	checkpath -q -d -m 0511 -o lp:lpadmin /var/run/cups/certs
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
