@@ -1,0 +1,58 @@
+#
+# $Header:  /etc/sv/cgred/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="CGroup Rules Engine Daemon"
+SVC_CMD=cgrulesengd
+SVC_OPTS='--nodaemon --logfile=-'
+SVC_CONFIGFILE=/etc/cgroup/cgconfig.conf
+
+CGCONFIGPARSER=/usr/sbin/cgconfigparser
+CGCLASSIFY=/usr/sbin/cgclassify
+CG_CLASSIFY=No
+
+pre()
+{
+	begin "Setting up Control Groups"
+	${CGCONFIGPARSER} --load=${SVC_CONFIGFILE} >/dev/null 2>&1
+	local ret=${?}
+	end "${ret}"
+	if ! [ ${ret} -eq 0 ]; then
+		error "Failed to Setup CGroups"
+		return 1
+	fi
+
+	# Classify PID according to the rules if requested
+	yesno "${CG_CLASSIFY}" || return 0
+	begin "Classifying PID to CGroups"
+	local pid
+	for pid in $(ps --no-headers -eL o tid); do
+		 ${CGCLASSIFY} ${pid}
+	done
+	end "${?}"
+	return 0
+}
+
+post()
+{
+	local ctrl eq mnt_pnt mnt_pts
+	while read ctrl eq mnt_pnt; do
+		case "${ctrl}" in
+			(\#*)    continue    ;;
+			(mount*) mnt_pts=true;;
+			(\}*)    mnt_pts=    ;;
+			(*)
+				[ -n "${mnt_pts}" ] || continue
+				mnt_pnt="${mnt_pnt%;}"
+				begin "Unmounting ${mnt_pnt}"
+				umount "${mnt_pnt}"
+				end "${?}"
+				;;
+		esac
+	done <"${SVC_CONFIGFILE}"
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
