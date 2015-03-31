@@ -1,0 +1,37 @@
+#
+# $Header:  /etc/sv/syslog/OPTIONS.socklog               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=socklog
+
+ENV_DIR=Yes
+SVC_CMD=socklog
+
+pre()
+{
+	case "${SVC_NAME}" in
+		(*-inet)
+		:	${PORT:=514}
+		:	${IP:=0}
+		[ "${PORT}" -le 1024 -a ! "${SVC_USER}" != "root" ] &&
+			{ error "Super-User priviledge required"; return 1; }
+		:	${SVC_OPTS:=inet ${IP}:${PORT}}
+		:	${SOCK_LOGDIR:=/var/log/socklog-inet}
+		;;
+		(*-ucspi)
+		:	${SVC_OPTS:=ucspi ${UCSPI_OPTS}}
+		:	${SOCK_LOGDIR:=/var/log/socklog-ucspi-tcp}
+		;;
+		(*-unix|*)
+		:	${SVC_OPTS:=unix /dev/log}
+		:	${SOCK_LOGDIR:=/var/log/socklog}
+		;;
+	esac
+	checkpath -q -d ${SVC_USER:--o} ${SVC_USER} ${SVC_GROUP:--g} \
+			${SVC_GROUP} ${SOCK_LOGDIR}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -1,0 +1,27 @@
+#
+# $Header:  /etc/sv/syslog/OPTIONS.syslog-ng             Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=syslog-ng
+
+SVC_CONFIGFILE="/etc/${name}/${name}.conf"
+SVC_STATEFILE_DIR="/var/lib/${name}"
+SVC_STATEFILE="${SVC_STATEFILE_DIR}/${name}.persist"
+
+SVC_CMD="/usr/sbin/${name}"
+SVC_OPTS="--cfgfile ${SVC_CONFIGFILE} --foreground --persist-file ${SVC_STATEFILE}"
+
+pre()
+{
+	checkpath -q -d -m 0700 -o "${SVC_USER}:${SVC_GROUP}" "${SVC_STATEFILE_DIR}"
+}
+
+check_config()
+{
+	eval ${SVC_CMD} --syntax-only --cfgfile "${SVC_CONFIGFILE}"
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
