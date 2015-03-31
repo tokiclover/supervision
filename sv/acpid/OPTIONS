@@ -1,0 +1,11 @@
+#
+# $Header:  /etc/sv/acpid/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_OPTS=--foreground
+SVC_USE=syslog
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
