@@ -1,0 +1,15 @@
+#
+# $Header:  /etc/sv/snmpd/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Dep(used): saned - generating & retrieving SNMP data  Exp $
+#
+
+description='Simple Network Management Protocol Daemon'
+
+SVC_CONFIGFILE=/etc/snmp/snmpd.conf
+SVC_OPTS='-A -c ${SVC_CONFIGFILE} -f -q'
+SVC_USE=syslog
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
