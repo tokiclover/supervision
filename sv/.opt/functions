@@ -1,0 +1,131 @@
+#
+# $Header:  /etc/sv/.opt/functions                       Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 1.1 2015/03/24 21:09:26                      Exp $
+#
+
+#
+# @FUNCTION: Print error message to stderr
+# @ARG: MSG
+#
+error()
+{
+	local prefix=${name:+" ${CLR_MAG}${name}:${CLR_RST}"}
+	echo -e " ${CLR_RED}*${CLR_RST}${prefix} ${@}" >&2
+}
+
+#
+# @FUNCTION: Print error message to stderr & exit
+# @ARG: MSG
+#
+die()
+{
+	local ret=${?}; error "${@}"; exit ${ret}
+}
+
+#
+# @FUNCTION: Print info message to stdout
+# @ARG: MSG
+#
+info()
+{
+	local prefix=${name:+" ${CLR_YLW}${name}:${CLR_RST}"}
+	echo -e " ${CLR_BLU}*${CLR_RST}${prefix} ${@}"
+}
+
+#
+# @FUNCTION: Print begin message to stdout
+# @ARG: MSG
+#
+begin()
+{
+	local prefix=${name:+"${CLR_MAG}[${CLR_RST} ${CLR_BLU}${name}${CLR_RST}: ${CLR_MAG}]${CLR_RST}"}
+	echo -en " ${prefix} ${@}"
+}
+
+#
+# @FUNCTION: Print end message to stdout
+# @ARG: MSG
+#
+end()
+{
+	local suffix
+	case "${1}" in
+		(0) suffix="${CLR_BLU}[${CLR_RST} ${CLR_GRN}Ok${CLR_RST} ${CLR_BLU}]${CLR_RST}";;
+		(*) suffix="${CLR_YLW}[${CLR_RST} ${CLR_RED}No${CLR_RST} ${CLR_YLW}]${CLR_RST}";;
+	esac
+	shift
+	echo -en " ${@} ${suffix}\n"
+}
+
+#
+# @FUNCTION: YES or NO helper
+#
+yesno()
+{
+	case "${1:-NO}" in
+	(0|[Dd][Ii][Ss][Aa][Bb][Ll][Ee]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee]|[Nn][Oo])
+		return 1;;
+	(1|[Ee][Nn][Aa][Bb][Ll][Ee]|[Oo][Nn]|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss])
+		return 0;;
+	(*)
+		return 2;;
+	esac
+}
+
+#
+# @FUNCTION: source wrapper
+# @ARG: [OPT] FILE
+#
+SOURCE()
+{
+	local arg msg opt ret
+	msg='Failed to source ${arg}'
+	while [ ${#} -ge 1 ]; do
+		case "${1}" in
+			(-[ed]) opt=${1};;
+			(*) break;;
+		esac
+		shift
+	done
+
+	for arg; do
+	[ -e "${1}" ] && source "${1}"
+	case "${?}" in
+		(0)
+			;;
+		(*)
+			ret=$((${ret} + ${?}))
+			case "${opt}" in
+				(-e) eval error \"${msg}\";;
+				(-d) eval die   \"${msg}\";;
+			esac
+			;;
+	esac
+	shift
+	done
+	return ${ret}
+}
+
+#
+# @FUNCTION: Colors handler
+#
+eval_colors()
+{
+	local BLD ESC FGD clr
+	BLD='1;' ESC='\e[' FGD='3'
+
+	for clr in 0:BLK 1:RED 2:GRN 3:YLW 4:BLU 5:MAG 6:CYN 7:WHT; do
+		eval CLR_${clr#*:}="'${ESC}${BLD}${FGD}${clr%:*}m'"
+	done
+	CLR_RST="${ESC}0m"
+}
+
+if [ -t 1 ] && yesno "${COLOR:-Yes}"; then
+	eval_colors
+fi
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
