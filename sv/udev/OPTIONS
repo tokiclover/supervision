@@ -1,0 +1,51 @@
+#
+# $Header:  /etc/sv/udev/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_CMD=/sbin/udevd
+SVC_OPTS=
+UDEV_DEBUG=No
+
+#
+# Use mdev as fall back
+#
+USE_MDEV=Yes
+
+pre()
+{
+	if ! grep -q devtmpfs /proc/filesystems; then
+		if yesno "${USE_MDEV}" && type mdev-start-dev >/dev/null 2>&1; then
+			begin "Starting mdev"
+			mdev-start-dev ${MDEV_OPTS}
+			end "${?}"
+		fi
+		error "DevtmpFS is not supported"
+		return 1
+	fi
+	if ! grep -Eq '/dev .*devtmpfs' /proc/mounts; then
+		if ! mount -t devtmpfs -o nosuid,mode=755,size=10M dev /dev; then
+			error "Failed to setup devtmpfs"
+			return 2
+		fi
+		mkdir -p /dev/pts /dev/shm
+	fi
+	if [ ! -e /proc/net/unix ]; then
+		if ! modprobe unix; then
+			error "Failed to load unix domain socket module"
+			return 3
+		fi
+	fi
+	if [ -e /proc/sys/kernel/hotplug ]; then
+		echo '' >/proc/sys/kernel/hotplug
+	fi
+	if yesno "${UDEV_DEBUG}"; then
+		CMD_OPTS="${CMD_OPTS} --debug 2> /run/udevdebug.log"
+	else
+		return 0
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
