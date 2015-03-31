@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+# $Header:  /etc/sv/.bin/sv-shutdown                     Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Description: Simple & Cheap shutdown script           Exp $
+# $Version: 0.2 2015/03/28 21:09:26                      Exp $
+#
+:	${name=${0##*/}}
+:	${SV_RUNDIR:=/run/service}
+:	${SV_BACKEND:=${SV_RUNDIR}/.opt/sv-backend}
+
+if [ -f "${SV_BACKEND}" ]; then
+	source "${SV_BACKEND}"
+	svc_backend -i -s
+else
+	echo "${SV_BACKEND} required file not found." >&2
+	exit 1
+fi
+
+usage() {
+	cat <<-EOH
+usage: ${0##*/} COMMAND
+  -6, -r, --reboot    System reboot
+  -0, -s, --shutdown  System shutdown
+      -f, --fast      Skip fsck on reboot
+      -F, --fsck      Force fsck on reboot
+      -t, --time sec  Send signal after waiting
+  -?, -h, --help      Help/Exit
+EOH
+exit
+}
+
+ARGS="$(getopt \
+	-o \?06Ffhrst: \
+	-l fast,fsck,help,reboot,shutdown,time: \
+	-s sh -n ${name} -- "${@}")"
+[ ${?} -eq 0 ] || usage
+eval set -- ${ARGS}
+
+while true; do
+case "${1}" in
+	(-[6r]|--reboot) LEVEL=6    ;;
+	(-[0s]|--shutd*) LEVEL=0    ;;
+	(-[?h]|--help)   usage      ;;
+	(-f|--fa*) touch /fastboot  ;;
+	(-F|--fs*) touch /forcefsck ;;
+	(-t|--time) TIME=$2; shift  ;;
+	(*) break;;
+esac
+shift
+done
+case "${SV_OPT}" in
+	(daemontoo*) die "Un-Supported supervsion backend!";;
+	(runit) CMD="runit-init ${LEVEL}"                  ;;
+	(s6) CMD="${SV_RUNDIR}/.s6-svscan/finish -${LEVEL}";;
+esac
+case "${LEVEL}" in
+	(0) MSG="System halt"   ;;
+	(6) MSG="System reboot" ;;
+	(*) die "-0|-6 required";;
+esac
+
+echo "${@:-${MSG}}" | busybox wall
+([ -n "${TIME}" ] && sleep ${TIME}
+eval ${CMD}) &
+
+unset CMD LEVEL SHIFT TIME
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
