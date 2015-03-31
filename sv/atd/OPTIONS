@@ -1,0 +1,20 @@
+#
+# $Header:  /etc/sv/atd/OPTIONS                          Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_OPTS='-f -d'
+SVC_USER=at
+SVC_GROUP=at
+SVC_SPOOLDIR=/var/spool/at
+SVC_USE=syslog
+
+pre()
+{
+	checkpath -q -d -m 1770 -o ${SVC_USER}:${SVC_GROUP} ${SVC_SPOOLDIR}/atjobs
+	checkpath -q -d -m 1770 -o ${SVC_USER}:${SVC_GROUP} ${SVC_SPOOLDIR}/atspool
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
