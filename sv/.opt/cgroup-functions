@@ -1,0 +1,170 @@
+#
+# $Header:  /etc/sv/.opt/cgroup-functions                Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 1.0 2015/02/28                               Exp $
+#
+# Copyright (c) 2012 Alexander Vershilov <qnikst@gentoo.org>
+# CopyLetf  (c) 2015 -tclover <tokiclover@gmail.com>
+#
+:	${CG_NAME=supervision}
+:	${CG_ROOT=/sys/fs/cgroup}
+:	${CG_PATH=${CG_ROOT}/${CG_NAME}}
+:	${SYSFS_OPTS=nodev,nosuid,noexec}
+:	${CG_RELEASE_AGENT=${SV_SVCDIR}/.opt/cgroup-release-agent}
+#
+# @FUNCTION: Set up & Mount Control Group
+#
+cgroup_start_sys()
+{
+	local opt
+	[ -w /etc/mtab ] || opt=-n
+	[ -d ${CG_ROOT} ] && grep -q cgroup /proc/filesystems || return
+
+	if ! grep -q -E "${CG_ROOT}.*tmpfs" /proc/mounts; then
+		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CG_FS_SIZE:-10M} \
+			cgroup_root ${CG_ROOT}
+	fi
+	[ ${?} -eq 0 ] && cgroup_mount_sys
+}
+cgroup_mount_sys()
+{
+	if ! grep -q ${CG_PATH} /proc/mounts; then
+		mkdir -p ${CG_PATH}
+		mount ${opt} -o none,${SYSFS_OPTS},name=${CG_NAME},release_agent=${CG_RELEASE_AGENT} \
+			-t cgroup  ${CG_NAME} ${CG_PATH}
+		echo 1 > ${CG_PATH}/notify_on_release
+	fi
+
+	yesno ${CG_FS_MOUNT:-Yes} || return 0
+	local ctrl hirc num enabled exta
+	while read ctrl hirc num enabled extra; do
+		case "${enabled}" in
+			(1)
+				grep -q ${CG_ROOT}/${ctrl} /proc/mounts && continue
+				mkdir   ${CG_ROOT}/${ctrl}
+				mount ${opt} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
+					${ctrl} ${CG_ROOT}/${ctrl}
+				;;
+		esac
+	done < /proc/cgroups
+	return 0
+}
+
+cgroup_find_path()
+{
+	local ifs DIR ctrl dir n
+	[ -n "${1}" ] || return 0
+	ifs="${IFS}"; IFS=":"
+	while read n ctrl dir; do
+		[ "${ctrl}" = "${1}" ] && DIR="${dir}"
+	done < /proc/1/cgroup
+	IFS="${ifs}"
+	echo "${DIR}"
+}
+
+cgroup_get_pids()
+{
+	local p
+	PIDS=
+	while read p; do
+		[ ${p} -eq $$ ] || PIDS="${PIDS} ${p}"
+	done < ${CG_PATH}/${SVC_NAME}/tasks
+	[ -n "${PIDS}" ]
+}
+
+cgroup_get_state()
+{
+	[ -d "${CG_PATH}/${SVC_NAME}" ]
+}
+
+cgroup_set_values()
+{
+	[ -n "${1}" -a -n "${2}" -a -d "${CG_ROOT}/${1}" ] || return 0
+
+	local group head ctrl
+	ctrl="${1}"; head=$(cgroup_find_path "${1}")
+	group="${CG_ROOT}/${1}${head}${CG_NAME}_${SVC_NAME}"
+	[ -d "${group}" ] || mkdir -p "${group}"
+
+	set -- ${2}
+	local prm val
+	while [ -n "${1}" -a "${ctrl}" != "cpuacct" ]; do
+		case "${1}" in
+			(${ctrl}.*)
+				if [ -n "${prm}" -a -f "${group}/${prm}" -a -n "${val}" ]; then
+					info "Setting ${group}/${prm} to ${val}"
+					echo "${val}" > "${group}/${prm}"
+				fi
+				prm="${1}"; val=
+				;;
+			(*)
+				val="${val} ${1}"
+				;;
+		esac
+		shift
+	done
+	if [ -n "${prm}" -a -f "${group}/${prm}" -a -n "${val}" ]; then
+		info "Setting ${group}/${prm} to ${val}"
+		echo "${val}" > "${group}/${prm}"
+	fi
+	if [ -f "${group}/tasks" ]; then
+		info "Adding to ${group}/tasks"
+		echo $$ > "${group}/tasks"
+	fi
+	return 0
+}
+
+cgroup_add_service()
+{
+	#
+	# FIXME:
+	# Relocating process to the top of the CGroup to prevent
+	# unwanted inheriting user CGroup may lead to issue when
+	# inheriting may be necessary.
+	#
+	if yesno ${cgroup_inherit:-${CGROUP_INHERIT}}; then
+		local dir
+		for dir in ${CG_ROOT}/*; do
+			[ -f "${dir}"/tasks ] && echo $$ > "${dir}"/tasks
+		done
+	fi
+
+	if [ -d "${CG_PATH}" ]; then
+		local group
+		group="${CG_PATH}/${SVC_NAME}"
+		mkdir -p "${group}"
+		[ -f "${group}/tasks" ] && echo $$ > "${group}/tasks"
+	fi
+}
+
+cgroup_set_limits()
+{
+	local ctrl blkio cpu cpuacct cpuset devices memory net_prio
+
+	for ctrl in blkio:BLKIO cpu:CPU cpuacct:CPUACCT cpuset:CPUSET \
+		devices:DEVICES memory:MEMORY net_prio:NET_PRIO; do
+		eval ${ctrl%:*}=\"\${cgroup_${ctrl%:*}:-\${CGROUP_${ctrl#*:}}}\"
+		eval [ -n \"\${${ctrl%:*}}\" ] && cgroup_set_values "${ctrl%:*}" "\${${ctrl%:*}}"
+	done
+	return 0
+}
+
+cgroup_remove_service()
+{
+	cgroup_get_state || return 0
+	yesno "${cgroup_cleanup:-${CGROUP_CLEANUP}}" || return 0
+	local CGROUP_GET_PIDS SIG
+	CGROUP_GET_PIDS='cgroup_get_pids || { end 0; return 0; };'
+
+	begin "Cleaning up CGroup"
+	for SIG in TERM QUIT INT; do
+		eval ${CGROUP_GET_PIDS}
+		kill -${SIG} ${PIDS}
+	done
+	eval ${CGROUP_GET_PIDS}
+	kill -TERM ${PIDS}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
