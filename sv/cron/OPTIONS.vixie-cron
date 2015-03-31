@@ -1,0 +1,16 @@
+#
+# $Header:  /etc/sv/cron/OPTIONS.dcron                   Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Vixie Cron Daemon'
+SVC_OPTS=-n
+
+pre()
+{
+	[ "${SVC_USE/syslog}" != "${SVC_USE}"  ] || SVC_OPTS="${SVC_OPTS} -s"
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

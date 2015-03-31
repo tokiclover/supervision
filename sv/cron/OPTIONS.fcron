@@ -1,0 +1,23 @@
+#
+# $Header:  /etc/sv/cron/OPTIONS.fcron                   Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_CONFIGFILE=/etc/${name}/${name}.conf
+SVC_CRONTABS_DIR=/var/spool/${name}
+SVC_CMD=/usr/libexec/${name}
+SVC_OPTS="--configfile ${SVC_CONFIGFILE} --foreground"
+
+pre()
+{
+	[ "${SVC_USE/syslog}" = "${SVC_USE}" ] && SVC_OPTS="${SVC_OPTS} --nosyslog"
+	[ -z "${SVC_LOGFILE}" ] || SVC_OPTS="${SVC_OPTS} --logfilepath ${SVC_LOGFILE}"
+}
+check_config()
+{
+	[ -d ${SVC_CRONTABS_DIR} ] || ${SVC_CMD} --newspooldir ${SVC_CRONTABS_DIR}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

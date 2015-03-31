@@ -1,0 +1,13 @@
+#
+# $Header:  /etc/sv/cron/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+#
+# Possible choice: {b,d,f}cron,cronie,vixie-cron
+#
+name=fcron
+SVC_USE=syslog
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
