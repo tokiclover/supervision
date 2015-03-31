@@ -1,0 +1,43 @@
+#
+# $Header:  /etc/sv/wpa_supplicant/OPTIONS               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Wi-Fi Protected Access client and IEEE 802.1X supplicant'
+name=wpa_supplicant
+SVC_CONFIGFILE=/etc/${name}/${name}.conf
+SVC_CMD=${name}
+SVC_OPTS='${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IF}'
+
+pre()
+{
+	case "${SVC_OPTS}" in
+		(*-s*) SVC_USE=syslog;;
+		(*-i*)               ;;
+		(*) [ -n "${WPA_IF}" ] || find_iface;;
+	esac
+}
+
+find_iface()
+{
+	local IF
+	case "${OS_NAME}" in
+		(Linux)
+		for IF in /sys/class/net/*; do
+			[ -e "${IF}"/wireless -o -e "${IF}"/phy80211 ] &&
+				WPA_IF="${WPA_IF} -i ${IF##*/}"
+		done
+		;;
+		(*)
+		for IF in /dev/net/* $(ifconfig -s | tail -n+2 | awk '{print $1}' 2>${NULL}); do
+			ifconfig ${IF} 2>${NULL} | grep -iq '*ssid' &&
+				WPA_IF="${WPA_IF} -i ${IF##*/}"
+		done
+		;;
+	esac
+	[ -n "${WPA_IF}" ]
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
