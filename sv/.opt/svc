@@ -1,0 +1,73 @@
+#!/bin/sh
+#
+# $Header:  /etc/sv/.opt/svc                             Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Description: Simple helper to manage service          Exp $
+#
+
+:	${name=svc}
+:	${SV_SVCDIR:=/etc/sv}
+:	${SV_BACKEND:=${SV_SVCDIR}/.opt/sv-backend}
+
+usage()
+{
+	cat <<-EOH
+ usage: ${0##*/} [ACTION] [OPTIONS] service
+   ACTION: [add|remove|reload|start|stop|status]
+   ACTION: (CGroup) cgroup_remove_service
+   OPTION: (add) [-c|--check] [-d|--down] [-l|--log] [-s|--service]
+     -c, --check      Enable binary check
+     -d, --down       Start service as down
+     -l, --log        Add log directory
+     -s, --service    Add symlink to /service/
+     -h, --help       Help/Exit
+EOH
+}
+
+if [ -f "${SV_BACKEND}" ]; then
+	source "${SV_BACKEND}"
+	svc_backend -i -s
+else
+	echo "${SV_BACKEND} required file not found." >&2
+	exit 1
+fi
+
+opt=
+
+while true; do
+	case "${1}" in
+		(add) act="svc_${1}" args='${opt} ${svc}'
+			shift
+			while true; do
+				case "${1}" in
+					(-[cdls]*|--[cdls]*) opt="${opt} ${1}";;
+					(*) break 2;;
+				esac
+				shift
+			done
+			;;
+		(reload|remove|start|stop|status) act="svc_${1}";;
+		(cgroup_remove_service) act="${1}";;
+		(-h|--help|*) usage; exit;;
+	esac
+	shift
+	break
+done
+
+for svc; do
+	case "${act}" in
+		(remove|reload|stop|status|cgroup_remove_service)
+			svc_state -r || { error "Inactive service"  ; continue; };;
+		(desc|start)
+			svc_state -e || { error "Inexistent service"; continue; };;
+	esac
+	begin "ACTION:${act#svc_}: ${svc} service\n"
+	eval SVC_NAME="${svc}" ${act} ${args}
+	end "${?}"
+done
+
+unset act args opt svc
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
