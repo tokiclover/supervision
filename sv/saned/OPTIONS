@@ -1,0 +1,22 @@
+#
+# $Header:  /etc/sv/saned/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Scanner Access Now Easy daemon'
+
+ENV_DIR=Yes
+SVC_OPTS='-d 2'
+SVC_USER=saned
+SVC_GROUP=saned
+SVC_CONFIGFILE=/etc/sane.d/saned.conf
+SANE_CONFIG_DIR=/etc/sane.d
+
+pre()
+{
+	checkpath -q -d -m 0775 -o ${SVC_USER}:${SVC_GROUP} /var/run/saned
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
