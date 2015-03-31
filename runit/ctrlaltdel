@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# $Header:  /etc/runit/ctrlaltdel                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
+:	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+if [ -f ${SV_BACKEND} ]; then
+	source ${SV_BACKEND}
+	svc_backend -i
+fi
+
+MSG="System is going down in 3 seconds..."
+
+touch /etc/runit/stopit
+chmod 100 /etc/runit/stopit && echo "$MSG" | busybox wall
+sleep 3
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# $Header:  /etc/runit/2                                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
+:	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+if [ -f ${SV_BACKEND} ]; then
+	source ${SV_BACKEND}
+	svc_backend -i
+fi
+name=OpenRC
+begin "Bringing up the System\n"
+RUNLEVEL=S rc boot
+end "${?}"
+if [ -f ${SV_BACKEND} ]; then
+	rc_level
+else
+	begin "Starting default run level\n"
+	RUNLEVEL=3 rc default
+	end "${?}"
+fi
+
+name=Init-Stage-2
+begin "Setting up Supervision"
+:	${SV_RUNDIR:=/run/service}
+:	${SV_SERVICE:=/etc/service}
+
+if [ -f ${SV_BACKEND} ]; then
+	tmp_service
+	svc_backend
+else
+	case "${SV_RUNDIR}" in
+		("${SV_SERVICE}") :;
+			;;
+		(*/run/*|*/tmp/*)
+			rm -f -r "${SV_RUNDIR}"
+			mkdir -p "${SV_RUNDIR}"
+			cp -LRTp "${SV_SERVICE}" "${SV_RUNDIR}"
+			;;
+	esac
+	rm -f -r "${SV_RUNDIR}"/.tmp
+	mkdir -p "${SV_RUNDIR}"/.tmp
+fi
+end "${?}"
+
+SV_CMD=runsvdir
+SV_OPTS='log: ..................................................................'
+begin "Starting Supervision\n"
+exec env - PATH=${PATH} ${SV_CMD:-runsvdir} ${SV_RUNDIR} ${SV_OPTS}
+end "${?}"
+
+sh -aim
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

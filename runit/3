@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# $Header:  /etc/runit/3                                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+exec >/dev/console 2>&1
+:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
+:	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+if [ -f ${SV_BACKEND} ]; then
+	source ${SV_BACKEND}
+	svc_backend -i
+fi
+:	${SV_RUNDIR:=/run/service}
+if [ -x /etc/runit/reboot ]; then
+	LEVEL=0 ACTION=reboot   MSG='System reboot'
+else
+	LEVEL=6 ACTION=shutdown MSG='System shutdown'
+fi
+name=Init-Stage-3
+if [ -f ${SV_BACKEND} ]; then
+	svc_shutdown
+fi
+begin "Stopping Services"
+sv -w 10 force-shutdown ${SV_RUNDIR}/*
+end "${?}"
+RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
