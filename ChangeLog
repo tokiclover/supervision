@@ -1,0 +1,14 @@
+Header: supervision-scripts/ChangeLog, 2015/03/30
+
+30:
+
+First release with {runit,s6}/Init-Stage-[123];
+supervision.{conf,init}d init service & SERVICES.
+
+SERVICES: acpid, cupsd, getty, inetd, udev, sshd, syslog,
+atd, dbus, git-daemon, ntp, rsync-daemon, wpa_supplicant,
+cgred, dhcp, gpm, pcscd, saned, cron, dns, hostapd, lighttpd, snmpd
+
+VIRTUAL SERVICES: ntp/({busybox-,}ntpd), net/(dhcp/dhcp{,c}d...)
+SERVICE INSTANCES: syslog/{rsyslog,socklog,syslog-ng}
+SERVICE PROVIDERS:  cron/{d,f,vixie-}cron,cronie, inetd/{ipsvd,xinetd}
