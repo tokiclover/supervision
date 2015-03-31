@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/supervision-functions           Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 2.7 2015/03/28 21:09:26                      Exp $
+# $Version: 2.8 2015/03/30 21:09:26                      Exp $
 #
 
 #
@@ -296,19 +296,16 @@ svc_commands()
 		error "${@} command not found."
 		return 2
 	fi
-	local cmd
-	for cmd in ${SVC_COMMANDS}; do
-		[ "${cmd}" = "${1}" ] || continue
-		if command -v ${cmd} >${NULL} 2>&1; then
-			begin "processing ${cmd} ..."
-			eval ${cmd}
-			end ${?}
-			break
-		else
-			error "${cmd} command not defined."
-			return 3
-		fi
-	done
+	local cmd; cmd=${1}
+	if command -v ${cmd} >${NULL} 2>&1; then
+		shift
+		begin "processing ${cmd} ..."
+		eval ${cmd} "${@}"
+		end ${?}
+	else
+		error "${cmd} command not defined."
+		return 3
+	fi
 }
 
 svc_cmd()
