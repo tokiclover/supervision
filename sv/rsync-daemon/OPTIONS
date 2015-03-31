@@ -1,0 +1,19 @@
+#
+# $Header:  /etc/sv/rsync-daemon/OPTIONS                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Simple (anonymous) rsync daemon'
+ENV_DIR=Yes
+SVC_CONFIGFILE=/etc/rsyncd.conf
+SVC_CMD=rsync
+SVC_USER=nobody
+SVC_GROUP=nobody
+SVC_OPTS='${RSYNC_OPTS} --config=${SVC_CONFIGFILE} --daemon --no-detach'
+SVC_USE=net
+
+#RSYNC_OPTS='--log-file=${LOGDIR}/${SVC_NAME}.log --verbose'
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
