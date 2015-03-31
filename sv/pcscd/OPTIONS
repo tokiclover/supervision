@@ -1,0 +1,21 @@
+#
+# $Header:  /etc/sv/pcscd/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Dep(used): WPA - EAP-SIM authentification algorithm   Exp $
+#
+
+description='PC/SC Smart Card Daemon'
+
+SVC_CONFIGFILE=/etc/reader.conf.d/reader.conf
+SVC_OPTS='--config ${SVC_CONFIGFILE} --foreground'
+SVC_AFTER='udev dbus'
+SVC_USE=syslog
+
+pre()
+{
+	checkpath -q -d -m 0755 -o pcscd:pcscd /run/pcscd
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
