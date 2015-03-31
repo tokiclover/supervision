@@ -1,0 +1,11 @@
+#
+# $Header:  /etc/sv/ntp/OPTIONS.busybox-ntpd             Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+name=busybox-ntpd
+SVC_CMD=busybox
+SVC_OPTS='ntpd -n'
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -1,0 +1,20 @@
+#
+# $Header:  /etc/sv/ntp/OPTIONS.ntpd                     Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=ntpd
+SVC_CONFIGFILE=/etc/${name}.conf
+SVC_COMMANDS=check_config
+
+SVC_CMD=${name}
+SVC_OPTS='-d -f ${SVC_CONFIGFILE}'
+
+check_config()
+{
+	eval ${SVC_CMD} -f ${SVC_CONFIGFILE} -n
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

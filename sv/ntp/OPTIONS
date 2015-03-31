@@ -1,0 +1,13 @@
+#
+# $Header:  /etc/sv/ntp/OPTIONS                          Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Network Time Protocol Daemon'
+name=busybox-ntpd
+SVC_NEED=net
+SVC_USE=dns
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
