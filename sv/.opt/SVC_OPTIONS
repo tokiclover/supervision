@@ -1,0 +1,140 @@
+#
+# $Header:  /etc/sv/.opt/SVC_OPTIONS                     Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+#
+# ZSH compatibility
+#
+if [ -n "${ZSH_VERSION}" ]; then
+	emulate sh
+	setopt SH_WORD_SPLIT
+	disable -r end
+fi
+
+#
+# Set a few default env variables
+#
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
+:	${SVC_DIR:=${PWD%/log}}
+:	${SVC_NAME:=${SVC_DIR##*/}}
+:	${SV_SVCDIR:=/etc/sv}
+:	${SV_RUNDIR:=/run/service}
+:	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
+:	${SV_SERVICE:=/etc/service}
+:	${SV_BACKEND:=${SV_SVCDIR}/.opt/sv-backend}
+PATH=${SV_RUNDIR}/.bin:${PATH}
+:	${name:=${SVC_NAME}}
+:	${cmd:=${0##*/}}
+:	${cmd_args:="${@}"}
+:	${COLOR:=Yes}
+:	${LOGDIR:=/var/log}
+
+if [ -e "${SV_BACKEND}" ]; then
+	source "${SV_BACKEND}"
+	svc_backend -i
+fi
+if [ ! -e "${SV_TMPDIR}"/sv ]; then
+	svc_tmpdir
+fi
+SOURCE    "${SVC_DIR}"/OPTIONS
+#
+# Set debug options
+#
+if yesno "${SVC_DEBUG}"; then
+	set -x
+fi
+#
+# Handle specific (virtual) service backend/instance
+#
+if [ "${name}" != "${SVC_NAME}" ]; then
+SOURCE    "${SVC_DIR}"/OPTIONS.${name}
+else
+SOURCE    "${SVC_DIR}"/OPTIONS.${SVC_NAME}
+fi
+SOURCE    "${SV_TMPDIR}/${SVC_NAME}_OPTIONS"
+
+#
+# OS Specific
+#
+case "${OS_NAME}" in
+	(Linux)
+	:	${SV_TERM:=linux}
+		;;
+	(*)
+	:	${SV_TERM:=vt100}
+		;;
+esac
+
+#
+# Use RC config file if requested
+#
+if yesno "${RC_OPTS}"; then
+:	${RC_CONFDIR:=/etc/conf.d}
+:	${RC_INITDIR:=/etc/init.d}
+	SOURCE ${RC_CONFDIR}/${SVC_NAME}
+	SOURCE ${RC_INITDIR}/functions.sh
+fi
+#
+# Use ENV dir(s) if requested
+#
+yesno "${ENV_DIR}" && svc_env
+
+#
+# Set default getty options
+#
+case "${SVC_NAME}" in
+	(*getty-tty*)
+:	${PRE_CMD:=${PRECMD}}
+:	${SVC_CMD:=agetty}
+:	${TTY:=${SVC_NAME#*-}}
+	case "${TTY}" in
+		(tty[1-6])
+	:	${SVC_OPTS:=38400 ${TTY_OPTS} ${TTY} ${SV_TERM:-linux}}
+		;;
+		(ttyS[01])
+	:	${SVC_OPTS:=-L 115200 ${TTY_OPTS} ${TTY} vt100}
+		;;
+	esac
+	case "${SV_OPT}" in
+		(runit)
+	:	${PRE_OPTS:=-P}
+	:	${FIN_CMD:=utmpset}
+	:	${FIN_OPTS:=-w ${SVC_NAME#*-}}
+		;;
+	esac
+	;;
+esac
+
+#
+# Set a few specific log env variables
+#
+case "${cmd_dir}" in
+	(log)
+:	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
+:	${SVC_USER:=root:adm}
+:	${LOG_MODE:=0755}
+:	${LOG_PROC:=gzip -nq}
+:	${LOG_SIZE:=2048000}
+:	${LOG_STAT:=STAT}
+:	${LOG_PREFIX:="'$(uname -n 2>${NULL}):${SVC_NAME}:'"}
+#
+# Set default log options
+#
+:	${LOG_CMD:=${LOGCMD}}
+case "${SV_OPT}" in
+	(daemontools*|s6)
+:	${LOGOPT:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
+	;;
+	(runit)
+:	${LOGOPT:=-tt p${LOG_PREFIX}}
+	;;
+esac
+:	${LOG_OPTS:="${LOGOPT} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
+unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOGOPT
+	;;
+esac
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
