@@ -1,0 +1,30 @@
+#
+# $Header:  /etc/sv/gpm/OPTIONS                          Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+RC_OPTS=Yes
+SVC_OPTS='-D -m ${MOUSEDEV} -t ${MOUSE}
+	${RESPONSIVENESS:+-r} ${RESPONSIVENESS}
+	${REPEAT_TYPE:+-R} ${REPEAT_TYPE} ${APPEND}'
+#
+# See gpm(8) man page for more info.
+#
+:	${MOUSE:=ps2}
+:	${MOUSEDEV:=/dev/input/mice}
+#:	${REPEAT_TYPE:=raw}
+#:	${RESPONSIVENESS:=}
+#:	${APPEND:=-g 1 -A60}
+#
+
+pre()
+{
+	if [ -z "${MOUSEDEV}" -o -z "${MOUSE}" ]; then
+		error "MOUSEDEV and MOUSE should be set first"
+		return 1
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
