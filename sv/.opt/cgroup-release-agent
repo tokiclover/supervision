@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $Header:  /etc/sv/.opt/cgroup-release-agent            Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Description: CGroup Release Agent                     Exp $
+#
+
+source "${0%/*}"/cgroup-functions
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+group="/sys/fs/cgroup/${CG_NAME:-supervision}/${1}"
+if [ -d "${group}" ]; then
+	rmdir "${group}" >/dev/null 2>&1
+fi
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
