@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# $Header:  /etc/s6/finish                               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+exec >/dev/console 2>&1
+:	${SV_DIR:=/etc/s6}
+:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
+:	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+if [ -f ${SV_BACKEND} ]; then
+	source ${SV_BACKEND}
+	svc_backend -i
+fi
+case "${1}" in
+	(-[6ir])     LEVEL=6 ACTION=reboot MSG="System reboot";;
+	(-[07hpqst]) LEVEL=0 ACTION=shutdown MSG="System halt";;
+esac
+name=Init-Stage-3
+if [ -f ${SV_BACKEND} ]; then
+	svc_shutdown
+fi
+begin "Stopping Services"
+s6-svc -D -T 10000 ${SV_RUNDIR}/*
+end "${?}"
+begin "Stopping s6-svscan"
+s6-svscanctl "${@}" "${SV_RUNDIR:-/run/service}"
+end "${?}"
+
+RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
