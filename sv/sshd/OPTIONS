@@ -1,0 +1,27 @@
+#
+# $Header:  /etc/sv/sshd/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SSH_CONFDIR=/etc/ssh
+SVC_CONFIGFILE=${SSH_CONFDIR}/sshd_config
+SVC_CMD=sshd
+SVC_OPTS='${SSHD_OPTS} -D -f "${SVC_CONFIGFILE}"'
+SVC_USE='syslog dns'
+SVC_COMMANDS=check_config
+
+pre()
+{
+	[ -z "${SVC_LOGFILE}" ] || SVC_OPTS="${SVC_OPTS} -E ${SVC_LOGFILE}"
+}
+
+check_config()
+{
+	ssh-keygen -A || return 2
+	[ -f "${SVC_CONFIGFILE}" ] || return 1
+	eval ${SVC_CMD} -t ${SVC_OPTS} || return 3
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
