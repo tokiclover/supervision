@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# $Header:  /etc/sv/.opt/cmd                             Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+exec 2>&1
+:	${cmd=${0##*/}}
+
+case "${0}" in
+	(/*) head="${0%/*}"   ;;
+	(*)  head="${PWD}/${0#./}"
+	     head="${head%/*}";;
+esac
+:	${SVC_DIR=${head%/log}}
+case "${SVC_DIR}" in
+	(/etc/*)
+:	${SV_SVCDIR=${SVC_DIR%/*}}
+	;;
+	(*/run/*|*/tmp/*)
+:	${SV_RUNDIR=${SVC_DIR%/*}}
+	;;
+esac
+
+case "${head}" in
+	(*/log) cmd_dir=log;;
+	(*)     cmd_dir='' ;;
+esac
+unset head
+
+[ -e "${SVC_DIR}"/../.opt/SVC_OPTIONS ] && source "${SVC_DIR}"/../.opt/SVC_OPTIONS
+#
+# Handle [log/]{finish,run} & exec to the command
+#
+eval ${cmd_dir:-svc}_${cmd} "${@}"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
