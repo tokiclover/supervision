@@ -1,0 +1,124 @@
+#
+# $Header:  /etc/sv/.opt/sv-backend                      Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 1.0 2015/03/20 21:09:26                      Exp $
+#
+
+:	${SV_SVCDIR:=/etc/sv}
+:	${SV_RUNDIR:=/run/service}
+:	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
+:	${SV_SERVICE:=/etc/service}
+:	${NULL=/dev/null}
+
+svc_backend()
+{
+	local ARGS DIR SRV arg
+	while true; do
+	case "${1}" in
+		(-i|--init)
+			ARGS="functions cgroup-functions supervision-functions"
+			PATH=${SV_SVCDIR}/.bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
+			umask 022
+			shift;;
+		(-s|--ser*)
+			SRV=true
+			shift;;
+		(*) break;;
+	esac
+	done
+
+	DIR="${SV_SVCDIR}/.opt/"
+	for arg in sv.conf SVC_BACKEND ${ARGS} "${@}"; do
+		[ -f "${DIR}${arg}" ] && source "${DIR}${arg}"
+	done
+	[ -n "${ARGS}" ] && SOURCE "${SV_TMPDIR}"/SV_OPTIONS
+	[ -n "${SRV}"  ] && return 0
+	#
+	# Set up CGroup
+	#
+	case "${OS_NAME}" in
+		(Linux)
+		SVC_NAME="${SVC_NAME:-${SV_CMD}}" svc_cgroup
+		;;
+	esac
+}
+
+svc_shutdown()
+{
+	#
+	# Service halt
+	#
+	begin "Stopping Getty Instances"
+	eval ${SVCCMD} ${SIGWDWN} ${SV_RUNDIR}/getty-*
+	end "${?}"
+	begin "Stopping Other Services"
+	eval ${SVCCMD} ${SIGWDWN} ${SV_RUNDIR}/*
+	end "${?}"
+	#
+	# CGroup clean up
+	#
+	case "${OS_NAME}" in
+		(Linux)
+		SVC_NAME="${SVC_NAME:-${SV_CMD}}" cgroup_remove_service
+		;;
+	esac
+
+	[ -n "${MSG}" ] && echo "${MSG}" | busybox wall
+	#
+	# System halt
+	#
+	begin "${MSG:-Shuting down the system}\n"
+	RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
+}
+
+tmp_service()
+{
+	#
+	# Handle read-only root-FS and/or static /service/
+	#
+	case "${SV_RUNDIR}" in
+		("${SV_SERVICE}") :;
+		;;
+		(*/run/*|*/tmp/*)
+		if yesno "${SV_RDO}"; then
+			rm -f -r "${SV_RUNDIR}"
+			mkdir -p "${SV_RUNDIR}"
+			cp -LRp "${SV_SERVICE}"/* "${SV_RUNDIR}"
+			cp -LRp "${SV_SERVICE}"/.[beo]* "${SV_RUNDIR}"
+		else
+			cp -aT "${SV_SERVICE}" "${SV_RUNDIR}"
+		fi
+		;;
+	esac
+	svc_tmpdir
+}
+svc_tmpdir()
+{
+	rm -f -r "${SV_RUNDIR}"/.tmp
+	mkdir -p "${SV_RUNDIR}"/.tmp
+	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail "${SV_TMPDIR}"/star
+	#
+	# Initialization
+	#
+	echo "${SV_OPT}" >"${SV_TMPDIR}"/sv
+	OS_NAME=$(uname -s)
+	env_sv OS_NAME
+}
+
+rc_level()
+{
+	local cmdline level run
+	cmdline="$(cat /proc/cmdline)"
+	case "${cmdline}" in
+		(*nonetwork*) run=2 level=nonetwork;;
+		(*single*)    run=1 level=single   ;;
+	esac
+	begin "Starting ${level} run level\n"
+	RUNLEVEL=${run:-3} rc ${level:-default}
+	end ${?}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
