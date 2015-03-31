@@ -1,0 +1,21 @@
+#
+# $Header:  /etc/sv/dns/OPTIONS.dnsmasq                  Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=dnsmasq
+SVC_CONFIGFILE=/etc/${name}.conf
+SVC_CMD=${name}
+SVC_OPTS='-k -u ${name} -g ${name}'
+SVC_USER=${name}
+SVC_GROUP=${name}
+SVC_USE=syslog
+
+pre()
+{
+	checkpath -q -f -m 0644 -o ${name}:${name} /var/lib/misc/${name}.leases
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
