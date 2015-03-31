@@ -1,0 +1,40 @@
+#
+# $Header:  /etc/sv/getty/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=${SVC_NAME%-*}
+TTY=${SVC_NAME#*-}
+
+find_issue()
+{
+	[ -f /etc/issue.${TTY} ] && TTY_OPTS="${TTY_OPTS} ${1} /etc/issue.${TTY}"
+}
+
+#
+# Specific /service/{,a,m,min}getty-tty[1-6] symlinks are
+# honored; and so are {,a}getty-ttyS[01].
+#
+case "${name}" in
+	(mgetty)
+	find_issue -i
+	SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
+	SVC_OPTS="${TTY} ${TTY_OPTS}"
+	;;
+	(fbgetty)
+	find_issue -i
+	SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
+	;;
+	(mingetty)
+	SVC_OPTS=${TTY}
+	;;
+	(agetty|*)
+	find_issue -f
+	name=agetty
+	;;
+esac
+SVC_CMD=${name}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
