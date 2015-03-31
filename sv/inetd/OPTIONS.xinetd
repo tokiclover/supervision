@@ -1,0 +1,14 @@
+#
+# $Header:  /etc/sv/inetd/OPTIONS.xinetd                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=xinetd
+
+SVC_CONFIGFILE=/etc/xinetd.conf
+SVC_OPTS='-f ${SVC_CONFIGFILE} -dontfork -stayalive'
+SVC_USE=net
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
