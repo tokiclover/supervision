@@ -57,7 +57,7 @@ dist_SERVICES = \
 	snmpd \
 	syslog \
 	inetd \
-	lighttpd \
+	httpd \
 	ntp \
 	sshd \
 	wpa_supplicant \
@@ -70,6 +70,7 @@ dist_SVC_OPTS = \
 	dhcp/OPTIONS.dhcpcd dhcp/OPTIONS.dhcpd \
 	cron/OPTIONS.cronie cron/OPTIONS.dcron \
 	cron/OPTIONS.fcron cron/OPTIONS.vixie-cron \
+	httpd/OPTIONS.busybox-httpd httpd/OPTIONS.lighttpd \
 	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng

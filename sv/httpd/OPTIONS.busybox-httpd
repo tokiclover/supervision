@@ -1,0 +1,14 @@
+#
+# $Header:  /etc/sv/httpd/OPTIONS.busybox-httpd          Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+name=httpd
+
+SVC_CONFIGFILE=/etc/httpd.conf
+SVC_CMD=busybox
+SVC_OPTS="${name} -v -f -u ${SVC_USER}:${SVC_GROUP} -c ${SVC_CONFIGFILE} ${HTTP_OPTS}"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

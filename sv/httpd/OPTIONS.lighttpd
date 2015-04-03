@@ -1,23 +1,21 @@
 #
-# $Header:  /etc/sv/lighttpd/OPTIONS                     Exp $
+# $Header:  /etc/sv/httpd/OPTIONS.lighttpd               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-SVC_CONFIGFILE="/etc/${SVC_NAME}/${SVC_NAME}.conf"
-SVC_STATEDIR="/var/run/${SVC_NAME}"
-SVC_CMD="/usr/sbin/${SVC_NAME}"
+name=lighttpd
+SVC_CONFIGFILE="/etc/${name}/${name}.conf"
+SVC_STATEDIR="/var/run/${name}"
+SVC_CMD="/usr/sbin/${name}"
 SVC_OPTS="-D -f ${SVC_CONFIGFILE}"
-SVC_GROUP="${SVC_NAME}"
-SVC_USER="${SVC_NAME}"
-SVC_AFTER=syslog
-SVC_NEED=net
-SVC_USE='syslog slapd'
-ENV_DIR="Yes"
+SVC_USE="${SVC_USE} slapd"
+ENV_DIR=Yes
 
 pre()
 {
 	checkpath -q -d -m 0750 -o "${SVC_USER}:${SVC_GROUP}" "${SVC_STATEDIR}"
 }
+
 check_config()
 {
 	eval ${SVC_CMD} -t -f "${SVC_CONFIGFILE}"
