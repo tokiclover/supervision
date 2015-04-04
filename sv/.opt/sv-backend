@@ -10,6 +10,14 @@
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_SERVICE:=/etc/service}
 :	${NULL=/dev/null}
+#
+# ZSH compatibility
+#
+if [ -n "${ZSH_VERSION}" ]; then
+	emulate sh
+	setopt SH_WORD_SPLIT
+	disable -r end
+fi
 
 svc_backend()
 {

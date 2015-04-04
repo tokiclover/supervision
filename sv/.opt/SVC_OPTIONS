@@ -4,15 +4,6 @@
 #
 
 #
-# ZSH compatibility
-#
-if [ -n "${ZSH_VERSION}" ]; then
-	emulate sh
-	setopt SH_WORD_SPLIT
-	disable -r end
-fi
-
-#
 # Set a few default env variables
 #
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
