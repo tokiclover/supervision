@@ -98,6 +98,7 @@ getty_CMD   = cp -a sv/getty
 else
 getty_CMD   = ln -s $(SYSCONFDIR)/sv/getty
 endif
+getty_NAME  = $(shell which agetty >/dev/null 2>&1 && echo -n agetty || echo -n getty)
 
 define service_DIR =
 	$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$(1)
@@ -121,7 +122,7 @@ install: install-dir install-dist
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' supervision.1 \
 		>$(DESTDIR)$(MANDIR)/man1/supervision.1
 	for i in 1 2 3 4 5 6; do \
-		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/getty-tty$${i}; \
+		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
 	done
 	for dir in .bin .opt; do \
 		ln -f -s $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \

@@ -28,12 +28,27 @@ case "${name}" in
 	(mingetty)
 	SVC_OPTS=${TTY}
 	;;
-	(agetty|*)
+	(*)
 	find_issue -f
-	name=agetty
+	case "${name}" in
+		(agetty) :;;
+		(*)
+		if type -p agetty >${NULL} 2>&1; then
+			name=agetty
+		else
+			name=getty SVC_CMD=busybox
+		fi;;
+	esac
 	;;
 esac
-SVC_CMD=${name}
+:	${SVC_CMD:=${name}}
+
+pre()
+{
+	case "${SVC_CMD}" in
+		(*busybox) SVC_OPTS="getty ${SVC_OPTS}";;
+	esac
+}
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
