@@ -5,6 +5,7 @@ CHKCMD='sv check'
 STACMD=sv
 LOGCMD=svlogd
 PRECMD=chpst
+SCANCMD='pkill -CONT runsvdir'
 SIGSTRT=up
 SIGSTOP=down
 SIGONCE=once

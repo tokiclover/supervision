@@ -44,8 +44,8 @@ See supervision(1) man page.
 REQUIREMENTS
 ------------
 
-Supervision-Scripts require standard GNU coreutils, sed & a (POSIX) shell
-(BusyBox/ash *might* suffice.)
+Supervision Scripts Framework requires standard GNU coreutils, grep, procps,
+sed & a (POSIX) shell (BusyBox/ash *might* suffice.)
 Init-Stage-[123] & supervision init script service was written mainly for OpenRC
 to alleviate the burden of writting system boot/shutdown scripts (from scratch.)
 

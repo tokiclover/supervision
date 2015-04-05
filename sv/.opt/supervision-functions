@@ -47,6 +47,7 @@ svc_add()
 		(*) cp -LRpu ${dir} ${SV_RUNDIR}       ;;
 	esac
 	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
+	[ -z "${SCANCMD}" ] || eval ${SCANCMD}
 }
 
 svc_down()

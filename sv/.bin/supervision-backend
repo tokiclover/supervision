@@ -30,8 +30,8 @@ case ${SV_OPT} in
 		SIGQUIT=-q SIGUSR1=-1 SIGUSR2=-2
 		;;
 	(runit)
-		BIN=chpst CMDS="${CMDS} PRECMD" PREFIX='' SIGNALS="${SIGNALS} SIGRLD"
-		SIGWTUP="'-w 10 up'" SIGWDWN="'-w 10 down'"
+		BIN=chpst CMDS="${CMDS} PRECMD SCANCMD" PREFIX='' SIGNALS="${SIGNALS} SIGRLD"
+		SIGWTUP="'-w 10 up'" SIGWDWN="'-w 10 down'" SCANCMD="'pkill -CONT runsvdir'"
 		SIGSTRT=up SIGSTOP=down SIGONCE=once SIGPAUSE=pause SIGCONT=cont
 		SIGHUP=hup SIGALRM=alarm SIGINT=interrupt SIGQUIT=quit SIGUSR1=1
 		SIGUSR2=2 SIGTERM=term SIGKILL=kill SIGEXIT=exit SIGRLD=reload
@@ -40,6 +40,7 @@ case ${SV_OPT} in
 	(s6)
 		BIN='' PREFIX=s6- SIGWTUP="'-U -T 10000'" SIGWDWN="'-D -T 10000'"
 		SIGQUIT=-q SIGUSR1=-1 SIGUSR2=-2
+		CMDS="${CMDS} SCANCMD" SCANCMD='"s6-svscanctl -an ${SV_RUNDIR}"'
 		SV_CMD=s6-svscan SVCCMD=s6-svc CHKCMD=s6-svok STACMD=s6-svsat LOGCMD=s6-log
 		;;
 	(*) usage; exit 2;;
