@@ -89,14 +89,10 @@ tmp_service()
 		("${SV_SERVICE}") :;
 		;;
 		(*/run/*|*/tmp/*)
-		if yesno "${SV_RDO}"; then
 			rm -f -r "${SV_RUNDIR}"
 			mkdir -p "${SV_RUNDIR}"
 			cp -LRp "${SV_SERVICE}"/* "${SV_RUNDIR}"
 			cp -LRp "${SV_SERVICE}"/.[beo]* "${SV_RUNDIR}"
-		else
-			cp -aT "${SV_SERVICE}" "${SV_RUNDIR}"
-		fi
 		;;
 	esac
 	svc_tmpdir
