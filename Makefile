@@ -128,7 +128,8 @@ install: install-dir install-dist
 		ln -f -s $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
 ifdef STATIC
-	for svc in dns:dnsmasq net:dhcpcd ntp:busybox-ntpd syslog:socklog; do \
+	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/dhcp
+	for svc in cron:fcron dns:dnsmasq net:dhcpcd ntp:busybox-ntpd syslog:socklog; do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
