@@ -32,6 +32,7 @@ svc_add()
 	[ -e "${SV_RUNDIR}/${name}"  ] && return 0
 	[ -n "${log}" ] && mkdir -p "${dir}"/log || mkdir -p "${dir}"
 
+	[ -e "${dir}" ] ||
 	for cmd in finish run ${log:+log/run log/finish}; do
 		[ -x "${dir}/${cmd}" ] && continue
 		[ "${cmd#log/}" != "${cmd}" ] && log=0 || log=
@@ -41,11 +42,11 @@ svc_add()
 		${SV_SVCDIR}/.opt/OPTIONS.in >${dir}/OPTIONS
 	[ -n "${dwn}" ] && svc_down
 	[ -n "${svc}" ] || return 0
-
-	[ -e "${SV_SERVICE}/${name}" ] ||
-		ln -s "${SV_SVCDIR}/${name}" "${SV_SERVICE}/${name}"
-	yesno "${SV_RDO}" && cp -LRpu "${SV_SVCDIR}/${name}" "${SV_RUNDIR}" ||
-		ln -s "${SV_SVCDIR}/${name}" "${SV_RUNDIR}/${name}"
+	case ${SV_RUNDIR} in
+		(${SV_SERVICE}) rm -fr ${dir}/supervise;;
+		(*) cp -LRpu ${dir} ${SV_RUNDIR}       ;;
+	esac
+	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
 }
 
 svc_down()
