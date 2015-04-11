@@ -88,13 +88,15 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SCRIPTS) $(dist_SERVICES) $(dist_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.bin \
-	$(SYSCONFDIR)/service \
+	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
 	$(MANDIR)/man1 \
 	$(DOCDIR)/$(PACKAGE)-$(VERSION)
 DISTDIRS    = $(dist_DIRS)
 
 ifdef STATIC
 getty_CMD   = cp -a sv/getty
+dist_SVC_VIRT += cron:fcron dns:dnsmasq \
+	httpd:busybox-httpd ntp:busybox-ntpd syslog:socklog
 else
 getty_CMD   = ln -s $(SYSCONFDIR)/sv/getty
 endif
@@ -128,16 +130,13 @@ install: install-dir install-dist
 		ln -f -s $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
 ifdef STATIC
-	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/dhcp
-	for svc in cron:fcron dns:dnsmasq net:dhcpcd ntp:busybox-ntpd syslog:socklog; do \
+	for svc in $(dist_SVC_VIRT); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-	done
-else
-	-for svc in $(dist_SVC_VIRT); do \
-		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
 endif
+	for svc in $(dist_SVC_VIRT); do \
+		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+	done
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
@@ -179,22 +178,22 @@ install-%-svc:
 uninstall-all: uninstall unintsall-supervision-svc
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	rm -f $(MANDIR)/man1/supervision.1*
+	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
+ifdef STATIC
+	for svc in $(dist_SVC_OPTS); do \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc#*.}; \
+	done
+endif
 	for dir in $(dist_SERVICES); do \
-		rm -f  $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}/OPTIONS; \
-		rm -f  $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}/run; \
-		rm -f  $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}/finish; \
-		rm -f  $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}/log/run; \
-		-rmdir $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}/log; \
-		-rmdir $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}; \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}; \
 	done
-	for i in 1 2 3 4 5 6; do \
-		rm -f $(DESTDIR)$(SYSCONFDIR)/service/getty-tty$${i}; \
+	for svc in $(dist_SVC_VIRT); do \
+		rm -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
-	for dir in .bin .opt; do \
-		rm -f $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
+	for dir in .bin .opt $(getty_NAME); do \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
 	done
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
@@ -204,14 +203,6 @@ uninstall-%-svc:
 	rm -f $(DESTDIR)$(svcinitdir)/$*
 	-rmdir $(DESTDIR)$(svcconfdir)
 	-rmdir $(DESTDIR)$(svcinitdir)
-ifdef STATIC
-	for svc in dnsmasq dhcpcd busybox-ntpd rsyslog socklog syslog-ng; do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc}; \
-	done
-endif
-	-for svc in $(dist_SVC_VIRT); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-	done
 
 .PHONY: clean
 
