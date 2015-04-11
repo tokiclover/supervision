@@ -32,7 +32,6 @@ svc_add()
 	[ -e "${SV_RUNDIR}/${name}"  ] && return 0
 	[ -n "${log}" ] && mkdir -p "${dir}"/log || mkdir -p "${dir}"
 
-	[ -e "${dir}" ] ||
 	for cmd in finish run ${log:+log/run log/finish}; do
 		[ -x "${dir}/${cmd}" ] && continue
 		[ "${cmd#log/}" != "${cmd}" ] && log=0 || log=
@@ -43,8 +42,8 @@ svc_add()
 	[ -n "${dwn}" ] && svc_down
 	[ -n "${svc}" ] || return 0
 	case ${SV_RUNDIR} in
-		(${SV_SERVICE}) rm -fr ${dir}/supervise;;
-		(*) cp -LRpu ${dir} ${SV_RUNDIR}       ;;
+		(${SV_SERVICE}) ;;
+		(*) cp -LRpu ${dir} ${SV_RUNDIR};;
 	esac
 	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
 	[ -z "${SCANCMD}" ] || eval ${SCANCMD}
