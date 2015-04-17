@@ -21,27 +21,27 @@ fi
 
 svc_backend()
 {
-	local ARGS DIR SRV arg
+	local DIR SRV arg
+	DIR="${SV_SVCDIR}/.opt/"
+
 	while true; do
 	case "${1}" in
 		(-i|--init)
-			ARGS="functions cgroup-functions supervision-functions"
+			for arg in ${DIR}*functions; do
+				source ${arg}
+			done
 			PATH=${SV_SVCDIR}/.bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
-			umask 022
-			shift;;
-		(-s|--ser*)
-			SRV=true
-			shift;;
+			umask 022;;
+		(-s|--ser*) SRV=true ;;
 		(*) break;;
 	esac
+	shift
 	done
-
-	DIR="${SV_SVCDIR}/.opt/"
-	for arg in sv.conf SVC_BACKEND ${ARGS} "${@}"; do
+	for arg in sv.conf SVC_BACKEND "${@}"; do
 		[ -f "${DIR}${arg}" ] && source "${DIR}${arg}"
 	done
-	[ -n "${ARGS}" ] && SOURCE "${SV_TMPDIR}"/SV_OPTIONS
-	[ -n "${SRV}"  ] && return 0
+
+	[ -n "${SRV}"  ] && return 0 || SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 	#
 	# Set up CGroup
 	#
@@ -71,7 +71,6 @@ svc_shutdown()
 		SVC_NAME="${SVC_NAME:-${SV_CMD}}" cgroup_remove_service
 		;;
 	esac
-
 	[ -n "${MSG}" ] && echo "${MSG}" | busybox wall
 	#
 	# System halt
