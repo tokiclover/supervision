@@ -58,11 +58,11 @@ svc_shutdown()
 	# Service halt
 	#
 	begin "Stopping Getty Instances"
-	eval ${SVCCMD} ${SIGWDWN} ${SV_RUNDIR}/getty-*
-	end "${?}"
+	eval ${SVCCMD} ${SIGWDWN-${SIGEXIT}} ${SV_RUNDIR}/*getty-*
+	end ${?}
 	begin "Stopping Other Services"
-	eval ${SVCCMD} ${SIGWDWN} ${SV_RUNDIR}/*
-	end "${?}"
+	eval ${SVCCMD} ${SIGWDWN-${SIGEXIT}} ${SV_RUNDIR}/*
+	end ${?}
 	#
 	# CGroup clean up
 	#
