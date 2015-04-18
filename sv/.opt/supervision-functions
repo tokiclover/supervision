@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/supervision-functions           Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 2.8 2015/03/30 21:09:26                      Exp $
+# $Version: 2.8 2015/04/14 21:09:26                      Exp $
 #
 
 #
@@ -196,38 +196,40 @@ svc_post()
 svc_depend()
 {
 	local dep
-	for dep in use:USE need:NEED before:BEFORE after:AFTER; do
+	for dep in ${2-use:USE need:NEED before:BEFORE after:AFTER}; do
 		eval [ -n \"\${SVC_${dep#*:}}\" ] && command -v svc_${dep%:*} \
-			>${NULL} 2>&1 && svc_${dep%:*}
+			>${NULL} 2>&1 && svc_${dep%:*} ${1}
 	done
 }
 
 svc_after()
 {
-	local svc svc_name
-	svc_name=${SVC_NAME}
-	for svc in ${SVC_AFTER}; do
-		eval SVC_NAME="${svc}" svc_state -r && eval SVC_NAME="${svc}" svc_start
+	local svc SVC
+	SVC=${SVC_NAME}
+	for svc in ${2-${SVC_AFTER}}; do
+		SVC_NAME="${svc}"
+		svc_state -s && continue
+		svc_state -r && svc_cmd ${1-start}
 	done
-	SVC_NAME=${svc_name}
+	SVC_NAME=${SVC}
 }
 
 svc_need()
 {
-	if ! SVC_USE="${SVC_NEED}" svc_use; then
+	if ! svc_use ${1-start} "${2-${SVC_NEED}}"; then
 		die "Failed to set up service dependencies."
 	fi
 }
 svc_use()
 {
-	local ret svc svc_name
-	svc_name=${SVC_NAME}
-	for svc in ${SVC_USE}; do
-		eval SVC_NAME="${svc}" svc_state -f && ret=$((${ret} + 1)) ||
-			eval SVC_NAME="${svc}" svc_cmd start
-		ret=$((${ret} + ${?}))
+	local ret svc SVC
+	SVC=${SVC_NAME}
+	for svc in ${2-${SVC_USE}}; do
+		SVC_NAME="${svc}"
+		svc_state -f && ret=$((${ret}+1)) || svc_cmd ${1-start}
+		ret=$((${ret}+${?}))
 	done
-	SVC_NAME=${svc_name}
+	SVC_NAME=${SVC}
 	return ${ret}
 }
 
