@@ -2,22 +2,20 @@
 # $Header:  /etc/sv/.opt/functions                       Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.1 2015/03/24 21:09:26                      Exp $
+# $Version: 1.2 2015/04/14 21:09:26                      Exp $
 #
 
 #
 # @FUNCTION: Print error message to stderr
-# @ARG: MSG
 #
 error()
 {
 	local prefix=${name:+" ${CLR_MAG}${name}:${CLR_RST}"}
-	echo -e " ${CLR_RED}*${CLR_RST}${prefix} ${@}" >&2
+	echo -e${eol+n} "${eol+\n} ${CLR_RED}*${CLR_RST}${prefix} ${@}" >&2
 }
 
 #
 # @FUNCTION: Print error message to stderr & exit
-# @ARG: MSG
 #
 die()
 {
@@ -26,37 +24,37 @@ die()
 
 #
 # @FUNCTION: Print info message to stdout
-# @ARG: MSG
 #
 info()
 {
 	local prefix=${name:+" ${CLR_YLW}${name}:${CLR_RST}"}
-	echo -e " ${CLR_BLU}*${CLR_RST}${prefix} ${@}"
+	echo -e${eol+n} "${eol+\n} ${CLR_BLU}*${CLR_RST}${prefix} ${@}"
 }
 
 #
 # @FUNCTION: Print begin message to stdout
-# @ARG: MSG
 #
 begin()
 {
+	[ -n "${eol}" ] && echo
+:	${eol=0}
 	local prefix=${name:+"${CLR_MAG}[${CLR_RST} ${CLR_BLU}${name}${CLR_RST}: ${CLR_MAG}]${CLR_RST}"}
 	echo -en " ${prefix} ${@}"
 }
 
 #
 # @FUNCTION: Print end message to stdout
-# @ARG: MSG
 #
 end()
 {
 	local suffix
-	case "${1}" in
+	case "${1-0}" in
 		(0) suffix="${CLR_BLU}[${CLR_RST} ${CLR_GRN}Ok${CLR_RST} ${CLR_BLU}]${CLR_RST}";;
 		(*) suffix="${CLR_YLW}[${CLR_RST} ${CLR_RED}No${CLR_RST} ${CLR_YLW}]${CLR_RST}";;
 	esac
 	shift
 	echo -en " ${@} ${suffix}\n"
+	eol=
 }
 
 #
