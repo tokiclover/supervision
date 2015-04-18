@@ -280,10 +280,12 @@ svc_cgroup()
 
 svc_desc()
 {
-	if [ -n "${description}" ]; then
-		name=Description info "${description}"
+	local desc
+	eval desc=\"\${description${1:+_$1}}\"
+	if [ -n "${desc}" ]; then
+		name=description info "${desc}"
 	else
-		info "No Description found"
+		warn "No description found"
 	fi
 }
 
