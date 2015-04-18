@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# $Header:  /etc/sv/.bin/rs                              Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.1 2015/04/14 21:09:26                      Exp $
+#
+
+exec 2>&1
+
+usage() {
+	cat <<-EOH
+ usage: rs [OPTIONS] COMMAND SERVICE [ARGUMENTS]
+   COMMAND: add|del|restart|start|stop|status|zap
+   OPTIONS:
+     -D, --nodeps     Disable dependencies
+     -d, --debug      Enable debug mode
+     -h, --help       Help/Exit
+EOH
+eval ${1+exit ${1}}
+}
+
+[ ${#} -ge 2 ] || usage 1
+ARGS="$(getopt \
+	-o Ddh -l debug,help,nodeps \
+	-s sh -n rs -- "${@}")"
+[ ${?} -eq 0 ] || usage 1
+eval set -- ${ARGS}
+
+while true; do
+	case "${1}" in
+		(-D|--node*) DEPS=0 ;;
+		(-d|--debug) set -x ;;
+		(-h|--help) usage 0 ;;
+		(*) shift;  break   ;;
+	esac
+	shift
+done
+
+case "${0}" in
+	(/*) head="${0%/*}"   ;;
+	(*)  head="${PWD}/${0#./}"
+	     head="${head%/*}";;
+esac
+
+case ${1} in
+	(*rs.d/*)
+:	${SVC_NAME:=${1##*/}}
+:	${cmd=${2}}
+	;;
+	(*)
+:	${RS_STAGE:=${3}}
+:	${SVC_NAME:=${2}}
+:	${cmd=${1}}
+	eval ${3+shift}
+	;;
+esac
+shift 2
+:	${RS_STAGE:=stage-2}
+:	${RS_SVCDIR:=${head%/sv*}/rs.d}
+:	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
+:	${SV_SVCDIR:=${head%/.bin}}
+unset head
+
+:	${SV_CGROUP:=No}
+:	${SVC_DIR=${RS_SVCDIR}}
+:	${name=${SVC_NAME}}
+
+[ -e "${SV_SVCDIR}"/.opt/SVC_OPTIONS ] && source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
+SOURCE -d ${RS_SVCDIR}/${SVC_NAME}
+SOURCE    ${SV_TMPDIR}/RS_OPTIONS
+yesno ${DEPS-1} || SVC_AFTER= SVC_NEED= SVC_USE=
+
+#
+# Handle command
+#
+eval rs_cmd ${cmd} "${@}"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
