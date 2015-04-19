@@ -26,6 +26,7 @@ dist_COMMON = \
 	sv/.opt/SVC_BACKEND \
 	sv/.opt/cgroup-functions \
 	sv/.opt/functions \
+	sv/.opt/runscript-functions \
 	sv/.opt/sv-backend \
 	sv/.opt/sv.conf \
 	sv/.opt/supervision-functions
@@ -75,6 +76,8 @@ dist_SVC_OPTS = \
 	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
+dist_RUNSCRIPTS = \
+
 ifdef RUNIT
 dist_COMMON  += runit/reboot
 dist_SCRIPTS += runit/1 runit/2 runit/3 runit/ctrlaltdel
@@ -84,12 +87,15 @@ ifdef S6
 dist_SCRIPTS += s6/crash s6/finish s6/init-stage-1
 dist_DIRS    += $(SYSCONFDIR)/s6
 endif
+
 DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SVC_OPTS) \
+	$(dist_RUNSCRIPTS) \
 	$(dist_SCRIPTS) $(dist_SERVICES) $(dist_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.bin \
 	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
+	$(SYSCONFDIR)/rs.d \
 	$(MANDIR)/man1 \
 	$(DOCDIR)/$(PACKAGE)-$(VERSION)
 DISTDIRS    = $(dist_DIRS)
@@ -138,6 +144,10 @@ endif
 	for svc in $(dist_SVC_VIRT); do \
 		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
+	for i in 0 1 2 3; do \
+		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}; \
+		echo >$(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}/.keep_stage-$${i}; \
+	done
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
@@ -168,6 +178,9 @@ ifdef STATIC
 else
 	$(install_DATA) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
 endif
+$(dist_RUNSCRIPTS):
+	$(install_SCRIPT) rs.d/$@ $(DESTDIR)$(SYSCONFDIR)/rs.d/$@
+	-$(install_DATA)  rs.d/OPTIONS.$@ $(DESTDIR)$(SYSCONFDIR)/rs.d/OPTIONS.$@
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -196,6 +209,7 @@ endif
 	for dir in .bin .opt $(getty_NAME); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
 	done
+	rm -fr $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/$(PACKAGE)-$(VERSION)/%)
