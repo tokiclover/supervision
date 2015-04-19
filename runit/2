@@ -8,13 +8,14 @@
 :	${SV_BACKEND=/etc/sv/.opt/sv-backend}
 if [ -f ${SV_BACKEND} ]; then
 	source ${SV_BACKEND}
-	svc_backend -i
+	svc_backend -i -1
 fi
 name=OpenRC
 begin "Bringing up the System\n"
 RUNLEVEL=S rc boot
 end "${?}"
 if [ -f ${SV_BACKEND} ]; then
+	svc_stage -2
 	rc_level
 else
 	begin "Starting default run level\n"
@@ -26,7 +27,6 @@ name=Init-Stage-2
 begin "Setting up Supervision"
 :	${SV_RUNDIR:=/run/service}
 :	${SV_SERVICE:=/etc/service}
-
 if [ -f ${SV_BACKEND} ]; then
 	tmp_service
 	svc_backend
