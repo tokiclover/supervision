@@ -42,7 +42,7 @@ case "${0}" in
 	     head="${head%/*}";;
 esac
 
-case ${1} in
+case "${1}" in
 	(*rs.d/*)
 :	${SVC_NAME:=${1##*/}}
 :	${cmd=${2}}
@@ -51,7 +51,7 @@ case ${1} in
 :	${RS_STAGE:=${3}}
 :	${SVC_NAME:=${2}}
 :	${cmd=${1}}
-	eval ${3+shift}
+	${3+shift}
 	;;
 esac
 shift 2
@@ -59,16 +59,17 @@ shift 2
 :	${RS_SVCDIR:=${head%/sv*}/rs.d}
 :	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
 :	${SV_SVCDIR:=${head%/.bin}}
+:	${name=${SVC_NAME}}
 unset head
 
-:	${SV_CGROUP:=No}
-:	${SVC_DIR=${RS_SVCDIR}}
-:	${name=${SVC_NAME}}
+source "${SV_SVCDIR}"/.opt/sv-backend ||
+	{ echo "Required file not found." >&2; exit 1; }
+svc_backend -i -s
 
-[ -e "${SV_SVCDIR}"/.opt/SVC_OPTIONS ] && source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
-SOURCE -d ${RS_SVCDIR}/${SVC_NAME}
-SOURCE    ${SV_TMPDIR}/RS_OPTIONS
-yesno ${DEPS-1} || SVC_AFTER= SVC_NEED= SVC_USE=
+SOURCE    "${SV_TMPDIR}"/OPTIONS.${SVC_NAE}
+SOURCE -d "${RS_SVCDIR}"/${SVC_NAME}
+SOURCE    "${SV_TMPDIR}"/RS_OPTIONS
+yesno ${DEPS-1} || SVC_AFTER= SVC_BEFORE= SVC_NEED= SVC_USE=
 
 #
 # Handle command
