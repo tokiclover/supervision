@@ -259,23 +259,17 @@ env_sv()
 #
 svc_cgroup()
 {
-	local ret
-	SOURCE "${SV_SVCDIR}"/.opt/cgroup-functions
-	ret=${?}
 	if [ -z "${SV_CGROUP}" ]; then
-		if [ ${ret} -eq 0 ]; then
-			cgroup_start_sys; ret=${?}
-		fi
-		case "${ret}" in
+		cgroup_start_sys
+		case ${?} in
 			(0) SV_CGROUP=Yes;;
 			(*) SV_CGROUP=No ;;
 		esac
 		env_sv SV_CGROUP
 	fi
 	if yesno "${SV_CGROUP}"; then
-		cgroup_add_service; ret=${?}
+		cgroup_add_service
 	fi
-	return ${ret}
 }
 
 svc_desc()
