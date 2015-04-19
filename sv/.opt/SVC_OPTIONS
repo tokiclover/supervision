@@ -21,14 +21,17 @@ PATH=${SV_RUNDIR}/.bin:${PATH}
 :	${COLOR:=Yes}
 :	${LOGDIR:=/var/log}
 
-if [ -e "${SV_BACKEND}" ]; then
+case "${cmd}" in
+	(finish|run)
 	source "${SV_BACKEND}"
 	svc_backend -i
-fi
+	;;
+esac
 if [ ! -e "${SV_TMPDIR}"/sv ]; then
 	svc_tmpdir
 fi
-SOURCE    "${SVC_DIR}"/OPTIONS
+
+SOURCE "${SVC_DIR}"/OPTIONS
 #
 # Set debug options
 #
@@ -38,12 +41,16 @@ fi
 #
 # Handle specific (virtual) service backend/instance
 #
-if [ "${name}" != "${SVC_NAME}" ]; then
-SOURCE    "${SVC_DIR}"/OPTIONS.${name}
-else
-SOURCE    "${SVC_DIR}"/OPTIONS.${SVC_NAME}
-fi
-SOURCE    "${SV_TMPDIR}/${SVC_NAME}_OPTIONS"
+case "${name}" in
+	("${SVC_NAME}")
+SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
+	;;
+	(*)
+SOURCE "${SVC_DIR}"/OPTIONS.${name}
+	;;
+esac
+SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
+SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 
 #
 # OS Specific
