@@ -235,6 +235,68 @@ T}
 Custom stop/start command if any.
 T}
 .TE
+.SS BUILTINS
+.TS
+tab (@);
+l lx.
+\fBinfo [MSG]\fR@T{
+Print notice message to standard output
+T}
+\fBwarn [MSG]\fR@T{
+Print warning message to standard output
+T}
+\fBerror [MSG]\fR@T{
+Print error message to standard error
+T}
+\fBbegin [MSG]\fR@T{
+Print beginning message to standard output
+T}
+\fBend [MSG]\fR@T{
+Print ending message to standard output
+T}
+\fBSOURCE [FILES]\fR@T{
+Source wrapper (with file existance check)
+T}
+\fBenv_svc VARS\fR@T{
+Save persistent environment variables
+T}
+\fBsvc_down -d|-r\fR@T{
+Mark a service as down
+T}
+\fBsvc_mark [-d..]\fR@T{
+Set defined service status
+T}
+.TE
+.TP
+.B SUPERVISION
+.TS
+tab (@);
+l lx.
+\fBenv_sv\fR@T{
+Save (global) persistent environment variables
+T}
+\fBsvc_cmd\fR@T{
+Run a supervision service command
+T}
+\fBsvc_state [-d..]\fR@T{
+Get a defined service status
+T}
+.TE
+.TP
+.B RUNSCRIPT
+.TS
+tab (@);
+l lx.
+\fBenv_rs\fR@T{
+Save (global) persistent environment variables
+T}
+\fBrs_cmd\fR@T{
+Run a runscript service command
+T}
+\fBrs_state [-d..]\fR@T{
+Get a defined service status
+T}
+.TE
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on
