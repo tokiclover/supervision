@@ -20,6 +20,7 @@ unlet b:current_syntax
 
 syn keyword svKwd begin die end error eval_colors info yesno checkpath warn SOURCE
 syn keyword svKwd env_svc env_sv  svc_cmd svc_down svc_env svc_mark svc_state
+syn keyword svKwd env_rs rs_cmd rs_state rs_wait
 syn keyword svVars SVC_DEBUG SVC_CONFIGFILE SVC_CMD SVC_OPTS SVC_GROUP SVC_USER
 syn keyword svVars SVC_USE SVC_NEED SVC_BEFORE SVC_AFTER SVC_TRY SV_TRY SV_TERM
 syn keyword svVars ENV_DIR ENV_CMD ENV_OPTS PRE_CMD PRE_OPTS FIN_CMD FIN_OPTS
