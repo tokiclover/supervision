@@ -60,13 +60,14 @@ shift 2
 :	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
 :	${SV_SVCDIR:=${head%/.bin}}
 :	${name=${SVC_NAME}}
+:	${SVC_DIR=${RS_SVCDIR}}
 unset head
 
 source "${SV_SVCDIR}"/.opt/sv-backend ||
 	{ echo "Required file not found." >&2; exit 1; }
 svc_backend -C -i
 
-SOURCE    "${SV_TMPDIR}"/OPTIONS.${SVC_NAE}
+SOURCE -d "${SV_SVCDIR}"/.opt/SVC_OPTIONS
 SOURCE -d "${RS_SVCDIR}"/${SVC_NAME}
 SOURCE    "${SV_TMPDIR}"/RS_OPTIONS
 yesno ${DEPS-1} || SVC_AFTER= SVC_BEFORE= SVC_NEED= SVC_USE=
