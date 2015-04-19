@@ -377,7 +377,14 @@ See cgconfig.conf(5) & enable cgred service.
 This is only necessary if not using the bundled Init-Stage-2 which have CGroup
 support: child process (supervisor) will naturally inherit supervision CGroup.
 .SH FILES
+.SS @SYSCONFDIR@/rs.d/\ (RS_SVCDIR)
+RUNSCRIPT service directory
+(See RS_SVCDIR/rs.d/stage-{0,1,2,3} for active services.)
+.TP
+.B SERVICES
 .SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
+SUPERVISION service directory
+(See SV_SERVICE for active service.)
 .TP
 .RB .bin/
 .br
@@ -416,7 +423,7 @@ cmd
   Default {,log/}{finish,run} commands
 .br
 svc
-  Simple helper to manage service e.g. SV_SVCDIR=sv sv/.opt/svc add --log SVC
+  Simple helper to manage service e.g. SV_SVCDIR=sv sv/.opt/svc add --log SERVICE
 .br
 SVC_BACKEND
   Specific Backend Environment variable
@@ -445,11 +452,7 @@ sv.conf
 sv-backend
   Supervision backend configuration file
 .TP
-.RB SERVICES
-.br
-Optional services. (Active services are symlinked to '/service/'SERVICE.)
-
-.B SERVICES:\ \c
+.B SERVICES
 .RB [\| acpid \|]\ \c
 .RB [\| atd \|]\ \c
 .RB [\| cgred \|]\ \c
