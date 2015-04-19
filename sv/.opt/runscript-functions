@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/runscript-functions             Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.1 2015/04/14 21:09:26                      Exp $
+# $Version: 0.2 2015/04/18 21:09:26                      Exp $
 #
 
 env_rs()
@@ -39,7 +39,11 @@ rs_cmd()
 	FAIL='[ ${val} = 0 ] || { val=2; rs_zap; break; }'
 
 	case "${cmd}" in
-		(start|stop) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
+		(start|stop)
+		case "${2}" in
+			(stage) ARGS="${1} ${3}" CMD=svc_stage cmd=stage;;
+			(*) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
+		esac;;
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
 			CMD="stop_pre stop stop_post
 			   start_pre start start_post";;
