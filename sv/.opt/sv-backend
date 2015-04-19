@@ -62,6 +62,9 @@ svc_shutdown()
 	#
 	# Service halt
 	#
+	begin "Stopping stage-2 runscript"
+	svc_stage -2 -S
+	end ${?}
 	begin "Stopping Getty Instances"
 	eval ${SVCCMD} ${SIGWDWN-${SIGEXIT}} ${SV_RUNDIR}/*getty-*
 	end ${?}
@@ -80,7 +83,11 @@ svc_shutdown()
 	#
 	# System halt
 	#
+	begin "Stopping stage-1 runscript"
+	svc_stage -1 -S
+	end ${?}
 	begin "${MSG:-Shuting down the system}\n"
+	svc_stage -3
 	RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
 }
 
