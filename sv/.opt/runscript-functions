@@ -1,0 +1,135 @@
+#
+# $Header:  /etc/sv/.opt/runscript-functions             Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.1 2015/04/14 21:09:26                      Exp $
+#
+
+env_rs()
+{
+	[ -n "${*}" ] && set_env "RS_OPTIONS" "${@}"
+}
+
+rs_status()
+{
+	local msg
+	rs_state -s && msg=started || msg=stopped
+	echo -n ${msg}
+}
+
+rs_add()
+{
+	rs_state -e && ln -fns ${RS_SVCDIR}/${SVC_NAME} ${RS_RUNDIR}
+}
+
+rs_del()
+{
+	rm -f ${RS_RUNDIR}/${SVC_NAME}
+}
+
+rs_zap()
+{
+	rm -f ${SV_TMPDIR}/${SVC_NAME}_OPTIONS ${SV_TMPDIR}/*/${SVC_NAME}
+}
+
+rs_cmd()
+{
+	local ARGS CMD END FAIL cmd val
+	END='{ end 0; return; }' cmd="${1}"
+	FAIL='[ ${val} = 0 ] || { val=2; rs_zap; break; }'
+
+	case "${cmd}" in
+		(start|stop) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
+		(restart) command -v ${cmd} >${NULL} 2>&1 ||
+			CMD="stop_pre stop stop_post
+			   start_pre start start_post";;
+		(add|del|status|zap) CMD=rs_${cmd};;
+		(desc)  ARGS="${2}" CMD=svc_desc  ;;
+		(*) ARGS='"${@}"' CMD=svc_commands;;
+	esac
+
+	begin "service ${cmd}: "
+	case "${cmd}" in
+		(start)
+		rs_wait   || { end 1 "busy"; return 4; }
+		svc_state -s && eval ${END}
+		svc_mark  -d
+		svc_depend;;
+		(stop)
+		svc_state -s || eval ${END};;
+	esac
+
+	for cmd in ${CMD}; do
+		command -v ${cmd} >${NULL} 2>&1 || continue
+		eval ${cmd} ${ARGS}
+		case ${?} in
+			(0)
+			case ${cmd} in
+				(start) svc_mark -s -u;;
+				(stop)  svc_mark -S -u;;
+			esac;;
+			(*)
+			case ${cmd} in
+				(start_pre) eval ${FAIL};;
+				(stop_post) eval ${FAIL};;
+			esac
+			val=$((${val}+1));;
+		esac
+	done
+	end ${val-${?}}
+	return ${val}
+}
+
+rs_state()
+{
+	local arg ret
+	for arg in ${@--r}; do
+		case "${arg}" in
+			(-e|--exist) [ -e ${RS_SVCDIR}/${SVC_NAME} ];;
+			(-r|--runn*) [ -e ${RS_RUNDIR}/${SVC_NAME} ];;
+			(*) svc_state "${arg}";;
+		esac
+		ret=$((${ret}+${?}))
+	done
+	return ${ret}
+}
+
+rs_stage()
+{
+	local cmd opt svc lvl
+	while true; do
+	case "${1}" in
+		(*-[0123]) lvl=${1} ;;
+		(-f|--fo*) opt='&'  ;;
+		(-S|*stop) cmd=stop ;;
+		(-s|*sta*) cmd=start;;
+		(*) break;;
+	esac
+	shift
+	done
+
+	export RS_STAGE=stage${lvl--2}
+	for svc in ${RS_SVCDIR}/${RS_STAGE}/*; do
+		eval ${svc} ${cmd} ${opt}
+	done
+}
+
+rs_wait()
+{
+	local VAL
+	while [ -e ${SV_TMPDIR}/down/${1-${SVC_NAME}} ]; do
+		VAL=$((${VAL}+1))
+		[ ${VAL} -eq ${2-65536} ] && return 1
+	done
+	return 0
+}
+
+svc_stage()
+{
+	rs_stage "${@}" -f
+	rs_stage "${@}"
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
