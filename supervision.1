@@ -4,10 +4,11 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-03-33" "30" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2015-04-18" "32" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
+.SS SUPERVISION
 Supervision aim to provide an easy & efficient way to supervision;
 Deamontools[-encore], Runit & S6 backends are actually supported.
 Services use, by default, a single
@@ -16,6 +17,15 @@ file & \fI./{finish,run}\fR symlinked to \fIsv/.opt/cmd\fR.
 The same goes for the log directory.
 .I Envdir
 variant with a global \fIsv/.env\fR & local \fIsv/SERVICE/env\fR is also supported.
+.SS RUNSCRIPT
+It also provide a simple run-script API usable in Stage-[0123] that can be used
+to finely set up the system.
+Service dependencies apply on the start phase
+for now
+and can be interwined
+with supervision services.
+The same environment variables are used, minus that, almost only dependencies
+and extra commands are usable in this context.
 .SH OVERVIEW
 .SS CONFIGURATION
 Global configuration can be done with
@@ -176,6 +186,9 @@ Processor command to use for log rotation
 T}
 .TE
 .SS FUNCTIONS
+Extra service commands along with supported functions are defined as shell functions.
+.TP
+.B SUPERVISION
 .TS
 tab (@);
 l lx.
@@ -204,6 +217,24 @@ file for services like
 .R dbus,
 .R sshd
 for practical examples.
+.TP
+.B RUNSCRIPT
+Standard {restart,start,stop} along with st{art,op}_p{re,ost}
+(set/clean up) functions, and then,
+Standard LSB along with {restart,zap} and extra commands are supported.
+.TS
+tab (@);
+l lx.
+\fBstart{,_{pre,post}}\fR@T{
+Start command (preceded & followed by a set/clean up functions if any.)
+T}
+\fBstop{,_{pre,post}}\fR@T{
+Same as above for stop command.
+T}
+\fBrestart\fR@T{
+Custom stop/start command if any.
+T}
+.TE
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on
@@ -405,8 +436,8 @@ OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor cras
 .SS @SYSCONFDIR@/{conf,init}.d/supervision
 .TP
 Supervision init script service
+
 .SH "SEE ALSO"
-.br
 .B Shell:
 .BR sh (1p)
 .br
