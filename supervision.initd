@@ -7,7 +7,7 @@
 :	${SV_BACKEND:=/etc/sv/.opt/sv-backend}
 if [ -f "${SV_BACKEND}" ]; then
 	source "${SV_BACKEND}"
-	svc_backend -i
+	svc_backend -i -P
 fi
 :	${SV_RUNDIR:=/run/service}
 :	${SV_SERVICE:=/etc/service}

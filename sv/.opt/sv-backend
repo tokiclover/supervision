@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/sv-backend                      Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.1 2015/04/14 21:09:26                      Exp $
+# $Version: 1.2 2015/04/18 21:09:26                      Exp $
 #
 
 :	${SV_SVCDIR:=/etc/sv}
@@ -21,7 +21,7 @@ fi
 
 svc_backend()
 {
-	local DIR SRV STG arg
+	local CG DIR PP STG arg
 	DIR="${SV_SVCDIR}/.opt/"
 
 	while true; do
@@ -29,15 +29,19 @@ svc_backend()
 		(-i|--init)
 			for arg in ${DIR}*functions; do
 				source ${arg}
-			done
-			PATH=${SV_SVCDIR}/.bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
-			umask 022;;
-		(-s|--ser*) SRV=true ;;
+			done;;
+		(-C|--nocg*) CG=No ;;
+		(-P|--nopa*) PP=No ;;
 		(*-[0123]) STG=${1};;
 		(*) break;;
 	esac
 	shift
 	done
+	if [ -z "${PP}" ]; then
+		umask 022
+		PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
+		PATH=${SV_SVCDIR}/.bin:${PATH}:/usr/local/bin:/usr/local/sbin
+	fi
 	for arg in sv.conf SVC_BACKEND "${@}"; do
 		[ -f "${DIR}${arg}" ] && source "${DIR}${arg}"
 	done
@@ -45,8 +49,7 @@ svc_backend()
 	# Exec runscript
 	#
 	${STG+svc_stage ${STG}}
-
-	[ -n "${SRV}"  ] && return 0 || SOURCE "${SV_TMPDIR}"/SV_OPTIONS
+	[ -n "${CG}"  ] && return 0
 	#
 	# Set up CGroup
 	#

@@ -64,7 +64,7 @@ unset head
 
 source "${SV_SVCDIR}"/.opt/sv-backend ||
 	{ echo "Required file not found." >&2; exit 1; }
-svc_backend -i -s
+svc_backend -C -i
 
 SOURCE    "${SV_TMPDIR}"/OPTIONS.${SVC_NAE}
 SOURCE -d "${RS_SVCDIR}"/${SVC_NAME}

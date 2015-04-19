@@ -11,7 +11,7 @@
 
 if [ -f "${SV_BACKEND}" ]; then
 	source "${SV_BACKEND}"
-	svc_backend -i -s
+	svc_backend -C -i
 else
 	echo "${SV_BACKEND} required file not found." >&2
 	exit 1
