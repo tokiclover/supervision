@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/sv-backend                      Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/03/20 21:09:26                      Exp $
+# $Version: 1.1 2015/04/14 21:09:26                      Exp $
 #
 
 :	${SV_SVCDIR:=/etc/sv}
@@ -21,7 +21,7 @@ fi
 
 svc_backend()
 {
-	local DIR SRV arg
+	local DIR SRV STG arg
 	DIR="${SV_SVCDIR}/.opt/"
 
 	while true; do
@@ -33,6 +33,7 @@ svc_backend()
 			PATH=${SV_SVCDIR}/.bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
 			umask 022;;
 		(-s|--ser*) SRV=true ;;
+		(*-[0123]) STG=${1};;
 		(*) break;;
 	esac
 	shift
@@ -40,6 +41,10 @@ svc_backend()
 	for arg in sv.conf SVC_BACKEND "${@}"; do
 		[ -f "${DIR}${arg}" ] && source "${DIR}${arg}"
 	done
+	#
+	# Exec runscript
+	#
+	${STG+svc_stage ${STG}}
 
 	[ -n "${SRV}"  ] && return 0 || SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 	#
