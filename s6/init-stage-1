@@ -33,8 +33,7 @@ begin "Setting up Supervision"
 :	${SV_RUNDIR:=/run/service}
 :	${SV_SERVICE:=/etc/service}
 if [ -f ${SV_BACKEND} ]; then
-	tmp_service
-	svc_backend
+	svc_backend -2
 else
 	case "${SV_RUNDIR}" in
 		("${SV_SERVICE}") :;

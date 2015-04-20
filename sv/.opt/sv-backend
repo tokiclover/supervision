@@ -27,7 +27,7 @@ svc_backend()
 	while true; do
 	case "${1}" in
 		(-i|--init)
-			for arg in ${DIR}*functions; do
+			for arg in ${DIR}*functions ${DIR}sv.conf ${DIR}SVC_BACKEND; do
 				source ${arg}
 			done;;
 		(-C|--nocg*) CG=No ;;
@@ -37,18 +37,24 @@ svc_backend()
 	esac
 	shift
 	done
+
 	if [ -z "${PP}" ]; then
 		umask 022
 		PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
 		PATH=${SV_SVCDIR}/.bin:${PATH}:/usr/local/bin:/usr/local/sbin
 	fi
-	for arg in sv.conf SVC_BACKEND "${@}"; do
+	for arg; do
 		[ -f "${DIR}${arg}" ] && source "${DIR}${arg}"
 	done
 	#
 	# Exec runscript
 	#
-	${STG+svc_stage ${STG}}
+	case "${STG}" in
+		(*-[013]) svc_stage ${STG} ;;
+		(*-2) [ ! -e "${SV_TMPDIR}"/sv ] || svc_tmpdir
+		${SV_SVCDIR}/.opt/dep -s -2;;
+	esac
+
 	[ -n "${CG}"  ] && return 0
 	#
 	# Set up CGroup
