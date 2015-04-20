@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# $Header:  /etc/sv/.opt/dep                             Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.1 2015/04/20 21:09:26                      Exp $
+#
+
+exec 2>&1
+:	${name=${0##*/}}
+
+source "${0%/*}"/sv-backend || { echo "Required file not found." >&2; exit 1; }
+svc_backend -i -C
+
+mkdir -p ${SV_TMPDIR}/deps
+STG= SRV=
+while true; do
+case "${1}" in
+	(-r|--runscript) SRV=rs;;
+	(-v|--supervis*) SRV=sv;;
+	(*-[0123]) STG=${1#*-} ;;
+	(*) break;;
+esac
+shift
+done
+
+RS_STAGE=stage-${STG:-2}
+SV_DEPDIR=${SV_TMPDIR}/deps/${RS_STAGE}
+SV_CGROUP=0
+mkdir -p ${SV_DEPDIR}
+:	${RS_SVCDIR:=/etc/rs.d}
+:	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
+:	${SRV:=sv}
+
+gen_dep()
+{
+	local SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
+	case "${SRV}" in
+		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
+	esac
+	SVC_NAME=${1} source ${2}
+
+	for dep in use:USE need:NEED before:BEFORE after:AFTER; do
+		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${SRV}_${dep%:*}
+	done
+}
+
+rm -f ${SV_DEPDIR}/${SRV}_*
+case "${SRV}" in
+	(rs) DIR=${RS_RUNDIR}  OPT='${svc}';;
+	(sv) DIR=${SV_SERVICE} OPT=${SV_SVCDIR}/.opt/SVC_OPTIONS;;
+esac
+for svc in ${DIR}/*; do
+	eval gen_dep ${svc##*/} ${OPT}
+done
+
+for dep in ${SV_DEPDIR}/${SRV}_*; do
+	DEP=${dep##*_} DEP_0= DEP_1= DEP_2=
+	while read line; do
+		DEP_0="${DEP_0} ${line%:*}" DEP_1="${DEP_1} ${line#*:}"
+	done <${dep}
+	for i in 0 1; do
+		eval DEP_${i}=\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\"
+	done
+	for i in ${DEP_0}; do
+		for svc in ${DEP_1}; do
+			case "${i}" in
+				("${svc}") DEP_2="${DEP_2} ${i}"
+				DEP_0="${DEP_0/${i}}" DEP_1="${DEP_1/${i}}";;
+			esac
+		done
+	done
+	for i in 0 1 2; do
+		eval echo ${DEP}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
+	done >${dep}
+done
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
