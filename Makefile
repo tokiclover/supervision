@@ -79,6 +79,7 @@ dist_SVC_OPTS = \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 dist_RUNSCRIPTS = \
 	squashdir \
+	tmpdir \
 	zram
 
 ifdef RUNIT

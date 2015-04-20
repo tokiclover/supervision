@@ -1,0 +1,116 @@
+#!/etc/sv/.bin/rs
+#
+# $Header: /etc/rs.d/tmpdir                              Exp $
+# $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.20.0 2015/04/18 12:33:03                   Exp $
+#
+
+description="Temporary directory (with optional backup) setup"
+extra_commands="restore save"
+description_restore="Restore temporary directories"
+description_save="Archive temporary directories"
+
+:	${compressor:=lz4 -1 -}
+:	${extension:=.tar.${compressor%% *}}
+
+if yesno ${use_zram}; then
+	SVC_NEED=zram
+fi
+SVC_BEFORE=syslog
+
+start()
+{
+	local DIR IFS=":${IFS}" dir
+
+	for dir in ${tmpdir_saved} ${tmpdir_unsaved}; do
+		DIR="${tmpdir_root}${dir}"
+		grep -q "${DIR}" /proc/mounts && continue
+		mkdir -p "${DIR}"
+		begin  "Mounting ${DIR}"
+		mount --bind "${DIR}" "${dir}" >${NULL} 2>&1
+		end "$?"
+	done
+	restore
+	return 0
+}
+
+stop()
+{
+	save
+	local DIR IFS=":${IFS}" dir
+	for dir in ${tmpdir_saved} ${tmpdir_unsaved}; do
+		case "${dir}" in
+			(*/log|*/run|*/tmp) continue;;
+		esac
+		DIR="${tmpdir_root}${dir}"
+		grep -q "${DIR}" /proc/mounts || continue
+		begin  "Unmounting ${DIR}"
+		umount -l "${DIR}" >${NULL} 2>&1
+		end "$?"
+	done
+	return 0
+}
+
+start_pre()
+{
+	local IFS=":${IFS}" ret
+	for dir in ${tmpdir_saved}; do
+		[ -e "${dir}${extension}" ] && continue
+		[ -d "${dir}" ] && save "${dir}" || mkdir -p "${dir}"
+	done
+
+	grep -q "${tmpdir_root}" /proc/mounts && return
+	yesno ${use_zram} && warn "No suitable (zram) root-dir found"
+	mkdir -p "${tmpdir_root}"
+	mount -o rw,nodev,relatime,mode=0755,size=${tmpdir_size:-20%} \
+		-t tmpfs tmp "${tmpdir_root}" || return 2
+}
+
+restart()
+{
+	start
+}
+
+restore()
+{
+	local IFS=":${IFS}" decompress swd tarball
+	decompress="${compressor%% *}" 	swd="${PWD}"
+
+	for dir in ${@:-${tmpdir_saved}}; do
+		cd "${dir%/*}" >${NULL} 2>&1 || continue
+
+		if [ -f "${dir}${extension}" ]; then
+		:	tarball="${dir}${extension}"
+		elif [ -f "${dir}.old${extension}" ]; then
+		:	tarball="${dir}.old${extension}"
+		else
+			warn "No tarball found for ${dir}"
+			continue
+		fi
+		begin  "Restoring ${dir}"
+		${decompress} -cd "${tarball}" | tar -xp
+		end "${?}"
+	done
+	cd "${swd}" >${NULL} 2>&1
+}
+
+save()
+{
+	local IFS=":${IFS}" swd="${PWD}"
+
+	for dir in ${@:-${tmpdir_saved}}; do
+		cd "${dir%/*}" >${NULL} 2>&1 || continue
+		if [ -f "${dir}${extension}" ]; then
+			mv -f "${dir}${extension}" "${dir}.old${extension}"
+		fi
+		begin  "Saving ${dir}"
+		tar -Ocp ${dir##*/} | ${compressor} "${dir}${extension}"
+		end "${?}"
+	done
+	cd "${swd}" >${NULL} 2>&1
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
