@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/sv-backend                      Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/18 21:09:26                      Exp $
+# $Version: 1.2 2015/04/20 21:09:26                      Exp $
 #
 
 :	${SV_SVCDIR:=/etc/sv}
@@ -71,15 +71,18 @@ svc_shutdown()
 	#
 	# Service halt
 	#
-	begin "Stopping stage-2 runscript"
+	begin "Stopping stage-2..."
 	svc_stage -2 -S
-	end ${?}
-	begin "Stopping Getty Instances"
-	eval ${SVCCMD} ${SIGWDWN-${SIGEXIT}} ${SV_RUNDIR}/*getty-*
-	end ${?}
-	begin "Stopping Other Services"
+	end ${?} "runscript"
+	svc_stage -2 -S -v
+	case ${?} in
+		(0)
+		;;
+		(*)
 	eval ${SVCCMD} ${SIGWDWN-${SIGEXIT}} ${SV_RUNDIR}/*
-	end ${?}
+		;;
+	esac
+	end ${?} "supervision"
 	#
 	# CGroup clean up
 	#
