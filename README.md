@@ -22,6 +22,11 @@ file instead: `OPTIONS` file for each service along with a default file
 `{finish,run}` symlinked to `sv/.opt/cmd` would work out of the box!!!
 And so does `log/{finish,run}` directory!
 
+Runscript services are also supported with `{after,before,need,use}` service
+dependencies. A special system initialization level (stage-0), with system
+boot (stage-1), running state (stage-2) and shutdown (stage-3) levels are
+supported.
+
 INSTALLATION
 ------------
 
