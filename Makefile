@@ -78,6 +78,7 @@ dist_SVC_OPTS = \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 dist_RUNSCRIPTS = \
+	squashdir \
 	zram
 
 ifdef RUNIT

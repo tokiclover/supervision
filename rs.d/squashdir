@@ -1,0 +1,111 @@
+#!/etc/sv/.bin/rs
+#
+# $Header: /etc/rs.d/squashdir                           Exp $
+# $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.20.0 2015/04/18 12:33:03                   Exp $
+#
+
+description="(AUFS+SquashFS) squash-directories"
+
+:	${sdr:=$(type -p sdr 2>${NULL})}
+:	${squash_rootdir:=/aufs}
+
+SVC_AFTER=localmount
+SVC_BEFORE='consolefont bootmisc acpid keymaps'
+
+start_pre()
+{
+	local mod
+	begin "Setting up kernel modules"
+	for mod in aufs squashfs; do
+		grep -q ${mod} /proc/filesystems || modprobe ${mod} >${NULL} 2>&1 ||
+		{ end 1 ${mod}; return 1; }
+	done
+	end ${?}
+}
+
+start()
+{
+	local IFS=":${IFS}" dir
+	for dir in ${squash_sysdir} ${squash_localdir}; do
+		squash_mount "${squash_rootdir}" "${dir}"
+	done
+	return 0
+}
+
+stop()
+{
+	local IFS=":${IFS}" dir
+	for dir in ${squash_localdir}; do
+		squash_umount "${squash_rootdir}" "${dir}"
+	done
+	for dir in ${squashdir_sysdir}; do
+		squash_remount "${dir}" "ro"
+	done
+	return 0
+}
+
+restart()
+{
+	stop
+	start
+	local IFS=":${IFS}" dir
+	for dir in ${squashdir_sysdir}; do
+		squash_remount "${dir}" "rw"
+	done
+	return 0
+}
+
+stop_pre()
+{
+	local IFS="${IFS}:"
+	[ -n "${squash_rebuild_dir}" ] || return 0
+	[ -n "${sdr}" -a -x "${sdr}" ] || { warn "No suitable sdr found."; return; }
+
+	begin "Rebuilding ${squash_rebuild_dir}"
+	${sdr} -o${offset:-5} -d${squash_rebuild_dir} >${NULL} 2>&1
+	end ${?}
+}
+
+squash_mount()
+{
+	local DIR
+	DIR="${1}/${2#/}" dir="/${2#/}"
+	grep -q aufs:${dir} /proc/mounts && return
+
+	begin "Mounting aufs:${dir}"
+	if ! grep -q ${DIR}.squashfs /proc/mounts; then
+		mount -t squashfs -o loop,nodev,ro ${DIR}.squashfs ${DIR}/rr \
+			>${NULL} 2>&1 || { end 1; return 1; }
+	fi
+	mount -t aufs -o nodev,udba=reval,br:${DIR}/rw:${DIR}/rr aufs:${dir} ${DIR} \
+		>${NULL} 2>&1
+	end ${?}
+}
+
+squash_umount()
+{
+	local DIR opt
+	DIR="${1}/${2#/}" dir="/${2#/}"
+	case "${OS_NAME}" in
+		(Linux) opt="-O no_netdev";;
+	esac
+	auplink ${DIR} flush >${NULL} 2>&1
+	begin "Umounting aufs:${dir}"
+	umount -l ${opt} aufs:${dir} >${NULL} 2>&1 || { end 1 AUFS; return 1; }
+	umount -l ${opt} ${DIR}/rr   >${NULL} 2>&1
+	end ${?} SquashFS
+}
+
+squash_remount()
+{
+	dir="/${1#/}"
+	begin "Re-Mounting aufs:${dir}"
+	mount -o remount,${2:-ro} aufs:${dir} >${NULL} 2>&1
+	end ${?}
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
