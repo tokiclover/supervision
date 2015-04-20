@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/runscript-functions             Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/18 21:09:26                      Exp $
+# $Version: 1.0 2015/04/20 21:09:26                      Exp $
 #
 
 env_rs()
@@ -101,20 +101,52 @@ rs_state()
 rs_stage()
 {
 	local cmd opt svc lvl
+	local CMD DEP SRV dep df i line srv
+
 	while true; do
 	case "${1}" in
 		(*-[0123]) lvl=${1} ;;
 		(-f|--fo*) opt='&'  ;;
 		(-S|*stop) cmd=stop ;;
 		(-s|*sta*) cmd=start;;
+		(-r|--runs*) SRV=rs srv=${1};;
+		(-v|--supe*) SRV=sv srv=${1};;
 		(*) break;;
 	esac
 	shift
 	done
 
-	export RS_STAGE=stage${lvl--2}
-	for svc in ${RS_SVCDIR}/${RS_STAGE}/*; do
-		eval ${svc} ${cmd} ${opt}
+	[ -n "${lvl}" ] || return 1
+:	${cmd:=start}
+:	${SRV:=rs}
+	export RS_STAGE=stage-${lvl#*-}
+	case ${cmd} in
+		(start) ${SV_SVCDIR}/.opt/dep ${lvl} ${srv:-r}
+		        DEP='need use after before' ORD='2 1 0';;
+		(stop)  DEP='before after use need' ORD='0 1 2';;
+	esac
+	case ${SRV} in
+		(rs) CMD='${RS_SVCDIR}/${svc}'     ;;
+		(sv) CMD='${SV_SERVICE}/${svc}/run';;
+	esac
+
+	for dep in ${DEP}; do
+		local ${dep}_0 ${dep}_1 ${dep}_2
+		df=${SV_TMPDIR}/deps/${RS_STAGE}/${SRV}_${dep}
+		[ -f ${df} ] && source ${df} || continue
+
+		for i in ${ORD}; do
+			case ${i} in
+				(0)
+				case ${dep} in
+					(${DEP##* });;
+					(*) continue;;
+				esac;;
+			esac
+			for svc in $(eval echo \$${dep}_${i}); do
+			eval ${CMD} ${cmd} ${opt}
+		done
+		done
 	done
 }
 
