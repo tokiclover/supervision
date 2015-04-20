@@ -310,6 +310,12 @@ And usage of after style dependencies would do the trick.
 Mixed service dependencies is also supported. However, this is usable
 only in stage-2 because of svscan ties to stage-2, and, once stage-3
 is reached, service shutdown is triggered.
+.SS INIT-STAGE (RUNLEVELS)
+Superivision is organized in three distinct init-stage;
+one for system boot; second for system running state;
+third for system shutdown.
+An extended stage-0 (system initialization) is also supported.
+This is where {dev,proc,sys}fs et al runscript services should live in.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on
