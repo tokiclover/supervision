@@ -162,6 +162,9 @@ rs_wait()
 
 svc_stage()
 {
+	case "${*}" in
+		(*-0*) tmp_service;;
+	esac
 	rs_stage "${@}" -f
 	rs_stage "${@}"
 }
