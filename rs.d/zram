@@ -66,8 +66,8 @@ start_pre()
 		(*) ZRAM_COMP=;;
 	esac
 	dev=/sys/block/zram0 num=0
-	[ -w ${dev} ] || ZRAM_COMP=
-	[ -w ${dev} ] || ZRAM_STREAM=
+	[ -w ${dev}/comp_algorithm    ] || ZRAM_COMP=
+	[ -w ${dev}//max_comp_streams ] || ZRAM_STREAM=
 
 	while true; do
 		dev=/sys/block/zram$num
