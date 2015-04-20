@@ -34,6 +34,7 @@ start_pre()
 	ebegin "Setting up Supervision Service/"
 	if command -v tmp_service >/dev/null 2>&1; then
 		tmp_service; ret=$?
+		svc_backend -2
 		eend ${ret}; return ${ret}
 	fi
 	case "${SV_RUNDIR}" in
@@ -54,6 +55,7 @@ stop_pre()
 {
 	if [ -n "${SVCCMD}" ]; then
 		ebegin "Stopping Supervised Services"
+		svc_stage -2 -S -v ||
 		eval ${SVCCMD} ${SVC_OPTS} ${SIGEXIT} "${SV_RUNDIR}"/*
 		eend "$?"
 	else
