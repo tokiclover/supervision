@@ -1,5 +1,15 @@
 Header: supervision-scripts/ChangeLog, 2015/03/30
 
+32:
+
+Added runscript service support with a simple API which brings service
+dependencies scheduling; supervision service shutdown is now scheduled
+with {after,before,need,use} style dependencies.
+Improved the manual with {BUILTINS,DEPENDENCIES,INIT-STAGE} sections;
+and numerous RUNSCRIPTS sub-sections.
+
+SERVICE/RUNSCRIPT: Added squashdir, tmpdir, zram
+
 31:
 
 Added SCANCMD support to trigger re-scan (to get *hard* style dependencies
