@@ -27,7 +27,7 @@ rs_del()
 	rm -f ${RS_RUNDIR}/${SVC_NAME}
 }
 
-rs_zap()
+svc_zap()
 {
 	rm -f ${SV_TMPDIR}/${SVC_NAME}_OPTIONS ${SV_TMPDIR}/*/${SVC_NAME}
 }
@@ -47,9 +47,8 @@ rs_cmd()
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
 			CMD="stop_pre stop stop_post
 			   start_pre start start_post";;
-		(add|del|status|zap) CMD=rs_${cmd};;
-		(desc)  ARGS="${2}" CMD=svc_desc  ;;
-		(*) ARGS='"${@}"' CMD=svc_commands;;
+		(add|del|status) CMD=rs_${cmd};;
+		(*) svc_cmd "${@}"; return   ;;
 	esac
 
 	begin "service ${cmd}: "
