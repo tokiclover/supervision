@@ -34,12 +34,11 @@ dist_RUNS   =
 dist_SCRIPTS= \
 	sv/.bin/checkpath \
 	sv/.bin/rs \
-	sv/.bin/supervision-backend \
+	sv/.bin/sv \
 	sv/.bin/sv-shutdown \
 	sv/.bin/mdev-start-dev \
 	sv/.opt/cgroup-release-agent \
 	sv/.opt/dep \
-	sv/.opt/svc \
 	sv/.opt/cmd
 dist_SERVICES = \
 	acpid \

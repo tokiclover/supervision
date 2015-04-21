@@ -1,25 +1,74 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.bin/supervision-backend             Exp $
+# $Header:  /etc/sv/.bin/sv                              Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 1.0 2015/04/20 21:09:26                      Exp $
 #
 
-usage() {
+:	${name=sv}
+:	${SV_BACKEND:=/etc/sv/.opt/sv-backend}
+
+source "${SV_BACKEND}" || { echo "Required file not found." >&2; exit 1; }
+svc_backend -C -i
+
+usage()
+{
 	cat <<-EOH
- usage: ${0##*/} daemontools[-encore]|runit|s6
+ usage: sv [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
+   COMMAND: [add|remove|reload|start|stop|status]
+   COMMAND: (CGroup) cgroup_remove_service
+   OPTIONS: add SERVICE [-cdls]
+     -c, --check      Enable binary check
+     -d, --down       Start service as down
+     -l, --log        Add log directory
+     -s, --service    Add symlink to /service/
+   OPTIONS: -S daemontools[-encore]|runit|s6
+     -S, --set ARG    Set up backend
+     -D, --debug      Enable debug
+     -h, --help       Help/Exit
 EOH
+${1+exit ${1}}
 }
+
+sv_cmd()
+{
+	local cmd name svc
+	for svc; do
+		case "${CMD}" in
+			(add) cmd=svc_cmd SVC_NAME="${svc}";;
+			(*) cmd="${SV_SVCDIR}/${svc}/run"  ;;
+		esac
+		eval ${cmd} ${CMD} ${ARGS}
+	done
+	exit
+}
+
+[ ${#} -ge 2 ] || usage 2
+ARGS="$(getopt \
+	-o DS:cdhls \
+	-l check,debug,down,help,log,service,set: \
+	-s sh -n sv -- "${@}")"
+[ ${?} -eq 0 ] || usage 3
+eval set -- ${ARGS}
+ARGS= SV_OPT=
+
+while true; do
+	case "${1}" in
+		(-D|--debug) set -x;;
+		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
+		(-S|--set) SV_OPT="${2}"; shift 2; break;;
+		(*) CMD="${2}"; shift 2; break;;
+		(-h|--help) usage 0;;
+	esac
+	shift
+done
+[ -n "${SV_OPT}" ] || sv_cmd "${@}"
 
 SIGNALS='SIGSTRT SIGSTOP SIGONCE SIGPAUSE SIGCONT SIGHUP SIGALRM SIGINT
 	SIGTERM SIGKILL SIGEXIT SIGQUIT SIGUSR1 SIGUSR2 SIGWTUP SIGWDWN'
 BINS='envdir envuidgid fghack pgrphack setlock setuidgid softlimit'
 CMDS='SV_CMD SVCCMD CHKCMD STACMD LOGCMD'
-
-case "${1}" in
-	(daemontools*|runit|s6) SV_OPT=${1};;
-	(*) echo -e " Invalid supervision backend.\n" >&2
-		usage; exit 1;;
-esac
 
 case ${SV_OPT} in
 	(daemontools)
@@ -43,8 +92,9 @@ case ${SV_OPT} in
 		CMDS="${CMDS} SCANCMD" SCANCMD='"s6-svscanctl -an ${SV_RUNDIR}"'
 		SV_CMD=s6-svscan SVCCMD=s6-svc CHKCMD=s6-svok STACMD=s6-svsat LOGCMD=s6-log
 		;;
-	(*) usage; exit 2;;
+	(*) die "Invalid supervision backend";;
 esac
+
 :	${SIGSTRT:=-u}
 :	${SIGSTOP:=-d}
 :	${SIGONCE:=-o}
@@ -61,16 +111,17 @@ esac
 :	${CHKCMD:=svok}
 :	${STACMD:=svstat}
 :	${LOGCMD:=multilog}
-:	${SV_SVCDIR:=/etc/sv}
 
+begin "Setting up ${SV_OPT} supervision backend..."
 for bin in ${BINS}; do
 	ln -f -s $(type -p ${PREFIX}${BIN:-${bin%:*}}) ${SV_SVCDIR}/.bin/${bin#*:}
 done
-
+end ${?} Symlinks
 for env in SV_OPT ${CMDS} ${SIGNALS}; do
 	eval echo ${env}=\"\${${env}}\"
 	unset ${env}
 done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
+end ${?} SVC_BACKEND
 
 unset BINS CMDS PREFIX SIGNALS bin env
 

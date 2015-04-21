@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-04-18" "32" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2015-04-20" "32" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -38,9 +38,9 @@ extra commands are supported.
 .TP
 .B SUPERVISION
 And
-.R `sv/.opt/svc CMD [OPTS] SERVICE(S)'
+.R `sv/.bin/sv CMD [OPTS] SERVICE(S)'
 script does as well
-(see sv/.opt/svc --help).
+(see sv/.bin/sv --help).
 And those commands
 can be used with
 .R `sv/SERVICE/run CMD [OPTS]'
@@ -428,9 +428,11 @@ rs
  Simple script to run (stage-[0123]) runscript service, e.g. `rs add zram stage-1'
  or `rs start stage stage-0' (to start sysinit.)
 .br
-supervision-backend
-  Simple script to set up a specific Supervision Backend
-.br
+sv
+  Simple helper to manage supervision service e.g.
+  `SV_SVCDIR=sv sv/.bin/sv add --log SERVICE'
+  and to set up specific supervision Backend e.g.
+  `sv -S runit'
 .br
 sv-shutdown
   Simple script to handle system halt
@@ -454,9 +456,6 @@ cmd
 .br
 dep
   Simple script to list dependencies
-.br
-svc
-  Simple helper to manage service e.g. SV_SVCDIR=sv sv/.opt/svc add --log SERVICE
 .br
 SVC_BACKEND
   Specific Backend Environment variable
