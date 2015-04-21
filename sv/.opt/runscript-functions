@@ -58,7 +58,7 @@ rs_cmd()
 		rs_wait   || { end 1 "busy"; return 4; }
 		svc_state -s && eval ${END}
 		svc_mark  -d
-		svc_depend;;
+		svc_depend || return;;
 		(stop)
 		svc_state -s || eval ${END};;
 	esac
