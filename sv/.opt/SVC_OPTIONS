@@ -20,15 +20,18 @@ PATH=${SV_RUNDIR}/.bin:${PATH}
 :	${cmd_args:="${@}"}
 :	${COLOR:=Yes}
 :	${LOGDIR:=/var/log}
+:	${SVC_PID:=${SV_TMPDIR}/pids/${name}}
 
 source "${SV_BACKEND}"; svc_backend -i ${ARGS}
 
 case "${cmd}" in
 	(finish|run)
+:	${SRV=sv}
 SOURCE "${SVC_DIR}"/OPTIONS
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 	;;
 	(rs)
+:	${SRV=rs}
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 	;;
 esac
