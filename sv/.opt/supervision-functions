@@ -112,11 +112,15 @@ svc_mark()
 
 svc_state()
 {
-	local arg ret
+	local S arg ret
+	case "${SRV}" in
+		(sv) S=SV;;
+		(rs) S=RS;;
+	esac
 	for arg in ${@:--r}; do
 		case "${arg}" in
-			(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
-			(-r|--runn*) [ -e "${SV_RUNDIR}/${SVC_NAME}" ];;
+			(-e|--exist) eval [ -e "\${${S}_SVCDIR}/${SVC_NAME}" ];;
+			(-r|--runn*) eval [ -e "\${${S}_RUNDIR}/${SVC_NAME}" ];;
 			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;

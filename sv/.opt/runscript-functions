@@ -13,15 +13,14 @@ env_rs()
 rs_status()
 {
 	local msg
-	rs_state -s && msg=started || msg=stopped
+	svc_state -s && msg=started || msg=stopped
 	echo -n ${msg}
 }
 
 rs_add()
 {
-	rs_state -e && ln -fns ${RS_SVCDIR}/${SVC_NAME} ${RS_RUNDIR}
+	svc_state -e && ln -fns ${RS_SVCDIR}/${SVC_NAME} ${RS_RUNDIR}
 }
-
 rs_del()
 {
 	rm -f ${RS_RUNDIR}/${SVC_NAME}
@@ -81,20 +80,6 @@ rs_cmd()
 	done
 	end ${val-${?}}
 	return ${val}
-}
-
-rs_state()
-{
-	local arg ret
-	for arg in ${@--r}; do
-		case "${arg}" in
-			(-e|--exist) [ -e ${RS_SVCDIR}/${SVC_NAME} ];;
-			(-r|--runn*) [ -e ${RS_RUNDIR}/${SVC_NAME} ];;
-			(*) svc_state "${arg}";;
-		esac
-		ret=$((${ret}+${?}))
-	done
-	return ${ret}
 }
 
 rs_stage()
