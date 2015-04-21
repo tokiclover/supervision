@@ -349,6 +349,7 @@ svc_env()
 svc_run()
 {
 	if [ ${#} -ge 1 ]; then
+		ARGS=-C
 		svc_cmd "${@}"
 		return
 	fi

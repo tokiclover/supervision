@@ -21,17 +21,22 @@ PATH=${SV_RUNDIR}/.bin:${PATH}
 :	${COLOR:=Yes}
 :	${LOGDIR:=/var/log}
 
+source "${SV_BACKEND}"; svc_backend -i ${ARGS}
+
 case "${cmd}" in
 	(finish|run)
-	source "${SV_BACKEND}"
-	svc_backend -i
+SOURCE "${SVC_DIR}"/OPTIONS
+SOURCE "${SV_TMPDIR}"/SV_OPTIONS
+	;;
+	(rs)
+SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 	;;
 esac
+
 if [ ! -e "${SV_TMPDIR}"/sv ]; then
 	svc_tmpdir
 fi
 
-SOURCE "${SVC_DIR}"/OPTIONS
 #
 # Set debug options
 #
@@ -50,7 +55,6 @@ SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	;;
 esac
 SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
-SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 
 #
 # OS Specific

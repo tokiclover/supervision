@@ -16,7 +16,7 @@ usage() {
      -d, --debug      Enable debug mode
      -h, --help       Help/Exit
 EOH
-eval ${1+exit ${1}}
+${1+exit ${1}}
 }
 
 [ ${#} -ge 2 ] || usage 1
@@ -45,12 +45,12 @@ esac
 case "${1}" in
 	(*rs.d/*)
 :	${SVC_NAME:=${1##*/}}
-:	${cmd=${2}}
+:	${CMD=${2}}
 	;;
 	(*)
 :	${RS_STAGE:=${3}}
 :	${SVC_NAME:=${2}}
-:	${cmd=${1}}
+:	${CMD=${1}}
 	${3+shift}
 	;;
 esac
@@ -63,19 +63,17 @@ shift 2
 :	${SVC_DIR=${RS_SVCDIR}}
 unset head
 
-source "${SV_SVCDIR}"/.opt/sv-backend ||
+ARGS=-C
+source "${SV_SVCDIR}"/.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
-svc_backend -C -i
-
-SOURCE -d "${SV_SVCDIR}"/.opt/SVC_OPTIONS
 SOURCE -d "${RS_SVCDIR}"/${SVC_NAME}
-SOURCE    "${SV_TMPDIR}"/RS_OPTIONS
 yesno ${DEPS-1} || SVC_AFTER= SVC_BEFORE= SVC_NEED= SVC_USE=
 
 #
 # Handle command
 #
-eval rs_cmd ${cmd} "${@}"
+eval set -- "${CMD}" "${@}"
+eval rs_cmd "${@}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
