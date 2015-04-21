@@ -415,30 +415,29 @@ RUNSCRIPT service directory
 .SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
 SUPERVISION service directory
 (See SV_SERVICE for active service.)
+.SS SV_SVCDIR/.bin/
 .TP
-.RB .bin/
-.br
-checkpath
-  Simple & Cheap checkpath/mktemp script
-.br
-mdev-start-dev
-  Simple script to set up (BusyBox) mdev (Linux) device-manager.
-.br
-rs
- Simple script to run (stage-[0123]) runscript service, e.g. `rs add zram stage-1'
- or `rs start stage stage-0' (to start sysinit.)
-.br
-sv
-  Simple helper to manage supervision service e.g.
-  `SV_SVCDIR=sv sv/.bin/sv add --log SERVICE'
-  and to set up specific supervision Backend e.g.
-  `sv -S runit'
-.br
-sv-shutdown
-  Simple script to handle system halt
-.br
-BIN_SYMLINKS
-  Extra backend binary symlinks; Refer to to the following supported list.
+.RB checkpath
+Simple & Cheap checkpath/mktemp script
+.TP
+.RB mdev-start-dev
+Simple script to set up (BusyBox) mdev (Linux) device-manager.
+.TP
+.RB rs
+Simple script to run (stage-[0123]) runscript service, e.g. `rs add zram stage-1'
+or `rs start stage stage-0' (to start sysinit.)
+.TP
+.RB sv
+Simple helper to manage supervision service e.g.
+`SV_SVCDIR=sv sv/.bin/sv add --log SERVICE'
+and to set up specific supervision Backend e.g.
+`sv -S runit'
+.TP
+.RB sv-shutdown
+Simple script to handle system halt
+.TP
+.RB BIN_SYMLINKS
+Extra backend binary symlinks; Refer to to the following supported list.
 
 .B BIN_SYMLINKS: \c
 .RB \| envdir \|\ \c
@@ -448,41 +447,40 @@ BIN_SYMLINKS
 .RB \| setlock \|\ \c
 .RB \| setuidgid \|\ \c
 .RB \| softlimit \|
+.SS SV_SVCDIR/.opt/
 .TP
-.RB .opt/
-.br
-cmd
-  Default {,log/}{finish,run} commands
-.br
-dep
-  Simple script to list dependencies
-.br
-SVC_BACKEND
-  Specific Backend Environment variable
-.br
-SVC_OPTIONS
-  Default service OPTIONS
-.br
-cgroup-release-agent
-  CGroup Release Agent script
-.br
-cgroup-functions
-  CGroup Functions/helper library
-.br
-functions
-  Generic Functions/Helpers library
-.br
-runscript-functions
- Run-script Functions/helpers library
-.br
-supervision-functions
-  Supervision Functions/Helpers library
-.br
-sv.conf
-  Supervision configuration file
-.br
-sv-backend
-  Supervision backend configuration file
+.RB cmd
+Default {,log/}{finish,run} commands
+.TP
+.RB dep
+Simple script to list dependencies
+.TP
+.RB SVC_BACKEND
+Specific Backend Environment variable
+.TP
+.RB SVC_OPTIONS
+Default service OPTIONS
+.TP
+.RB cgroup-release-agent
+CGroup Release Agent script
+.TP
+.RB cgroup-functions
+CGroup Functions/helper library
+.TP
+.RB functions
+Generic Functions/Helpers library
+.TP
+.RB runscript-functions
+Run-script Functions/helpers library
+.TP
+.RB supervision-functions
+Supervision Functions/Helpers library
+.TP
+.RB sv.conf
+Supervision configuration file
+.TP
+.RB sv-backend
+Supervision backend configuration file
 .TP
 .B SERVICES
 .RB [\| acpid \|]\ \c
@@ -515,29 +513,23 @@ Default run time '/service/' directory
 .SS @SYSCONFDIR@/runit/
 .TP
 .RB {1,2,3}
-.br
 OpenRC friendly Init-Stage-{1,2,3} files to handle system boot/shutdown & supervisor.
 .TP
 .RB ctrlaltdel
-.br
 C-ALT-DEL signal handler (shutdown/reboot)
 .SS @SYSCONFDIR@/s6/
 .TP
 .RB init-stage-1
-.br
 OpenRC firendly Init-Stage-{1,2} file to handle system boot
 .TP
 .RB {crash,finish}
-.br
 OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor crashes.
 .SS @SYSCONFDIR@/{conf,init}.d/supervision
 .TP
 Supervision init script service
-
 .SH "SEE ALSO"
 .B Shell:
 .BR sh (1p)
-.br
 .B Deamontools[-encore]:
 .BR \%svc (8),
 .BR \%multilog (8),
