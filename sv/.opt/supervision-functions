@@ -333,10 +333,10 @@ svc_cmd()
 
 	case "${cmd}" in
 		(*remove*|reload|stop|status)
-			svc_state -r || (rs_state -r && pfx='rs_cmd ') ||
+			svc_state -r ||
 			{ error "Inactive service" ; return 1; };;
 		(desc|start)
-			svc_state -e || (rs_state -e && pfx='rs_cmd ') ||
+			svc_state -e ||
 			{ error "Inexistent service"; return 2; };;
 	esac
 	begin "service ${cmd}: "
