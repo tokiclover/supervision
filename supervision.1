@@ -32,14 +32,26 @@ Local, per service, configuration is done with
 file. See
 .BR OPTIONS
 sub-section for more info.
-.SS COMMANDS
-.RB sv/.opt/svc
-has a LSB like commands {reload,start,status,stop} and extra
-{add,remove,cgroup_remove_service} commands support
-(see sv/.opt/svc --help) and those commands
+.SS LSB COMMANDS
+Standard LSB along with {restart,zap} and {add,desc,cgroup_remove_service}
+extra commands are supported.
+.TP
+.B SUPERVISION
+And
+.R `sv/.opt/svc CMD [OPTS] SERVICE(S)'
+script does as well
+(see sv/.opt/svc --help).
+And those commands
 can be used with
-.RB sv/SERVICE/run\ CMD\ [OPTIONS]
-directly (plus desc command for description.)
+.R `sv/SERVICE/run CMD [OPTS]'
+directly.
+.TP
+.B RUNSCRIPT
+And so does
+.R `sv/.bin/rs [OPTS] CMD SERVICE [stage-(0123)] [ARGS]'
+for runscript services; or else with
+.R `rs.d/SERVICE CMD [ARGS]'
+directly.
 .SS SERVICE INSTANCE
 Service supporting many instances can be written in a short manner
 like a virtual service backend with specific
@@ -219,8 +231,7 @@ for practical examples.
 .TP
 .B RUNSCRIPT
 Standard {restart,start,stop} along with st{art,op}_p{re,ost}
-(set/clean up) functions, and then,
-Standard LSB along with {restart,zap} and extra commands are supported.
+(set/clean up) functions are supported.
 .TS
 tab (@);
 l lx.
