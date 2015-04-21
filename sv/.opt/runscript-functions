@@ -100,7 +100,7 @@ rs_state()
 
 rs_stage()
 {
-	local cmd opt svc lvl
+	local cmd lvl opt ret svc
 	local CMD DEP SRV dep df i line srv
 
 	while true; do
@@ -145,9 +145,11 @@ rs_stage()
 			esac
 			for svc in $(eval echo \$${dep}_${i}); do
 			eval ${CMD} ${cmd} ${opt}
+			ret=$((${ret}+${?}))
 		done
 		done
 	done
+	return ${ret}
 }
 
 rs_wait()
