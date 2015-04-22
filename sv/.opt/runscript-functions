@@ -84,12 +84,27 @@ rs_cmd()
 
 rs_stage()
 {
-	local cmd lvl opt ret svc
+	local args cmd lvl opt ret svc
 	local CMD DEP SRV dep df i line srv
+	args="$(getopt -o 0123Sfrsv -l fork,start,stop,runscript,supervision \
+		-n stage -s sh -- "${@}")"
+	eval set -- ${args}
 
 	while true; do
 	case "${1}" in
-		(*-[0123]) lvl=${1} ;;
+		(*-[0123]) lvl=${1};
+		case "${1}" in
+			(*-0) tmp_service;
+			      ACTION=sysinit LEVEL=S;;
+			(*-1) ACTION=boot    LEVEL=S;;
+			(*-2) [ -e "${SV_TMPDIR}"/sv ] || svc_tmpdir;
+			case "$(cat /proc/cmdline)" in
+				(*nonetwoork*) ACTION=nonetwoork LEVEL=2;;
+				(*single*)    ACTION=single  LEVEL=1;;
+				(*default*|*) ACTION=default LEVEL=3;;
+			esac;;
+			(*-3) ACTION=${ACTION:=shutdown} LEVEL=${LEVEL:=0};;
+		esac;;
 		(-f|--fo*) opt='&'  ;;
 		(-S|*stop) cmd=stop ;;
 		(-s|*sta*) cmd=start;;
@@ -128,6 +143,7 @@ rs_stage()
 				esac;;
 			esac
 			for svc in $(eval echo \$${dep}_${i}); do
+				eval [ -x ${CMD} ] || continue
 				eval ${CMD} ${cmd} ${opt}
 				ret=$((${ret}+${?}))
 			done
@@ -148,27 +164,10 @@ rs_wait()
 
 svc_stage()
 {
-	case "${*}" in
-		(*-0*) tmp_service;;
-		(*-[123]*)  ;;
-		(*) return 1;;
-	esac
-
 	yesno ${RS_PARALLEL:-YES} && rs_stage "${@}" -f
 	rs_stage "${@}"
 
 	if yesno ${RC_SYS:-YES}; then
-		case "${*}" in
-			(*-0*) ACTION=sysinit LEVEL=S;;
-			(*-1*) ACTION=boot    LEVEL=S;;
-			(*-2*)
-			case "$(cat /proc/cmdline)" in
-				(*nonetwoork*) ACTION=nonetwoork LEVEL=2;;
-				(*single*)    ACTION=single  LEVEL=1;;
-				(*default*|*) ACTION=default LEVEL=3;;
-			esac;;
-			(*-3*) ACTION=${ACTION:-shutdown} LEVEL=${LEVEL:-0};;
-		esac
 		begin "${MSG:-System ${ACTION}}\n"
 		RUNLEVEL=${LEVEL} rc ${ACTION}
 		end ${?}
