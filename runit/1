@@ -9,13 +9,12 @@
 
 if [ -f ${SV_BACKEND} ]; then
 	source ${SV_BACKEND}
-	svc_backend -i -0
+	svc_backend -i -0 -C
 else
 name=OpenRC begin "System initialization"
 RUNLEVEL=S rc sysinit
 end "$?"
 fi
-
 touch /etc/runit/stopit
 chmod 0 /etc/runit/stopit
 

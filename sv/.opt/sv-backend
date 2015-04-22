@@ -51,9 +51,7 @@ svc_backend()
 	# Exec runscript
 	#
 	case "${STG}" in
-		(*-[013]) svc_stage ${STG} ;;
-		(*-2) [ ! -e "${SV_TMPDIR}"/sv ] || svc_tmpdir
-		${SV_SVCDIR}/.opt/dep -s -2;;
+		(*-[0123]) svc_stage ${STG} ;;
 	esac
 
 	[ -n "${CG}"  ] && return 0
