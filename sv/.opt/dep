@@ -3,17 +3,16 @@
 # $Header:  /etc/sv/.opt/dep                             Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.1 2015/04/20 21:09:26                      Exp $
+# $Version: 0.2 2015/04/22 21:09:26                      Exp $
 #
 
-exec 2>&1
 :	${name=${0##*/}}
 
 source "${0%/*}"/sv-backend || { echo "Required file not found." >&2; exit 1; }
 svc_backend -i -C
 
 mkdir -p ${SV_TMPDIR}/deps
-STG= SRV=
+STG= SRV= SV_INIT=1
 while true; do
 case "${1}" in
 	(-r|--runscript) SRV=rs;;
@@ -32,47 +31,56 @@ mkdir -p ${SV_DEPDIR}
 :	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
 :	${SRV:=sv}
 
-gen_dep()
+dep_gen()
 {
-	local SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
+	local RC_OPTS SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	case "${SRV}" in
 		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
 	esac
-	SVC_NAME=${1} source ${2}
+	DEP_0="${DEP_0} ${1}"
+	SVC_NAME=${1} source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
 	for dep in use:USE need:NEED before:BEFORE after:AFTER; do
+		eval [ -n \"\${SVC_${dep#*:}}\" ] || continue
 		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${SRV}_${dep%:*}
+	done
+}
+dep_tree()
+{
+	local s
+	while read line; do
+		DEP_1="${DEP_1} ${line%:*}" DEP_2="${DEP_2} ${line#*:}"
+		DEP_0="${DEP_0/${line%:*}}"
+	done <${1}
+	for i in 1 2; do
+	eval DEP_${i}=\"$(echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\"
+	done
+	for i in 0 1; do
+	for s in $(eval echo \${DEP_${i}}); do
+		for svc in $(eval echo \${DEP_$((${i}+1))}); do
+			case "${s}" in
+				("${svc}") eval DEP_${i}=\"\${DEP_${i}/${s}}\";;
+			esac
+		done
+	done
 	done
 }
 
 rm -f ${SV_DEPDIR}/${SRV}_*
 case "${SRV}" in
-	(rs) DIR=${RS_RUNDIR}  OPT='${svc}';;
-	(sv) DIR=${SV_SERVICE} OPT=${SV_SVCDIR}/.opt/SVC_OPTIONS;;
+	(rs) DIR=${RS_RUNDIR} ;;
+	(sv) DIR=${SV_SERVICE};;
 esac
 for svc in ${DIR}/*; do
-	eval gen_dep ${svc##*/} ${OPT}
+	dep_gen ${svc##*/}
 done
-
-for dep in ${SV_DEPDIR}/${SRV}_*; do
-	DEP=${dep##*_} DEP_0= DEP_1= DEP_2=
-	while read line; do
-		DEP_0="${DEP_0} ${line%:*}" DEP_1="${DEP_1} ${line#*:}"
-	done <${dep}
-	for i in 0 1; do
-		eval DEP_${i}=\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\"
-	done
-	for i in ${DEP_0}; do
-		for svc in ${DEP_1}; do
-			case "${i}" in
-				("${svc}") DEP_2="${DEP_2} ${i}"
-				DEP_0="${DEP_0/${i}}" DEP_1="${DEP_1/${i}}";;
-			esac
-		done
-	done
+dep_0="${DEP_0}"
+for dep in use need before after; do
+	DEP=${SV_DEPDIR}/${SRV}_${dep} DEP_0="${dep_0}" DEP_1= DEP_2=
+	[ -f ${DEP} ] && dep_tree ${DEP}
 	for i in 0 1 2; do
-		eval echo ${DEP}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
-	done >${dep}
+		eval echo ${dep}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
+	done >${DEP}
 done
 
 #
