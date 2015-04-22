@@ -98,7 +98,7 @@ svc_reload()
 
 svc_mark()
 {
-	local arg
+	local arg ret
 	for arg in ${@:--s}; do
 		case "${arg}" in
 			(-d|--down*)  touch "${SV_TMPDIR}/down/${SVC_NAME}";;
@@ -107,7 +107,9 @@ svc_mark()
 			(-s|--start*) touch "${SV_TMPDIR}/star/${SVC_NAME}";;
 			(-S|--stoped) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
 		esac
+		ret=$((${ret}+${?}))
 	done
+	return ${ret}
 }
 
 svc_state()
