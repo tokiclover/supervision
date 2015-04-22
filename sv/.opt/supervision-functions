@@ -206,9 +206,11 @@ svc_depend()
 		eval svc_${dep%:*} ${1}
 		eval RET_${dep#*:}=${?}
 	done
-	case ${RET_NEED:-0} in
-		(0) echo $$ >${SVC_PID}  ;;
-		(*) return ${RET_NEED:-0};;
+	DEP_RET=${RET_NEED:-0}
+	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}+${RET_BEFORE}))
+	case ${DEP_RET} in
+		(0) echo $$ >${SVC_PID};;
+		(*) return ${DEP_RET}  ;;
 	esac
 }
 
