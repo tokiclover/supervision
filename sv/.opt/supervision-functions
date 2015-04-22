@@ -332,7 +332,8 @@ svc_cmd()
 			(cgroup_remove_service) cmd=${1} pfx= ;;
 			(-[cdls]*|--[cdls]*) opt="${opt} ${1}";;
 			(-*) error "Invalid option"; return 3 ;;
-			([a-z]*|[A-Z]*) cmd="commands"; break ;;
+			(*) [ -z "${cmd}" ] && { cmd=commands opt='"${@}"'; }
+				break;;
 		esac
 		shift
 	done
@@ -342,7 +343,7 @@ svc_cmd()
 			svc_state -r || { error "Inactive service" ; return 1; };;
 	esac
 	begin "service ${cmd}: "
-	eval ${pfx}${cmd} ${opt} "${@}"
+	eval ${pfx}${cmd} ${opt}
 	end "${?}"
 }
 
