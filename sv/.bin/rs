@@ -11,7 +11,7 @@ usage() {
    COMMAND: add|del|restart|start|stop|status|zap
    OPTIONS: [OPTS] COMMAND SERVICE [ARGS]
      -D, --nodeps     Disable dependencies
-     -d, --debug      Enable debug mode
+     -g, --debug      Enable debug mode
    OPTIONS: [OPTS] stage [ARGS]
      -0, --sysinit    Select stage-0
      -1, --boot       Select stage-1
@@ -24,7 +24,7 @@ ${1+exit ${1}}
 
 [ ${#} -ge 2 ] || usage 1
 ARGS="$(getopt \
-	-o 0123Ddh -l debug,help,nodeps \
+	-o 0123Dgh -l debug,help,nodeps \
 	-l boot,default,shutdown,sysinit \
 	-s sh -n rs -- "${@}")"
 [ ${?} -eq 0 ] || usage 1
@@ -32,8 +32,8 @@ eval set -- ${ARGS}
 
 while true; do
 	case "${1}" in
-		(-D|--node*) DEPS=0 ;;
-		(-d|--debug) set -x ;;
+		(-D|--node*) SVC_NODEPS=0 ;;
+		(-g|--debug) set -x ;;
 		(-h|--help) usage 0 ;;
 		(-0|--sysin*) LVL=0 ;;
 		(-1|--boot)   LVL=1 ;;
@@ -74,8 +74,6 @@ unset head
 ARGS=-C
 source "${SV_SVCDIR}"/.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
-
-yesno ${DEPS-1} || SVC_AFTER= SVC_BEFORE= SVC_NEED= SVC_USE=
 
 #
 # Handle command

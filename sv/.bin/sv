@@ -19,13 +19,14 @@ usage()
    COMMAND: [add|remove|reload|start|stop|status]
    COMMAND: (CGroup) cgroup_remove_service
    OPTIONS: add SERVICE [-cdls]
+     -D, --nodeps     Disable dependencies
      -c, --check      Enable binary check
      -d, --down       Start service as down
      -l, --log        Add log directory
      -s, --service    Add symlink to /service/
    OPTIONS: -S daemontools[-encore]|runit|s6
      -S, --set ARG    Set up backend
-     -D, --debug      Enable debug
+     -g, --debug      Enable debug
      -h, --help       Help/Exit
 EOH
 ${1+exit ${1}}
@@ -46,8 +47,8 @@ sv_cmd()
 
 [ ${#} -ge 2 ] || usage 2
 ARGS="$(getopt \
-	-o DS:cdhls \
-	-l check,debug,down,help,log,service,set: \
+	-o DS:cdghls \
+	-l check,debug,down,help,nodeps,log,service,set: \
 	-s sh -n sv -- "${@}")"
 [ ${?} -eq 0 ] || usage 3
 eval set -- ${ARGS}
@@ -55,7 +56,8 @@ ARGS= SV_OPT=
 
 while true; do
 	case "${1}" in
-		(-D|--debug) set -x;;
+		(-D|--node*) SVC_NODEPS=0 ;;
+		(-g|--debug) set -x;;
 		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
 		(-S|--set) SV_OPT="${2}"; shift 2; break;;
 		(*) CMD="${2}"; shift 2; break;;
