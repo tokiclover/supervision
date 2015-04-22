@@ -206,8 +206,9 @@ svc_depend()
 		eval svc_${dep%:*} ${1}
 		eval RET_${dep#*:}=${?}
 	done
+
 	DEP_RET=${RET_NEED:-0}
-	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}+${RET_BEFORE}))
+	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}+${RET_USE}))
 	case ${DEP_RET} in
 		(0) echo $$ >${SVC_PID};;
 		(*) return ${DEP_RET}  ;;
@@ -332,7 +333,7 @@ svc_cmd()
 			(cgroup_remove_service) cmd=${1} pfx= ;;
 			(-[cdls]*|--[cdls]*) opt="${opt} ${1}";;
 			(-*) error "Invalid option"; return 3 ;;
-			(*) [ -z "${cmd}" ] && { cmd=commands opt='"${@}"'; }
+			(*) [ -z "${cmd}" ] && cmd=commands; opt='"${@}"'
 				break;;
 		esac
 		shift
