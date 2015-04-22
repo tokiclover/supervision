@@ -7,8 +7,6 @@
 # Set a few default env variables
 #
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
-:	${SVC_DIR:=${PWD%/log}}
-:	${SVC_NAME:=${SVC_DIR##*/}}
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/service}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
@@ -22,23 +20,31 @@ PATH=${SV_RUNDIR}/.bin:${PATH}
 :	${LOGDIR:=/var/log}
 :	${SVC_PID:=${SV_TMPDIR}/pids/${name}}
 
-source "${SV_BACKEND}"; svc_backend -i ${ARGS}
-
+[ -z "${SV_INIT}" ] && { source "${SV_BACKEND}"; svc_backend -i ${ARGS}; }
+if [ ! -e "${SV_TMPDIR}"/sv ]; then
+	svc_tmpdir
+fi
 case "${cmd}" in
 	(finish|run)
 :	${SRV=sv}
-SOURCE "${SVC_DIR}"/OPTIONS
+:	${SVC_DIR:=${PWD%/log}}
+:	${SVC_NAME:=${SVC_DIR##*/}}
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 	;;
 	(rs)
 :	${SRV=rs}
+:	${SVC_DIR:=${RS_SVCDIR}}
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 	;;
 esac
-
-if [ ! -e "${SV_TMPDIR}"/sv ]; then
-	svc_tmpdir
-fi
+case "${SRV:-sv}" in
+	(rs)
+SOURCE -d "${SVC_DIR}"/${SVC_NAME}
+	;;
+	(sv)
+SOURCE "${SVC_DIR}"/OPTIONS
+	;;
+esac
 
 #
 # Set debug options
