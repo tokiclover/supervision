@@ -2,18 +2,21 @@
 #
 # $Header:  /etc/sv/.bin/rs                              Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.1 2015/04/14 21:09:26                      Exp $
+# $Version: 0.2 2015/04/22 21:09:26                      Exp $
 #
-
-exec 2>&1
 
 usage() {
 	cat <<-EOH
  usage: rs [OPTIONS] COMMAND SERVICE [ARGUMENTS]
    COMMAND: add|del|restart|start|stop|status|zap
-   OPTIONS:
+   OPTIONS: [OPTS] COMMAND SERVICE [ARGS]
      -D, --nodeps     Disable dependencies
      -d, --debug      Enable debug mode
+   OPTIONS: [OPTS] stage [ARGS]
+     -0, --sysinit    Select stage-0
+     -1, --boot       Select stage-1
+     -2, --default    Select stage-2
+     -3, --shutdown   Select stage-3
      -h, --help       Help/Exit
 EOH
 ${1+exit ${1}}
@@ -21,7 +24,8 @@ ${1+exit ${1}}
 
 [ ${#} -ge 2 ] || usage 1
 ARGS="$(getopt \
-	-o Ddh -l debug,help,nodeps \
+	-o 0123Ddh -l debug,help,nodeps \
+	-l boot,default,shutdown,sysinit \
 	-s sh -n rs -- "${@}")"
 [ ${?} -eq 0 ] || usage 1
 eval set -- ${ARGS}
@@ -31,6 +35,10 @@ while true; do
 		(-D|--node*) DEPS=0 ;;
 		(-d|--debug) set -x ;;
 		(-h|--help) usage 0 ;;
+		(-0|--sysin*) LVL=0 ;;
+		(-1|--boot)   LVL=1 ;;
+		(-2|--defau*) LVL=2 ;;
+		(-3|--shutd*) LVL=3 ;;
 		(*) shift;  break   ;;
 	esac
 	shift
@@ -48,11 +56,12 @@ case "${1}" in
 :	${CMD=${2}}
 	;;
 	(*)
-:	${RS_STAGE:=${3}}
 :	${SVC_NAME:=${2}}
 :	${CMD=${1}}
-	${3+shift}
 	;;
+esac
+case "${3}" in
+	(*-[0123]) LVL=${3#*-}; shift;;
 esac
 shift 2
 :	${RS_STAGE:=stage-2}
@@ -60,13 +69,12 @@ shift 2
 :	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
 :	${SV_SVCDIR:=${head%/.bin}}
 :	${name=${SVC_NAME}}
-:	${SVC_DIR=${RS_SVCDIR}}
 unset head
 
 ARGS=-C
 source "${SV_SVCDIR}"/.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
-SOURCE -d "${RS_SVCDIR}"/${SVC_NAME}
+
 yesno ${DEPS-1} || SVC_AFTER= SVC_BEFORE= SVC_NEED= SVC_USE=
 
 #

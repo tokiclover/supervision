@@ -38,7 +38,7 @@ extra commands are supported.
 .TP
 .B SUPERVISION
 And
-.R `sv/.bin/sv CMD [OPTS] SERVICE(S)'
+.R `sv/.bin/sv [OPTS] CMD SERVICE(S)'
 script does as well
 (see sv/.bin/sv --help).
 And those commands
@@ -48,7 +48,7 @@ directly.
 .TP
 .B RUNSCRIPT
 And so does
-.R `sv/.bin/rs [OPTS] CMD SERVICE [stage-(0123)] [ARGS]'
+.R `sv/.bin/rs [OPTS] CMD SERVICE [ARGS]'
 for runscript services; or else with
 .R `rs.d/SERVICE CMD [ARGS]'
 directly.
@@ -424,8 +424,8 @@ Simple & Cheap checkpath/mktemp script
 Simple script to set up (BusyBox) mdev (Linux) device-manager.
 .TP
 .RB rs
-Simple script to run (stage-[0123]) runscript service, e.g. `rs add zram stage-1'
-or `rs start stage stage-0' (to start sysinit.)
+Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
+or `rs -0 start stage' (to start sysinit.)
 .TP
 .RB sv
 Simple helper to manage supervision service e.g.
