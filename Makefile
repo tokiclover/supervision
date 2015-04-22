@@ -36,7 +36,6 @@ dist_SCRIPTS= \
 	sv/.bin/rs \
 	sv/.bin/sv \
 	sv/.bin/sv-shutdown \
-	sv/.bin/mdev-start-dev \
 	sv/.opt/cgroup-release-agent \
 	sv/.opt/dep \
 	sv/.opt/cmd
@@ -77,6 +76,7 @@ dist_SVC_OPTS = \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 dist_RUNSCRIPTS = \
+	mdev \
 	squashdir \
 	tmpdir \
 	zram

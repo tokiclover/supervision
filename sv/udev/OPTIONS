@@ -5,19 +5,16 @@
 
 SVC_CMD=/sbin/udevd
 SVC_OPTS=
+SVC_BEFORE='checkfs fsck'
+SVC_NEED='dev-mount sysfs'
 UDEV_DEBUG=No
-
-#
-# Use mdev as fall back
-#
-USE_MDEV=Yes
 
 pre()
 {
 	if ! grep -q devtmpfs /proc/filesystems; then
-		if yesno "${USE_MDEV}" && type mdev-start-dev >/dev/null 2>&1; then
-			begin "Starting mdev"
-			mdev-start-dev ${MDEV_OPTS}
+		if yesno "${USE_MDEV:-YES}"; then
+			begin "Starting mdev\n"
+			/etc/rs.d/mdev start
 			end "${?}"
 		fi
 		error "DevtmpFS is not supported"

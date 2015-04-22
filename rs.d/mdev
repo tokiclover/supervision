@@ -1,31 +1,31 @@
-#!/bin/sh
+#!/etc/sv/.bin/rs
 #
-# $Header:  /etc/sv/.bin/mdev-start-dev                  Exp $
+# $Header: /etc/rs.d/squashdir                           Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/02/24 21:09:26                      Exp $
+# $Version: 0.4 2015/04/24 21:09:26                      Exp $
 #
 
 :	${MDEV_CMD:=/sbin/mdev}
 :	${MDEV_LOGFILE:=/run/mdev.log}
-if command -v die >/dev/null 2>&1; then
-	source "${0%/*}"/../.opt/functions
-fi
-name=mdev
+SVC_NEED='dev-mount sysfs'
 
-mdev_start_dev()
+start()
 {
+	begin "Setting up mdev\n"
 	if ! [ -x ${MDEV_CMD} ]; then
-		if type -p busybox >/dev/null 2>&1; then
+		if type -p busybox >${NULL} 2>&1; then
 			MDEV_CMD="$(type -p busybox) mdev"
 		else
-			die "Failed to setup mdev."
+			end "1" "Failed to setup mdev."
+			return 1
 		fi
 	fi
 	if ! grep -Eq '/dev .*tmpfs' /proc/mounts; then
-		mount -t tmpfs -o exec,nosuid,mode=755,size=10M dev /dev ||
-			die "Failed to setup tmpfs."
+		mount -t tmpfs -o exec,nosuid,mode=755,size=10M dev /dev >${NULL} 2>&1 ||
+			{ end "2" "Failed to setup tmpfs."; return 2; }
 	fi
-	if [ -n "${MDEV_DEBUG}" ]; then
+	if yesno ${MDEV_DEBUG}; then
 		touch ${MDEV_LOGFILE}
 		ln -s ${MDEV_LOGFILE} /dev/mdev.log
 	fi
@@ -35,13 +35,10 @@ mdev_start_dev()
 	# Populate /dev
 	#
 	${MDEV_CMD} -s
-	#
-	# Seed /dev with necessary device nodes
-	#
-	mdev_seed_dev
+	end ${?}
 }
 
-mdev_seed_dev()
+start_post()
 {
 	#
 	# Check out/Create some required nodes
@@ -63,10 +60,6 @@ mdev_seed_dev()
 	#
 	mkdir -p /dev/pts /dev/shm
 }
-
-if [ "${0##*/}" = "mdev-start-dev" ]; then
-	mdev_start_dev "${@}"
-fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

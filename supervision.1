@@ -409,6 +409,7 @@ RUNSCRIPT service directory
 (See RS_SVCDIR/rs.d/stage-{0,1,2,3} for active services.)
 .TP
 .B SERVICES
+.RB [\| mdev \|]\ \c
 .RB [\| squashdir \|]\ \c
 .RB [\| tmpdir \|]\ \c
 .RB [\| zram \|]
@@ -419,9 +420,6 @@ SUPERVISION service directory
 .TP
 .RB checkpath
 Simple & Cheap checkpath/mktemp script
-.TP
-.RB mdev-start-dev
-Simple script to set up (BusyBox) mdev (Linux) device-manager.
 .TP
 .RB rs
 Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'

@@ -1,0 +1,9 @@
+#
+# $Header: /etc/rs.d/OPTIONS.mdev, 2015/04/22            Exp $
+#
+
+name=mdev
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
