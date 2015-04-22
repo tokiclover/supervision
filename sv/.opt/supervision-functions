@@ -119,6 +119,8 @@ svc_state()
 	esac
 	for arg in ${@:--r}; do
 		case "${arg}" in
+			(-R|--runs*) S=RS;;
+			(-V|--supe*) S=SV;;
 			(-e|--exist) eval [ -e "\${${S}_SVCDIR}/${SVC_NAME}" ];;
 			(-r|--runn*) eval [ -e "\${${S}_RUNDIR}/${SVC_NAME}" ];;
 			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
@@ -343,10 +345,10 @@ svc_cmd()
 
 	case "${cmd}" in
 		(*remove*|reload|stop|status)
-			svc_state -r || (rs_state -r && pfx='rs_cmd ') ||
+			svc_state -r || (svc_state -R -r && pfx='rs_cmd ') ||
 			{ error "Inactive service" ; return 1; };;
 		(desc|start)
-			svc_state -e || (rs_state -e && pfx='rs_cmd ') ||
+			svc_state -e || (svc_state -R -e && pfx='rs_cmd ') ||
 			{ error "Inexistent service"; return 2; };;
 	esac
 	begin "service ${cmd}: "
