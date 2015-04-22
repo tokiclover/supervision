@@ -118,11 +118,16 @@ svc_mark()
 
 svc_state()
 {
-	local S arg ret
+	local S arg args ret
 	case "${SRV}" in
 		(sv) S=SV;;
 		(rs) S=RS;;
 	esac
+	args="$(getopt -o RVdefrs -l down,exist,failed,running,runscript \
+		-l start,supervision -n state -s sh -- "${@}")"
+	[ ${?} = 0 ] || return 128
+	eval set -- ${args}
+
 	for arg in ${@:--r}; do
 		case "${arg}" in
 			(-R|--runs*) S=RS;;
@@ -132,10 +137,10 @@ svc_state()
 			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
+			(*) return ${ret};;
 		esac
 		ret=$((${ret} + ${?}))
 	done
-	return ${ret}
 }
 
 #
