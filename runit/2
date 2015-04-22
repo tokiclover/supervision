@@ -50,7 +50,7 @@ begin "Starting Supervision\n"
 exec env - PATH=${PATH} ${SV_CMD:-runsvdir} ${SV_RUNDIR} ${SV_OPTS}
 end "${?}"
 
-sh -aim
+${RS_SHELL:-${SHELL:-sh}} -aim
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

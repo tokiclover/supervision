@@ -22,7 +22,8 @@ end "${?}"
 #
 # FIXME: Reboot if the previous restart attempt failed
 #
-eval "${SV_DIR}"/finish -6 || sh -aim
+eval "${SV_DIR}"/finish -6 ||
+${RS_SHELL:-${SHELL:-sh}} -im
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
