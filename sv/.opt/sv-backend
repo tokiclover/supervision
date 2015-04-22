@@ -2,9 +2,10 @@
 # $Header:  /etc/sv/.opt/sv-backend                      Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/20 21:09:26                      Exp $
+# $Version: 1.2 2015/04/22 21:09:26                      Exp $
 #
 
+:	${RS_SVCDIR:=/etc/rs.d}
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/service}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
@@ -91,6 +92,7 @@ svc_shutdown()
 		SVC_NAME="${SVC_NAME:-${SV_CMD}}" cgroup_remove_service
 		;;
 	esac
+
 	[ -n "${MSG}" ] && echo "${MSG}" | busybox wall
 	#
 	# System halt
@@ -98,7 +100,6 @@ svc_shutdown()
 	begin "Stopping stage-1 runscript"
 	svc_stage -1 -S
 	end ${?}
-	begin "${MSG:-Shuting down the system}\n"
 	svc_stage -3
 	RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
 }
@@ -131,19 +132,6 @@ svc_tmpdir()
 	echo "${SV_OPT}" >"${SV_TMPDIR}"/sv
 	OS_NAME=$(uname -s)
 	env_sv OS_NAME
-}
-
-rc_level()
-{
-	local cmdline level run
-	cmdline="$(cat /proc/cmdline)"
-	case "${cmdline}" in
-		(*nonetwork*) run=2 level=nonetwork;;
-		(*single*)    run=1 level=single   ;;
-	esac
-	begin "Starting ${level} run level\n"
-	RUNLEVEL=${run:-3} rc ${level:-default}
-	end ${?}
 }
 
 #

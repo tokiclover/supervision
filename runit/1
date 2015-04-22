@@ -6,14 +6,15 @@
 
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
 :	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+
 if [ -f ${SV_BACKEND} ]; then
 	source ${SV_BACKEND}
 	svc_backend -i -0
-fi
-
+else
 name=OpenRC begin "System initialization"
 RUNLEVEL=S rc sysinit
 end "$?"
+fi
 
 touch /etc/runit/stopit
 chmod 0 /etc/runit/stopit

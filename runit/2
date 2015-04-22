@@ -9,14 +9,14 @@
 if [ -f ${SV_BACKEND} ]; then
 	source ${SV_BACKEND}
 	svc_backend -i -1
-fi
+else
 name=OpenRC
 begin "Bringing up the System\n"
 RUNLEVEL=S rc boot
 end "${?}"
+fi
 if [ -f ${SV_BACKEND} ]; then
 	svc_stage -2
-	rc_level
 else
 	begin "Starting default run level\n"
 	RUNLEVEL=3 rc default

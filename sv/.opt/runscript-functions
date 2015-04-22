@@ -128,9 +128,9 @@ rs_stage()
 				esac;;
 			esac
 			for svc in $(eval echo \$${dep}_${i}); do
-			eval ${CMD} ${cmd} ${opt}
-			ret=$((${ret}+${?}))
-		done
+				eval ${CMD} ${cmd} ${opt}
+				ret=$((${ret}+${?}))
+			done
 		done
 	done
 	return ${ret}
@@ -150,9 +150,28 @@ svc_stage()
 {
 	case "${*}" in
 		(*-0*) tmp_service;;
+		(*-[123]*)  ;;
+		(*) return 1;;
 	esac
 	rs_stage "${@}" -f
 	rs_stage "${@}"
+
+	if yesno ${RC_SYS:-YES}; then
+		case "${*}" in
+			(*-0*) ACTION=sysinit LEVEL=S;;
+			(*-1*) ACTION=boot    LEVEL=S;;
+			(*-2*)
+			case "$(cat /proc/cmdline)" in
+				(*nonetwoork*) ACTION=nonetwoork LEVEL=2;;
+				(*single*)    ACTION=single  LEVEL=1;;
+				(*default*|*) ACTION=default LEVEL=3;;
+			esac;;
+			(*-3*) ACTION=${ACTION:-shutdown} LEVEL=${LEVEL:-0};;
+		esac
+		begin "${MSG:-System ${ACTION}}\n"
+		RUNLEVEL=${LEVEL} rc ${ACTION}
+		end ${?}
+	fi
 }
 
 #
