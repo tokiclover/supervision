@@ -153,7 +153,8 @@ svc_stage()
 		(*-[123]*)  ;;
 		(*) return 1;;
 	esac
-	rs_stage "${@}" -f
+
+	yesno ${RS_PARALLEL:-YES} && rs_stage "${@}" -f
 	rs_stage "${@}"
 
 	if yesno ${RC_SYS:-YES}; then
