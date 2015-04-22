@@ -98,7 +98,11 @@ svc_reload()
 
 svc_mark()
 {
-	local arg ret
+	local arg args ret
+	args="$(getopt -o Sdfsu -l down,failed,start,stop,up -n mark -s sh -- "${@}")"
+	[ ${?} = 0 ] || return 128
+	eval set -- ${args}
+
 	for arg in ${@:--s}; do
 		case "${arg}" in
 			(-d|--down*)  touch "${SV_TMPDIR}/down/${SVC_NAME}";;
@@ -106,10 +110,10 @@ svc_mark()
 			(-f|--failed) touch "${SV_TMPDIR}/fail/${SVC_NAME}";;
 			(-s|--start*) touch "${SV_TMPDIR}/star/${SVC_NAME}";;
 			(-S|--stoped) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
+			(*) return ${ret};;
 		esac
 		ret=$((${ret}+${?}))
 	done
-	return ${ret}
 }
 
 svc_state()
