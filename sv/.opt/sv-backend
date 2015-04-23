@@ -22,8 +22,10 @@ fi
 
 svc_backend()
 {
-	local CG DIR PP STG arg
+	local CG DIR PP STG arg args
 	DIR="${SV_SVCDIR}/.opt/"
+	args="$(getopt -o 0123CPi -l init,nocgroup,nopath -n backend -s sh -- "${@}")"
+	eval set -- ${args}
 
 	while true; do
 	case "${1}" in
@@ -34,7 +36,7 @@ svc_backend()
 		(-C|--nocg*) CG=No ;;
 		(-P|--nopa*) PP=No ;;
 		(*-[0123]) STG=${1};;
-		(*) break;;
+		(*) shift; break ;;
 	esac
 	shift
 	done
