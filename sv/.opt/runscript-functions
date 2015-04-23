@@ -35,7 +35,7 @@ rs_cmd()
 {
 	local ARGS CMD END FAIL cmd val
 	END='{ end 0; return; }' cmd="${1}"
-	FAIL='[ ${val} = 0 ] || { val=2; rs_zap; break; }'
+	FAIL='{ rs_zap; break; }'
 
 	case "${cmd}" in
 		(start|stop)
@@ -72,8 +72,8 @@ rs_cmd()
 			esac;;
 			(*)
 			case ${cmd} in
-				(start_pre) eval ${FAIL};;
-				(stop_post) eval ${FAIL};;
+				(*_pre)  val=2; eval ${FAIL};;
+				(*_post) val=3; eval ${FAIL};;
 			esac
 			val=$((${val}+1));;
 		esac
