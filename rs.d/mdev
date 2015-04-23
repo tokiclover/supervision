@@ -1,6 +1,6 @@
 #!/etc/sv/.bin/rs
 #
-# $Header: /etc/rs.d/squashdir                           Exp $
+# $Header: /etc/rs.d/mdev                                Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 0.4 2015/04/24 21:09:26                      Exp $
@@ -46,7 +46,7 @@ start_post()
 	[ -c /dev/console ] || mknod /dev/console c 5 1
 	[ -c /dev/tty1    ] || mknod /dev/tty1    c 4 1
 	[ -c /dev/null    ] || mknod /dev/null    c 1 3
-	[ -d /lib/mdev/devices ] && cp -RPp /lib/mdev/devices/* /dev 2>/dev/null
+	[ -d /lib/mdev/devices ] && cp -RPp /lib/mdev/devices/* /dev 2>${NULL}
 	#
 	# Handle std{out,in,err} (not provided by sysfs)
 	#
