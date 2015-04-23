@@ -12,6 +12,7 @@ case "${0}" in
 	     head="${head%/*}";;
 esac
 :	${SVC_DIR=${head%/log}}
+:	${SVC_NAME=${SVC_DIR##*/}}
 case "${SVC_DIR}" in
 	(/etc/*)
 :	${SV_SVCDIR=${SVC_DIR%/*}}
@@ -20,7 +21,6 @@ case "${SVC_DIR}" in
 :	${SV_RUNDIR=${SVC_DIR%/*}}
 	;;
 esac
-
 case "${head}" in
 	(*/log) cmd_dir=log;;
 	(*)     cmd_dir='' ;;
