@@ -195,15 +195,15 @@ svc_post()
 	#
 	case "${cmd_args}" in
 		(0*)
-			;;
+		;;
 		(*)
-			SVC_TRY=$((${SVC_TRY} + 1))
-			env_svc SVC_TRY
-			if [ ${SVC_TRY:-0} -ge ${SV_TRY:-3} ]; then
-				error "Maximum number of starting attempts reached."
-				svc_remove
-			fi
-			;;
+		SVC_TRY=$((${SVC_TRY}+1))
+		env_svc SVC_TRY
+		if [ ${SVC_TRY:-0} -ge ${SV_TRY:-3} ]; then
+			error "Maximum number of starting attempts reached."
+			svc_remove
+		fi
+		;;
 	esac
 }
 
