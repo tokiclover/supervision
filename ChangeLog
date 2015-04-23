@@ -8,7 +8,10 @@ with {after,before,need,use} style dependencies.
 Improved the manual with {BUILTINS,DEPENDENCIES,INIT-STAGE} sections;
 and numerous RUNSCRIPTS sub-sections.
 
-SERVICE/RUNSCRIPT: Added squashdir, tmpdir, zram
+Unified {supervision-backend,svc} scripts to sv/.opt/sv;
+converted mdev-start-dev to runscript service.
+
+SERVICE/RUNSCRIPT: Added mdev, squashdir, tmpdir, zram
 
 31:
 
