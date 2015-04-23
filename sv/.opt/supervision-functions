@@ -2,7 +2,7 @@
 # $Header:  /etc/sv/.opt/supervision-functions           Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 2.8 2015/04/14 21:09:26                      Exp $
+# $Version: 2.8 2015/04/22 21:09:26                      Exp $
 #
 
 #
@@ -11,18 +11,24 @@
 #
 svc_add()
 {
-	local cmd chk dwn log sym svc name dir
+	local args cmd chk dwn log sym svc name dir
+	args="$(getopt -o cdls -l check,down,log,service -n add -s sh -- "${@}")"
+	[ ${?} = 0 ] || return 128
+	eval set -- ${args}
+
 	while [ $# -ge 1 ]; do
 		case "${1}" in
-			(-c|--check)   chk=0; shift;;
-			(-d|--down)    dwn=0; shift;;
-			(-l|--log)     log=0; shift;;
-			(-s|--service) svc=0; shift;;
-			(*) break;;
+			(-c|--check) chk=0;;
+			(-d|--down)  dwn=0;;
+			(-l|--log)   log=0;;
+			(-s|--serv*) svc=0;;
+			(*)   shift; break;;
 		esac
+		shift
 	done
 :	${name:=${1:-${SVC_NAME}}}
 :	${dir=${SV_SVCDIR}/${name}}
+
 	if [ -n "${chk}" ]; then
 		if ! type -p ${SVC_CMD:-${name}} >${NULL} 2>&1; then
 			error "Command not found."
@@ -346,8 +352,6 @@ svc_cmd()
 			(add|remove|desc|reload|zap) cmd=${1} ;;
 			(start|stop|status)        cmd=${1}   ;;
 			(cgroup_remove_service) cmd=${1} pfx= ;;
-			(-[cdls]*|--[cdls]*) opt="${opt} ${1}";;
-			(-*) error "Invalid option"; return 3 ;;
 			(*) [ -z "${cmd}" ] && cmd=commands; opt='"${@}"'
 				break;;
 		esac
