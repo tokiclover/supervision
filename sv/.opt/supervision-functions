@@ -154,8 +154,8 @@ svc_state()
 #
 svc_pre()
 {
-	local REMOVE_SVC file
-	REMOVE_SVC='{ svc_remove; die "Failed to setup ${SVC_NAME}"; };'
+	local REMOVE_SVC file val
+	REMOVE_SVC='{ svc_remove; svc_mark -f; return ${val}; }'
 
 	if [ -x ./RUN ]; then
 		SVC_CMD=./RUN
@@ -164,16 +164,19 @@ svc_pre()
 	fi
 	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
 		error "Command not found."
-		eval ${REMOVE_SVC}
+		val=1 eval ${REMOVE_SVC}
 	fi
 	for file in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
 		if [ ! -f "${file}" ]; then
 			error "${file} required file not found"
-			eval ${REMOVE_SVC}
+			val=2 eval ${REMOVE_SVC}
 		fi
 	done
 	if command -v pre >${NULL} 2>&1; then
-		pre || eval ${REMOVE_SVC}
+		pre || {
+			error "Failed to set up service"
+			val=3 eval ${REMOVE_SVC}
+		}
 	fi
 }
 svc_remove()
@@ -389,7 +392,7 @@ svc_run()
 		return
 	fi
 	if command -v svc_pre >${NULL} 2>&1; then
-		svc_pre
+		svc_pre || return
 	fi
 	svc_depend || return
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
