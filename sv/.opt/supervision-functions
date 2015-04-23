@@ -178,11 +178,8 @@ svc_pre()
 }
 svc_remove()
 {
-	begin "Removing ${SVC_NAME} service"
 	rm -fr "${SV_RUNDIR}/${SVC_NAME}"
-	end ${?}
-	rm -f "${SV_TMPDIR}/${SVC_NAME}_OPTIONS"
-	svc_mark --failed
+	svc_zap
 }
 
 #
@@ -208,6 +205,7 @@ svc_post()
 		if [ ${SVC_TRY:-0} -ge ${SV_TRY:-3} ]; then
 			error "Maximum number of starting attempts reached."
 			svc_remove
+			svc_mark -f
 		fi
 		;;
 	esac
