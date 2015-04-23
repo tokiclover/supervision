@@ -37,12 +37,13 @@ SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 	;;
 esac
+
 case "${SRV:-sv}" in
 	(rs)
-SOURCE -d "${SVC_DIR}"/${SVC_NAME}
+SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 	;;
 	(sv)
-SOURCE "${SVC_DIR}"/OPTIONS
+SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 	;;
 esac
 

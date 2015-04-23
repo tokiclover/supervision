@@ -49,15 +49,23 @@ case "${0}" in
 	(*)  head="${PWD}/${0#./}"
 	     head="${head%/*}";;
 esac
-
 case "${1}" in
 	(*rs.d/*)
 :	${SVC_NAME:=${1##*/}}
 :	${CMD=${2}}
 	;;
 	(*)
-:	${SVC_NAME:=${2}}
+case "${2}" in
+	(stage)
+:	${SRC_OPTS=}
+:	${CMD=${1} ${2} '${RS_STAGE}'}
+	;;
+	(*)
 :	${CMD=${1}}
+	;;
+esac
+:	${SRC_OPTS=-d}
+:	${SVC_NAME=${2}}
 	;;
 esac
 case "${3}" in
@@ -74,11 +82,10 @@ unset head
 ARGS=-C
 source "${SV_SVCDIR}"/.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
-
 #
 # Handle command
 #
-eval set -- "${CMD}" "${@}"
+eval set -- ${CMD} "${@}"
 eval rs_cmd "${@}"
 
 #

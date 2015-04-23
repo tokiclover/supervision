@@ -90,7 +90,7 @@ rs_stage()
 		-n stage -s sh -- "${@}")"
 	eval set -- ${args}
 
-	while true; do
+	while [ ${#} -ge 1 ]; do
 	case "${1}" in
 		(*-[0123]) lvl=${1};
 		case "${1}" in
@@ -110,7 +110,7 @@ rs_stage()
 		(-s|*sta*) cmd=start;;
 		(-r|--runs*) SRV=rs srv=${1};;
 		(-v|--supe*) SRV=sv srv=${1};;
-		(*) break;;
+		(--) ;;
 	esac
 	shift
 	done
@@ -119,6 +119,7 @@ rs_stage()
 :	${cmd:=start}
 :	${SRV:=rs}
 	export RS_STAGE=stage-${lvl#*-}
+
 	case ${cmd} in
 		(start) ${SV_SVCDIR}/.opt/dep ${lvl} ${srv:-r}
 		        DEP='need use after before' ORD='2 1 0';;
