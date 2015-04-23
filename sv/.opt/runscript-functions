@@ -35,7 +35,7 @@ rs_cmd()
 {
 	local ARGS CMD END FAIL cmd val
 	END='{ end 0; return; }' cmd="${1}"
-	FAIL='{ rs_zap; break; }'
+	FAIL='{ svc_zap; break; };'
 
 	case "${cmd}" in
 		(start|stop)
