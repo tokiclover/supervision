@@ -175,7 +175,7 @@ svc_pre()
 }
 svc_remove()
 {
-	rm -fr "${SV_RUNDIR}/${SVC_NAME}"
+	eval rm -fr "\${${SV_SRV}_RUNDIR}/${SVC_NAME}"
 	svc_zap
 }
 

@@ -21,11 +21,11 @@ rs_add()
 {
 	svc_state -e && ln -fns ${RS_SVCDIR}/${SVC_NAME} ${RS_RUNDIR}
 }
-rs_del()
-{
-	rm -f ${RS_RUNDIR}/${SVC_NAME}
-}
 
+svc_del()
+{
+	eval rm -fr "\${${SV_SRV}_RUNDIR}/${SVC_NAME}"
+}
 svc_zap()
 {
 	rm -f ${SV_TMPDIR}/${SVC_NAME}_OPTIONS ${SV_TMPDIR}/*/${SVC_NAME}
