@@ -38,7 +38,7 @@ extra commands are supported.
 .TP
 .B SUPERVISION
 And
-.R `sv/.opt/sv [OPTS] CMD SERVICE(S)'
+.R `sv/.bin/sv [OPTS] CMD SERVICE(S)'
 script does as well
 (see sv/.bin/sv --help).
 And those commands
@@ -425,6 +425,12 @@ Simple & Cheap checkpath/mktemp script
 Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
 or `rs -0 start stage' (to start sysinit.)
 .TP
+.RB sv
+Simple helper to manage supervision service e.g.
+`SV_SVCDIR=sv sv/.bin/sv add --log SERVICE'
+and to set up specific supervision Backend e.g.
+`sv -S runit'
+.TP
 .RB sv-shutdown
 Simple script to handle system halt
 .TP
@@ -440,12 +446,6 @@ Extra backend binary symlinks; Refer to to the following supported list.
 .RB \| setuidgid \|\ \c
 .RB \| softlimit \|
 .SS SV_SVCDIR/.opt/
-.TP
-.RB sv
-Simple helper to manage supervision service e.g.
-`SV_SVCDIR=sv sv/.bin/sv add --log SERVICE'
-and to set up specific supervision Backend e.g.
-`sv -S runit'
 .TP
 .RB cmd
 Default {,log/}{finish,run} commands
