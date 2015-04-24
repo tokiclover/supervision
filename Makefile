@@ -34,7 +34,7 @@ dist_SV_RUNS  =
 dist_SCRIPTS  = \
 	sv/.bin/checkpath \
 	sv/.bin/rs \
-	sv/.bin/sv \
+	sv/.bin/sp \
 	sv/.bin/sv-shutdown \
 	sv/.opt/cgroup-release-agent \
 	sv/.opt/dep \

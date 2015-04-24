@@ -38,9 +38,9 @@ extra commands are supported.
 .TP
 .B SUPERVISION
 And
-.R `sv/.bin/sv [OPTS] CMD SERVICE(S)'
+.R `sv/.bin/sp [OPTS] CMD SERVICE(S)'
 script does as well
-(see sv/.bin/sv --help).
+(see sv/.bin/sp --help).
 And those commands
 can be used with
 .R `sv/SERVICE/run CMD [OPTS]'
@@ -425,11 +425,11 @@ Simple & Cheap checkpath/mktemp script
 Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
 or `rs -0 start stage' (to start sysinit.)
 .TP
-.RB sv
+.RB sp
 Simple helper to manage supervision service e.g.
-`SV_SVCDIR=sv sv/.bin/sv add --log SERVICE'
+`SV_SVCDIR=sv sv/.bin/sp add --log SERVICE'
 and to set up specific supervision Backend e.g.
-`sv -S runit'
+`sp -S runit'
 .TP
 .RB sv-shutdown
 Simple script to handle system halt

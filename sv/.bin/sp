@@ -1,12 +1,12 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.bin/sv                              Exp $
+# $Header:  /etc/sv/.bin/sp                              Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 1.0 2015/04/24 21:09:26                      Exp $
 #
 
-:	${name=sv}
+:	${name=sp}
 :	${SV_BACKEND:=/etc/sv/.opt/sv-backend}
 
 source "${SV_BACKEND}" || { echo "Required file not found." >&2; exit 1; }
@@ -15,7 +15,7 @@ svc_backend -C -i
 usage()
 {
 	cat <<-EOH
- usage: sv [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
+ usage: sp [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
    COMMAND: [add|del|remove|reload|start|stop|status|zap]
    COMMAND: (CGroup) cgroup_remove_service
    OPTIONS: add SERVICE [-cdls]
@@ -42,14 +42,13 @@ sv_cmd()
 		esac
 		eval ${cmd} ${CMD} ${ARGS}
 	done
-	exit
 }
 
 [ ${#} -ge 2 ] || usage 2
 ARGS="$(getopt \
 	-o DS:cdghls \
 	-l check,debug,down,help,nodeps,log,service,set: \
-	-s sh -n sv -- "${@}")"
+	-s sh -n sp -- "${@}")"
 [ ${?} -eq 0 ] || usage 3
 eval set -- ${ARGS}
 ARGS= SV_OPT=
@@ -58,14 +57,17 @@ while true; do
 	case "${1}" in
 		(-D|--node*) SVC_NODEPS=0 ;;
 		(-g|--debug) set -x;;
-		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
 		(-S|--set) SV_OPT="${2}"; shift 2; break;;
+		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
 		(*) CMD="${2}"; shift 2; break;;
 		(-h|--help) usage 0;;
 	esac
 	shift
 done
-[ -n "${SV_OPT}" ] || sv_cmd "${@}"
+
+sv_backend()
+{
+local BINS CMDS PREFIX SIGNALS bin env
 
 SIGNALS='SIGSTRT SIGSTOP SIGONCE SIGPAUSE SIGCONT SIGHUP SIGALRM SIGINT
 	SIGTERM SIGKILL SIGEXIT SIGQUIT SIGUSR1 SIGUSR2 SIGWTUP SIGWDWN'
@@ -124,8 +126,9 @@ for env in SV_OPT ${CMDS} ${SIGNALS}; do
 	unset ${env}
 done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
 end ${?} SVC_BACKEND
+}
 
-unset BINS CMDS PREFIX SIGNALS bin env
+[ -n "${SV_OPT}" ] && sv_backend || sv_cmd "${@}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

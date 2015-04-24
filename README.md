@@ -39,7 +39,7 @@ and copy service directory to make new instances, e.g.
 `cp -a /etc/sv/getty /etc/service/getty-ttyS2` instead of
 `ln -s /etc/sv/getty /etc/service/getty-ttyS2`.
 
-And do not forget to run `sv/.bin/sv -S BACKEND` afterwards!
+And do not forget to run `sv/.bin/sp -S BACKEND` afterwards!
 
 DOCUMENTATION
 -------------
