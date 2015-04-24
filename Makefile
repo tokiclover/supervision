@@ -75,12 +75,14 @@ dist_SV_OPTS  = \
 	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
+
 dist_RS_SVCS  = \
 	mdev \
 	squashdir \
 	tmpdir \
 	zram
-dist_RS_OPTS  =
+dist_RS_OPTS  = \
+	dev
 dist_RS_VIRT  = \
 	dev:mdev
 
