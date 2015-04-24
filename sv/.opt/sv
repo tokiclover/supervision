@@ -3,7 +3,7 @@
 # $Header:  /etc/sv/.opt/sv                              Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/20 21:09:26                      Exp $
+# $Version: 1.0 2015/04/24 21:09:26                      Exp $
 #
 
 :	${name=sv}
@@ -16,7 +16,7 @@ usage()
 {
 	cat <<-EOH
  usage: sv [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
-   COMMAND: [add|remove|reload|start|stop|status]
+   COMMAND: [add|del|remove|reload|start|stop|status|zap]
    COMMAND: (CGroup) cgroup_remove_service
    OPTIONS: add SERVICE [-cdls]
      -D, --nodeps     Disable dependencies

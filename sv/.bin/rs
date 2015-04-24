@@ -2,13 +2,13 @@
 #
 # $Header:  /etc/sv/.bin/rs                              Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/22 21:09:26                      Exp $
+# $Version: 0.2 2015/04/24 21:09:26                      Exp $
 #
 
 usage() {
 	cat <<-EOH
  usage: rs [OPTIONS] COMMAND SERVICE [ARGUMENTS]
-   COMMAND: add|del|restart|start|stop|status|zap
+   COMMAND: add|del|remove|restart|start|stop|status|zap
    OPTIONS: [OPTS] COMMAND SERVICE [ARGS]
      -D, --nodeps     Disable dependencies
      -g, --debug      Enable debug mode
@@ -82,6 +82,7 @@ unset head
 ARGS=-C
 source "${SV_SVCDIR}"/.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
+
 #
 # Handle command
 #
