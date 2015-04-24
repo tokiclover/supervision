@@ -344,22 +344,27 @@ svc_cmd()
 	local arg cmd opt pfx; pfx=svc_
 	for arg; do
 		case "${1}" in
-			(add|remove|desc|reload|zap) cmd=${1} ;;
-			(start|stop|status)        cmd=${1}   ;;
+			(add|del|desc|remove|zap)    cmd=${1} ;;
+			(reload|start|stop|status) cmd=${1}   ;;
 			(cgroup_remove_service) cmd=${1} pfx= ;;
-			(*) [ -z "${cmd}" ] && cmd=commands; opt='"${@}"'
-				break;;
+			(*)     opt='"${@}"' cmd=commands     ;;
 		esac
 		shift
+		opt='"${@}"'
+		break
 	done
 
+	case "${RS_SRV}" in
+		(rs)
+		case "${cmd}" in
+			(add|start|stop|status) pfx='rs_cmd ';;
+		esac;;
+	esac
 	case "${cmd}" in
 		(*remove*|reload|stop|status)
-			svc_state -r || (svc_state -R -r && pfx='rs_cmd ') ||
-			{ error "Inactive service" ; return 1; };;
+			svc_state -r || { error "Inactive service"  ; return 1; };;
 		(desc|start)
-			svc_state -e || (svc_state -R -e && pfx='rs_cmd ') ||
-			{ error "Inexistent service"; return 2; };;
+			svc_state -e || { error "Inexistent service"; return 2; };;
 	esac
 	begin "service ${cmd}: "
 	eval ${pfx}${cmd} ${opt}
