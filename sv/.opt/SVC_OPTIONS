@@ -26,19 +26,21 @@ if [ ! -e "${SV_TMPDIR}"/sv ]; then
 fi
 case "${cmd}" in
 	(finish|run)
-:	${SRV=sv}
+:	${SV_SRV=SV}
+:	${RS_SRV=sv}
 :	${SVC_DIR:=${PWD%/log}}
 :	${SVC_NAME:=${SVC_DIR##*/}}
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 	;;
 	(rs)
-:	${SRV=rs}
+:	${SV_SRV=RS}
+:	${RS_SRV=rs}
 :	${SVC_DIR:=${RS_SVCDIR}}
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 	;;
 esac
 
-case "${SRV:-sv}" in
+case "${RS_SRV:-sv}" in
 	(rs)
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 	;;
