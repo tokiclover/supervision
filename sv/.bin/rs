@@ -72,7 +72,7 @@ case "${3}" in
 	(*-[0123]) LVL=${3#*-}; shift;;
 esac
 shift 2
-:	${RS_STAGE:=stage-2}
+:	${RS_STAGE:=stage-${LVL:-2}}
 :	${RS_SVCDIR:=${head%/sv*}/rs.d}
 :	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
 :	${SV_SVCDIR:=${head%/.bin}}
