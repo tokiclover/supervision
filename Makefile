@@ -30,8 +30,8 @@ dist_COMMON = \
 	sv/.opt/sv-backend \
 	sv/.opt/sv.conf \
 	sv/.opt/supervision-functions
-dist_RUNS   = 
-dist_SCRIPTS= \
+dist_SV_RUNS  =
+dist_SCRIPTS  = \
 	sv/.bin/checkpath \
 	sv/.bin/rs \
 	sv/.opt/sv \
@@ -39,7 +39,7 @@ dist_SCRIPTS= \
 	sv/.opt/cgroup-release-agent \
 	sv/.opt/dep \
 	sv/.opt/cmd
-dist_SERVICES = \
+dist_SV_SVCS  = \
 	acpid \
 	atd \
 	cgred \
@@ -63,10 +63,10 @@ dist_SERVICES = \
 	sshd \
 	wpa_supplicant \
 	udev
-dist_SVC_VIRT = \
+dist_SV_VIRT  = \
 	net:dhcp \
 	socklog-inet:syslog socklog-ucspi:syslog
-dist_SVC_OPTS = \
+dist_SV_OPTS  = \
 	dns/OPTIONS.dnsmasq \
 	dhcp/OPTIONS.dhcpcd dhcp/OPTIONS.dhcpd \
 	cron/OPTIONS.cronie cron/OPTIONS.dcron \
@@ -75,11 +75,14 @@ dist_SVC_OPTS = \
 	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
-dist_RUNSCRIPTS = \
+dist_RS_SVCS  = \
 	mdev \
 	squashdir \
 	tmpdir \
 	zram
+dist_RS_OPTS  =
+dist_RS_VIRT  = \
+	dev:mdev
 
 ifdef RUNIT
 dist_COMMON  += runit/reboot
@@ -92,9 +95,9 @@ dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
 DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
-	$(dist_SVC_OPTS) \
-	$(dist_RUNSCRIPTS) \
-	$(dist_SCRIPTS) $(dist_SERVICES) $(dist_RUNS:%=%/RUN)
+	$(dist_SV_OPTS) $(dist_SV_SVCS) \
+	$(dist_RS_OPTS) $(dist_RS_SVCS) \
+	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.bin \
 	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
@@ -105,20 +108,38 @@ DISTDIRS    = $(dist_DIRS)
 
 ifdef STATIC
 getty_CMD   = cp -a sv/getty
-dist_SVC_VIRT += cron:fcron dns:dnsmasq \
+dist_SV_VIRT += cron:fcron dns:dnsmasq \
 	httpd:busybox-httpd ntp:busybox-ntpd syslog:socklog
 else
 getty_CMD   = ln -s $(SYSCONFDIR)/sv/getty
 endif
 getty_NAME  = $(shell which agetty >/dev/null 2>&1 && echo -n agetty || echo -n getty)
 
-define service_DIR =
+define svc_dir =
 	$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$(1)
 endef
-define service_CMD =
+define svc_cmd =
 	for cmd in finish run; do \
 		ln -s $(subst log,..,$(2))../.opt/cmd \
 		$(DESTDIR)$(SYSCONFDIR)/sv/$(1)/$(2)/$${cmd}; \
+	done
+endef
+define svc_sym =
+	for svc in $(2); do \
+		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/$(1)/$${svc%:*}; \
+	done
+endef
+define rem_sym =
+	for svc in $(2); do \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/$(1)/$${svc%:*}; \
+	done
+endef
+define svc_opt  =
+	$(install_DATA)  $(1) $(DESTDIR)$(SYSCONFDIR)/$(1)
+endef
+define rem_svc =
+	for svc in $(2); do \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/$(1)/$${svc}; \
 	done
 endef
 
@@ -140,13 +161,10 @@ install: install-dir install-dist
 		ln -f -s $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
 ifdef STATIC
-	for svc in $(dist_SVC_VIRT); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-	done
+	$(call rem_sym,sv,$(dist_SV_VIRT))
 endif
-	for svc in $(dist_SVC_VIRT); do \
-		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-	done
+	$(call svc_sym,sv,$(dist_SV_VIRT))
+	$(call svc_sym,rs.d,$(dist_RS_VIRT))
 	for i in 0 1 2 3; do \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}; \
 		echo >$(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}/.keep_stage-$${i}; \
@@ -164,26 +182,28 @@ $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_EXTRA): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$(PACKAGE)-$(VERSION)/$@
-$(dist_SERVICES): FORCE
+$(dist_SV_SVCS): FORCE
 	if test -d sv/$@/log; then \
-		$(call service_DIR,$@/log); \
-		$(call service_CMD,$@,log/); \
+		$(call svc_dir,$@/log); \
+		$(call svc_cmd,$@,log/); \
 	else \
-		$(call service_DIR,$@); \
+		$(call svc_dir,$@); \
 	fi
-	-$(install_DATA) sv/$@/OPTIONS $(DESTDIR)$(SYSCONFDIR)/sv/$@/OPTIONS
-	-$(call service_CMD,$@)
-$(dist_SVC_OPTS): $(dist_SERVICES)
+	-$(call svc_opt,sv/$@/OPTIONS)
+	-$(call svc_cmd,$@)
+$(dist_SV_OPTS): $(dist_SV_SVCS)
 ifdef STATIC
 	sh -c 'ARGS=$(subst /OPTIONS,,$@); set $${ARGS/./ }; \
 	cp -a $(DESTDIR)$(SYSCONFDIR)/sv/$${1} $(DESTDIR)$(SYSCONFDIR)/sv/$${2}; \
 	$(install_DATA) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$${2}/OPTIONS'
 else
-	$(install_DATA) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
+	$(call svc_opt,sv/$@)
 endif
-$(dist_RUNSCRIPTS):
+$(dist_RS_SVCS):
 	$(install_SCRIPT) rs.d/$@ $(DESTDIR)$(SYSCONFDIR)/rs.d/$@
-	-$(install_DATA)  rs.d/OPTIONS.$@ $(DESTDIR)$(SYSCONFDIR)/rs.d/OPTIONS.$@
+	-$(call svc_opt,rs.d/OPTIONS.$@)
+$(dist_RS_OPTS):
+	-$(call svc_opt,rs.d/OPTIONS.$@)
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -199,16 +219,15 @@ uninstall: uninstall-doc
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 ifdef STATIC
-	for svc in $(dist_SVC_OPTS); do \
+	for svc in $(dist_SV_OPTS); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc#*.}; \
 	done
 endif
-	for dir in $(dist_SERVICES); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${dir}; \
-	done
-	for svc in $(dist_SVC_VIRT); do \
-		rm -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-	done
+	$(call rem_sym,sv,$(dist_SV_VIRT))
+	$(call rem_svc,sv,$(dist_SV_SVCS))
+	$(call rem_sym,rs.d,$(dist_RS_VIRT))
+	$(call rem_svc,rs.d,$(dist_RS_SVCS))
+	$(call rem_svc,rs.d,$(dist_RS_SVCS:%=OPTIONS.%))
 	for dir in .bin .opt $(getty_NAME); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
 	done
