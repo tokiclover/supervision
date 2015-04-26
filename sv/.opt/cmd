@@ -21,7 +21,9 @@ case "${SVC_DIR}" in
 :	${SV_SVCDIR=${SVC_DIR%/*}}
 	;;
 esac
+:	${RS_SRV=sv}
 :	${SV_LIBDIR=${SV_RUNDIR:-${SV_SVCDIR}}/.lib}
+
 case "${head}" in
 	(*/log) cmd_dir=log;;
 	(*)     cmd_dir='' ;;

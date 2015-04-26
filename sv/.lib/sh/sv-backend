@@ -53,7 +53,16 @@ svc_backend()
 	case "${STG}" in
 		(*-[0123]) svc_stage ${STG} -r;;
 	esac
+
 	[ -n "${CG}"  ] && return 0
+	case "${RS_SRV}" in
+		(sv)
+	SOURCE "${SV_TMPDIR}"/SV_OPTIONS
+		;;
+		(rs)
+	SOURCE "${SV_TMPDIR}"/RS_OPTIONS
+		;;
+	esac
 	#
 	# Set up CGroup
 	#

@@ -28,16 +28,12 @@ fi
 case "${cmd}" in
 	(finish|run)
 :	${SV_SRV=SV}
-:	${RS_SRV=sv}
 :	${SVC_DIR:=${PWD%/log}}
 :	${SVC_NAME:=${SVC_DIR##*/}}
-SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 	;;
 	(rs)
 :	${SV_SRV=RS}
-:	${RS_SRV=rs}
 :	${SVC_DIR:=${RS_SVCDIR}}
-SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 	;;
 esac
 

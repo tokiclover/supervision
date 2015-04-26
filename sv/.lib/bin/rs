@@ -79,6 +79,8 @@ case "${3}" in
 	(*-[0123]) LVL=${3#*-}; shift;;
 esac
 shift 2
+
+:	${RS_SRV=rs}
 :	${RS_STAGE:=stage-${LVL:-2}}
 :	${name=${SVC_NAME}}
 unset head
