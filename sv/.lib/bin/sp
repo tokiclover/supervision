@@ -1,15 +1,20 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.bin/sp                              Exp $
+# $Header:  /lib/sv/bin/sp                               Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 1.0 2015/04/24 21:09:26                      Exp $
 #
 
 :	${name=sp}
-:	${SV_BACKEND:=/etc/sv/.opt/sv-backend}
-
-source "${SV_BACKEND}" || { echo "Required file not found." >&2; exit 1; }
+case "${0}" in
+	(/*) head="${0%/*}"   ;;
+	(*)  head="${PWD}/${0#./}"
+	     head="${head%/*}";;
+esac
+:	${SV_LIBDIR:=${head%/*}}
+source ${SV_LIBDIR}/sh/sv-backend ||
+	{ echo "Required file not found." >&2; exit 1; }
 svc_backend -C -i
 
 usage()
@@ -118,7 +123,7 @@ esac
 
 begin "Setting up ${SV_OPT} supervision backend..."
 for bin in ${BINS}; do
-	ln -f -s $(type -p ${PREFIX}${BIN:-${bin%:*}}) ${SV_SVCDIR}/.bin/${bin#*:}
+	ln -f -s $(type -p ${PREFIX}${BIN:-${bin%:*}}) ${SV_LIBDIR}/bin/${bin#*:}
 done
 end ${?} Symlinks
 for env in SV_OPT ${CMDS} ${SIGNALS}; do
