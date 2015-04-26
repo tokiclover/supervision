@@ -7,12 +7,13 @@
 # Set a few default env variables
 #
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
+:	${SV_LIBDIR:=/lib/sv}
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/service}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_SERVICE:=/etc/service}
-:	${SV_BACKEND:=${SV_SVCDIR}/.opt/sv-backend}
-PATH=${SV_RUNDIR}/.bin:${PATH}
+:	${SV_BACKEND:=${SV_LIBDIR}/sh/sv-backend}
+PATH=${SV_LIBDIR}/bin:${PATH}
 :	${name:=${SVC_NAME}}
 :	${cmd:=${0##*/}}
 :	${cmd_args:="${@}"}

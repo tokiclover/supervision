@@ -1,10 +1,11 @@
 #
-# $Header:  /etc/sv/.opt/sv-backend                      Exp $
+# $Header:  /lib/sv/sh/sv-backend                        Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/22 21:09:26                      Exp $
+# $Version: 1.2 2015/04/24 21:09:26                      Exp $
 #
 
+:	${SV_LIBDIR:=/lib/sv}
 :	${RS_SVCDIR:=/etc/rs.d}
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/service}
@@ -22,15 +23,15 @@ fi
 
 svc_backend()
 {
-	local CG DIR PP STG arg args
-	DIR="${SV_SVCDIR}/.opt/"
+	local CG PP STG args
 	args="$(getopt -o 0123CPi -l init,nocgroup,nopath -n backend -s sh -- "${@}")"
 	eval set -- ${args}
 
 	while true; do
 	case "${1}" in
 		(-i|--init)
-			for arg in ${DIR}*functions ${DIR}sv.conf ${DIR}SVC_BACKEND; do
+			for arg in ${SV_LIBDIR}/sh/*functions \
+				${SV_SVCDIR}/.opt/sv.conf ${SV_SVCDIR}/.opt/SVC_BACKEND; do
 				source ${arg}
 			done;;
 		(-C|--nocg*) CG=No ;;
@@ -44,11 +45,8 @@ svc_backend()
 	if [ -z "${PP}" ]; then
 		umask 022
 		PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
-		PATH=${SV_SVCDIR}/.bin:${PATH}:/usr/local/bin:/usr/local/sbin
+		PATH=${SV_LIBDIR}/.bin:${PATH}:/usr/local/bin:/usr/local/sbin
 	fi
-	for arg; do
-		[ -f "${DIR}${arg}" ] && source "${DIR}${arg}"
-	done
 	#
 	# Exec runscript
 	#
@@ -116,7 +114,7 @@ tmp_service()
 			rm -f -r "${SV_RUNDIR}"
 			mkdir -p "${SV_RUNDIR}"
 			cp -LRp "${SV_SERVICE}"/* "${SV_RUNDIR}"
-			cp -LRp "${SV_SERVICE}"/.[beo]* "${SV_RUNDIR}"
+			cp -LRp "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 		;;
 	esac
 	svc_tmpdir
