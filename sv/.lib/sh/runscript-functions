@@ -172,8 +172,8 @@ rs_wait()
 {
 	local VAL
 	while [ -e ${SV_TMPDIR}/down/${1-${SVC_NAME}} ]; do
-		VAL=$((${VAL}+1))
-		[ ${VAL} -eq ${2-65536} ] && return 1
+		VAL=$((${VAL}+1)); sleep 0.01s
+		[ ${VAL} -eq ${2-6000} ] && return 1
 	done
 	return 0
 }
