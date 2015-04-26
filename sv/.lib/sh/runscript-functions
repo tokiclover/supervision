@@ -58,6 +58,7 @@ rs_cmd()
 		svc_mark  -d
 		svc_depend || return;;
 		(stop)
+		svc_state -f || eval ${END}
 		svc_state -s || eval ${END};;
 	esac
 
