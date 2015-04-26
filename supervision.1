@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-04-20" "32" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2015-04-24" "32" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -38,9 +38,9 @@ extra commands are supported.
 .TP
 .B SUPERVISION
 And
-.R `sv/.bin/sp [OPTS] CMD SERVICE(S)'
+.R `sv/.lib/bin/sp [OPTS] CMD SERVICE(S)'
 script does as well
-(see sv/.bin/sp --help).
+(see sv/.lib/bin/sp --help).
 And those commands
 can be used with
 .R `sv/SERVICE/run CMD [OPTS]'
@@ -48,7 +48,7 @@ directly.
 .TP
 .B RUNSCRIPT
 And so does
-.R `sv/.bin/rs [OPTS] CMD SERVICE [ARGS]'
+.R `sv/.lib/bin/rs [OPTS] CMD SERVICE [ARGS]'
 for runscript services; or else with
 .R `rs.d/SERVICE CMD [ARGS]'
 directly.
@@ -416,42 +416,13 @@ RUNSCRIPT service directory
 .SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
 SUPERVISION service directory
 (See SV_SERVICE for active service.)
-.SS SV_SVCDIR/.bin/
-.TP
-.RB checkpath
-Simple & Cheap checkpath/mktemp script
-.TP
-.RB rs
-Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
-or `rs -0 start stage' (to start sysinit.)
-.TP
-.RB sp
-Simple helper to manage supervision service e.g.
-`SV_SVCDIR=sv sv/.bin/sp add --log SERVICE'
-and to set up specific supervision Backend e.g.
-`sp -S runit'
-.TP
-.RB sv-shutdown
-Simple script to handle system halt
-.TP
-.RB BIN_SYMLINKS
-Extra backend binary symlinks; Refer to to the following supported list.
-
-.B BIN_SYMLINKS: \c
-.RB \| envdir \|\ \c
-.RB \| envuidgid \|\ \c
-.RB \| fghack \|\ \c
-.RB \| pgrphack \|\ \c
-.RB \| setlock \|\ \c
-.RB \| setuidgid \|\ \c
-.RB \| softlimit \|
+.SS SV_SVCDIR/.lib/
+Symbolic link to SV_LIBDIR/sv
 .SS SV_SVCDIR/.opt/
 .TP
 .RB cmd
 Default {,log/}{finish,run} commands
 .TP
-.RB dep
-Simple script to list dependencies
 .TP
 .RB SVC_BACKEND
 Specific Backend Environment variable
@@ -459,26 +430,8 @@ Specific Backend Environment variable
 .RB SVC_OPTIONS
 Default service OPTIONS
 .TP
-.RB cgroup-release-agent
-CGroup Release Agent script
-.TP
-.RB cgroup-functions
-CGroup Functions/helper library
-.TP
-.RB functions
-Generic Functions/Helpers library
-.TP
-.RB runscript-functions
-Run-script Functions/helpers library
-.TP
-.RB supervision-functions
-Supervision Functions/Helpers library
-.TP
 .RB sv.conf
 Supervision configuration file
-.TP
-.RB sv-backend
-Supervision backend configuration file
 .TP
 .B SERVICES
 .RB [\| acpid \|]\ \c
@@ -525,6 +478,61 @@ OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor cras
 .SS @SYSCONFDIR@/{conf,init}.d/supervision
 .TP
 Supervision init script service
+.SS @LIBDIR@/sv/\ (SV_LIBDIR)
+SUPERVISION library directory
+.TP
+.B bin/
+.TP
+.RB checkpath
+Simple & Cheap checkpath/mktemp script
+.TP
+.RB rs
+Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
+or `rs -0 start stage' (to start sysinit.)
+.TP
+.RB sp
+zsh:1: command not found: :w
+`SV_SVCDIR=sv sv/.lib/bin/sp add --log SERVICE'
+and to set up specific supervision Backend e.g.
+`sp -S runit'
+.TP
+.RB sv-shutdown
+Simple script to handle system halt
+.TP
+.RB BIN_SYMLINKS
+Extra backend binary symlinks; Refer to to the following supported list.
+
+.B BIN_SYMLINKS: \c
+.RB \| envdir \|\ \c
+.RB \| envuidgid \|\ \c
+.RB \| fghack \|\ \c
+.RB \| pgrphack \|\ \c
+.RB \| setlock \|\ \c
+.RB \| setuidgid \|\ \c
+.RB \| softlimit \|
+.TP
+.B sh/
+.TP
+.RB dep
+Simple script to list dependencies
+.TP
+.RB cgroup-release-agent
+CGroup Release Agent script
+.TP
+.RB cgroup-functions
+CGroup Functions/helper library
+.TP
+.RB functions
+Generic Functions/Helpers library
+.TP
+.RB runscript-functions
+Run-script Functions/helpers library
+.TP
+.RB supervision-functions
+Supervision Functions/Helpers library
+.TP
+.RB sv-backend
+Supervision initialization file
 .SH "SEE ALSO"
 .B Shell:
 .BR sh (1p)
