@@ -115,6 +115,12 @@ rs_stage()
 	shift
 	done
 
+	if yesno ${RC_SYS:-YES}; then
+		begin "${MSG:-System ${ACTION}}\n"
+		RUNLEVEL=${LEVEL} rc ${ACTION}
+		end ${?}
+	fi
+
 	[ -n "${lvl}" ] || return 1
 :	${cmd:=start}
 :	${SRV:=rs}
@@ -167,12 +173,6 @@ svc_stage()
 {
 	yesno ${RS_PARALLEL:-YES} && rs_stage "${@}" -f
 	rs_stage "${@}"
-
-	if yesno ${RC_SYS:-YES}; then
-		begin "${MSG:-System ${ACTION}}\n"
-		RUNLEVEL=${LEVEL} rc ${ACTION}
-		end ${?}
-	fi
 }
 
 #
