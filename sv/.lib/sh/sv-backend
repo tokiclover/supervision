@@ -111,10 +111,13 @@ tmp_service()
 		("${SV_SERVICE}") :;
 		;;
 		(*/run/*|*/tmp/*)
-			rm -f -r "${SV_RUNDIR}"
-			mkdir -p "${SV_RUNDIR}"
-			cp -LRp "${SV_SERVICE}"/* "${SV_RUNDIR}"
-			cp -LRp "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
+		rm -f -r "${SV_RUNDIR}"
+		mkdir -p "${SV_RUNDIR}"
+		for tty in ${SV_SERVICE}/*getty-*; do
+			cp -LRp ${tty} ${SV_RUNDIR}
+		done
+		cp -LRpu "${SV_SERVICE}"/* "${SV_RUNDIR}"
+		cp -LRpu "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 		;;
 	esac
 	svc_tmpdir
