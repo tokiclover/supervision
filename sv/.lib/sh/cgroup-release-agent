@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.opt/cgroup-release-agent            Exp $
+# $Header:  /lib/sv/sh/cgroup-release-agent              Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: CGroup Release Agent                     Exp $
 #
