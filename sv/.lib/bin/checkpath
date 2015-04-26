@@ -1,13 +1,19 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.bin/checkpath                       Exp $
+# $Header:  /lib/sv/bin/checkpath                        Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: Simple & Cheap checkpath/mktemp script   Exp $
-# $Version: 0.6 2015/03/28 21:09:26                      Exp $
+# $Version: 0.6 2015/04/24 21:09:26                      Exp $
 #
 
 name="${0##*/}"
-source "${0%/*}"/../.opt/functions ||
+case "${0}" in
+	(/*) head="${0%/*}"   ;;
+	(*)  head="${PWD}/${0#./}"
+	     head="${head%/*}";;
+esac
+:	${SV_LIBDIR:=${head%/*}}
+source ${SV_LIBDIR}/sh/sv-backend ||
 	{ echo "Required file not found." >&2; exit 1; }
 
 usage() {
