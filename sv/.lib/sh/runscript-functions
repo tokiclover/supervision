@@ -1,8 +1,8 @@
 #
-# $Header:  /etc/sv/.opt/runscript-functions             Exp $
+# $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/20 21:09:26                      Exp $
+# $Version: 1.0 2015/04/24 21:09:26                      Exp $
 #
 
 env_rs()
@@ -121,7 +121,7 @@ rs_stage()
 	export RS_STAGE=stage-${lvl#*-}
 
 	case ${cmd} in
-		(start) ${SV_SVCDIR}/.opt/dep ${lvl} ${srv:-r}
+		(start) ${SV_LIBDIR}/sh/dep ${lvl} ${srv:-r}
 		        DEP='need use after before' ORD='2 1 0';;
 		(stop)  DEP='before after use need' ORD='0 1 2';;
 	esac
