@@ -54,14 +54,14 @@ rs_cmd()
 	begin "service ${cmd}: "
 	case "${cmd}" in
 		(start)
-		rs_wait || eval ${BUSY}
+		svc_wait || eval ${BUSY}
 		svc_state -s && eval ${END}
 		svc_mark  -d
 		svc_depend || return;;
 		(stop)
 		svc_state -f && eval ${END}
 		svc_state -s || eval ${END}
-		rs_wait || eval ${BUSY}
+		svc_wait || eval ${BUSY}
 		svc_mark  -d;;
 	esac
 
@@ -168,12 +168,22 @@ svc_stage()
 	return ${ret}
 }
 
-rs_wait()
+svc_wait()
 {
-	local VAL
-	while [ -e ${SV_TMPDIR}/down/${1-${SVC_NAME}} ]; do
+	local FILE LIMIT NAME OPT VAL
+
+	case "${1}" in
+		(-E) OPT='!'; shift;;
+	esac
+	LIMIT=${2:-6000} NAME=${3:-${SVC_NAME}}
+	FILE=${1:-${SV_TMPDIR}/down/${NAME}}
+
+	while [ ${OPT} -e ${FILE} ]; do
 		VAL=$((${VAL}+1)); sleep 0.01s
-		[ ${VAL} -eq ${2-6000} ] && return 1
+		case ${VAL} in
+			(*00|*000) info "Waiting for ${NAME}...(${VAL%00} seconds)";;
+		esac
+		[ ${VAL} -eq ${LIMIT} ] && return 1
 	done
 	return 0
 }
