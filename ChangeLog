@@ -1,4 +1,4 @@
-Header: supervision-scripts/ChangeLog, 2015/03/30
+Header: supervision/ChangeLog, 2015/04/24
 
 32:
 
@@ -8,8 +8,10 @@ with {after,before,need,use} style dependencies.
 Improved the manual with {BUILTINS,DEPENDENCIES,INIT-STAGE} sections;
 and numerous RUNSCRIPTS sub-sections.
 
-Unified {supervision-backend,svc} scripts to sv/.opt/sv;
+Unified {supervision-backend,svc} scripts to sv/.bin/sp;
 converted mdev-start-dev to runscript service.
+Moved sv/.{bin,lib/bin} & library files from sv/.opt to sv/.lib/sh
+to keep system configuration directory clean of extraneous files.
 
 SERVICE/RUNSCRIPT: Added mdev, squashdir, tmpdir, zram
 
