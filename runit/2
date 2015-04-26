@@ -5,7 +5,7 @@
 #
 
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+:	${SV_BACKEND=/etc/sv/.lib/sh/sv-backend}
 if [ -f ${SV_BACKEND} ]; then
 	source ${SV_BACKEND}
 	svc_backend -i -1
@@ -41,7 +41,7 @@ fi
 end "${?}"
 
 SV_CMD=runsvdir
-SV_OPTS='log: ..................................................................'
+SV_OPTS="'log: ..................................................................'"
 begin "Starting Supervision\n"
 exec env - PATH=${PATH} ${SV_CMD:-runsvdir} ${SV_RUNDIR} ${SV_OPTS}
 end "${?}"

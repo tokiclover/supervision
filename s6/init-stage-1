@@ -5,7 +5,7 @@
 #
 :	${SV_DIR=/etc/s6}
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${SV_BACKEND=/etc/sv/.opt/sv-backend}
+:	${SV_BACKEND=/etc/sv/.lib/sv-backend}
 if [ -f ${SV_BACKEND} ]; then
 	source ${SV_BACKEND}
 	svc_backend -i -0 -C
