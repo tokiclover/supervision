@@ -45,15 +45,14 @@ svc_backend()
 	if [ -z "${PP}" ]; then
 		umask 022
 		PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
-		PATH=${SV_LIBDIR}/.bin:${PATH}:/usr/local/bin:/usr/local/sbin
+		PATH=${SV_LIBDIR}/bin:${PATH}:/usr/local/bin:/usr/local/sbin
 	fi
 	#
 	# Exec runscript
 	#
 	case "${STG}" in
-		(*-[0123]) svc_stage ${STG} ;;
+		(*-[0123]) svc_stage ${STG} -r;;
 	esac
-
 	[ -n "${CG}"  ] && return 0
 	#
 	# Set up CGroup
