@@ -1,7 +1,7 @@
 #
-# $Header:  /etc/sv/.opt/cgroup-functions                Exp $
+# $Header:  /lib/sv/sh/cgroup-functions                  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/02/28                               Exp $
+# $Version: 1.0 2015/04/24                               Exp $
 #
 # Copyright (c) 2012 Alexander Vershilov <qnikst@gentoo.org>
 # CopyLetf  (c) 2015 -tclover <tokiclover@gmail.com>
@@ -10,7 +10,7 @@
 :	${CG_ROOT=/sys/fs/cgroup}
 :	${CG_PATH=${CG_ROOT}/${CG_NAME}}
 :	${SYSFS_OPTS=nodev,nosuid,noexec}
-:	${CG_RELEASE_AGENT=${SV_SVCDIR}/.opt/cgroup-release-agent}
+:	${CG_RELEASE_AGENT=${SV_LIBDIR}/sh/cgroup-release-agent}
 #
 # @FUNCTION: Set up & Mount Control Group
 #
