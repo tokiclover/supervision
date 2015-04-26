@@ -1,4 +1,4 @@
-#!/etc/sv/.bin/rs
+#!/lib/sv/bin/rs
 #
 # $Header: /etc/rs.d/zram                                Exp $
 # $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
@@ -11,6 +11,7 @@ description_reset="Reset ZRAM devices"
 
 SVC_BEFORE=bootmisc
 SVC_COMMANDS=reset
+
 :	${ZRAM_DEV:=4}
 
 start()

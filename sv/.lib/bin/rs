@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.bin/rs                              Exp $
+# $Header:  /lib/sv/bin/rs                               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 0.2 2015/04/24 21:09:26                      Exp $
 #
@@ -43,18 +43,25 @@ while true; do
 	esac
 	shift
 done
-
-case "${0}" in
-	(/*) head="${0%/*}"   ;;
-	(*)  head="${PWD}/${0#./}"
+RS_HEAD()
+{
+case "${1}" in
+	(/*) head="${1%/*}"   ;;
+	(*)  head="${PWD}/${1#./}"
 	     head="${head%/*}";;
 esac
+}
 case "${1}" in
 	(*rs.d/*)
+	RS_HEAD "${1}"
+:	${SV_LIBDIR:=${0%/bin*}}
+:	${RS_SVCDIR:=${head%/stage-*}}
 :	${SVC_NAME:=${1##*/}}
 :	${CMD=${2}}
 	;;
 	(*)
+	RS_HEAD "${0}"
+:	${SV_LIBDIR:=${head%/bin}}
 case "${2}" in
 	(stage)
 :	${SRC_OPTS=}
@@ -73,15 +80,14 @@ case "${3}" in
 esac
 shift 2
 :	${RS_STAGE:=stage-${LVL:-2}}
-:	${RS_SVCDIR:=${head%/sv*}/rs.d}
-:	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
-:	${SV_SVCDIR:=${head%/.bin}}
 :	${name=${SVC_NAME}}
 unset head
 
-ARGS=-C
-source "${SV_SVCDIR}"/.opt/SVC_OPTIONS ||
+source ${SV_LIBDIR}/sh/sv-backend ||
 	{ echo "Required file not found." >&2; exit 1; }
+:	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
+ARGS=-C
+source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
 
 #
 # Handle command

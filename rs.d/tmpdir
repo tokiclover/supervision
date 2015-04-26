@@ -1,4 +1,4 @@
-#!/etc/sv/.bin/rs
+#!/lib/sv/bin/rs
 #
 # $Header: /etc/rs.d/tmpdir                              Exp $
 # $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
