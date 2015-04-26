@@ -14,13 +14,14 @@ esac
 :	${SVC_DIR=${head%/log}}
 :	${SVC_NAME=${SVC_DIR##*/}}
 case "${SVC_DIR}" in
-	(/etc/*)
-:	${SV_SVCDIR=${SVC_DIR%/*}}
-	;;
 	(*/run/*|*/tmp/*)
 :	${SV_RUNDIR=${SVC_DIR%/*}}
 	;;
+	(*)
+:	${SV_SVCDIR=${SVC_DIR%/*}}
+	;;
 esac
+:	${SV_LIBDIR=${SV_RUNDIR:-${SV_SVCDIR}}/.lib}
 case "${head}" in
 	(*/log) cmd_dir=log;;
 	(*)     cmd_dir='' ;;
