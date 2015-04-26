@@ -1,8 +1,8 @@
 #
-# $Header:  /etc/sv/.opt/supervision-functions           Exp $
+# $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 2.8 2015/04/22 21:09:26                      Exp $
+# $Version: 2.8 2015/04/24 21:09:26                      Exp $
 #
 
 #
