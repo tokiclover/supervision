@@ -1,21 +1,22 @@
 #!/bin/sh
 #
-# $Header:  /etc/sv/.bin/sv-shutdown                     Exp $
+# $Header:  /lib/sv/bin/sv-shutdown                      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: Simple & Cheap shutdown script           Exp $
-# $Version: 0.3 2015/03/30 21:09:26                      Exp $
+# $Version: 0.3 2015/04/24 21:09:26                      Exp $
 #
-:	${name=${0##*/}}
-:	${SV_RUNDIR:=/run/service}
-:	${SV_BACKEND:=${SV_RUNDIR}/.opt/sv-backend}
 
-if [ -f "${SV_BACKEND}" ]; then
-	source "${SV_BACKEND}"
-	svc_backend -C -i
-else
-	echo "${SV_BACKEND} required file not found." >&2
-	exit 1
-fi
+:	${name=${0##*/}}
+
+case "${0}" in
+	(/*) head="${0%/*}"   ;;
+	(*)  head="${PWD}/${0#./}"
+	     head="${head%/*}";;
+esac
+:	${SV_LIBDIR:=${head%/*}}
+source ${SV_LIBDIR}/sh/sv-backend ||
+	{ echo "Required file not found." >&2; exit 1; }
+svc_backend -C -i
 
 usage() {
 	cat <<-EOH
