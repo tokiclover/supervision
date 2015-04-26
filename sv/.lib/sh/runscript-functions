@@ -86,7 +86,7 @@ rs_cmd()
 	return ${val}
 }
 
-rs_stage()
+svc_stage()
 {
 	local args cmd lvl opt ret svc
 	local CMD DEP SRV dep df i line srv
@@ -109,7 +109,6 @@ rs_stage()
 			esac;;
 			(*-3) ACTION=${ACTION:=shutdown} LEVEL=${LEVEL:=0};;
 		esac;;
-		(-f|--fo*) opt='&'  ;;
 		(-S|*stop) cmd=stop ;;
 		(-s|*sta*) cmd=start;;
 		(-r|--runs*) SRV=rs srv=${1};;
@@ -129,6 +128,7 @@ rs_stage()
 :	${cmd:=start}
 :	${SRV:=rs}
 	export RS_STAGE=stage-${lvl#*-}
+	yesno ${RS_PARALLEL:-No} && opt='&'
 
 	case ${cmd} in
 		(start) ${SV_LIBDIR}/sh/dep ${lvl} ${srv:-r}
@@ -153,7 +153,12 @@ rs_stage()
 					(*) continue;;
 				esac;;
 			esac
-			for svc in $(eval echo \$${dep}_${i}); do
+			eval SVC=\"\$${dep}_${i}\"
+			for svc in ${SVC}; do
+				eval [ -x ${CMD} ] || continue
+				eval ${CMD} ${cmd} &
+			done
+			for svc in ${SVC}; do
 				eval [ -x ${CMD} ] || continue
 				eval ${CMD} ${cmd} ${opt}
 				ret=$((${ret}+${?}))
@@ -171,12 +176,6 @@ rs_wait()
 		[ ${VAL} -eq ${2-65536} ] && return 1
 	done
 	return 0
-}
-
-svc_stage()
-{
-	yesno ${RS_PARALLEL:-YES} && rs_stage "${@}" -f
-	rs_stage "${@}"
 }
 
 #
