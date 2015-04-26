@@ -13,6 +13,7 @@ SVC_BEFORE=bootmisc
 SVC_COMMANDS=reset
 
 :	${ZRAM_DEV:=4}
+:	${CONTINUE='{ num=$((${num}+1)); continue; }'}
 
 start()
 {
@@ -23,7 +24,7 @@ start()
 		[ -b ${dev} ] || break
 		eval set -- \${ZRAM_DEV_${num}}
 		fs="${2}" dir="${3}" opt="${4}" mode="${5}"
-		[ -n "${fs}" ] || continue
+		[ -n "${fs}" ] || eval ${CONTINUE}
 		
 		case "${fs}" in
 			(swap)
@@ -45,7 +46,7 @@ start()
 				[ -n "${mode}" ] && chmod ${mode} "${dir}"
 			fi;;
 		esac
-		num=$((${num}+1))
+		eval ${CONTINUE}
 	done
 	return 0
 }
@@ -74,12 +75,12 @@ start_pre()
 		dev=/sys/block/zram$num
 		[ -d ${dev} ] || break
 		eval set -- \${ZRAM_DEV_${num}}
-		size=${1}; [ -n "${size}" ] || continue
+		size=${1}; [ -n "${size}" ] || eval ${CONTINUE}
 
 		[ -n "${ZRAM_COMP}"   ] && echo ${ZRAM_COMP}   >${dev}/comp_algorithm
 		[ -n "${ZRAM_STREAM}" ] && echo ${ZRAM_STREAM} >${dev}/max_comp_streams
 		echo ${size} >${dev}/disksize
-		num=$((${num}+1))
+		eval ${CONTINUE}
 	done
 }
 
@@ -91,7 +92,7 @@ stop()
 		[ -b ${dev} ] || break
 		eval set -- \${ZRAM_DEV_${num}}
 		fs="${2}" dir="${3}"
-		[ -n "${fs}" ] || continue
+		[ -n "${fs}" ] || eval ${CONTINUE}
 
 		case "${fs}" in
 			(swap)
@@ -107,7 +108,7 @@ stop()
 			end ${?};;
 		esac;;
 		esac
-		num=$((${num}+1))
+		eval ${CONTINUE}
 	done
 	return 0
 }
