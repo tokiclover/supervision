@@ -3,6 +3,7 @@ VERSION     = $(shell sed -nre '3s/(.*):/\1/p' ChangeLog)
 
 PREFIX      = /usr/local
 SYSCONFDIR  = /etc
+LIBDIR      = /lib
 RC_CONFDIR  = $(SYSCONFDIR)/conf.d
 RC_INITDIR  = $(SYSCONFDIR)/init.d
 DATADIR     = $(PREFIX)/share
@@ -24,20 +25,22 @@ dist_COMMON = \
 	sv/.opt/OPTIONS.in \
 	sv/.opt/SVC_OPTIONS \
 	sv/.opt/SVC_BACKEND \
-	sv/.opt/cgroup-functions \
-	sv/.opt/functions \
-	sv/.opt/runscript-functions \
-	sv/.opt/sv-backend \
-	sv/.opt/sv.conf \
-	sv/.opt/supervision-functions
+	sv/.opt/sv.conf
+dist_SH_BINS  = \
+	sv/.lib/bin/checkpath \
+	sv/.lib/bin/rs \
+	sv/.lib/bin/sp \
+	sv/.lib/bin/sv-shutdown \
+	sv/.lib/sh/cgroup-release-agent \
+	sv/.lib/sh/dep
+dist_SH_LIBS  = \
+	sv/.lib/sh/cgroup-functions \
+	sv/.lib/sh/functions \
+	sv/.lib/sh/runscript-functions \
+	sv/.lib/sh/supervision-functions \
+	sv/.lib/sh/sv-backend
 dist_SV_RUNS  =
 dist_SCRIPTS  = \
-	sv/.bin/checkpath \
-	sv/.bin/rs \
-	sv/.bin/sp \
-	sv/.bin/sv-shutdown \
-	sv/.opt/cgroup-release-agent \
-	sv/.opt/dep \
 	sv/.opt/cmd
 dist_SV_SVCS  = \
 	acpid \
@@ -99,9 +102,10 @@ endif
 DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) \
 	$(dist_RS_OPTS) $(dist_RS_SVCS) \
+	$(dist_SH_BINS) $(dist_SH_LIBS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
-	$(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.bin \
+	$(SYSCONFDIR)/sv/.opt $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh \
 	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
 	$(SYSCONFDIR)/rs.d \
 	$(MANDIR)/man1 \
@@ -154,13 +158,17 @@ all:
 install-all: install install-supervision-svc
 install: install-dir install-dist
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' supervision.1 \
-		>$(DESTDIR)$(MANDIR)/man1/supervision.1
+	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
+		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
+	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
+		-i $(DESTDIR)/$(LIBDIR)/sv/sh/sv-backend \
+		   $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
 	for i in 1 2 3 4 5 6; do \
 		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
 	done
-	for dir in .bin .opt; do \
-		ln -f -s $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
+	ln -fns $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
+	for dir in .lib .opt; do \
+		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
 ifdef STATIC
 	$(call rem_sym,sv,$(dist_SV_VIRT))
@@ -184,6 +192,10 @@ $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_EXTRA): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$(PACKAGE)-$(VERSION)/$@
+$(dist_SH_BINS): FORCE
+	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
+$(dist_SH_LIBS): FORCE
+	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
 $(dist_SV_SVCS): FORCE
 	if test -d sv/$@/log; then \
 		$(call svc_dir,$@/log); \
@@ -229,10 +241,16 @@ endif
 	$(call rem_svc,sv,$(dist_SV_SVCS))
 	$(call rem_sym,rs.d,$(dist_RS_VIRT))
 	$(call rem_svc,rs.d,$(dist_RS_SVCS))
+	$(call rem_svc,rs.d,$(dist_RS_OPTS:%=OPTIONS.%))
 	$(call rem_svc,rs.d,$(dist_RS_SVCS:%=OPTIONS.%))
-	for dir in .bin .opt $(getty_NAME); do \
+	for file in $(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_BINS)) \
+		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
+		rm -f $(DESTDIR)$${file}; \
+	done
+	for dir in .lib .opt $(getty_NAME); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
 	done
+	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.[bl]*
 	rm -fr $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
