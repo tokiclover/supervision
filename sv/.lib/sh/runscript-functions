@@ -175,8 +175,8 @@ svc_wait()
 	case "${1}" in
 		(-E) OPT='!'; shift;;
 	esac
-	LIMIT=${2:-6000} NAME=${3:-${SVC_NAME}}
-	FILE=${1:-${SV_TMPDIR}/down/${NAME}}
+	LIMIT=${1:-6000} NAME=${2:-${SVC_NAME}}
+	FILE=${3:-${SV_TMPDIR}/down/${NAME}}
 
 	while [ ${OPT} -e ${FILE} ]; do
 		VAL=$((${VAL}+1)); sleep 0.01s
