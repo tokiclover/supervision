@@ -416,22 +416,6 @@ RUNSCRIPT service directory
 .SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
 SUPERVISION service directory
 (See SV_SERVICE for active service.)
-.SS SV_SVCDIR/.lib/
-Symbolic link to SV_LIBDIR/sv
-.SS SV_SVCDIR/.opt/
-.TP
-.RB cmd
-Default {,log/}{finish,run} commands
-.TP
-.TP
-.RB SVC_BACKEND
-Specific Backend Environment variable
-.TP
-.RB SVC_OPTIONS
-Default service OPTIONS
-.TP
-.RB sv.conf
-Supervision configuration file
 .TP
 .B SERVICES
 .RB [\| acpid \|]\ \c
@@ -457,6 +441,23 @@ Supervision configuration file
 .RB [\| syslog \|]\ \c
 .RB [\| udev \|]\ \c
 .RB [\| wpa_supplicant \|]
+.TP
+.B .lib/
+Symbolic link to SV_LIBDIR
+.SS SV_SVCDIR/.opt/
+.TP
+.RB cmd
+Default {,log/}{finish,run} commands
+.TP
+.TP
+.RB SVC_BACKEND
+Specific Backend Environment variable
+.TP
+.RB SVC_OPTIONS
+Default service OPTIONS
+.TP
+.RB sv.conf
+Supervision configuration file
 .SS @SYSCONFDIR@/service/ (SV_SERVICE)
 Default supervision '/service/' directory
 .SS /run/service/ (SV_RUNDIR)
@@ -480,8 +481,7 @@ OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor cras
 Supervision init script service
 .SS @LIBDIR@/sv/\ (SV_LIBDIR)
 SUPERVISION library directory
-.TP
-.B bin/
+.SS SV_LIBDIR/bin/
 .TP
 .RB checkpath
 Simple & Cheap checkpath/mktemp script
@@ -491,7 +491,6 @@ Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
 or `rs -0 start stage' (to start sysinit.)
 .TP
 .RB sp
-zsh:1: command not found: :w
 `SV_SVCDIR=sv sv/.lib/bin/sp add --log SERVICE'
 and to set up specific supervision Backend e.g.
 `sp -S runit'
@@ -499,10 +498,7 @@ and to set up specific supervision Backend e.g.
 .RB sv-shutdown
 Simple script to handle system halt
 .TP
-.RB BIN_SYMLINKS
-Extra backend binary symlinks; Refer to to the following supported list.
-
-.B BIN_SYMLINKS: \c
+.B SYMLINKS\ (backend binary symlinks)
 .RB \| envdir \|\ \c
 .RB \| envuidgid \|\ \c
 .RB \| fghack \|\ \c
@@ -510,8 +506,7 @@ Extra backend binary symlinks; Refer to to the following supported list.
 .RB \| setlock \|\ \c
 .RB \| setuidgid \|\ \c
 .RB \| softlimit \|
-.TP
-.B sh/
+.SS SV_LIBDIR/sh/
 .TP
 .RB dep
 Simple script to list dependencies
