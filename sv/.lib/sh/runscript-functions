@@ -91,6 +91,7 @@ svc_stage()
 {
 	local args cmd lvl opt ret svc
 	local CMD DEP SRV dep df i line srv
+
 	args="$(getopt -o 0123Sfrsv -l fork,start,stop,runscript,supervision \
 		-n stage -s sh -- "${@}")"
 	eval set -- ${args}
@@ -102,7 +103,7 @@ svc_stage()
 			(*-0) tmp_service;
 			      ACTION=sysinit LEVEL=S;;
 			(*-1) ACTION=boot    LEVEL=S;;
-			(*-2) [ -e "${SV_TMPDIR}"/sv ] || svc_tmpdir;
+			(*-2)
 			case "$(cat /proc/cmdline)" in
 				(*nonetwoork*) ACTION=nonetwoork LEVEL=2;;
 				(*single*)    ACTION=single  LEVEL=1;;
@@ -124,15 +125,16 @@ svc_stage()
 		RUNLEVEL=${LEVEL} rc ${ACTION}
 		end ${?}
 	fi
-
 	[ -n "${lvl}" ] || return 1
+	[ -d "${SV_RUNDIR}" ] || tmp_service
+
 :	${cmd:=start}
 :	${SRV:=rs}
 	export RS_STAGE=stage-${lvl#*-}
 	yesno ${RS_PARALLEL:-No} && opt='&'
 
 	case ${cmd} in
-		(start) ${SV_LIBDIR}/sh/dep ${lvl} ${srv:-r}
+		(start) ${SV_LIBDIR}/sh/dep ${lvl} ${srv:--r}
 		        DEP='need use after before' ORD='2 1 0';;
 		(stop)  DEP='before after use need' ORD='0 1 2';;
 	esac
