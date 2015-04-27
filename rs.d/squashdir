@@ -12,7 +12,9 @@ description="(AUFS+SquashFS) squash-directories"
 :	${squash_rootdir:=/aufs}
 
 SVC_AFTER=localmount
-SVC_BEFORE='consolefont bootmisc acpid keymaps'
+if [ "${RS_STAGE}" = "stage-1" ]; then
+	SVC_BEFORE='acpid bootmisc consolefont keymaps'
+fi
 
 start_pre()
 {
