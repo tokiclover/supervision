@@ -5,6 +5,9 @@
 # $Version: 1.0 2015/04/24 21:09:26                      Exp $
 #
 
+EEND='{ end 0; return; };'
+EBUSY='{ end 1 "busy"; return 16; };'
+
 env_rs()
 {
 	[ -n "${*}" ] && set_env "RS_OPTIONS" "${@}"
@@ -33,10 +36,8 @@ svc_zap()
 
 rs_cmd()
 {
-	local ARGS BUSY CMD END FAIL cmd val
-	END='{ end 0; return; }' cmd="${1}"
-	FAIL='{ svc_zap; break; };'
-	BUSY='{ end 1 "busy"; return 4; }'
+	local ARGS CMD FAIL cmd val
+	FAIL='{ svc_zap; break; };' cmd="${1}"
 
 	case "${cmd}" in
 		(start|stop)
@@ -54,14 +55,14 @@ rs_cmd()
 	begin "service ${cmd}: "
 	case "${cmd}" in
 		(start)
-		svc_wait || eval ${BUSY}
-		svc_state -s && eval ${END}
+		svc_state -s && eval ${EEND}
+		svc_wait || eval ${EBUSY}
 		svc_mark  -d
 		svc_depend || return;;
 		(stop)
-		svc_state -f && eval ${END}
-		svc_state -s || eval ${END}
-		svc_wait || eval ${BUSY}
+		svc_state -f && eval ${EEND}
+		svc_state -s || eval ${EEND}
+		svc_wait || eval ${EBUSY}
 		svc_mark  -d;;
 	esac
 
