@@ -53,6 +53,8 @@ for runscript services; or else with
 .R `rs.d/SERVICE CMD [ARGS]'
 directly.
 .SS SERVICE INSTANCE
+.TP
+.B SUPERVISION
 Service supporting many instances can be written in a short manner
 like a virtual service backend with specific
 .IR OPTIONS.instance
@@ -72,7 +74,14 @@ a single symlink and a single service/OPTIONS file.
 Making service instances with symlinks conflict with static /service/!
 Obviously using a single directory for many instances will not work at all,
 so make a copy of the whole directory instead.
+.TP
+.B RUNSCRIPT
+Similarly, runscript service instances use a symlink to the service with an extra
+.B OPTIONS.instance
+configuration file if any.
 .SS VIRTUAL SERVICE
+.TP
+.B SUPERVISION
 Virtual service is done by making a symbolic link to a particular provider
 e.g.
 .IR net
@@ -91,6 +100,14 @@ and
 in
 .IR OPTIONS[.backend]
 file is required.
+.TP
+.B RUNSCRIPT
+Similarly, runscript services use a symlink virtual->service to define a virtual
+service; and an extra
+.B OPTIONS.virtual
+configuration file to define the real
+.RB name=SVC_NAME
+of the provider (e.g. dev virtual service use mdev as a provider.)
 .SS SERVICE USAGE
 Full {after,before,need,use} service dependencies is supported. See
 .B DEPENDENCIES
