@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-04-24" "32" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2015-04-26" "32" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -91,20 +91,24 @@ and
 in
 .IR OPTIONS[.backend]
 file is required.
-.SS USAGE
+.SS SERVICE USAGE
+Full {after,before,need,use} service dependencies is supported. See
+.B DEPENDENCIES
+and
+.B INIT-STAGE
+for more info.
+.TP
+.B SUPERVISION
 If service dependencies matter, usage of Runit/S6 is recommanded.
-Use
-.IR add\ --service
-instead of LSB
-.IR start
-command to manualy start a service. This starting choice matters with
-.IR need
-style dependency because
-.IR supervise
-command is not used to start services and connot be used without races.
+Still, before style dependency matters only for service shutdown.
 Cold system boot should be fine because everything is started in parallele;
-so, services with dependencies would wait enough, or else, increase SV_TRY
-in the configuration file, to get the desired effect.
+so, services with dependencies would reliably wait enough, or else, SV_TRY
+configuration setting would restart (failed) services.
+.TP
+.B RUNSCRIPT
+Runscript service can be used to finely bring up & shutdown a system.
+Yet, runscript services do not support launching daemons because this is left
+for supervision services. Launching daemons should be manually handled.
 .SH OPTIONS
 .SS ENVIRONMENT
 The following environment variables are supported.
