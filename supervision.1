@@ -326,14 +326,16 @@ T}
 .TE
 .SS DEPENDENCIES
 Standard {after,before,need,use} service dependencies is supported.
-Still, supervision scan model has the major advantage of parallele
+Still, supervision scan model has the major advantage of parallel
 service management making it simple & cheap to implement but
 .I before
 dependencies.
 So, before style dependencies matter only in the schedule of shutting
 down services for now.
-Note, runscript services variant are not impacted by this.
 And usage of after style dependencies would do the trick.
+Note, runscript services variant are not impacted by this.
+And then, RS_PARALLEL configuration setting can be enabled to start everything
+in parallel.
 
 Mixed service dependencies is also supported. However, this is usable
 only in stage-2 because of svscan ties to stage-2, and, once stage-3
