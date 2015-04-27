@@ -107,10 +107,21 @@ so, services with dependencies would wait enough, or else, increase SV_TRY
 in the configuration file, to get the desired effect.
 .SH OPTIONS
 .SS ENVIRONMENT
-The following environment variables are supported (usually set in
-.I sv/SERVICE/OPTIONS
+The following environment variables are supported.
 if necessary). The default environment variables are defined in
-.I sv/.opt/SVC_OPTIONS.
+.IR sv/.opt/SVC_OPTIONS.
+.TP
+.B SUPERVISION
+Supervision services use
+.I sv/SERVICE/OPTIONS
+file or provider file(s) to define environment variables if necessary.
+.TP
+.B RUNSCRIPT
+Runscript services use
+.IR rs.d/[OPTIONS.]SERVICE
+script to define services dependencies and other environment variables or the
+service configuration file for extra variables.
+.RE
 .TS
 tab (@);
 l lx.
