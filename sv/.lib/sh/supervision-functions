@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 2.8 2015/04/24 21:09:26                      Exp $
+# $Version: 3.0 2015/04/26 21:09:26                      Exp $
 #
 
 #
@@ -65,25 +65,36 @@ svc_down()
 
 svc_start()
 {
-	svc_add --service || return
 	local val
+
+	svc_state -s && eval ${EEND}
+	svc_wait 500 || eval ${EBUSY}
+	svc_mark  -d
+	svc_add -s || return 5
+
 	eval ${SVCCMD} ${SIGWTUP:-${SIGSTRT}} "${SV_RUNDIR}/${SVC_NAME}"
 	case ${?} in
-		(0) svc_mark --up -s ;;
-		(*) val=1;;
+		(0) val=0; svc_mark -su;;
+		(*) val=5; svc_mark -Su;;
 	esac
-	svc_down --remove
+	svc_down -r
 	return ${val}
 }
 
 svc_stop()
 {
 	local SIG val
-	for SIG in STOP TERM; do
-		eval ${SVCCMD} \${SIG${SIG}} "${SV_RUNDIR}/${SVC_NAME}"
-	done
-	val=${?}
-	[ ${val} -eq 0 ] && svc_mark -S
+
+	svc_state -r || eval ${EEND}
+	svc_state -f && eval ${EEND}
+	svc_wait 500 || eval ${EBUSY}
+	svc_mark  -d
+
+	eval ${SVCCMD} ${SIGWDWN:-${SIGSTOP}} "${SV_RUNDIR}/${SVC_NAME}"
+	case ${?} in
+		(0) val=0; svc_mark -Su;;
+		(*) val=5; svc_mark -fu;;
+	esac
 	return ${val}
 }
 
