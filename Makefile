@@ -161,7 +161,10 @@ install: install-dir install-dist
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
-		-i $(DESTDIR)/$(LIBDIR)/sv/sh/sv-backend \
+		-i $(DESTDIR)$(LIBDIR)/sv/sh/sv-backend \
+		   $(DESTDIR)$(LIBDIR)/sv/bin/sp \
+		   $(DESTDIR)$(LIBDIR)/sv/bin/sv-shutdown \
+		   $(DESTDIR)$(LIBDIR)/sv/bin/checkpath \
 		   $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
 	for i in 1 2 3 4 5 6; do \
 		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
@@ -250,7 +253,7 @@ endif
 	for dir in .lib .opt $(getty_NAME); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
 	done
-	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.[bl]*
+	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.[ol]*
 	rm -fr $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
