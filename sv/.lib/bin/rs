@@ -32,7 +32,7 @@ eval set -- ${ARGS}
 
 while true; do
 	case "${1}" in
-		(-D|--node*) SVC_NODEPS=0 ;;
+		(-D|--node*) SVC_DEPS=0 ;;
 		(-g|--debug) set -x ;;
 		(-h|--help) usage 0 ;;
 		(-0|--sysin*) LVL=0 ;;

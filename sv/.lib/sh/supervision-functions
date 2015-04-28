@@ -224,10 +224,18 @@ svc_post()
 #
 svc_depend()
 {
-	local dep
-	yesno ${SVC_NODEPS:-NO} && return
+	local DEP dep
+	case "${1}" in
+		(stop)
+	DEP='before:BEFORE after:AFTER use:USE need:NEED' dep=0
+		;;
+		(*)
+	DEP='use:USE need:NEED before:BEFORE after:AFTER' dep=1
+		;;
+	esac
 
-	for dep in ${2-use:USE need:NEED before:BEFORE after:AFTER}; do
+	yesno ${SVC_DEPS:-${dep}} &&
+	for dep in ${DEP}; do
 		eval [ -n \"\${SVC_${dep#*:}}\" ] &&
 		command -v svc_${dep%:*} >${NULL} 2>&1 || continue
 		eval svc_${dep%:*} ${1}

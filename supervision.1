@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-04-26" "32" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2015-04-28" "32" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -159,6 +159,9 @@ T}
 \fBSVC_DEBUG=Yes\fR@T{
 To enable debug mode
 T}
+\fBSVC_DEPS=No\fR@T{
+To disable (or to force for stop phase) dependencies
+T}
 \fBSVC_NAME\fR@T{
 Service name (default to SERVICE directory)
 T}
@@ -297,20 +300,20 @@ T}
 \fBend [MSG]\fR@T{
 Print ending message to standard output
 T}
-\fBSOURCE [FILES]\fR@T{
+\fBSOURCE [-e|-d] FILES\fR@T{
 Source wrapper (with file existance check)
 T}
 \fBenv_svc VARS\fR@T{
 Save persistent environment variables
 T}
 \fBsvc_down -d|-r\fR@T{
-Mark a service as down
+Set up a service as down (SUPERVISION)
 T}
 \fBsvc_mark [-Sdfsu]\fR@T{
 Set defined service status
 T}
 \fBsvc_state [-defrs]\fR@T{
-Get a defined service status
+Get defined service status
 T}
 \fBsvc_del\fR@T{
 Remove service from running directory

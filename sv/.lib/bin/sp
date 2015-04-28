@@ -60,7 +60,7 @@ ARGS= SV_OPT=
 
 while true; do
 	case "${1}" in
-		(-D|--node*) SVC_NODEPS=0 ;;
+		(-D|--node*) SVC_DEPS=0 ;;
 		(-g|--debug) set -x;;
 		(-S|--set) SV_OPT="${2}"; shift 2; break;;
 		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
