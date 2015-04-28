@@ -81,6 +81,7 @@ svc_shutdown()
 	begin "Stopping stage-2..."
 	svc_stage -2 -S
 	end ${?} "runscript"
+	${SV_LIBDIR}/sh/dep -2 -v
 	svc_stage -2 -S -v
 	case ${?} in
 		(0)
@@ -90,6 +91,7 @@ svc_shutdown()
 		;;
 	esac
 	end ${?} "supervision"
+
 	#
 	# CGroup clean up
 	#
@@ -107,7 +109,6 @@ svc_shutdown()
 	svc_stage -1 -S
 	end ${?}
 	svc_stage -3
-	RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
 }
 
 tmp_service()
@@ -132,8 +133,8 @@ tmp_service()
 }
 svc_tmpdir()
 {
-	rm -f -r "${SV_RUNDIR}"/.tmp
-	mkdir -p "${SV_RUNDIR}"/.tmp/pids
+	rm -f -r "${SV_TMPDIR}"
+	mkdir -p "${SV_TMPDIR}"/pids
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail "${SV_TMPDIR}"/star
 	#
 	# Initialization
