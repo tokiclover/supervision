@@ -227,10 +227,10 @@ svc_depend()
 	local DEP dep
 	case "${1}" in
 		(stop)
-	DEP='before:BEFORE after:AFTER use:USE need:NEED' dep=0
+	DEP="${SV_SOP_DEP_ORD}" dep=0
 		;;
 		(*)
-	DEP='use:USE need:NEED before:BEFORE after:AFTER' dep=1
+	DEP="${SV_SRT_DEP_ORD}" dep=1
 		;;
 	esac
 

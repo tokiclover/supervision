@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/24 21:09:26                      Exp $
+# $Version: 0.2 2015/04/28 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -27,20 +27,19 @@ RS_STAGE=stage-${STG:-2}
 SV_DEPDIR=${SV_TMPDIR}/deps/${RS_STAGE}
 SV_CGROUP=0
 mkdir -p ${SV_DEPDIR}
-:	${RS_SVCDIR:=/etc/rs.d}
 :	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
 :	${SRV:=sv}
 
 dep_gen()
 {
-	local RC_OPTS SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
+	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	case "${SRV}" in
 		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
 	esac
 	DEP_0="${DEP_0} ${1}"
 	SVC_NAME=${1} source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
-	for dep in use:USE need:NEED before:BEFORE after:AFTER; do
+	for dep in ${SV_SRT_DEP_ORD}; do
 		eval [ -n \"\${SVC_${dep#*:}}\" ] || continue
 		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${SRV}_${dep%:*}
 	done

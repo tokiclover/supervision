@@ -12,6 +12,8 @@
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_SERVICE:=/etc/service}
 :	${NULL=/dev/null}
+:	${SV_SRT_DEP_ORD=need:NEED use:USE after:AFTER before:BEFORE}
+:	${SV_SOP_DEP_ORD=before:BEFORE after:AFTER use:USE need:NEED}
 #
 # ZSH compatibility
 #
@@ -100,7 +102,6 @@ svc_shutdown()
 		SVC_NAME="${SVC_NAME:-${SV_CMD}}" cgroup_remove_service
 		;;
 	esac
-
 	[ -n "${MSG}" ] && echo "${MSG}" | busybox wall
 	#
 	# System halt

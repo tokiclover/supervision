@@ -135,8 +135,8 @@ svc_stage()
 
 	case ${cmd} in
 		(start) ${SV_LIBDIR}/sh/dep ${lvl} ${srv:--r}
-		        DEP='need use after before' ORD='2 1 0';;
-		(stop)  DEP='before after use need' ORD='0 1 2';;
+		        DEP="${SV_SRT_DEP_ORD}" ORD='2 1 0';;
+		(stop)  DEP="${SV_SOP_DEP_ORD}" ORD='0 1 2';;
 	esac
 	case ${SRV} in
 		(rs) CMD='${RS_SVCDIR}/${svc}'     ;;
@@ -144,6 +144,7 @@ svc_stage()
 	esac
 
 	for dep in ${DEP}; do
+		dep=${dep%:*}
 		local ${dep}_0 ${dep}_1 ${dep}_2
 		df=${SV_TMPDIR}/deps/${RS_STAGE}/${SRV}_${dep}
 		[ -f ${df} ] && source ${df} || continue
