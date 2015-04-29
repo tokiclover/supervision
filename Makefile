@@ -31,6 +31,7 @@ dist_SH_BINS  = \
 	sv/.lib/bin/rs \
 	sv/.lib/bin/sp \
 	sv/.lib/bin/sv-shutdown \
+	sv/.lib/sh/init-stage-0 \
 	sv/.lib/sh/cgroup-release-agent \
 	sv/.lib/sh/dep
 dist_SH_LIBS  = \

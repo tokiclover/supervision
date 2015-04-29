@@ -114,6 +114,7 @@ svc_shutdown()
 
 tmp_service()
 {
+	${SV_LIBDIR}/sh/init-stage-0
 	#
 	# Handle read-only root-FS and/or static /service/
 	#
