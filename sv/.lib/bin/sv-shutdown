@@ -3,18 +3,12 @@
 # $Header:  /lib/sv/bin/sv-shutdown                      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: Simple & Cheap shutdown script           Exp $
-# $Version: 0.3 2015/04/24 21:09:26                      Exp $
+# $Version: 0.4 2015/04/28 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
 
-case "${0}" in
-	(/*) head="${0%/*}"   ;;
-	(*)  head="${PWD}/${0#./}"
-	     head="${head%/*}";;
-esac
-:	${SV_LIBDIR:=${head%/*}}
-source ${SV_LIBDIR}/sh/sv-backend ||
+source /lib/sv/sh/sv-backend ||
 	{ echo "Required file not found." >&2; exit 1; }
 svc_backend -C -i
 
@@ -23,17 +17,20 @@ usage() {
 usage: ${0##*/} COMMAND
   -6, -r, --reboot    System reboot
   -0, -s, --shutdown  System shutdown
+  -h, -H, --halt      System halt (-0 aliases)
+  -p, -P, --poweroff  System halt (-0 aliases)
       -f, --fast      Skip fsck on reboot
       -F, --fsck      Force fsck on reboot
       -t, --time sec  Send signal after waiting
-  -?, -h, --help      Help/Exit
+      -k, --message   Send warning message only
+  -?, -u, --usage     Print usage and exit
 EOH
-exit
+${1:+exit ${1}}
 }
 
 ARGS="$(getopt \
-	-o \?06Ffhrst: \
-	-l fast,fsck,help,reboot,shutdown,time: \
+	-o \?06FHPfhkprst:u \
+	-l fast,fsck,halt,message,poweroff,reboot,shutdown,time:,usage \
 	-s sh -n ${name} -- "${@}")"
 [ ${?} -eq 0 ] || usage
 eval set -- ${ARGS}
@@ -41,11 +38,12 @@ eval set -- ${ARGS}
 while true; do
 case "${1}" in
 	(-[6r]|--reboot) LEVEL=6 ACTION=reboot  ;;
-	(-[0s]|--shutd*) LEVEL=0 ACTION=shutdown;;
-	(-[?h]|--help)   usage      ;;
+	(-[0HPhps]|--[hps]*) LEVEL=0 ACTION=shutdown;;
+	(-[?u]|--usage)   usage 0   ;;
 	(-f|--fa*) touch /fastboot  ;;
 	(-F|--fs*) touch /forcefsck ;;
 	(-t|--time) TIME=$2; shift  ;;
+	(-k|--mesage) MESSAGE=1     ;;
 	(*) shift; break;;
 esac
 shift
@@ -58,16 +56,16 @@ esac
 case "${LEVEL}" in
 	(0) MSG="System halt"   ;;
 	(6) MSG="System reboot" ;;
-	(*) die "-0|-6 required";;
+	(*) error "-0|-6 required"; usage 1;;
 esac
 
 echo "${@:-${MSG}}" | busybox wall
+[ -n "${MESSAGE}" ] && exit
 eval "\
 	([ -n '${TIME}' ] && sleep ${TIME}
 	eval ${CMD}) \
 	${TIME:+&}"
-
-unset CMD LEVEL SHIFT TIME
+unset CMD LEVEL SHIFT TIME MESSAGE
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
