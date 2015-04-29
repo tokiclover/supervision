@@ -78,6 +78,11 @@ dep_0="${DEP_0}"
 for dep in use need before after; do
 	DEP=${SV_DEPDIR}/${SRV}_${dep} DEP_0="${dep_0}" DEP_1= DEP_2=
 	[ -f ${DEP} ] && dep_tree ${DEP}
+	case ${dep} in
+		(before) dep_1="${DEP_2}"
+		DEP_2="${DEP_1}"; DEP_1="${dep_1}"
+		;;
+	esac
 	for i in 0 1 2; do
 		eval echo ${dep}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
 	done >${DEP}
