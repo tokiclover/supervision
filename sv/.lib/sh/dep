@@ -13,11 +13,12 @@ svc_backend -i -C
 
 mkdir -p ${SV_TMPDIR}/deps
 STG= SRV= SV_INIT=1
+
 while true; do
 case "${1}" in
-	(-r|--runscript) SRV=rs;;
-	(-v|--supervis*) SRV=sv;;
-	(*-[0123]) STG=${1#*-} ;;
+	(-r|--rs)  SRV=rs;;
+	(-v|--sv)  SRV=sv;;
+	(*-[0123]) STG=${1#*-};;
 	(*) break;;
 esac
 shift

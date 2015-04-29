@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/24 21:09:26                      Exp $
+# $Version: 1.0 2015/04/28 21:09:26                      Exp $
 #
 
 EEND='{ end 0; return; };'
@@ -42,7 +42,7 @@ rs_cmd()
 	case "${cmd}" in
 		(start|stop)
 		case "${2}" in
-			(stage) ARGS="${1} ${3}" CMD=svc_stage cmd=stage;;
+			(stage) shift 2; svc_stage --${cmd} "${@}"; return;;
 			(*) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
 		esac;;
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
@@ -92,8 +92,7 @@ svc_stage()
 	local args cmd lvl opt ret svc
 	local CMD DEP SRV dep df i line srv
 
-	args="$(getopt -o 0123Sfrsv -l fork,start,stop,runscript,supervision \
-		-n stage -s sh -- "${@}")"
+	args="$(getopt -o 0123Sfrsv -l fork,start,stop,rs,sv -n stage -s sh -- "${@}")"
 	eval set -- ${args}
 
 	while [ ${#} -ge 1 ]; do
@@ -113,8 +112,8 @@ svc_stage()
 		esac;;
 		(-S|*stop) cmd=stop ;;
 		(-s|*sta*) cmd=start;;
-		(-r|--runs*) SRV=rs srv=${1};;
-		(-v|--supe*) SRV=sv srv=${1};;
+		(-r|--rs) SRV=rs srv=${1};;
+		(-v|--sv) SRV=sv srv=${1};;
 		(--) ;;
 	esac
 	shift

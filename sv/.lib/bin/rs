@@ -2,7 +2,7 @@
 #
 # $Header:  /lib/sv/bin/rs                               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/24 21:09:26                      Exp $
+# $Version: 0.2 2015/04/28 21:09:26                      Exp $
 #
 
 usage() {
@@ -17,6 +17,8 @@ usage() {
      -1, --boot       Select stage-1
      -2, --default    Select stage-2
      -3, --shutdown   Select stage-3
+     -r, --rs         Select runscript
+     -v, --sv         Select supervision
      -h, --help       Help/Exit
 EOH
 ${1+exit ${1}}
@@ -24,7 +26,7 @@ ${1+exit ${1}}
 
 [ ${#} -ge 2 ] || usage 1
 ARGS="$(getopt \
-	-o 0123Dgh -l debug,help,nodeps \
+	-o 0123Dghrv -l debug,help,nodeps,rs,sv \
 	-l boot,default,shutdown,sysinit \
 	-s sh -n rs -- "${@}")"
 [ ${?} -eq 0 ] || usage 1
@@ -33,6 +35,8 @@ eval set -- ${ARGS}
 while true; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
+		(-r|--rs) OPTS="${1}" ;;
+		(-v|--sv) OPTS="${1}" ;;
 		(-g|--debug) set -x ;;
 		(-h|--help) usage 0 ;;
 		(-0|--sysin*) LVL=0 ;;
@@ -94,7 +98,7 @@ source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
 #
 # Handle command
 #
-eval set -- ${CMD} "${@}"
+eval set -- ${CMD} ${OPTS} "${@}"
 eval rs_cmd "${@}"
 
 #
