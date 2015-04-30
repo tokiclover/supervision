@@ -10,19 +10,18 @@ source "${0%/*}"/sv-backend ||
 svc_backend -i -C
 
 [ -w /etc/mtab ] || opt=-n
-
 procfs=proc
 case "$(uname -s)" in
 	(GNU/kFreeBSD) procfs=linprocfs;;
 esac
-if ! grep -Eq '/proc .*proc' /proc/mounts; then
+if ! mount_info /proc; then
 	begin "Mounting /proc"
 	mount ${opt} -t ${procfs} -o ${SYSFS_OPTS:-nodev} proc /proc
 	end ${?}
 fi
 
 [ -d /run ] || exit 0
-if ! grep -Eq '/run .*tmpfs' /proc/mounts; then
+if ! mount_info /run; then
 	begin "Mounting /run"
 	mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
 	end ${?}

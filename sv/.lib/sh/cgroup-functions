@@ -1,7 +1,7 @@
 #
 # $Header:  /lib/sv/sh/cgroup-functions                  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/24                               Exp $
+# $Version: 1.0 2015/04/28                               Exp $
 #
 # Copyright (c) 2012 Alexander Vershilov <qnikst@gentoo.org>
 # CopyLetf  (c) 2015 -tclover <tokiclover@gmail.com>
@@ -20,7 +20,7 @@ cgroup_start_sys()
 	[ -w /etc/mtab ] || opt=-n
 	[ -d ${CG_ROOT} ] && grep -q cgroup /proc/filesystems || return
 
-	if ! grep -q -E "${CG_ROOT}.*tmpfs" /proc/mounts; then
+	if ! mount_info ${CG_ROOT}; then
 		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CG_FS_SIZE:-10M} \
 			cgroup_root ${CG_ROOT}
 	fi
@@ -28,7 +28,7 @@ cgroup_start_sys()
 }
 cgroup_mount_sys()
 {
-	if ! grep -q ${CG_PATH} /proc/mounts; then
+	if ! mount_info ${CG_PATH}; then
 		mkdir -p ${CG_PATH}
 		mount ${opt} -o none,${SYSFS_OPTS},name=${CG_NAME},release_agent=${CG_RELEASE_AGENT} \
 			-t cgroup  ${CG_NAME} ${CG_PATH}
@@ -40,7 +40,7 @@ cgroup_mount_sys()
 	while read ctrl hirc num enabled extra; do
 		case "${enabled}" in
 			(1)
-				grep -q ${CG_ROOT}/${ctrl} /proc/mounts && continue
+				mount_info ${CG_ROOT}/${ctrl} && continue
 				mkdir   ${CG_ROOT}/${ctrl}
 				mount ${opt} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
 					${ctrl} ${CG_ROOT}/${ctrl}
