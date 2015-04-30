@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/24 21:09:26                      Exp $
+# $Version: 1.2 2015/04/28 21:09:26                      Exp $
 #
 
 #
@@ -132,6 +132,29 @@ eval_colors()
 if [ -t 1 ] && yesno "${COLOR:-Yes}"; then
 	eval_colors
 fi
+
+#
+# @FUNCTION: Mount/fstab info helper
+# @ARG: [-f] DIR
+#
+mount_info()
+{
+	local DST SRC dev dir opts ret
+
+	DST=$(mktemp -p /tmp mnt-XXXX) SRC=/proc/mounts
+	case "${1}" in
+		(-f|--fstab) SRC=/etc/fstab; shift;;
+	esac
+	sed -nre "s|(^[^#].*${1}[[:space:]].*)|\1|p" ${SRC} >${DST}
+
+	while read dev dir opts; do
+		case "${1}" in
+			("${dev}"|"${dir}") ret=0; break;;
+		esac
+	done <${DST}
+	rm -f ${DST}
+	return ${ret:-1}
+}
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
