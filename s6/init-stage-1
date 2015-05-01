@@ -5,57 +5,37 @@
 #
 :	${SV_DIR=/etc/s6}
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${SV_BACKEND=/etc/sv/.lib/sh/sv-backend}
-if [ -f ${SV_BACKEND} ]; then
-	source ${SV_BACKEND}
-	svc_backend -i -0 -C
-	svc_backend -1
-else
-name=OpenRC
-begin "System initialization\n"
-RUNLEVEL=S rc sysinit
-end "${?}"
-begin "Bringing up the System\n"
-RUNLEVEL=S rc boot
-end "${?}"
-fi
-
-name=Init-Stage-2
-begin "Setting up Supervision"
+:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
 :	${SV_SERVICE:=/etc/service}
-if [ -f ${SV_BACKEND} ]; then
-	svc_stage -2
-else
-	begin "Starting default run level\n"
-	RUNLEVEL=3 rc default
-	end "${?}"
-	case "${SV_RUNDIR}" in
-		("${SV_SERVICE}") :;
-			;;
-		(*/run/*|*/tmp/*)
-			rm -f -r "${SV_RUNDIR}"
-			mkdir -p "${SV_RUNDIR}"
-			cp -LRTp "${SV_SERVICE}" "${SV_RUNDIR}"
-			;;
-	esac
-	rm -f -r "${SV_RUNDIR}"/.tmp
-	mkdir -p "${SV_RUNDIR}"/.tmp
-fi
 
-mkdir -p "${SV_RUNDIR}"/.s6-svscan
+
+mkdir -m 0755 -p "${SV_RUNDIR}"/.s6-svscan
 for link in crash finish; do
 	ln -f -s "${SV_DIR}"/${link} "${SV_RUNDIR}"/.s6-svscan/${link}
 done
-end "${?}"
 
-SV_CMD=s6-svscan
-SV_OPTS=
-begin "Starting Supervision\n"
-exec env - PATH=${PATH} ${SV_CMD:-s6-svscan} ${SV_OPTS} ${SV_RUNDIR}
-end "${?}"
+if [ -x ${INIT_STAGE} ]; then
+	eval ${INIT_STAGE} -1
+	exec ${INIT_STAGE} -2
+fi
+RUNLEVEL=S rc sysinit
+RUNLEVEL=S rc boot
+RUNLEVEL=3 rc default
 
-exec ${RS_SHELL:-${SHELL:-sh}} -im </dev/console >/dev/console 2>&1
+case "${SV_RUNDIR}" in
+	("${SV_SERVICE}")
+	;;
+	(*/run/*|*/tmp/*)
+	rm -f -r "${SV_RUNDIR}"
+	mkdir -p "${SV_RUNDIR}"
+	cp -LRTp "${SV_SERVICE}" "${SV_RUNDIR}"
+	;;
+esac
+
+exec env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
+exec 2>&1
+exec ${SHELL:-sh} -aim
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

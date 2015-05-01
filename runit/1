@@ -5,18 +5,12 @@
 #
 
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${SV_BACKEND=/etc/sv/.lib/sh/sv-backend}
+:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
 
-if [ -f ${SV_BACKEND} ]; then
-	source ${SV_BACKEND}
-	svc_backend -i -0 -C
-else
-name=OpenRC begin "System initialization"
-RUNLEVEL=S rc sysinit
-end "$?"
-fi
-touch /etc/runit/stopit
+touch   /etc/runit/stopit
 chmod 0 /etc/runit/stopit
+[ -x ${INIT_STAGE} ] && exec ${INIT_STAGE} -1
+RUNLEVEL=S rc sysinit
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

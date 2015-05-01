@@ -6,24 +6,16 @@
 
 exec >/dev/console 2>&1
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${SV_BACKEND=/etc/sv/.lib/sh/sv-backend}
-if [ -f ${SV_BACKEND} ]; then
-	source ${SV_BACKEND}
-	svc_backend -i
-fi
+:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
+
+[ -x ${INIT_STAGE} ] && exec ${INIT_STAGE} -3
 if [ -x /etc/runit/reboot ]; then
 	LEVEL=0 ACTION=reboot   MSG='System reboot'
 else
 	LEVEL=6 ACTION=shutdown MSG='System shutdown'
 fi
-name=Init-Stage-3
-if [ -f ${SV_BACKEND} ]; then
-	svc_shutdown
-fi
-begin "Stopping Services"
 sv -w 10 force-shutdown ${SV_RUNDIR}/*
-end "${?}"
 RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
 
 #
