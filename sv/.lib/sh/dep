@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/28 21:09:26                      Exp $
+# $Version: 0.2 2015/04/30 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -13,12 +13,15 @@ svc_backend -i -C
 
 mkdir -p ${SV_TMPDIR}/deps
 STG= SRV= SV_INIT=1
+ARGS="$(getopt -o 0123Sd:rv -l dir:,rs,sv -n dep -s sh -- "${@}")"
+eval set -- ${ARGS}
 
 while true; do
 case "${1}" in
-	(-r|--rs)  SRV=rs;;
-	(-v|--sv)  SRV=sv;;
-	(*-[0123]) STG=${1#*-};;
+	(-r|--rs) SRV=rs;;
+	(-v|--sv) SRV=sv;;
+	(-[0123]) STG=${1#*-};;
+	(-d|--dir) DIR="${2}" ;;
 	(*) break;;
 esac
 shift
@@ -67,11 +70,12 @@ dep_tree()
 }
 
 rm -f ${SV_DEPDIR}/${SRV}_*
+[ -n "${DIR}" -a -d "${DIR}" ] ||
 case "${SRV}" in
 	(rs) DIR=${RS_RUNDIR} ;;
 	(sv) DIR=${SV_SERVICE};;
 esac
-for svc in ${DIR}/*; do
+for svc in "${DIR}"/*; do
 	dep_gen ${svc##*/}
 done
 dep_0="${DEP_0}"
@@ -85,8 +89,8 @@ for dep in use need before after; do
 	esac
 	for i in 0 1 2; do
 		eval echo ${dep}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
-	done >${DEP}
-done
+	done
+done >${SV_DEPDIR}/${SRV}
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
