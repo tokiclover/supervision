@@ -2,7 +2,7 @@
 #
 # $Header:  /lib/sv/bin/rs                               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/28 21:09:26                      Exp $
+# $Version: 0.2 2015/04/30 21:09:26                      Exp $
 #
 
 usage() {
@@ -69,7 +69,7 @@ case "${1}" in
 case "${2}" in
 	(stage)
 :	${SRC_OPTS=}
-:	${CMD=${1} ${2} '${RS_STAGE}'}
+:	${CMD=${1} ${2} '-${LVL}'}
 	;;
 	(*)
 :	${CMD=${1}}
@@ -80,7 +80,9 @@ esac
 	;;
 esac
 case "${3}" in
-	(*-[0123]) LVL=${3#*-}; shift;;
+	(*-[0123])
+:	${LVL:=${3#*-}}
+	shift;;
 esac
 shift 2
 
