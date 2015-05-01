@@ -6,23 +6,16 @@
 
 :	${SV_DIR:=/etc/s6}
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${SV_BACKEND=/etc/sv/.lib/sh/sv-backend}
-if [ -f ${SV_BACKEND} ]; then
-	source ${SV_BACKEND}
-	svc_backend -i
-fi
+:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
 
-SV_CMD=s6-svscan
-name=Init-Stage-3 begin "Re-Starting Supervision"
-exec env - PATH=${PATH} ${SV_CMD:-s6-svscan} ${SV_OPTS} ${SV_RUNDIR}
-end "${?}"
+if [ -x ${INIT_STAGE} ]; then
+	exec ${INIT_STAGE} -2
+fi
 
-#
-# FIXME: Reboot if the previous restart attempt failed
-#
-eval "${SV_DIR}"/finish -6 ||
-exec ${RS_SHELL:-${SHELL:-sh}} -im </dev/console >/dev/console 2>&1
+exec env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
+exec 2>&1
+exec ${SHELL:-sh} -aim
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

@@ -5,18 +5,21 @@
 #
 
 exec >/dev/console 2>&1
+
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
 :	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
 
-[ -x ${INIT_STAGE} ] && exec ${INIT_STAGE} -3
 if [ -x /etc/runit/reboot ]; then
 	LEVEL=0 ACTION=reboot   MSG='System reboot'
 else
 	LEVEL=6 ACTION=shutdown MSG='System shutdown'
 fi
+if [ -x ${INIT_STAGE} ]; then
+	exec env - ACTION=${ACTION} LEVEL=${LEVEL} ${INIT_STAGE} -3
+fi
 sv -w 10 force-shutdown ${SV_RUNDIR}/*
-RUNLEVEL=${LEVEL:-0} rc ${ACTION:-shutdown}
+RUNLEVEL=${LEVEL} rc ${ACTION}
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
