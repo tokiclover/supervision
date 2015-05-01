@@ -374,7 +374,7 @@ Superivision is organized in three distinct init-stage;
 one for system boot; second for system running state;
 third for system shutdown.
 An extended stage-0 (system initialization) is also supported.
-This is where {dev,proc,sys}fs et al runscript services should live in.
+This is where {dev,sysfs} et al. runscript services should live in.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on
@@ -564,6 +564,9 @@ Simple script to list dependencies
 .TP
 .RB cgroup-release-agent
 CGroup Release Agent script
+.TP
+.RB init-stage
+Init-Stage-[123] handler
 .TP
 .RB cgroup-functions
 CGroup Functions/helper library

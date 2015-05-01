@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# $Header:  /lib/sv/sh/init-stage                        Exp $
+# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.1 2015/04/30                               Exp $
+#
+
+:	${name=${0##*/}}
+source "${0%/*}"/sv-backend ||
+{ echo "Required file not found." >&2; exit 1; }
+svc_backend -i -C
+
+svc_init()
+{
+	local procfs opt
+	[ -w /etc/mtab ] || opt=-n
+
+	procfs=proc
+	case "$(uname -s)" in
+		(GNU/kFreeBSD) procfs=linprocfs;;
+	esac
+
+	if ! mount_info /proc; then
+		begin "Mounting /proc"
+		mount ${opt} -t ${procfs} -o ${SYSFS_OPTS:-nodev} proc /proc
+		end ${?}
+	fi
+
+	[ -d /run ] || return 0
+	if ! mount_info /run; then
+		begin "Mounting /run"
+		mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
+		end ${?}
+	fi
+}
+
+RSH()
+{
+:	${RS_SHELL:=${SHELL:-sh}}
+	case "${RS_SHELL}" in
+		(*sulogin) exec ${RS_SHELL} -p /dev/tty8;;
+		(*sh) exec 2>1; exec ${RS_SHELL} -aim   ;;
+	esac
+}
+
+OPTS="start stage"
+begin "Starting Init-Stage${1}"
+case "${1}" in
+	(-1)
+	svc_init
+	svc_stage -0rs
+	svc_stage -1rs
+	;;
+	(-2)
+	svc_backend
+	info "Starting Service Scan"
+	echo $$ >${SV_TMPDIR}/${SV_CMD}.pid
+	sh -c "rs -1 ${OPTS}; exec rs -2 ${OPTS}" &
+	exec ${SV_CMD} ${SV_RUNDIR} "${SV_OPTS}"
+	end ${?}
+	#
+	# Drop into a rescue shell
+	#
+	RSH
+	;;
+	(-3)
+	svc_shutdown
+	;;
+esac
+end ${?}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
