@@ -60,6 +60,7 @@ dist_SV_SVCS  = \
 	rsync-daemon \
 	saned \
 	snmpd \
+	sulogin \
 	syslog \
 	inetd \
 	httpd \
