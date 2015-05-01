@@ -171,8 +171,8 @@ svc_stage()
 
 	for srv in ${SRV:-sv rs}; do
 	case ${srv} in
-		(rs) CMD='${RS_SVCDIR}/${svc}'     ;;
-		(sv) CMD='${SV_SERVICE}/${svc}/run';;
+		(rs) CMD='${RS_SVCDIR}/${svc}'    ;;
+		(sv) CMD='${SV_SVCDIR}/${svc}/run';;
 	esac
 	df=${SV_TMPDIR}/deps/${RS_STAGE}/${srv}
 	[ -f ${df} ] || ${SV_LIBDIR}/sh/dep --${srv} ${lvl}
