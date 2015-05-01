@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-04-28" "32" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2015-04-30" "32" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -369,12 +369,20 @@ in parallel.
 Mixed service dependencies is also supported. However, this is usable
 only in stage-2 because of svscan ties to stage-2, and, once stage-3
 is reached, service shutdown is triggered.
-.SS INIT-STAGE (RUNLEVELS)
+.SS INIT-STAGE
 Superivision is organized in three distinct init-stage;
 one for system boot; second for system running state;
 third for system shutdown.
 An extended stage-0 (system initialization) is also supported.
 This is where {dev,sysfs} et al. runscript services should live in.
+.SS RUNLEVELS
+{boot,default,nonetwork,single} run levels are supported.
+Extra services that should be started in {boot,single} run levels should be add
+into SV_SERVICE/.LEVEL,
+e.g. sulogin in single level.
+.B WARING:
+A static /service/ would require to manually remove sulogin (`sv/sulogin/run del')
+service after using single run-level.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on
