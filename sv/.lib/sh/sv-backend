@@ -14,6 +14,7 @@
 :	${NULL=/dev/null}
 :	${SV_SRT_DEP_ORD=need:NEED use:USE after:AFTER before:BEFORE}
 :	${SV_SOP_DEP_ORD=before:BEFORE after:AFTER use:USE need:NEED}
+
 #
 # ZSH compatibility
 #
@@ -80,11 +81,8 @@ svc_shutdown()
 	#
 	# Service halt
 	#
-	begin "Stopping stage-2..."
+	begin "Stopping Stage-2"
 	svc_stage -2 -S
-	end ${?} "runscript"
-	${SV_LIBDIR}/sh/dep -2 -v
-	svc_stage -2 -S -v
 	case ${?} in
 		(0)
 		;;
@@ -92,8 +90,7 @@ svc_shutdown()
 	eval ${SVCCMD} ${SIGWDWN-${SIGEXIT}} ${SV_RUNDIR}/*
 		;;
 	esac
-	end ${?} "supervision"
-
+	end ${?}
 	#
 	# CGroup clean up
 	#
@@ -106,33 +103,31 @@ svc_shutdown()
 	#
 	# System halt
 	#
-	begin "Stopping stage-1 runscript"
+	begin "Stopping Stage-1"
 	svc_stage -1 -S
 	end ${?}
+	begin "Starting Stage-3"
 	svc_stage -3
+	end ${?}
 }
 
 tmp_service()
 {
-	${SV_LIBDIR}/sh/init-stage-0
 	#
 	# Handle read-only root-FS and/or static /service/
 	#
 	case "${SV_RUNDIR}" in
-		("${SV_SERVICE}") :;
+		("${SV_SERVICE}")
 		;;
 		(*/run/*|*/tmp/*)
 		rm -f -r "${SV_RUNDIR}"
 		mkdir -p "${SV_RUNDIR}"
-		for tty in ${SV_SERVICE}/*getty-*; do
-			cp -LRp ${tty} ${SV_RUNDIR}
-		done
-		cp -LRpu "${SV_SERVICE}"/* "${SV_RUNDIR}"
 		cp -LRpu "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 		;;
 	esac
 	svc_tmpdir
 }
+
 svc_tmpdir()
 {
 	rm -f -r "${SV_TMPDIR}"
