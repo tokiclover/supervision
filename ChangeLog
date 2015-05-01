@@ -3,17 +3,20 @@ Header: supervision/ChangeLog, 2015/04/24
 32:
 
 Added runscript service support with a simple API which brings service
-dependencies scheduling; supervision service shutdown is now scheduled
-with {after,before,need,use} style dependencies.
-Improved the manual with {BUILTINS,DEPENDENCIES,INIT-STAGE} sections;
-and numerous RUNSCRIPTS sub-sections.
+dependencies scheduling; supervision service is now scheduled with
+{after,before,need,use} style dependencies.
+Added praticable {boot,default,nonetwork,single} RUNLEVELS support.
+Improved the manual with {BUILTINS,DEPENDENCIES,INIT-STAGE,RUNLEVELS}
+sections; and numerous RUNSCRIPTS sub-sections.
 
 Unified {supervision-backend,svc} scripts to sv/.bin/sp;
+Unified Init-Stage-[123] into sv/.lib/sh/init-stage;
 converted mdev-start-dev to runscript service.
 Moved sv/.{bin,lib/bin} & library files from sv/.opt to sv/.lib/sh
 to keep system configuration directory clean of extraneous files.
 
 SERVICE/RUNSCRIPT: Added mdev, squashdir, tmpdir, zram
+SERVICE/SUPERVISION: Added sulogin
 
 31:
 
