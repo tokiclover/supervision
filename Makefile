@@ -189,6 +189,7 @@ endif
 		echo >$(DESTDIR)$(SYSCONFDIR)/service/.$${dir}/.keep_dir-$${dir}; \
 	done
 	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/service/.single
+	ln -fs $(SYSCONFDIR)/sv/syslog  $(DESTDIR)$(SYSCONFDIR)/service/.boot
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
