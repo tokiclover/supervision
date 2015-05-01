@@ -35,7 +35,7 @@ svc_init()
 	fi
 }
 
-RSH()
+svc_rsh()
 {
 :	${RS_SHELL:=${SHELL:-sh}}
 	case "${RS_SHELL}" in
@@ -62,7 +62,7 @@ case "${1}" in
 	#
 	# Drop into a rescue shell
 	#
-	RSH
+	svc_rsh
 	;;
 	(-3)
 	svc_shutdown
