@@ -252,14 +252,16 @@ svc_depend()
 
 svc_after()
 {
-	local svc SVC
+	local ret svc SVC
 	SVC=${SVC_NAME}
 	for svc in ${2-${SVC_AFTER}}; do
 		SVC_NAME="${svc}"
 		svc_state -s && continue
 		svc_state -r && svc_cmd ${1-start}
+		ret=$((${ret}+${?}))
 	done
 	SVC_NAME=${SVC}
+	return ${ret}
 }
 
 svc_need()
