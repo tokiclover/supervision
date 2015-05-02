@@ -104,7 +104,7 @@ svc_level()
 		(*) return;;
 	esac
 
-	if yesno ${RC_SYS:-YES}; then
+	if yesno ${RC_INIT_SYS:-YES}; then
 		begin "${MSG:-System ${ACTION}}\n"
 		RUNLEVEL=${LEVEL} rc ${ACTION}
 		end ${?}
@@ -177,6 +177,7 @@ svc_stage()
 	df=${SV_TMPDIR}/deps/${RS_STAGE}/${srv}
 	[ -f ${df} ] || ${SV_LIBDIR}/sh/dep --${srv} ${lvl}
 	[ -f ${df} ] && source ${df} || continue
+
 	for dep in ${DEP}; do
 		dep=${dep%:*}
 		for i in ${ORD}; do
