@@ -67,8 +67,8 @@ svc_start()
 {
 	local val
 
-	svc_state -s && eval ${EEND}
 	svc_wait 500 || eval ${EBUSY}
+	svc_state -s && eval ${EEND}
 	svc_add -s || return 5
 	svc_mark  -d
 
@@ -85,9 +85,9 @@ svc_stop()
 {
 	local val
 
+	svc_wait 500 || eval ${EBUSY}
 	svc_state -r || eval ${EEND}
 	svc_state -f && eval ${EEND}
-	svc_wait 500 || eval ${EBUSY}
 	svc_mark  -d
 
 	eval ${SVCCMD} ${SIGWDWN:-${SIGSTOP}} "${SV_RUNDIR}/${SVC_NAME}"

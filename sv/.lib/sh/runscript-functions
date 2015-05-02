@@ -55,14 +55,14 @@ rs_cmd()
 	begin "service ${cmd}: "
 	case "${cmd}" in
 		(start)
-		svc_state -s && eval ${EEND}
 		svc_wait || eval ${EBUSY}
+		svc_state -s && eval ${EEND}
 		svc_mark  -d
 		svc_depend || return;;
 		(stop)
+		svc_wait || eval ${EBUSY}
 		svc_state -f && eval ${EEND}
 		svc_state -s || eval ${EEND}
-		svc_wait || eval ${EBUSY}
 		svc_mark  -d;;
 	esac
 
