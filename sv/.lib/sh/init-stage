@@ -40,7 +40,7 @@ svc_rsh()
 :	${RS_SHELL:=${SHELL:-sh}}
 	case "${RS_SHELL}" in
 		(*sulogin) exec ${RS_SHELL} -p /dev/tty8;;
-		(*sh) exec 2>1; exec ${RS_SHELL} -aim   ;;
+		(*sh) exec 2>&1; exec ${RS_SHELL} -aim  ;;
 	esac
 }
 
