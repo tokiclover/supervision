@@ -32,35 +32,12 @@ start()
 	fi
 	touch /dev/mdev.seq
 	echo "${MDEV_CMD}" >/proc/sys/kernel/hotplug
-
 	#
 	# Populate /dev
 	#
 	${MDEV_CMD} -s
 	end ${?}
-}
-
-start_post()
-{
-	#
-	# Check out/Create some required nodes
-	#
-	[ -c /dev/console ] || mknod /dev/console c 5 1
-	[ -c /dev/tty1    ] || mknod /dev/tty1    c 4 1
-	[ -c /dev/null    ] || mknod /dev/null    c 1 3
 	[ -d /lib/mdev/devices ] && cp -RPp /lib/mdev/devices/* /dev 2>${NULL}
-	#
-	# Handle std{out,in,err} (not provided by sysfs)
-	#
-	ln -fns /proc/self/fd /dev/fd
-	ln -fns fd/0     /dev/stdin
-	ln -fns fd/1     /dev/stdout
-	ln -fns fd/2     /dev/stderr
-	[ -e /proc/kcore ] && ln -fns /proc/kcore /dev/core
-	#
-	# Create required directories
-	#
-	mkdir -p /dev/pts /dev/shm
 }
 
 #
