@@ -6,7 +6,7 @@
 SVC_CMD=/sbin/udevd
 SVC_OPTS=
 SVC_BEFORE='checkfs fsck'
-SVC_NEED='dev-mount sysfs'
+SVC_NEED='devfs sysfs'
 UDEV_DEBUG=No
 
 pre()
@@ -14,17 +14,16 @@ pre()
 	if ! grep -q devtmpfs /proc/filesystems; then
 		if yesno "${USE_MDEV:-YES}"; then
 			begin "Starting mdev\n"
-			/etc/rs.d/mdev start
+			${RS_SVCDIR}/mdev start
 			end "${?}"
 		fi
 		error "DevtmpFS is not supported"
 		return 1
 	fi
-	if ! grep -Eq '/dev .*devtmpfs' /proc/mounts; then
-		if ! mount -t devtmpfs -o nosuid,mode=755,size=10M dev /dev; then
-			error "Failed to setup devtmpfs"
-			return 2
-		fi
+	if ! mount_info /dev; then
+		mount -t devtmpfs -o nosuid,mode=755,size=${DEV_FS_SIZE:-10M} \
+			dev /dev >${NULL} 2>&1 ||
+			{ error "Failed to setup devtmpfs"; return 2; }
 		mkdir -p /dev/pts /dev/shm
 	fi
 	if [ ! -e /proc/net/unix ]; then
