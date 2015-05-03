@@ -1,0 +1,83 @@
+#!/lib/sv/bin/rs
+#
+# $Header: /etc/rs.d/devfs                               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.1 2015/04/30 21:09:26                      Exp $
+#
+
+mount_dev()
+{
+	if grep -q devtmpfs /proc/filesystems; then
+		fs=devtmpfs
+	elif grep -q tmpfs /proc/filesystems; then
+		fs=tmpfs
+	else
+		warn "{dev,}tmpfs filesystems are not supported;"
+		warn "/dev will not be mounted."
+		return 0
+	fi
+	if mount_info /dev; then
+		msg=Remounting
+	else
+		msg=Mounting opt="${opt},size=${DEV_FS_SIZE:-10M}"
+	fi
+	begin "${msg} /dev"
+	if mount_info /dev; then
+		mount ${arg} -o remount,${opt}      /dev >${NULL} 2>&1
+	else
+		mount ${arg} -t ${fs} -o ${opt} dev /dev >${NULL} 2>&1
+	fi
+	end ${?}
+}
+
+seed_dev()
+{
+	#
+	# Check out/Create some required nodes
+	#
+	[ -c /dev/console ] || mknod -m 600 /dev/console c 5 1
+	[ -c /dev/tty  ] || mknod -m 666 /dev/tty1 c 5 0
+	[ -c /dev/tty1 ] || mknod -m 620 /dev/tty1 c 4 1
+	[ -c /dev/null ] || mknod -m 666 /dev/null c 1 3
+	[ -c /dev/kmsg ] || mknod -m 660 /dev/kmsg c 1 11
+
+	#
+	# Handle std{out,in,err} (not provided by sysfs)
+	#
+	ln -fns /proc/kcore /dev/core
+	ln -fns /proc/self/fd /dev/fd
+	ln -fns fd/0     /dev/stdin
+	ln -fns fd/1     /dev/stdout
+	ln -fns fd/2     /dev/stderr
+
+	#
+	# Handle required directories
+	#
+	for fs in \
+		'mqueue /dev/mqueue 1777 nodev' \
+		'devpts /dev/pts 0755 gid=5,mode=0620' \
+		'tmpfs  /dev/shm 1777 nodev,mode=1777'
+	do
+		set -- ${fs}
+		grep -Eq "[[:space:]]${1}$" /proc/filesystems || continue
+		mount_info ${2} && continue
+		mkdir -m ${3} -p ${2} >${NULL} 2>&1 || continue
+		begin "Mounting ${2}"
+		mount ${arg} -t ${1} -o noexec,nosuid,${4} ${2##*/} ${2} >${NULL} >&1
+		end ${?}
+	done
+}
+
+start()
+{
+	local arg act fs msg opt
+	opt='exec,nosuid,mode=755'
+	[ -w /etc/mtab ] || arg=-n
+
+	mount_dev
+	seed_dev
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
