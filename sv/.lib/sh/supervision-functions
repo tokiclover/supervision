@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.0 2015/04/26 21:09:26                      Exp $
+# $Version: 3.0 2015/04/30 21:09:26                      Exp $
 #
 
 #
@@ -305,24 +305,6 @@ env_svc()
 env_sv()
 {
 	[ -n "${@}" ] && set_env "SV_OPTIONS" "${@}"
-}
-
-#
-# @FUNCTION: Set up CGroup
-#
-svc_cgroup()
-{
-	if [ -z "${SV_CGROUP}" ]; then
-		cgroup_start_sys
-		case ${?} in
-			(0) SV_CGROUP=Yes;;
-			(*) SV_CGROUP=No ;;
-		esac
-		env_sv SV_CGROUP
-	fi
-	if yesno "${SV_CGROUP}"; then
-		cgroup_add_service
-	fi
 }
 
 svc_desc()

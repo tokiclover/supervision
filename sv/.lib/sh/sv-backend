@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/sv-backend                        Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/24 21:09:26                      Exp $
+# $Version: 1.2 2015/04/30 21:09:26                      Exp $
 #
 
 :	${SV_LIBDIR:=/lib/sv}
@@ -71,7 +71,7 @@ svc_backend()
 	#
 	case "${OS_NAME}" in
 		(Linux)
-		SVC_NAME="${SVC_NAME:-${SV_CMD}}" svc_cgroup
+		SVC_NAME="${SVC_NAME:-${SV_CMD}}" cgroup_add_service
 		;;
 	esac
 }
@@ -139,6 +139,18 @@ svc_tmpdir()
 	echo "${SV_OPT}" >"${SV_TMPDIR}"/sv
 	OS_NAME=$(uname -s)
 	env_sv OS_NAME
+
+	#
+	# Set up CGroup
+	#
+	if yesno ${SV_CGROUP:-YES}; then
+		cgroup_start_sys
+		case ${?} in
+			(0) SV_CGROUP=Yes;;
+			(*) SV_CGROUP=No ;;
+		esac
+		env_sv SV_CGROUP
+	fi
 }
 
 #
