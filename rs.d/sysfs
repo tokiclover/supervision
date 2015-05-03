@@ -1,0 +1,57 @@
+#!/lib/sv/bin/rs
+#
+# $Header: /etc/rs.d/devfs                               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.1 2015/04/30 21:09:26                      Exp $
+#
+
+mount_sys()
+{
+	mount_info /sys && return 0
+	grep -Eq "[[:space:]]sysfs$" /proc/filesystems || return 1
+
+	if ! mkdir -m 0755 -p /sys; then
+		warn "Cannot create /sys"
+		return 2
+	fi
+	begin "Mounting /sys"
+	if mount_info /sys; then
+		mount ${arg} -o remount,${opt}      /sys >${NULL} 2>&1
+	else
+		mount ${arg} -t sysfs -o ${opt} sys /sys >${NULL} 2>&1
+	fi
+	end $?
+}
+
+seed_sys()
+{
+	for fs in \
+		'/sys/kernel/config configfs' \
+		'/sys/kernel/debug debugfs' \
+		'/sys/firmware/efi/efivars efivars' \
+		'/sys/fs/fuse/connections fusectl' \
+		'/sys/kernel/security securityfs'
+	do
+		set -- ${fs}
+		[ -d ${1} ] && ! mount_info ${1} || continue
+		grep -q ${2} /proc/filesystems || continue
+		begin "Mounting ${1}"
+		mount ${arg} -t ${2} -o ${opt} ${2} ${1} >${NULL} 2>&1
+		end ${?}
+	done
+}
+
+start()
+{
+	local arg fs opt
+
+	opt='nodev,noexec,nosuid'
+	[ -w /etc/mtab ] || arg=-n
+
+	mount_sys
+	seed_sys
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -85,6 +85,7 @@ dist_RS_SVCS  = \
 	devfs \
 	mdev \
 	squashdir \
+	sysfs \
 	tmpdir \
 	zram
 dist_RS_OPTS  = \
