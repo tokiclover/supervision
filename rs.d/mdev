@@ -8,7 +8,7 @@
 
 :	${MDEV_CMD:=/sbin/mdev}
 :	${MDEV_LOGFILE:=/run/mdev.log}
-SVC_NEED='dev-mount sysfs'
+SVC_NEED='devfs sysfs'
 
 start()
 {
@@ -21,8 +21,9 @@ start()
 			return 1
 		fi
 	fi
-	if ! grep -Eq '/dev .*tmpfs' /proc/mounts; then
-		mount -t tmpfs -o exec,nosuid,mode=755,size=10M dev /dev >${NULL} 2>&1 ||
+	if ! mount_info /dev; then
+		mount -t tmpfs -o exec,nosuid,mode=755,size=${DEV_FS_SIZE:-10M} \
+			dev /dev >${NULL} 2>&1 ||
 			{ end "2" "Failed to setup tmpfs."; return 2; }
 	fi
 	if yesno ${MDEV_DEBUG}; then
@@ -31,6 +32,7 @@ start()
 	fi
 	touch /dev/mdev.seq
 	echo "${MDEV_CMD}" >/proc/sys/kernel/hotplug
+
 	#
 	# Populate /dev
 	#
