@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/28 21:09:26                      Exp $
+# $Version: 1.2 2015/04/30 21:09:26                      Exp $
 #
 
 #
@@ -139,20 +139,28 @@ fi
 #
 mount_info()
 {
-	local DST SRC dev dir opts ret
+	local DIR DST SRC args d opts ret
 
-	DST=$(mktemp -p /tmp mnt-XXXX) SRC=/proc/mounts
+	SRC=/proc/mounts
+	args="$(getopt -o F:f -l fstab,fsys: -n mount_info -s sh -- "${@}")"
+	eval set -- ${args}
+
+	while true; do
 	case "${1}" in
-		(-f|--fstab) SRC=/etc/fstab; shift;;
+		(-f|--fstab) SRC=/etc/fstab;;
+		(-F|--fsys*) FS=${2}; shift;;
+		(*) shift; break;;
 	esac
-	sed -nre "s|(^[^#].*${1}[[:space:]].*)|\1|p" ${SRC} >${DST}
+	shift
+	done
+	DIR=${1}
+	DST="$(sed -nre "s|(^[^#].*${1}[[:space:]].*${FS})[[:space:]].*$|\1|p" ${SRC})"
 
-	while read dev dir opts; do
-		case "${1}" in
-			("${dev}"|"${dir}") ret=0; break;;
+	for d in ${DST}; do
+		case "${DIR}" in
+			("${d}") ret=0; break;;
 		esac
-	done <${DST}
-	rm -f ${DST}
+	done
 	return ${ret:-1}
 }
 
