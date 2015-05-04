@@ -350,7 +350,7 @@ svc_cmd()
 			(add|del|desc|remove|zap)    cmd=${1} ;;
 			(reload|start|stop|status) cmd=${1}   ;;
 			(cgroup_remove_service) cmd=${1} pfx= ;;
-			(*)     opt='"${@}"' cmd=commands     ;;
+			(*) opt='"${@}"' cmd=commands; break  ;;
 		esac
 		shift
 		opt='"${@}"'
