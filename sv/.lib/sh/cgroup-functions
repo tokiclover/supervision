@@ -1,53 +1,30 @@
 #
 # $Header:  /lib/sv/sh/cgroup-functions                  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/28                               Exp $
+# $Version: 1.0 2015/05/04                               Exp $
 #
 # Copyright (c) 2012 Alexander Vershilov <qnikst@gentoo.org>
 # CopyLetf  (c) 2015 -tclover <tokiclover@gmail.com>
 #
+
 :	${CG_NAME=supervision}
 :	${CG_ROOT=/sys/fs/cgroup}
 :	${CG_PATH=${CG_ROOT}/${CG_NAME}}
 :	${SYSFS_OPTS=nodev,nosuid,noexec}
 :	${CG_RELEASE_AGENT=${SV_LIBDIR}/sh/cgroup-release-agent}
-#
-# @FUNCTION: Set up & Mount Control Group
-#
+
 cgroup_start_sys()
 {
+	${RS_SVCDIR}/sysfs mount_cgroup || return 1
+
 	local opt
 	[ -w /etc/mtab ] || opt=-n
-	[ -d ${CG_ROOT} ] && grep -q cgroup /proc/filesystems || return
-
-	if ! mount_info ${CG_ROOT}; then
-		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CG_FS_SIZE:-10M} \
-			cgroup_root ${CG_ROOT}
-	fi
-	[ ${?} -eq 0 ] && cgroup_mount_sys
-}
-cgroup_mount_sys()
-{
 	if ! mount_info ${CG_PATH}; then
 		mkdir -p ${CG_PATH}
 		mount ${opt} -o none,${SYSFS_OPTS},name=${CG_NAME},release_agent=${CG_RELEASE_AGENT} \
 			-t cgroup  ${CG_NAME} ${CG_PATH}
 		echo 1 > ${CG_PATH}/notify_on_release
 	fi
-
-	yesno ${CG_FS_MOUNT:-Yes} || return 0
-	local ctrl hirc num enabled exta
-	while read ctrl hirc num enabled extra; do
-		case "${enabled}" in
-			(1)
-				mount_info ${CG_ROOT}/${ctrl} && continue
-				mkdir   ${CG_ROOT}/${ctrl}
-				mount ${opt} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
-					${ctrl} ${CG_ROOT}/${ctrl}
-				;;
-		esac
-	done < /proc/cgroups
-	return 0
 }
 
 cgroup_find_path()
