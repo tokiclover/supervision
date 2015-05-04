@@ -5,6 +5,8 @@
 # $Version: 0.1 2015/04/30 21:09:26                      Exp $
 #
 
+:	${SYSFS_OPTS:=nodev,nosuid,noexec}
+
 mount_dev()
 {
 	if grep -q devtmpfs /proc/filesystems; then
@@ -16,16 +18,12 @@ mount_dev()
 		warn "/dev will not be mounted."
 		return 0
 	fi
+	begin "Mounting /dev"
 	if mount_info /dev; then
-		msg=Remounting
+		mount ${arg} -o remount,${SYSFS_OPTS}      /dev >${NULL} 2>&1
 	else
-		msg=Mounting opt="${opt},size=${DEV_FS_SIZE:-10M}"
-	fi
-	begin "${msg} /dev"
-	if mount_info /dev; then
-		mount ${arg} -o remount,${opt}      /dev >${NULL} 2>&1
-	else
-		mount ${arg} -t ${fs} -o ${opt} dev /dev >${NULL} 2>&1
+		mount ${arg} -t ${fs} -o ${SYSFS_OPTS},mode=755,size=${DEV_FS_SIZE:-10M} \
+			dev /dev >${NULL} 2>&1
 	fi
 	end ${?}
 }
@@ -40,7 +38,6 @@ seed_dev()
 	[ -c /dev/tty1 ] || mknod -m 620 /dev/tty1 c 4 1
 	[ -c /dev/null ] || mknod -m 666 /dev/null c 1 3
 	[ -c /dev/kmsg ] || mknod -m 660 /dev/kmsg c 1 11
-
 	#
 	# Handle std{out,in,err} (not provided by sysfs)
 	#
@@ -50,9 +47,9 @@ seed_dev()
 	ln -fns fd/1     /dev/stdout
 	ln -fns fd/2     /dev/stderr
 
-	#
-	# Handle required directories
-	#
+}
+mount_devfs()
+{
 	for fs in \
 		'mqueue /dev/mqueue 1777 nodev' \
 		'devpts /dev/pts 0755 gid=5,mode=0620' \
@@ -70,11 +67,11 @@ seed_dev()
 
 start()
 {
-	local arg act fs msg opt
-	opt='exec,nosuid,mode=755'
+	local arg fs
 	[ -w /etc/mtab ] || arg=-n
 
 	mount_dev
+	mount_devfs
 	seed_dev
 }
 
