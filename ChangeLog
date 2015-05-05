@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+33:
+
+Bug fix of r32: extra service command support, tiny service lock. 
+SERVICE/RUNSCRIPT: Added {dev,sys}fs
+
 32:
 
 Added runscript service support with a simple API which brings service
