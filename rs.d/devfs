@@ -20,7 +20,7 @@ mount_dev()
 	fi
 	begin "Mounting /dev"
 	if mount_info /dev; then
-		mount ${arg} -o remount,${SYSFS_OPTS}      /dev >${NULL} 2>&1
+		mount ${arg} -o remount,${SYSFS_OPTS} /dev >${NULL} 2>&1
 	else
 		mount ${arg} -t ${fs} -o ${SYSFS_OPTS},mode=755,size=${DEV_FS_SIZE:-10M} \
 			dev /dev >${NULL} 2>&1
@@ -34,7 +34,7 @@ seed_dev()
 	# Check out/Create some required nodes
 	#
 	[ -c /dev/console ] || mknod -m 600 /dev/console c 5 1
-	[ -c /dev/tty  ] || mknod -m 666 /dev/tty1 c 5 0
+	[ -c /dev/tty  ] || mknod -m 666 /dev/tty  c 5 0
 	[ -c /dev/tty1 ] || mknod -m 620 /dev/tty1 c 4 1
 	[ -c /dev/null ] || mknod -m 666 /dev/null c 1 3
 	[ -c /dev/kmsg ] || mknod -m 660 /dev/kmsg c 1 11
@@ -43,10 +43,9 @@ seed_dev()
 	#
 	ln -fns /proc/kcore /dev/core
 	ln -fns /proc/self/fd /dev/fd
-	ln -fns fd/0     /dev/stdin
-	ln -fns fd/1     /dev/stdout
-	ln -fns fd/2     /dev/stderr
-
+	ln -fns fd/0 /dev/stdin
+	ln -fns fd/1 /dev/stdout
+	ln -fns fd/2 /dev/stderr
 }
 mount_devfs()
 {
