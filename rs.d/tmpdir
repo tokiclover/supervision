@@ -7,9 +7,9 @@
 #
 
 description="Temporary directory (with optional backup) setup"
-extra_commands="restore save"
 description_restore="Restore temporary directories"
 description_save="Archive temporary directories"
+SVC_COMMANDS="restore save"
 
 :	${compressor:=lz4 -1 -}
 :	${extension:=.tar.${compressor%% *}}
@@ -29,7 +29,7 @@ start()
 		mkdir -p "${DIR}"
 		begin  "Mounting ${DIR}"
 		mount --bind "${DIR}" "${dir}" >${NULL} 2>&1
-		end "$?"
+		end "${?}"
 	done
 	restore
 	return 0
@@ -43,10 +43,10 @@ stop()
 		case "${dir}" in
 			(*/log|*/run|*/tmp) continue;;
 		esac
-		grep -q "${dir}" /proc/mounts || continue
+		mount_info "${dir}" || continue
 		begin  "Unmounting ${dir}"
 		umount -l "${dir}" >${NULL} 2>&1
-		end "$?"
+		end "${?}"
 	done
 	return 0
 }
@@ -59,11 +59,14 @@ start_pre()
 		[ -d "${dir}" ] && save "${dir}" || mkdir -p "${dir}"
 	done
 
-	grep -q "${tmpdir_root}" /proc/mounts && return
+	mount_info "${tmpdir_root}" && return
 	yesno ${use_zram} && warn "No suitable (zram) root-dir found"
 	mkdir -p "${tmpdir_root}"
+
+	begin "Mounting ${tmpdir_root}"
 	mount -o rw,nodev,relatime,mode=0755,size=${tmpdir_size:-20%} \
-		-t tmpfs tmp "${tmpdir_root}" || return 2
+		-t tmpfs tmp "${tmpdir_root}" || { end 1; return 2; }
+	end "${?}"
 }
 
 restart()
