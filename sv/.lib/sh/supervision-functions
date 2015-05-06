@@ -45,6 +45,7 @@ svc_add()
 	done
 	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${name}|" \
 		${SV_SVCDIR}/.opt/OPTIONS.in >${dir}/OPTIONS
+
 	[ -n "${dwn}" ] && svc_down
 	[ -n "${svc}" ] || return 0
 	case ${SV_RUNDIR} in
@@ -52,6 +53,7 @@ svc_add()
 		(*) cp -LRpu ${dir} ${SV_RUNDIR};;
 	esac
 	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
+
 	[ -z "${SCANCMD}" ] || eval ${SCANCMD}
 }
 
@@ -243,7 +245,7 @@ svc_depend()
 	done
 
 	DEP_RET=${RET_NEED:-0}
-	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}+${RET_USE}))
+	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}))
 	case ${DEP_RET} in
 		(0) echo $$ >${SVC_PID};;
 		(*) return ${DEP_RET}  ;;
