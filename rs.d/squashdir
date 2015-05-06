@@ -13,7 +13,7 @@ description="(AUFS+SquashFS) squash-directories"
 
 SVC_AFTER=localmount
 if [ "${RS_STAGE}" = "stage-1" ]; then
-	SVC_BEFORE='acpid bootmisc consolefont keymaps'
+	SVC_BEFORE='bootmisc consolefont keymaps'
 fi
 
 start_pre()
