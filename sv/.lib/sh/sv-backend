@@ -99,7 +99,6 @@ svc_shutdown()
 		SVC_NAME="${SVC_NAME:-${SV_CMD}}" cgroup_remove_service
 		;;
 	esac
-	[ -n "${MSG}" ] && echo "${MSG}" | busybox wall
 	#
 	# System halt
 	#
@@ -127,7 +126,6 @@ tmp_service()
 	esac
 	svc_tmpdir
 }
-
 svc_tmpdir()
 {
 	rm -f -r "${SV_TMPDIR}"
