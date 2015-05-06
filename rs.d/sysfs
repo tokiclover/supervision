@@ -38,8 +38,8 @@ mount_sysfs()
 		'/sys/kernel/security securityfs'
 	do
 		set -- ${fs}
-		[ -d ${1} ] && ! mount_info ${1} || continue
-		grep -q ${2} /proc/filesystems || continue
+		[ -d ${1} ] && grep -q ${2} /proc/filesystems || continue
+		mount_info ${1} && continue
 		begin "Mounting ${1}"
 		mount ${arg} -t ${2} -o ${SYSFS_OPTS} ${2} ${1} >${NULL} 2>&1
 		end ${?}
@@ -51,7 +51,7 @@ mount_cgroup()
 	[ -d ${CG_ROOT} ] && grep -q cgroup /proc/filesystems || return 1
 	if ! mount_info ${CG_ROOT}; then
 		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CG_FS_SIZE:-10M} \
-			cgroup_root ${CG_ROOT}
+			cgroup ${CG_ROOT}
 	fi
 	[ ${?} -eq 0 ] || return 2
 
@@ -60,7 +60,7 @@ mount_cgroup()
 		case "${enabled}" in
 			(1)
 			mount_info ${CG_ROOT}/${ctrl} && continue
-			mkdir   ${CG_ROOT}/${ctrl}
+			mkdir -p ${CG_ROOT}/${ctrl}
 			mount ${arg} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
 				${ctrl} ${CG_ROOT}/${ctrl}
 			;;
