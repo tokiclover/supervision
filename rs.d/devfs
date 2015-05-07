@@ -5,8 +5,6 @@
 # $Version: 0.1 2015/04/30 21:09:26                      Exp $
 #
 
-:	${SYSFS_OPTS:=nodev,nosuid,noexec}
-
 mount_dev()
 {
 	if grep -q devtmpfs /proc/filesystems; then
@@ -66,8 +64,10 @@ mount_devfs()
 
 start()
 {
-	local arg fs
+	local SYSFS_OPTS arg fs
+
 	[ -w /etc/mtab ] || arg=-n
+	SYSFS_OPTS=nodev,nosuid,exec
 
 	mount_dev
 	mount_devfs
