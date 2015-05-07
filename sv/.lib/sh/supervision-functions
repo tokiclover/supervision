@@ -308,6 +308,17 @@ env_sv()
 {
 	[ -n "${@}" ] && set_env "SV_OPTIONS" "${@}"
 }
+del_env()
+{
+	local OPT env
+	case "${1}" in
+		(*_OPTIONS) OPT=${1}; shift;;
+		(*) OPT=${SVC_NAME}_OPTIONS;;
+	esac
+	for env; do
+		sed -e "/^${env}=.*$/d" -i ${SV_TMPDIR}/${OPT}
+	done
+}
 
 svc_desc()
 {
