@@ -13,7 +13,7 @@ svc_backend -i -C
 
 svc_init()
 {
-	local procfs opt
+	local dir opt procfs
 	[ -w /etc/mtab ] || opt=-n
 
 	procfs=proc
@@ -37,6 +37,17 @@ svc_init()
 		mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
 		end ${?}
 	fi
+	for dir in /var/*; do
+		[ -L "${dir}" ] || continue
+		dir="$(readlink ${dir})"
+		case "${dir}" in
+			(/run*)
+			begin "Creating ${dir}"
+			mkdir -m 0755 -p "${dir}"
+			end ${?}
+			;;
+		esac
+	done
 }
 
 svc_rsh()
