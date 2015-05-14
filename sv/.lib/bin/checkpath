@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/bin/checkpath                        Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: Simple & Cheap checkpath/mktemp script   Exp $
-# $Version: 0.7 2015/05/05 21:09:26                      Exp $
+# $Version: 0.7 2015/05/14 21:09:26                      Exp $
 #
 
 name="${0##*/}"
@@ -46,7 +46,7 @@ TEMP=-XXXXXX TYPE='' ARGS=''
 while true; do
 	case "${1}" in
 		(-c|--chec*) TASK=chk  ;;
-		(-p|--tmpd*) TASK=tmp TMPDIR="${2:-${TMPDIR}}"; shift;;
+		(-p|--tmpd*) TASK=tmp tmpdir="${2:-${TMPDIR:-/tmp}}"; shift;;
 		(-d|--dir) ARGS=-d TYPE=dir;;
 		(-f|--file)  TYPE=file ;;
 		(-P|--pipe)  TYPE=pipe ;;
@@ -63,13 +63,16 @@ done
 
 case "${TASK}" in
 	(tmp)
-	QUIET= TMPDIR="${TMPDIR:-/tmp}"
-	[ "${1%$temp}" = "$1" ] && die "Invalid TEMPLATE"
+	QUIET=
+	case "${1}" in
+		(*${temp}) ;;
+		(*) die "Invalid TEMPLATE";;
+	esac
 	if type -p mktemp >${NULL} 2>&1; then
-		TMP=$(mktemp -p "${TMPDIR}" ${ARGS} "${1}")
+		TMP=$(mktemp ${tmpdir:+-p} "${tmpdir}" ${ARGS} "${1}")
 	else
 		type -p uuidgen >${NULL} 2>&1 && TEMP=$(uuidgen --random)
-		TMP=$TMPDIR/${1-*}-$(echo "$temp" | cut -c-6)
+		TMP="$tmpdir/${1-*}-$(echo "$temp" | cut -c-6)"
 	fi
 	;;
 	(*)
