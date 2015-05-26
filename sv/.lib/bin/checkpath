@@ -3,9 +3,10 @@
 # $Header:  /lib/sv/bin/checkpath                        Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: Simple & Cheap checkpath/mktemp script   Exp $
-# $Version: 0.7 2015/05/14 21:09:26                      Exp $
+# $Version: 0.8 2015/05/24 21:09:26                      Exp $
 #
 
+NULL=/dev/null
 name="${0##*/}"
 case "${0}" in
 	(/*) head="${0%/*}"   ;;
@@ -13,7 +14,7 @@ case "${0}" in
 	     head="${head%/*}";;
 esac
 :	${SV_LIBDIR:=${head%/*}}
-source ${SV_LIBDIR}/sh/sv-backend ||
+source ${SV_LIBDIR}/sh/functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 
 usage() {
@@ -69,8 +70,14 @@ case "${TASK}" in
 		(*) die "Invalid TEMPLATE";;
 	esac
 	if type -p mktemp >${NULL} 2>&1; then
-		TMP=$(mktemp ${tmpdir:+-p} "${tmpdir}" ${ARGS} "${1}")
-	else
+		mktmp=mktemp
+	elif type -p busybox >${NULL} 2>&1; then
+		mktmp='busybox mktemp'
+	fi
+	if [ -n "${mktmp}" ]; then
+		TMP="$(${mktmp} ${tmpdir:+-p} "${tmpdir}" ${ARGS} "${1}")"
+	fi
+	if [ ! -e "${TMP}" ]; then
 		type -p uuidgen >${NULL} 2>&1 && TEMP=$(uuidgen --random)
 		TMP="$tmpdir/${1-*}-$(echo "$temp" | cut -c-6)"
 	fi
