@@ -1,24 +1,27 @@
 #
-# $Header: /etc/rs.d/OPTIONS.squashdir, 2015/04/20       Exp $
+# $Header: /etc/rs.d/OPTIONS.squashdir, 2015/05/28       Exp $
 #
 
-# Squash directory root, where to put aufs hierchichal tree
-squash_rootdir=/aufs
+# Squash directory root, where to put the merged hierchy filesystem
+squash_rootdir=/squash
+# Filesystem to use for the merged hierachy
+#   Supported value: aufs, overlay; or else, auto-detected
+squash_filesystem=overlay
 
 # System wide squash-ed directory-ies
-#squash_sysdir=/usr:/opt
+#squash_sysdir="/usr /opt"
 
 # Local squash-ed directory-ies
-squash_localdir=/var/db:/var/cache/edb:/var/lib/layman
+squash_localdir="/var/db /var/cache/edb /var/lib/layman"
 
 # Squashed directory-ies to rebuild before shutting down the service
 # WARN: This list should be in either squash_sysdir|localdir group
 squash_rebuild_dir=
 #
-# Full path to sdr.$shell script, else default to $(which sdr)
-sdr=/usr/sbin/sdr.bash
+# Full path to sdr script, else default to $(which sdr)
+sdr=/usr/sbin/sdr
 # Offset to use when rebuilding (in percent)
-offset=10
+offset=20
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
