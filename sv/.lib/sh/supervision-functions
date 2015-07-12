@@ -27,10 +27,10 @@ svc_add()
 		shift
 	done
 :	${name:=${1:-${SVC_NAME}}}
-:	${dir=${SV_SVCDIR}/${name}}
+:	${dir:=${SV_SVCDIR}/${name}}
 
 	if [ -n "${chk}" ]; then
-		if ! type -p ${SVC_CMD:-${name}} >${NULL} 2>&1; then
+		if ! command -v ${SVC_CMD:-${name}} >${NULL} 2>&1; then
 			error "Command not found."
 			return 1
 		fi
@@ -167,7 +167,7 @@ svc_pre()
 	if [ -x ${SVC_DIR}/RUN ]; then
 		SVC_CMD=${SVC_DIR}/RUN
 	else
-		SVC_CMD=$(type -p ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
+		SVC_CMD=$(command -v ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
 	fi
 	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
 		error "Command not found."
