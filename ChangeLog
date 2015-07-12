@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+34:
+
+Bug fix of r33 (use of command builtin instead of type builtin--zsh fix);
+and init stage fix (handle `/var/SYMLINKS' to `/run').
+
 33:
 
 Bug fix of r32: extra service command support, tiny service lock. 
