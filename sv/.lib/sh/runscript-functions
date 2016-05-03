@@ -1,8 +1,8 @@
 #
 # $Header:  /lib/sv/sh/runscript-functions               Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/30 21:09:26                      Exp $
+# $Version: 1.1 2016/05/01 21:09:26                      Exp $
 #
 
 EEND='{ end 0; return; };'
@@ -27,7 +27,7 @@ rs_add()
 
 svc_del()
 {
-	eval rm -fr "\${${SV_SRV}_RUNDIR}/${SVC_NAME}"
+	eval rm -fr "\${${SV_TYPE}_RUNDIR}/${SVC_NAME}"
 }
 svc_zap()
 {
@@ -40,11 +40,7 @@ rs_cmd()
 	FAIL='{ svc_zap; break; };' cmd="${1}"
 
 	case "${cmd}" in
-		(start|stop)
-		case "${2}" in
-			(stage) shift 2; svc_stage --${cmd} "${@}"; return;;
-			(*) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
-		esac;;
+		(start|stop) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
 			CMD="stop_pre stop stop_post
 			   start_pre start start_post";;
@@ -135,76 +131,6 @@ svc_level()
 	done
 }
 
-svc_stage()
-{
-	local args cmd lvl opt ret svc
-	local CMD DEP SRV dep df i srv
-
-	args="$(getopt -o 0123Sfrsv -l fork,start,stop,rs,sv -n stage -s sh -- "${@}")"
-	eval set -- ${args}
-
-	while true; do
-	case "${1}" in
-		(-[0123]) lvl=${1};;
-		(-S|--stop) cmd=stop ;;
-		(-s|--sta*) cmd=start;;
-		(-r|--rs) srv=rs; SRV="${SRV} ${srv}";;
-		(-v|--sv) srv=sv; SRV="${SRV} ${srv}";;
-		(*) break;;
-	esac
-	shift
-	done
-:	${lvl:=-2}
-:	${cmd:=start}
-	svc_level ${lvl}
-	export RS_STAGE=stage${lvl}
-	yesno ${RS_PARALLEL:-No} && opt='&'
-
-	case ${cmd} in
-		(start) DEP="${SV_SRT_DEP_ORD}" ORD='2 1 0';;
-		(stop)  DEP="${SV_SOP_DEP_ORD}" ORD='0 1 2';;
-	esac
-	case "${lvl}" in
-		(-[03]) SRV=rs;;
-	esac
-	args="${DEP##* }"
-
-	for srv in ${SRV:-sv rs}; do
-	case ${srv} in
-		(rs) CMD='${RS_SVCDIR}/${svc}'    ;;
-		(sv) CMD='${SV_SVCDIR}/${svc}/run';;
-	esac
-	df=${SV_TMPDIR}/deps/${RS_STAGE}/${srv}
-	[ -f ${df} ] || ${SV_LIBDIR}/sh/dep --${srv} ${lvl}
-	[ -f ${df} ] && source ${df} || continue
-
-	for dep in ${DEP}; do
-		dep=${dep%:*}
-		for i in ${ORD}; do
-			case ${i} in
-				(0)
-				case "${dep}" in
-					("${args%:*}") ;;
-					(*) continue   ;;
-				esac;;
-			esac
-
-			eval SVC=\"\$${dep}_${i}\"
-			for svc in ${SVC}; do
-				eval [ -x ${CMD} ] || continue
-				eval ${CMD} ${cmd} &
-			done
-			for svc in ${SVC}; do
-				eval [ -x ${CMD} ] || continue
-				eval ${CMD} ${cmd} ${opt}
-				ret=$((${ret}+${?}))
-			done
-		done
-	done
-	done
-	return ${ret}
-}
-
 svc_wait()
 {
 	local FILE LIMIT NAME OPT VAL
@@ -213,7 +139,7 @@ svc_wait()
 		(-E) OPT='!'; shift;;
 	esac
 	LIMIT=${1:-6000} NAME=${2:-${SVC_NAME}}
-	FILE=${3:-${SV_TMPDIR}/down/${NAME}}
+	FILE=${3:-${SV_TMPDIR}/wait/${NAME}}
 
 	while [ ${OPT} -e ${FILE} ]; do
 		VAL=$((${VAL}+1)); sleep 0.01s
