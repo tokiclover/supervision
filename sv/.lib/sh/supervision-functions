@@ -1,8 +1,8 @@
 #
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.0 2015/04/30 21:09:26                      Exp $
+# $Version: 3.0 2016/05/01 21:09:26                      Exp $
 #
 
 #
@@ -145,8 +145,8 @@ svc_state()
 
 	for arg in ${@:--r}; do
 		case "${arg}" in
-			(-e|--exist) eval [ -e "\${${SV_SRV}_SVCDIR}/${SVC_NAME}" ];;
-			(-r|--runn*) eval [ -e "\${${SV_SRV}_RUNDIR}/${SVC_NAME}" ];;
+			(-e|--exist) eval [ -e "\${${SV_TYPE}_SVCDIR}/${SVC_NAME}" ];;
+			(-r|--runn*) eval [ -e "\${${SV_TYPE}_RUNDIR}/${SVC_NAME}" ];;
 			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
@@ -188,7 +188,7 @@ svc_pre()
 }
 svc_remove()
 {
-	eval rm -fr "\${${SV_SRV}_RUNDIR}/${SVC_NAME}"
+	eval rm -fr "\${${SV_TYPE}_RUNDIR}/${SVC_NAME}"
 	svc_zap
 }
 
@@ -372,7 +372,7 @@ svc_cmd()
 		break
 	done
 
-	case "${RS_SRV}" in
+	case "${RS_TYPE}" in
 		(rs)
 		case "${cmd}" in
 			(add|start|stop|status) pfx='rs_cmd ';;
