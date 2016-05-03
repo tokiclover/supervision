@@ -1,9 +1,9 @@
 #!/bin/sh
 #
 # $Header:  /lib/sv/sh/dep                               Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2015/04/30 21:09:26                      Exp $
+# $Version: 0.2 2016/05/01 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -12,40 +12,41 @@ source "${0%/*}"/sv-backend || { echo "Required file not found." >&2; exit 1; }
 svc_backend -i -C
 
 mkdir -p ${SV_TMPDIR}/deps
-STG= SRV= SV_INIT=1
+SV_INIT=1
 ARGS="$(getopt -o 0123Sd:rv -l dir:,rs,sv -n dep -s sh -- "${@}")"
 eval set -- ${ARGS}
 
 while true; do
 case "${1}" in
-	(-r|--rs) SRV=rs;;
-	(-v|--sv) SRV=sv;;
-	(-[0123]) STG=${1#*-};;
+	(-r|--rs) RS_TYPE=rs;;
+	(-v|--sv) RS_TYPE=sv;;
+	(-[0123]) RS_STAGE=${1#*-};;
 	(-d|--dir) DIR="${2}" ;;
 	(*) break;;
 esac
 shift
 done
 
-RS_STAGE=stage-${STG:-2}
-SV_DEPDIR=${SV_TMPDIR}/deps/${RS_STAGE}
+:	${RS_STAGE:=2}
+SV_DEPDIR=${SV_TMPDIR}/deps/stage-${RS_STAGE}
 SV_CGROUP=0
 mkdir -p ${SV_DEPDIR}
-:	${RS_RUNDIR:=${RS_SVCDIR}/${RS_STAGE}}
-:	${SRV:=sv}
+:	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
+:	${RS_TYPE:=sv}
 
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	case "${SRV}" in
+	case "${RS_TYPE}" in
 		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
 	esac
 	DEP_0="${DEP_0} ${1}"
-	SVC_NAME=${1} source ${SV_SVCDIR}/.opt/SVC_OPTIONS
+	SVC_NAME="${1}"
+	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
 	for dep in ${SV_SRT_DEP_ORD}; do
 		eval [ -n \"\${SVC_${dep#*:}}\" ] || continue
-		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${SRV}_${dep%:*}
+		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${RS_TYPE}_${dep%:*}
 	done
 }
 dep_tree()
@@ -69,9 +70,9 @@ dep_tree()
 	done
 }
 
-rm -f ${SV_DEPDIR}/${SRV}_*
+rm -f ${SV_DEPDIR}/${RS_TYPE}_*
 [ -n "${DIR}" -a -d "${DIR}" ] ||
-case "${SRV}" in
+case "${RS_TYPE}" in
 	(rs) DIR=${RS_RUNDIR} ;;
 	(sv) DIR=${SV_SERVICE};;
 esac
@@ -80,7 +81,7 @@ for svc in "${DIR}"/*; do
 done
 dep_0="${DEP_0}"
 for dep in use need before after; do
-	DEP=${SV_DEPDIR}/${SRV}_${dep} DEP_0="${dep_0}" DEP_1= DEP_2=
+	DEP=${SV_DEPDIR}/${RS_TYPE}_${dep} DEP_0="${dep_0}" DEP_1= DEP_2=
 	[ -f ${DEP} ] && dep_tree ${DEP}
 	case ${dep} in
 		(before) dep_1="${DEP_2}"
@@ -90,7 +91,7 @@ for dep in use need before after; do
 	for i in 0 1 2; do
 		eval echo ${dep}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
 	done
-done >${SV_DEPDIR}/${SRV}
+done >${SV_DEPDIR}/${RS_TYPE}
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
