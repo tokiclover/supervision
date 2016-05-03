@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2015-04-30" "32" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2016-05-01" "35" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -48,7 +48,7 @@ directly.
 .TP
 .B RUNSCRIPT
 And so does
-.R `sv/.lib/bin/rs [OPTS] CMD SERVICE [ARGS]'
+.R `sv/.lib/bin/rs [OPTS] SERVICE CMD [ARGS]'
 for runscript services; or else with
 .R `rs.d/SERVICE CMD [ARGS]'
 directly.
@@ -464,6 +464,11 @@ See cgconfig.conf(5) & enable cgred service.
 This is only necessary if not using the bundled Init-Stage-2 which have CGroup
 support: child process (supervisor) will naturally inherit supervision CGroup.
 .SH FILES
+.SS @SBINDIR@
+.TP
+.RB rs
+Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 zram add'
+or `rs -0 stage' (to start sysinit.)
 .SS @SYSCONFDIR@/rs.d/\ (RS_SVCDIR)
 RUNSCRIPT service directory
 (See RS_SVCDIR/stage-{0,1,2,3} for active services.)
@@ -549,9 +554,8 @@ SUPERVISION library directory
 .RB checkpath
 Simple & Cheap checkpath/mktemp script
 .TP
-.RB rs
-Simple script to run (stage-[0123]) runscript service, e.g. `rs -1 add zram'
-or `rs -0 start stage' (to start sysinit.)
+.RB term-cols
+Simple utility to get terminal columns
 .TP
 .RB sp
 `SV_SVCDIR=sv sv/.lib/bin/sp add --log SERVICE'
@@ -586,6 +590,9 @@ CGroup Functions/helper library
 .RB functions
 Generic Functions/Helpers library
 .TP
+.RB runscript
+Run-script helper utility
+.TP
 .RB runscript-functions
 Run-script Functions/helpers library
 .TP
@@ -612,7 +619,7 @@ Supervision initialization file
 .BR \%s6-log (8),
 .BR \%s6-svscan (8).
 .SH AUTHORS
--tclover <tokiclover@supervision.project>
+tokiclover <tokiclover@supervision.project>
 .\"
 .\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
 .\"
