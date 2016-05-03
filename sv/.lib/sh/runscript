@@ -1,0 +1,61 @@
+#!/bin/sh
+#
+# $Header:  /lib/sv/sh/runscript                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# $Version: 0.3 2015/05/01 21:09:26                      Exp $
+#
+
+rs_help_message() {
+	cat <<-EOH
+ usage: rs [OPTIONS] SERVICE COMMAND [ARGS]
+   COMMAND: add|del|remove|restart|start|stop|status|zap
+   OPTIONS: [OPTS] SERVICE COMMAND [ARGS]
+     -D, --nodeps     Disable dependencies
+     -g, --debug      Enable debug mode
+     -r, --rs         Select runscript backend
+     -v, --sv         Select supervision backend
+     -h, --help       Print help and exit
+EOH
+${1+exit ${1}}
+}
+
+[ ${#} -ge 2 ] || rs_help_message 1
+ARGS="$(getopt \
+	-o Dghrv -l debug,help,nodeps,rs,sv \
+	-s sh -n rs -- "${@}")"
+[ ${?} -eq 0 ] || rs_help_message 1
+eval set -- ${ARGS}
+
+while true; do
+	case "${1}" in
+		(-D|--node*) SVC_DEPS=0 ;;
+		(-r|--rs) RS_TYPE="rs" ;;
+		(-v|--sv) RS_TYPE="sv" ;;
+		(-g|--debug) set -x ;;
+		(-h|--help) rs_help_message 0 ;;
+		(*) shift;  break   ;;
+	esac
+	shift
+done
+
+:	${SV_LIBDIR:=${0%/sh*}}
+:	${SVC_NAME:=${1##*/}}
+:	${RS_TYPE:=rs}
+:	${RS_STAGE:=2}
+:	${name=${SVC_NAME}}
+shift
+
+source ${SV_LIBDIR}/sh/sv-backend ||
+	{ echo "Required file not found." >&2; exit 1; }
+:	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
+ARGS=-C
+source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
+
+#
+# Handle command
+#
+eval rs_cmd "${@}"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

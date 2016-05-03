@@ -1,6 +1,8 @@
 PACKAGE     = supervision
 VERSION     = $(shell sed -nre '3s/(.*):/\1/p' ChangeLog)
 
+SUBDIRS    = src
+
 PREFIX      = /usr/local
 SYSCONFDIR  = /etc
 LIBDIR      = /lib
@@ -28,7 +30,6 @@ dist_COMMON = \
 	sv/.opt/sv.conf
 dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
-	sv/.lib/bin/rs \
 	sv/.lib/bin/sp \
 	sv/.lib/bin/sv-shutdown \
 	sv/.lib/sh/init-stage \
@@ -37,6 +38,7 @@ dist_SH_BINS  = \
 dist_SH_LIBS  = \
 	sv/.lib/sh/cgroup-functions \
 	sv/.lib/sh/functions \
+	sv/.lib/sh/runscript \
 	sv/.lib/sh/runscript-functions \
 	sv/.lib/sh/supervision-functions \
 	sv/.lib/sh/sv-backend
@@ -157,7 +159,10 @@ FORCE:
 
 .PHONY: FORCE all install install-doc install-dist install-all
 
-all:
+all: $(SUBDIRS)
+
+$(SUBDIRS): FORCE
+	$(MAKE) -C $@
 
 install-all: install install-supervision-svc
 install: install-dir install-dist
