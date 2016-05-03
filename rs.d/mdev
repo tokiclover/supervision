@@ -1,4 +1,4 @@
-#!/lib/sv/bin/rs
+#!/sbin/rs
 #
 # $Header: /etc/rs.d/mdev                                Exp $
 # $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $

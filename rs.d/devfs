@@ -1,4 +1,4 @@
-#!/lib/sv/bin/rs
+#!/sbin/rs
 #
 # $Header: /etc/rs.d/devfs                               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
