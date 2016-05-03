@@ -25,23 +25,17 @@ PATH=${SV_LIBDIR}/bin:${PATH}
 if [ ! -e "${SV_TMPDIR}"/sv ]; then
 	svc_tmpdir
 fi
-case "${cmd}" in
-	(finish|run)
-:	${SV_SRV=SV}
-:	${SVC_DIR:=${PWD%/log}}
-:	${SVC_NAME:=${SVC_DIR##*/}}
-	;;
-	(rs)
-:	${SV_SRV=RS}
-:	${SVC_DIR:=${RS_SVCDIR}}
-	;;
-esac
 
-case "${RS_SRV:-sv}" in
+case "${RS_TYPE:-sv}" in
 	(rs)
+:	${SV_TYPE=RS}
+:	${SVC_DIR:=${RS_SVCDIR}}
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 	;;
 	(sv)
+:	${SV_TYPE=SV}
+:	${SVC_DIR:=${PWD%/log}}
+:	${SVC_NAME:=${SVC_DIR##*/}}
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 	;;
 esac
