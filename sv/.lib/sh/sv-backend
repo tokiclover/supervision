@@ -1,8 +1,8 @@
 #
 # $Header:  /lib/sv/sh/sv-backend                        Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/30 21:09:26                      Exp $
+# $Version: 1.2 2016/05/01 21:09:26                      Exp $
 #
 
 :	${SV_LIBDIR:=/lib/sv}
@@ -12,8 +12,8 @@
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_SERVICE:=/etc/service}
 :	${NULL=/dev/null}
-:	${SV_SRT_DEP_ORD=need:NEED use:USE after:AFTER before:BEFORE}
-:	${SV_SOP_DEP_ORD=before:BEFORE after:AFTER use:USE need:NEED}
+:	${SV_SRT_DEP_ORD=need:NEED use:USE before:BEFORE after:AFTER}
+:	${SV_SOP_DEP_ORD=after:AFTER after:AFTER use:USE need:NEED}
 
 #
 # ZSH compatibility
@@ -51,14 +51,14 @@ svc_backend()
 		PATH=${SV_LIBDIR}/bin:${PATH}:/usr/local/bin:/usr/local/sbin
 	fi
 	#
-	# Exec runscript
+	# Bring run level or stage up
 	#
 	case "${STG}" in
-		(*-[0123]) svc_stage ${STG} -r;;
+		(*-[0123]) rs ${STG} -r stage;;
 	esac
 
 	[ -n "${CG}"  ] && return 0
-	case "${RS_SRV}" in
+	case "${RS_TYPE}" in
 		(sv)
 	SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 		;;
@@ -82,7 +82,7 @@ svc_shutdown()
 	# Service halt
 	#
 	begin "Stopping Stage-2"
-	svc_stage -2 -S
+	rs -2 stage stop
 	case ${?} in
 		(0)
 		;;
@@ -103,10 +103,10 @@ svc_shutdown()
 	# System halt
 	#
 	begin "Stopping Stage-1"
-	svc_stage -1 -S
+	rs -1 stage stop
 	end ${?}
 	begin "Starting Stage-3"
-	svc_stage -3
+	rs -3 --rs stage
 	end ${?}
 }
 
@@ -129,7 +129,7 @@ tmp_service()
 svc_tmpdir()
 {
 	rm -f -r "${SV_TMPDIR}"
-	mkdir -p "${SV_TMPDIR}"/pids
+	mkdir -p "${SV_TMPDIR}"/pids "${SV_TMPDIR}"/wait
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail "${SV_TMPDIR}"/star
 	#
 	# Initialization
