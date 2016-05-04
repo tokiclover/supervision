@@ -9,7 +9,7 @@
 
 #include "error.h"
 
-void error(int err, const char *fmt, ...)
+__NORETURN__ void error(int err, const char *fmt, ...)
 {
 	char buf[BUFSIZ];
 	va_list va;
@@ -24,8 +24,10 @@ void error(int err, const char *fmt, ...)
 	fflush(NULL);
 
 	va_end(va);
-	if (err < 0)   abort();
-	if (err > 0) exit(err);
+	if (err >= 0)
+		exit(err);
+	else
+		abort();
 }
 
 void *err_malloc(size_t size)

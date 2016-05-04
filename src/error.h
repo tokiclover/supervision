@@ -51,7 +51,7 @@ extern "C" {
 #  define DBG(fmt, ...)
 #endif
 
-void error(int err, const char *fmt, ...);
+__NORETURN__ void error(int err, const char *fmt, ...);
 extern const char *prgname;
 
 __UNUSED__ void *err_malloc(size_t size);
