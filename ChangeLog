@@ -1,5 +1,15 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+35:
+
+Added a new rs binary to manage properly service scheduling and start/stop
+functionality after renaming sv/.lib/bin/rs to sv/.lib/sh/runscript.
+WARN: New utility reverse the order of argument! (compared to the rs old
+rs script).
+
+Added a tiny utility to get terminal columns, so, printing utility can
+format nicely output.
+
 34:
 
 Bug fix of r33 (use of command builtin instead of type builtin--zsh fix);
