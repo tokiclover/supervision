@@ -5,6 +5,7 @@ SUBDIRS    = src
 
 PREFIX      = /usr/local
 SYSCONFDIR  = /etc
+SBINDIR     = /sbin
 LIBDIR      = /lib
 RC_CONFDIR  = $(SYSCONFDIR)/conf.d
 RC_INITDIR  = $(SYSCONFDIR)/init.d
@@ -155,19 +156,21 @@ define rem_svc =
 	done
 endef
 
-FORCE:
-
 .PHONY: FORCE all install install-doc install-dist install-all
 
 all: $(SUBDIRS)
+
+FORCE:
 
 $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
 install-all: install install-supervision-svc
 install: install-dir install-dist
+	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-i $(DESTDIR)$(LIBDIR)/sv/sh/sv-backend \
