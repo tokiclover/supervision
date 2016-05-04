@@ -34,7 +34,7 @@ enum {
 };
 /* !!! likewise !!! */
 static char *rs_svc_cmd[] = { "stop", "start",
-	"add", "del", "remove", "restart", "status", "zap"
+	"add", "del", "desc", "remove", "restart", "status", "zap"
 };
 
 static const char *shortopts = "Dg0123rvh";
@@ -68,21 +68,26 @@ struct RS_Service_State {
 	const char *name;
 };
 
-/*static struct RS_Service_State rs_service_state = {
-	{ RS_SVC_STARTED,  "star" },
-	{ RS_SVC_STOPPED,  "stop" },
-	{ RS_SVC_STARTING, "wait" },
-	{ RS_SVC_STOPPING, "wait" },
-	{ RS_SVC_UP,       "down" },
-	{ RS_SVC_DOWN,     "down" },
-	{ RS_SVC_FAILED,   "fail" },
-	{ 0, NULL}
-};*/
-
 __NORETURN__ void rs_help_message(int exit_val);
+/*
+ * bring system to a named level or stage
+ * @cmd (start|stop|NULL); NULL is the default command
+ */
 void svc_stage(const char *cmd);
+/*
+ * execute a service with the appended arguments
+ */
 __NORETURN__ int svc_exec(int argc, char *argv[]);
+/*
+ * execute a service list (called from svc_stage())
+ * @return 0 on success or number of failed services
+ */
 int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[]);
+/*
+ * find a service
+ * @return NULL if nothing found or service path (dir/file)
+ */
+char *rs_svc_find(const char *svc);
 
 __NORETURN__ void rs_help_message(int exit_val)
 {
@@ -102,23 +107,63 @@ __NORETURN__ void rs_help_message(int exit_val)
 	exit(exit_val);
 }
 
-int svc_exec(int argc, char *argv[]) {
-	char opt[8], *args[argc+3], *ptr, *envp[2], env[32];
-	int i;
-	args[0] = "runscript";
+char *rs_svc_find(const char *svc)
+{
+	size_t size = 512;
+	char *buf = err_malloc(size);
+	int err = errno;
 
-	for (i = 1; i < argc; i++)
-		args[i] = argv[i-1];
-	if (ptr = getenv("RS_TYPE")) {
-		snprintf(opt, 8, "--%s", ptr);
-		args[argc+1] = opt;
-		args[argc+2] = (char *)0;
-	}
+	if (!svc)
+		return NULL;
+
+	snprintf(buf, size, "%s/%s", RS_SVCDIR, svc);
+	if (file_test(buf, 'x'))
+		return err_realloc(buf, strlen(buf));
+	errno = 0;
+
+	snprintf(buf, size, "%s/%s", SV_SVCDIR, svc);
+	if (file_test(buf, 'd'))
+		return err_realloc(buf, strlen(buf));
+	errno = err;
+
+	return NULL;
+}
+
+__NORETURN__ int svc_exec(int argc, char *argv[]) {
+	char opt[8], *envp[2], env[32];
+	const char *args[argc+3], *ptr;
+	int i = 0, j;
+	args[i++] = "runscript";
+
+	if (argv[0][0] == '/')
+		ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
 	else
-		args[argc+1] = (char *)0;
+		ptr = getenv("RS_TYPE");
 
-	snprintf(env, 32, "PRINT_COL=%d", get_term_cols());
-	envp[1] = (char *)0;
+	if (ptr == NULL) {
+		ptr = rs_svc_find(argv[0]);
+		if (ptr == NULL) {
+			ERR("Invalid service name `%s'\n", argv[0]);
+			exit(EXIT_FAILURE);
+		}
+		else {
+			argc--, argv++;
+			args[i++] = opt;
+			args[i++] = ptr;
+			if (strstr(ptr, RS_SVCDIR))
+				ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
+			else
+				ptr = rs_stage_type[RS_STAGE_SUPERVISION];
+			snprintf(opt, sizeof(opt), "--%s", ptr);
+		}
+	}
+
+	for ( j = 0; j < argc; j++)
+		args[i++] = argv[j];
+	args[i] = (char *)0;
+
+	snprintf(env, sizeof(env), "PRINT_COL=%d", get_term_cols());
+	envp[0] = env, envp[1] = (char *)0;
 
 	execve(RS_RUNSCRIPT, (char *const*)args, (char *const*)envp);
 	exit(127);
@@ -315,7 +360,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 		if (cmd == NULL) {
-			ERR("Invalid command.", NULL);
+			ERR("Invalid command.\n", NULL);
 			exit(EXIT_FAILURE);
 		}
 		svc_exec(argc-optind, argv+optind);
