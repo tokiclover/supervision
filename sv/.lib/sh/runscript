@@ -42,6 +42,15 @@ done
 :	${SVC_NAME:=${1##*/}}
 :	${RS_STAGE:=2}
 :	${name=${SVC_NAME}}
+
+case "${1}" in
+	(*/rs.d/*)
+:	${RS_TYPE:=rs}
+	;;
+	(*/sv/*)
+:	${RS_TYPE:=sv}
+	;;
+esac
 shift
 
 source ${SV_LIBDIR}/sh/sv-backend ||
