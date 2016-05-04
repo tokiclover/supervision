@@ -36,7 +36,7 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 				 stat(pathname, &st_buf);
 	if (retval < 0) {
 		errno = EBADF;
-		return -1;
+		return 0;
 	}
 	switch (mode) {
 		case  0 :
@@ -54,7 +54,7 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 		case 'x': return st_buf.st_mode & S_IXUSR;
 		case 'g': return st_buf.st_mode & S_ISGID;
 		case 'u': return st_buf.st_mode & S_ISUID;
-		default: errno = EINVAL; return -1;
+		default: errno = EINVAL; return 0;
 	}
 }
 
