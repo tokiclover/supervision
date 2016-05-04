@@ -40,7 +40,6 @@ done
 
 :	${SV_LIBDIR:=${0%/sh*}}
 :	${SVC_NAME:=${1##*/}}
-:	${RS_TYPE:=rs}
 :	${RS_STAGE:=2}
 :	${name=${SVC_NAME}}
 shift
@@ -54,7 +53,10 @@ source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
 #
 # Handle command
 #
-eval rs_cmd "${@}"
+case "${RS_TYPE}" in
+	(rs) rs_cmd "${@}";;
+	(*) svc_cmd "${@}";;
+esac
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
