@@ -1,17 +1,25 @@
 #
 # $Header:  /lib/sv/sh/functions                         Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2015/04/30 21:09:26                      Exp $
+# $Version: 1.3 2016/05/01 21:09:26                      Exp $
 #
+
+trap 'PRINT_COL="$(tput cols)"' WINCH
+#
+# Setup a few environment variables beforehand
+#
+:	${PRINT_COL:=$(tput cols)}
 
 #
 # @FUNCTION: Print error message to stderr
 #
 error()
 {
-	local prefix=${name:+" ${CLR_MAG}${name}:${CLR_RST}"}
-	echo -e${eol+n} "${eol+\n} ${CLR_RED}*${CLR_RST}${prefix} ${@}" >&2
+	local msg="${*}"
+	PRINT_LEN=$((${#NAME}+3+${#msg}))
+	local pfx="${NAME:+${COLOR_MAG}${NAME}:${COLOR_RST}}"
+	echo -e "${PRINT_EOL}${COLOR_RED}*${COLOR_RST} ${pfx} ${@}" >&2
 }
 
 #
@@ -19,7 +27,7 @@ error()
 #
 die()
 {
-	local ret=${?}; error "${@}"; exit ${ret}
+	local ret=${?}; pr_error "${@}"; exit ${ret}
 }
 
 #
@@ -27,8 +35,10 @@ die()
 #
 info()
 {
-	local prefix=${name:+" ${CLR_YLW}${name}:${CLR_RST}"}
-	echo -e${eol+n} "${eol+\n} ${CLR_BLU}*${CLR_RST}${prefix} ${@}"
+	local msg="${*}"
+	PRINT_LEN=$((${#NAME}+3+${#msg}))
+	local pfx="${NAME:+${COLOR_YLW}${NAME}:${COLOR_RST}}"
+	echo -e "${PRINT_EOL}${COLOR_BLU}*${COLOR_RST} ${pfx} ${@}"
 }
 
 #
@@ -36,8 +46,10 @@ info()
 #
 warn()
 {
-	local prefix=${name:+" ${CLR_RED}${name}:${CLR_RST}"}
-	echo -e${eol+n} "${eol+\n} ${CLR_YLW}*${CLR_RST}${prefix} ${@}"
+	local msg="${*}"
+	PRINT_LEN=$((${#NAME}+3+${#msg}))
+	local pfx="${NAME:+${COLOR_RED}${NAME}:${COLOR_RST}}"
+	echo -e "${PRINT_EOL}${COLOR_YLW}*${COLOR_RST} ${pfx} ${@}"
 }
 
 #
@@ -45,10 +57,12 @@ warn()
 #
 begin()
 {
-	[ -n "${eol}" ] && echo
-:	${eol=0}
-	local prefix=${name:+"${CLR_MAG}[${CLR_RST} ${CLR_BLU}${name}${CLR_RST}: ${CLR_MAG}]${CLR_RST}"}
-	echo -en " ${prefix} ${@}"
+	echo -en "${PRINT_EOL}"
+	PRINT_EOL="\n"
+	local msg="${*}"
+	PRINT_LEN=$((${#NAME}+3+${#msg}))
+	local pfx="${NAME:+${COLOR_MAG}[${COLOR_BLU}${NAME}${COLOR_MAG}]${COLOR_RST}}"
+	echo -en "${pfx} ${@}"
 }
 
 #
@@ -58,12 +72,14 @@ end()
 {
 	local suffix
 	case "${1-0}" in
-		(0) suffix="${CLR_BLU}[${CLR_RST} ${CLR_GRN}Ok${CLR_RST} ${CLR_BLU}]${CLR_RST}";;
-		(*) suffix="${CLR_YLW}[${CLR_RST} ${CLR_RED}No${CLR_RST} ${CLR_YLW}]${CLR_RST}";;
+		(0) suffix="${COLOR_BLU}[${COLOR_GRN}ok${COLOR_BLU}]${COLOR_RST}";;
+		(*) suffix="${COLOR_YLW}[${COLOR_RED}no${COLOR_YLW}]${COLOR_RST}";;
 	esac
 	shift
-	echo -en " ${@} ${suffix}\n"
-	eol=
+	PRINT_LEN=$((${PRINT_COL}-${PRINT_LEN}))
+	printf "%*b\n" "${PRINT_LEN}" "${@} ${suffix}"
+	PRINT_EOL=
+	PRINT_LEN=0
 }
 
 #
@@ -120,13 +136,24 @@ SOURCE()
 #
 eval_colors()
 {
-	local BLD ESC FGD clr
-	BLD='1;' ESC='\e[' FGD='3'
+	local ESC FGD BGD color
+	ESC='\e[' FGD='3' BGD='4'
 
-	for clr in 0:BLK 1:RED 2:GRN 3:YLW 4:BLU 5:MAG 6:CYN 7:WHT; do
-		eval CLR_${clr#*:}="'${ESC}${BLD}${FGD}${clr%:*}m'"
+	for color in 0:BLK 1:RED 2:GRN 3:YLW 4:BLU 5:MAG 6:CYN 7:WHT; do
+		eval COLOR_${color#*:}="'${ESC}${FGD}${color%:*}m'"
+		eval COLOR_BG_${color#*:}="'${ESC}${BGD}${color%:*}m'"
 	done
-	CLR_RST="${ESC}0m"
+	COLOR_RST="${ESC}0m"
+	COLOR_BLD="${ESC}1m"
+	COLOR_UND="${ESC}4m"
+	COLOR_ITA="${ESC}3m"
+	if [ "${1}" = 256 ]; then
+		local i
+		for i in seq 0 255; do
+			eval BG_${i}="'${ESC}${BGD}${i}m'"
+			eval FG_${i}="'${ESC}${FGD}${i}m'"
+		done
+	fi
 }
 
 if [ -t 1 ] && yesno "${COLOR:-Yes}"; then
