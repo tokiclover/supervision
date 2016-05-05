@@ -180,6 +180,7 @@ install: install-dir install-dist
 		   $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
 	for i in 1 2 3 4 5 6; do \
 		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
+		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i}; \
 	done
 	ln -fns $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
 	for dir in .lib .opt; do \
