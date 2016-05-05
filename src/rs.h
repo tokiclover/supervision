@@ -106,6 +106,18 @@ RS_String_T *rs_deplist_adu_svc(RS_DepType_T *list, const char *str, int index);
 RS_String_T *rs_deplist_find_svc(RS_DepType_T *list, const char *str, int index);
 int          rs_deplist_del_svc(RS_DepType_T *list, const char *str, int index);
 
+/*
+ * retrieve a configuration value like getenv(3)
+ * @envp: configuration list;
+ * @env: configuration name;
+ */
+const char *rs_getconf(const char *env);
+/*
+ * simple helper to ease yes/no querries of config settings
+ * @return: true/false;
+ */
+int rs_conf_yesno(const char *env);
+
 #ifdef __cplusplus
 }
 #endif

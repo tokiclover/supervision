@@ -1,7 +1,7 @@
 override CFLAGS  += -D_DEFAULT_SOURCE -std=c99 -fPIC
 CC      ?= cc
 
-SRCS = error.c helper.c rs-list.c rs.c
+SRCS = error.c helper.c rs-conf.c rs-list.c rs.c
 OBJS = $(SRCS:%.c=%.o)
 HDRS = error.h helper.h rs.h
 BINS = rs
