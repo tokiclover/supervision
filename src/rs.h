@@ -44,7 +44,7 @@ enum {
 	RS_STAGE_SUPERVISION
 #define RS_STAGE_SUPERVISION RS_STAGE_SUPERVISION
 };
-extern const char *rs_stage_type[];
+extern const char *const rs_stage_type[];
 
 enum {
 	RS_STAGE_SYSINIT,
@@ -56,9 +56,9 @@ enum {
 	RS_STAGE_SHUTDOWN
 #define RS_STAGE_SHUTDOWN RS_STAGE_SHUTDOWN
 };
-extern const char *rs_stage_name[];
+extern const char *const rs_stage_name[];
 
-extern const char *rs_deps_type[];
+extern const char *const rs_deps_type[];
 #define RS_DEPS_TYPE ARRAY_SIZE(rs_deps_type)
 
 /* singly-linked list using queue(3) */

@@ -17,9 +17,9 @@
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
 /* !!! order matter (defined constant/enumeration) !!! */
-const char *rs_stage_type[] = { "rs", "sv" };
-const char *rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
-const char *rs_deps_type[] = { "after", "before", "use", "need" };
+const char *const rs_stage_type[] = { "rs", "sv" };
+const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
+const char *const rs_deps_type[] = { "after", "before", "use", "need" };
 const char *prgname;
 
 enum {
@@ -33,7 +33,7 @@ enum {
 	RS_SVC_CMD_ZAP
 };
 /* !!! likewise !!! */
-static char *rs_svc_cmd[] = { "stop", "start",
+static const char *const rs_svc_cmd[] = { "stop", "start",
 	"add", "del", "desc", "remove", "restart", "status", "zap"
 };
 
@@ -50,7 +50,7 @@ static const struct option longopts[] = {
 	{ "help",     0, NULL, 'h' },
 	{ 0, 0, 0, 0 }
 };
-static const char const *longopts_help[] = {
+static const char *longopts_help[] = {
 	"Disable dependencies",
 	"Enable debug mode",
 	"Select stage-0 run level",
@@ -63,9 +63,13 @@ static const char const *longopts_help[] = {
 	NULL
 };
 
-struct RS_Service_State {
-	int state;
-	const char *name;
+static const char *const env_list[] = {
+	"PATH", "SHELL", "SHLVL", "USER", "HOME", "TERM", "TMP", "TMPDIR",
+	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
+	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
+	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME",
+	"COLUMNS", "LINES", "SVC_DEPS", "RS_DEBUG",
+	NULL
 };
 
 __NORETURN__ void rs_help_message(int exit_val);
@@ -88,6 +92,10 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
  * @return NULL if nothing found or service path (dir/file)
  */
 char *rs_svc_find(const char *svc);
+/*
+ * generate a default environment for service
+ */
+const char **rs_svc_env(void);
 
 __NORETURN__ void rs_help_message(int exit_val)
 {
@@ -107,6 +115,31 @@ __NORETURN__ void rs_help_message(int exit_val)
 	exit(exit_val);
 }
 
+const char **rs_svc_env(void)
+{
+	const char **envp;
+	size_t size = 1024;
+	char *env = err_malloc(8);
+	int i = 0, j;
+	envp = err_calloc(ARRAY_SIZE(env_list), sizeof(void *));
+
+	if (!getenv("COLUMNS")) {
+		snprintf(env, sizeof(env), "%d", get_term_cols());
+		setenv("COLUMNS", env, 1);
+	}
+	free(env);
+
+	for (j = 0; env_list[j]; j++)
+		if (getenv(env_list[j])) {
+			env = err_malloc(size);
+			snprintf(env, size, "%s=%s", env_list[j], getenv(env_list[j]));
+			envp[i++] = err_realloc(env, strlen(env)+1);
+		}
+
+	envp[i] = (char *)0;
+	return envp;
+}
+
 char *rs_svc_find(const char *svc)
 {
 	size_t size = 512;
@@ -118,19 +151,20 @@ char *rs_svc_find(const char *svc)
 
 	snprintf(buf, size, "%s/%s", RS_SVCDIR, svc);
 	if (file_test(buf, 'x'))
-		return err_realloc(buf, strlen(buf));
+		return err_realloc(buf, strlen(buf)+1);
 	errno = 0;
 
 	snprintf(buf, size, "%s/%s", SV_SVCDIR, svc);
 	if (file_test(buf, 'd'))
-		return err_realloc(buf, strlen(buf));
+		return err_realloc(buf, strlen(buf)+1);
 	errno = err;
 
 	return NULL;
 }
 
 __NORETURN__ int svc_exec(int argc, char *argv[]) {
-	char opt[8], *envp[2], env[32];
+	char opt[8];
+	const char **envp;
 	const char *args[argc+3], *ptr;
 	int i = 0, j;
 	args[i++] = "runscript";
@@ -161,9 +195,7 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 	for ( j = 0; j < argc; j++)
 		args[i++] = argv[j];
 	args[i] = (char *)0;
-
-	snprintf(env, sizeof(env), "PRINT_COL=%d", get_term_cols());
-	envp[0] = env, envp[1] = (char *)0;
+	envp = rs_svc_env();
 
 	execve(RS_RUNSCRIPT, (char *const*)args, (char *const*)envp);
 	exit(127);
@@ -251,8 +283,9 @@ void svc_stage(const char *cmd)
 	RS_DepType_T *elm, *nil = NULL;
 	RS_String_T *svc;
 	const char *command = cmd;
-	const char *envp[2], *argv[6] = { "runscript" };
-	char opt[8], env[32];
+	const char **envp;
+	const char *argv[6] = { "runscript" };
+	char opt[8];
 	int i, j, k, type = 1;
 
 	if (RS_STAGE.type == NULL) /* -r|-v passed ? */
@@ -260,8 +293,7 @@ void svc_stage(const char *cmd)
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
 
-	snprintf(env, 32, "PRINT_COL=%d", get_term_cols());
-	envp[0] = env, envp[1] = (char *)0;
+	envp = rs_svc_env();
 	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
 
 	for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) {
@@ -304,7 +336,8 @@ int main(int argc, char *argv[])
 		;
 	prgname++;
 
-	char *cmd = NULL, *opts, *svc;
+	const char *cmd = NULL;
+	char *opts;
 	int i, opt;
 
 	/* Show help if insufficient args */
@@ -354,15 +387,23 @@ int main(int argc, char *argv[])
 		}
 	}
 	else {
+		if ((argc-optind) < 2) {
+			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGS]\n",
+					prgname);
+			exit(EXIT_FAILURE);
+		}
+
 		for (i = 0; i < ARRAY_SIZE(rs_svc_cmd); i++)
 			if (strcmp(rs_svc_cmd[i], argv[optind+1]) == 0) {
 				cmd = rs_svc_cmd[i];
 				break;
 			}
+
 		if (cmd == NULL) {
 			ERR("Invalid command.\n", NULL);
 			exit(EXIT_FAILURE);
 		}
+
 		svc_exec(argc-optind, argv+optind);
 	}
 
