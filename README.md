@@ -30,6 +30,7 @@ supported.
 INSTALLATION
 ------------
 
+`make` to build; and then
 `make DESTDIR=/tmp PREFIX=/usr/local RUNIT=1 S6=1 install-all`
 or only `install` (without supervision init script) would suffice.
 (Remove `RUNIT/S6` to avoid installing related Init-Stage-[123].)
@@ -40,6 +41,7 @@ and copy service directory to make new instances, e.g.
 `ln -s /etc/sv/getty /etc/service/getty-ttyS2`.
 
 And do not forget to run `sv/.lib/bin/sp -S BACKEND` afterwards!
+or `${DESTDIR}/lib/sv/bin/sp -S BACKEND` after installation.
 
 DOCUMENTATION
 -------------
