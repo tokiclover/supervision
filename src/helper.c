@@ -122,3 +122,46 @@ retline:
 	return len;
 }
 
+int rs_yesno(const char *str)
+{
+	if (!str) {
+		errno = ENOENT;
+		return 0;
+	}
+
+	switch(str[0]) {
+		case 'y':
+		case 'Y':
+		case 't':
+		case 'T':
+		case 'e':
+		case 'E':
+		case '1':
+			return 1;
+		case 'n':
+		case 'N':
+		case 'f':
+		case 'F':
+		case 'd':
+		case 'D':
+		case '0':
+			return 0;
+		case 'o':
+		case 'O':
+			switch(str[1]) {
+				case 'n':
+				case 'N':
+					return 1;
+				case 'f':
+				case 'F':
+					return 0;
+				default:
+					errno = EINVAL;
+					return 0;
+			}
+		default:
+			errno = EINVAL;
+			return 0;
+	}
+}
+

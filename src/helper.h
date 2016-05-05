@@ -29,6 +29,13 @@ __UNUSED__ int file_test(const char *pathname, int mode);
 ssize_t rs_getline(FILE *stream, char **buf, size_t *size);
 
 /*
+ * (WARN: only first to second character are used!)
+ * simple yes/no helper
+ * @return true/false;
+ */
+int rs_yesno(const char *str);
+
+/*
  * tiny helper to get terminal cols
  * @retrun terminal cols
  */
