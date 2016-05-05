@@ -5,11 +5,10 @@
 # $Version: 1.3 2016/05/01 21:09:26                      Exp $
 #
 
-trap 'PRINT_COL="$(tput cols)"' WINCH
 #
 # Setup a few environment variables beforehand
 #
-:	${PRINT_COL:=$(tput cols)}
+:	${COLUMNS:=$(tput cols)}
 
 #
 # @FUNCTION: Print error message to stderr
@@ -76,7 +75,7 @@ end()
 		(*) suffix="${COLOR_YLW}[${COLOR_RED}no${COLOR_YLW}]${COLOR_RST}";;
 	esac
 	shift
-	PRINT_LEN=$((${PRINT_COL}-${PRINT_LEN}))
+	PRINT_LEN=$((${COLUMNS}-${PRINT_LEN}))
 	printf "%*b\n" "${PRINT_LEN}" "${@} ${suffix}"
 	PRINT_EOL=
 	PRINT_LEN=0
