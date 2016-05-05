@@ -7,7 +7,6 @@
  * new BSD License included in the distriution of this package.
  */
 
-#include "rs.h"
 #include "helper.h"
 #include "rs.h"
 
@@ -71,6 +70,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 			ptr += pos+1;
 		}
 	}
+	fclose(depfile);
 
 	return deplist;
 }
