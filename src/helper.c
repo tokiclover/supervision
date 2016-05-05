@@ -91,10 +91,14 @@ ssize_t rs_getline(FILE *stream, char **buf, size_t *size)
 		errno = EBADF;
 		return -1;
 	}
+
 	*buf = err_realloc(*buf, BUFSIZ);
 	memset(*buf, 0, BUFSIZ);
 
 	while (fgets(*buf+len, BUFSIZ, stream)) {
+		if (*(*buf) == '\n')
+			continue;
+
 		len += strlen(*buf);
 		if (*(*buf+len-1) == '\n') {
 			*(*buf+len-1) = '\0';
