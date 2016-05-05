@@ -1,7 +1,7 @@
 PACKAGE     = supervision
 VERSION     = $(shell sed -nre '3s/(.*):/\1/p' ChangeLog)
 
-SUBDIRS    = src
+SUBDIRS    := src
 
 PREFIX      = /usr/local
 SYSCONFDIR  = /etc

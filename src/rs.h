@@ -16,11 +16,14 @@
 extern "C" {
 #endif
 
+#ifndef SYSCONFDIR
+# define SYSCONFDIR "/etc"
+#endif
 #define SV_LIBDIR "/lib/sv"
-#define RS_SVCDIR "/etc/rs.d"
-#define SV_SVCDIR "/etc/sv"
-#define SV_SERVICE "/etc/service"
-#if defined(STATIC)
+#define RS_SVCDIR SYSCONFDIR "/rs.d"
+#define SV_SVCDIR SYSCONFDIR "/sv"
+#define SV_SERVICE SYSCONFDIR "/service"
+#if defined(STATIC_SERVICE)
 #define SV_RUNDIR SV_SERVICE
 #elif defined(__linux__) || (defined(__FreeBSD_kernel__) && \
 		defined(__GLIBC__)) || defined(__GNU__)
