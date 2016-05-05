@@ -31,9 +31,21 @@ char *shell_string_value(char *str)
 
 __UNUSED__ int file_test(const char *pathname, int mode)
 {
-	struct stat st_buf;
-	int retval = (mode == 'h' || mode == 'L') ? lstat(pathname, &st_buf) : \
+	static struct stat st_buf;
+	static char *path;
+	static int retval;
+	size_t len;
+
+	if (path == NULL) {
+		len = strlen(pathname);
+		path = err_malloc(len+1);
+		memcpy(path, pathname, len+1);
+	}
+
+	if (strcmp(path, pathname) != 0)
+		retval = (mode == 'h' || mode == 'L') ? lstat(pathname, &st_buf) : \
 				 stat(pathname, &st_buf);
+
 	if (retval < 0) {
 		errno = EBADF;
 		return 0;
