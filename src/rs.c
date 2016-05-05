@@ -209,6 +209,7 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	static int sigsetup = 0;
 	static struct sigaction sa_ign, sa_int, sa_quit;
 	static sigset_t ss_child, ss_save;
+	static int parallel = 1;
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -220,6 +221,8 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	}
 
 	if (!sigsetup) {
+		parallel = rs_conf_yesno("RS_PARALLEL");
+
 		/* ignore SIGINT and SIGQUIT */
 		sa_ign.sa_handler = SIG_IGN;
 		sa_ign.sa_flags = 0;
@@ -245,12 +248,20 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	}
 
 	SLIST_FOREACH(svc, list, entries) {
-		count += 1;
+		count++;
 		pidlist = err_realloc(pidlist, sizeof(pid_t) * count);
 		pid = fork();
 
-		if (pid > 0) /* parent */
-			pidlist[count-1] = pid;
+		if (pid > 0) { /* parent */
+			if (parallel)
+				pidlist[count-1] = pid;
+			else {
+				waitpid(pid, &status, 0);
+				if (!WIFEXITED(status))
+					retval++;
+				count--;
+			}
+		}
 		else if (pid == 0) { /* child */
 			/* restore previous signal actions and mask */
 			sigaction(SIGINT, &sa_int, NULL);
@@ -268,7 +279,7 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	for (i = 0; i < count; i++) {
 		waitpid(pidlist[i], &status, 0);
 		if (!WIFEXITED(status))
-			retval += 1;
+			retval++;
 	}
 	free(pidlist);
 
