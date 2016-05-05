@@ -49,7 +49,7 @@ void *err_calloc(size_t num, size_t size)
 void *err_realloc(void *ptr, size_t size)
 {
 	ptr = realloc(ptr, size);
-	if (ptr)
+	if (ptr || size == 0)
 		return ptr;
 	ERR_EXIT;
 }
