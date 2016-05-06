@@ -13,6 +13,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
@@ -27,15 +28,28 @@ enum {
 	RS_SVC_CMD_START,
 	RS_SVC_CMD_ADD,
 	RS_SVC_CMD_DEL,
+	RS_SVC_CMD_DESC,
 	RS_SVC_CMD_REMOVE,
 	RS_SVC_CMD_RESTART,
 	RS_SVC_CMD_STATUS,
 	RS_SVC_CMD_ZAP
 };
-/* !!! likewise !!! */
+/* !!! likewise (service command) !!! */
 static const char *const rs_svc_cmd[] = { "stop", "start",
 	"add", "del", "desc", "remove", "restart", "status", "zap"
 };
+
+/* !!! likewise (state subdirs) !!! */
+enum {
+	SV_SUBDIR_DOWN,
+#define SV_SUBDIR_DOWN SV_SUBDIR_DOWN
+	SV_SUBDIR_FAIL,
+#define SV_SUBDIR_FAIL SV_SUBDIR_FAIL
+	SV_SUBDIR_STAR,
+#define SV_SUBDIR_WAIT SV_SUBDIR_WAIT
+	SV_SUBDIR_WAIT
+};
+const char *const sv_state_subdirs[] = { "down", "fail", "star", "wait" };
 
 static const char *shortopts = "Dg0123rvh";
 static const struct option longopts[] = {
@@ -68,7 +82,7 @@ static const char *const env_list[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME",
-	"COLUMNS", "LINES", "SVC_DEPS", "RS_DEBUG",
+	"COLUMNS", "LINES", "SVC_DEPS", "SVC_DEBUG",
 	NULL
 };
 
@@ -77,21 +91,52 @@ __NORETURN__ void rs_help_message(int exit_val);
  * bring system to a named level or stage
  * @cmd (start|stop|NULL); NULL is the default command
  */
-void svc_stage(const char *cmd);
+static void svc_stage(const char *cmd);
+
+/*
+ * querry service status
+ * @svc: service name;
+ * @status: int value [defrs];
+ * @return: true/false;
+ */
+int svc_state(const char *svc, int status);
+
+/*
+ * set service status
+ * @svc: service name;
+ * @status: int value [dfrs]
+ * @return: 0 on success;
+ */
+int svc_mark(const char *svc, int status);
+
 /*
  * execute a service with the appended arguments
  */
 __NORETURN__ int svc_exec(int argc, char *argv[]);
+
+/*
+ * lock file for service to start/stop
+ * @svc: service name;
+ * @flag: true to lock, false to unlock;
+ * @return: zero on success;
+ */
+int svc_lock(const char *svc, int flag);
+
+/* handle SIGCHLD/INT setup */
+void rs_sigsetup(void);
+
 /*
  * execute a service list (called from svc_stage())
  * @return 0 on success or number of failed services
  */
 int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[]);
+
 /*
  * find a service
  * @return NULL if nothing found or service path (dir/file)
  */
 char *rs_svc_find(const char *svc);
+
 /*
  * generate a default environment for service
  */
@@ -142,7 +187,7 @@ const char **rs_svc_env(void)
 
 char *rs_svc_find(const char *svc)
 {
-	size_t size = 512;
+	size_t size = BUFSIZ;
 	char *buf = err_malloc(size);
 	int err = errno;
 
@@ -159,20 +204,178 @@ char *rs_svc_find(const char *svc)
 		return err_realloc(buf, strlen(buf)+1);
 	errno = err;
 
+	free(buf);
 	return NULL;
+}
+
+int svc_lock(const char *svc, int flag)
+{
+	char buf[BUFSIZ];
+	int fd;
+
+	if (!svc) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+			sv_state_subdirs[SV_SUBDIR_WAIT], svc);
+
+	if (flag) {
+		fd = open(buf, O_CREAT|O_EXCL|O_WRONLY, 0644);
+		if (fd >= 0) {
+			close(fd);
+			return 0;
+		}
+		errno = EBUSY;
+		return -1;
+	}
+	else {
+		if (file_test(buf, 0))
+			return unlink(buf);
+		else
+			return 0;
+	}
+}
+
+int svc_mark(const char *svc, int status)
+{
+	char buf[BUFSIZ], *path;
+	int fd;
+
+	if (!svc) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	switch(status) {
+		case 'f':
+			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+					sv_state_subdirs[SV_SUBDIR_FAIL], svc);
+			break;
+		case 'd':
+		case 'u':
+			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
+			break;
+		case 's':
+		case 'S':
+			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+					sv_state_subdirs[SV_SUBDIR_STAR], svc);
+			break;
+		default:
+			errno = EINVAL;
+			return -1;
+	}
+
+	switch (status) {
+		case 'd':
+		case 'f':
+		case 's':
+			fd = open(buf, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+			if (fd >= 0) {
+				close(fd);
+				return 0;
+			}
+			return -1;
+		default:
+			if (file_test(buf, 0))
+				return unlink(buf);
+			else
+				return 0;
+	}
+}
+
+int svc_state(const char *svc, int status)
+{
+	char buf[BUFSIZ], *path;
+	int retval;
+
+	if (!svc) {
+		errno = ENOENT;
+		return 0;
+	}
+
+	switch(status) {
+		case 'e':
+			path = rs_svc_find(svc);
+			retval = file_test(path, 0);
+			free(path);
+			return retval;
+		case 'f':
+			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+					sv_state_subdirs[SV_SUBDIR_FAIL], svc);
+			return file_test(buf, 0);
+		case 'd':
+			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
+			return file_test(buf, 0);
+		case 's':
+			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
+					sv_state_subdirs[SV_SUBDIR_STAR], svc);
+			return file_test(buf, 0);
+		default:
+			errno = EINVAL;
+			return 0;
+	}
+}
+
+static struct sigaction sa_sigint, sa_sigquit;
+static sigset_t ss_savemask;
+
+void rs_sigsetup(void)
+{
+	static int sigsetup = 0;
+	static struct sigaction sa_ign;
+	static sigset_t ss_child;
+
+	if (sigsetup)
+		return;
+
+	/* ignore SIGINT and SIGQUIT */
+	sa_ign.sa_handler = SIG_IGN;
+	sa_ign.sa_flags = 0;
+	sigemptyset(&sa_ign.sa_mask);
+
+	if (sigaction(SIGINT, &sa_ign, &sa_sigint) < 0) {
+		ERROR("%s: sigaction(SIGINT)", __func__);
+		exit(EXIT_FAILURE);
+	}
+	if (sigaction(SIGQUIT, &sa_ign, &sa_sigquit) < 0) {
+		ERROR("%s: sigaction(SIGQUIT)", __func__);
+		exit(EXIT_FAILURE);
+	}
+	sigemptyset(&ss_child);
+	sigaddset(&ss_child, SIGCHLD);
+	sigsetup = 1;
+
+	/* block SIGCHLD */
+	if (sigprocmask(SIG_BLOCK, &ss_child, &ss_savemask) < 0) {
+		ERROR("%s: sigprocmask(SIG_BLOCK)", __func__);
+		exit(EXIT_FAILURE);
+	}
+
 }
 
 __NORETURN__ int svc_exec(int argc, char *argv[]) {
 	char opt[8];
+	const char *ptr;
 	const char **envp;
-	const char *args[argc+3], *ptr;
-	int i = 0, j;
+	const char *args[argc+3], *cmd = argv[1], *svc;
+	int i = 0, j, state = 0, status;
+	pid_t pid;
 	args[i++] = "runscript";
+	args[i++] = opt;
 
-	if (argv[0][0] == '/')
+	/* setup argv and envp */
+	if (argv[0][0] == '/') {
 		ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
-	else
+		svc = strrchr(argv[0], '/')+1;
+	}
+	else {
 		ptr = getenv("RS_TYPE");
+		svc = argv[0];
+	}
 
 	if (ptr == NULL) {
 		ptr = rs_svc_find(argv[0]);
@@ -184,21 +387,66 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 			argc--, argv++;
 			args[i++] = opt;
 			args[i++] = ptr;
-			if (strstr(ptr, RS_SVCDIR))
+			if (strncmp(ptr, RS_SVCDIR, strlen(RS_SVCDIR)) == 0)
 				ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
 			else
 				ptr = rs_stage_type[RS_STAGE_SUPERVISION];
-			snprintf(opt, sizeof(opt), "--%s", ptr);
 		}
 	}
+	snprintf(opt, sizeof(opt), "--%s", ptr);
 
 	for ( j = 0; j < argc; j++)
 		args[i++] = argv[j];
 	args[i] = (char *)0;
 	envp = rs_svc_env();
 
-	execve(RS_RUNSCRIPT, (char *const*)args, (char *const*)envp);
-	exit(127);
+	/* get service status before doing anything */
+	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+		state = 's';
+	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
+		state = 'S';
+
+	if (state == 's' || state == 'S') {
+		status = svc_state(svc, 's');
+		if (status) {
+			if (state == 's') {
+				ERR("%s service is already started.\n", svc);
+				ERR("try zap command beforehand to force start up.\n", NULL);
+				exit(EXIT_FAILURE);
+			}
+		}
+		else if (state == 'S' && svc_state(svc, 'f')) {
+			ERR("%s service is not started.\n", svc);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	if (svc_lock(svc, 1)) {
+		ERR("Failed to lock file for %s service.\n", svc);
+		exit(EXIT_FAILURE);
+	}
+
+	rs_sigsetup();
+	pid = fork();
+
+	if (pid > 0) {
+		waitpid(pid, &status, 0);
+		svc_lock(svc, 0);
+		if (WIFEXITED(status) && state)
+			svc_mark(svc, state);
+		exit(status);
+	}
+	else if (pid == 0) {
+		/* restore previous signal actions and mask */
+		sigaction(SIGINT, &sa_sigint, NULL);
+		sigaction(SIGQUIT, &sa_sigquit, NULL);
+		sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
+
+		execve(RS_RUNSCRIPT, (char *const*)args, (char *const*)envp);
+		exit(127);
+	}
+
+	exit(EXIT_FAILURE);
 }
 
 int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[])
@@ -206,10 +454,12 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	RS_String_T *svc;
 	pid_t pid, *pidlist = NULL;
 	int count = 0, status, retval = 0, i;
-	static int sigsetup = 0;
-	static struct sigaction sa_ign, sa_int, sa_quit;
-	static sigset_t ss_child, ss_save;
-	static int parallel = 1;
+	static int parallel = 0;
+	char **svclist = NULL;
+	int state;
+
+	if (!parallel)
+		parallel = rs_conf_yesno("RS_PARALLEL");
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -219,69 +469,73 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		errno = ENOENT;
 		return -1;
 	}
+	rs_sigsetup();
 
-	if (!sigsetup) {
-		parallel = rs_conf_yesno("RS_PARALLEL");
-
-		/* ignore SIGINT and SIGQUIT */
-		sa_ign.sa_handler = SIG_IGN;
-		sa_ign.sa_flags = 0;
-		sigemptyset(&sa_ign.sa_mask);
-
-		if (sigaction(SIGINT, &sa_ign, &sa_int) < 0) {
-			ERROR("sigaction(SIGINT)", NULL);
-			exit(EXIT_FAILURE);
-		}
-		if (sigaction(SIGQUIT, &sa_ign, &sa_quit) < 0) {
-			ERROR("sigaction(SIGQUIT)", NULL);
-			exit(EXIT_FAILURE);
-		}
-		sigemptyset(&ss_child);
-		sigaddset(&ss_child, SIGCHLD);
-		sigsetup = 1;
-
-		/* block SIGCHLD */
-		if (sigprocmask(SIG_BLOCK, &ss_child, &ss_save) < 0) {
-			ERROR("sigprocmask(SIG_BLOCK)", NULL);
-			exit(EXIT_FAILURE);
-		}
-	}
+	if (strcmp(argv[3], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+		state = 's';
+	else
+		state = 'S';
 
 	SLIST_FOREACH(svc, list, entries) {
-		count++;
-		pidlist = err_realloc(pidlist, sizeof(pid_t) * count);
+		status = svc_state(svc->str, 's');
+		if (status) {
+			if (state == 's') {
+				ERR("%s service is already started.\n", svc->str);
+				continue;
+			}
+		}
+		else if (state == 'S' && svc_state(svc->str, 'f')) {
+			ERR("%s service is not started.\n", svc->str);
+			continue;
+		}
+
+		if (svc_lock(svc->str, 1)) {
+			ERR("Failed to lock file for %s service.\n", svc->str);
+			continue;
+		}
 		pid = fork();
 
 		if (pid > 0) { /* parent */
-			if (parallel)
+			if (parallel) {
+				count++;
+				pidlist = err_realloc(pidlist, sizeof(pid_t) * count);
+				svclist = err_realloc(svclist, sizeof(void*) * count);
 				pidlist[count-1] = pid;
+				svclist[count-1] = svc->str;
+			}
 			else {
 				waitpid(pid, &status, 0);
-				if (!WIFEXITED(status))
+				svc_lock(svc->str, 0);
+				if (WIFEXITED(status))
+					svc_mark(svc->str, state);
+				else
 					retval++;
-				count--;
 			}
 		}
 		else if (pid == 0) { /* child */
 			/* restore previous signal actions and mask */
-			sigaction(SIGINT, &sa_int, NULL);
-			sigaction(SIGQUIT, &sa_quit, NULL);
-			sigprocmask(SIG_SETMASK, &ss_save, NULL);
+			sigaction(SIGINT, &sa_sigint, NULL);
+			sigaction(SIGQUIT, &sa_sigquit, NULL);
+			sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
 
 			argv[2] = svc->str;
 			execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)envp);
 			_exit(127);
 		}
 		else
-			ERROR("fork", NULL);
+			ERROR("%s: fork()", __func__);
 	}
 
 	for (i = 0; i < count; i++) {
 		waitpid(pidlist[i], &status, 0);
-		if (!WIFEXITED(status))
+		svc_lock(svclist[i], 0);
+		if (WIFEXITED(status))
+			svc_mark(svclist[i], state);
+		else
 			retval++;
 	}
 	free(pidlist);
+	free(svclist);
 
 	return count;
 }
@@ -364,7 +618,7 @@ int main(int argc, char *argv[])
 				setenv("SVC_DEPS", "0", 1);
 				break;
 			case 'g':
-				setenv("RS_DEBUG", "1", 1);
+				setenv("SVC_DEBUG", "1", 1);
 				break;
 			case '0':
 			case '1':
