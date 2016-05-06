@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.1 2016/05/01 21:09:26                      Exp $
+# $Version: 1.1 2016/05/05 21:09:26                      Exp $
 #
 
 EEND='{ end 0; return; };'
@@ -49,34 +49,12 @@ rs_cmd()
 	esac
 
 	begin "service ${cmd}: "
-	case "${cmd}" in
-		(start)
-		svc_wait || eval ${EBUSY}
-		svc_state -s && eval ${EEND}
-		svc_mark  -d
-		svc_depend || return;;
-		(stop)
-		svc_wait || eval ${EBUSY}
-		svc_state -f && eval ${EEND}
-		svc_state -s || eval ${EEND}
-		svc_mark  -d;;
-	esac
-
 	for cmd in ${CMD}; do
 		command -v ${cmd} >${NULL} 2>&1 || continue
 		eval ${cmd} ${ARGS}
 		case ${?} in
-			(0)
-			case ${cmd} in
-				(start) svc_mark -s -u;;
-				(stop)  svc_mark -S -u;;
-			esac;;
-			(*)
-			case ${cmd} in
-				(*_pre)  val=2; eval ${FAIL};;
-				(*_post) val=3; eval ${FAIL};;
-			esac
-			val=$((${val}+1));;
+			(0) ;;
+			(*) val=2; eval ${FAIL};;
 		esac
 	done
 	end ${val-${?}}
