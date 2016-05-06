@@ -51,7 +51,7 @@ enum {
 };
 const char *const sv_state_subdirs[] = { "down", "fail", "star", "wait" };
 
-static const char *shortopts = "Dg0123rvh";
+static const char *shortopts = "Dg0123rVvh";
 static const struct option longopts[] = {
 	{ "nodeps",   0, NULL, 'D' },
 	{ "debug",    0, NULL, 'g' },
@@ -62,6 +62,7 @@ static const struct option longopts[] = {
 	{ "rs",       0, NULL, 'r' },
 	{ "sv",       0, NULL, 'v' },
 	{ "help",     0, NULL, 'h' },
+	{ "version",  0, NULL, 'V' },
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
@@ -74,6 +75,7 @@ static const char *longopts_help[] = {
 	"Select runscript backend",
 	"Select supervision backend",
 	"Show help and exit",
+	"Show version and exit",
 	NULL
 };
 
@@ -656,6 +658,10 @@ int main(int argc, char *argv[])
 			case 'r':
 				setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
 				break;
+			case 'V':
+				printf("%s version %u\n\n", prgname, VERSION);
+				puts(RS_COPYRIGHT);
+				exit(EXIT_SUCCESS);
 			case 'v':
 				setenv("RS_TYPE", rs_stage_type[RS_STAGE_SUPERVISION], 1);
 				break;
