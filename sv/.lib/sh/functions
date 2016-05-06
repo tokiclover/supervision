@@ -16,8 +16,8 @@
 error()
 {
 	local msg="${*}"
-	PRINT_LEN=$((${#NAME}+3+${#msg}))
-	local pfx="${NAME:+${COLOR_MAG}${NAME}:${COLOR_RST}}"
+	PRINT_LEN=$((${#name}+3+${#msg}))
+	local pfx="${name:+${COLOR_MAG}${name}:${COLOR_RST}}"
 	echo -e "${PRINT_EOL}${COLOR_RED}*${COLOR_RST} ${pfx} ${@}" >&2
 }
 
@@ -35,8 +35,8 @@ die()
 info()
 {
 	local msg="${*}"
-	PRINT_LEN=$((${#NAME}+3+${#msg}))
-	local pfx="${NAME:+${COLOR_YLW}${NAME}:${COLOR_RST}}"
+	PRINT_LEN=$((${#name}+3+${#msg}))
+	local pfx="${name:+${COLOR_YLW}${name}:${COLOR_RST}}"
 	echo -e "${PRINT_EOL}${COLOR_BLU}*${COLOR_RST} ${pfx} ${@}"
 }
 
@@ -46,8 +46,8 @@ info()
 warn()
 {
 	local msg="${*}"
-	PRINT_LEN=$((${#NAME}+3+${#msg}))
-	local pfx="${NAME:+${COLOR_RED}${NAME}:${COLOR_RST}}"
+	PRINT_LEN=$((${#name}+3+${#msg}))
+	local pfx="${name:+${COLOR_RED}${name}:${COLOR_RST}}"
 	echo -e "${PRINT_EOL}${COLOR_YLW}*${COLOR_RST} ${pfx} ${@}"
 }
 
@@ -59,8 +59,8 @@ begin()
 	echo -en "${PRINT_EOL}"
 	PRINT_EOL="\n"
 	local msg="${*}"
-	PRINT_LEN=$((${#NAME}+3+${#msg}))
-	local pfx="${NAME:+${COLOR_MAG}[${COLOR_BLU}${NAME}${COLOR_MAG}]${COLOR_RST}}"
+	PRINT_LEN=$((${#name}+3+${#msg}))
+	local pfx="${name:+${COLOR_MAG}[${COLOR_BLU}${name}${COLOR_MAG}]${COLOR_RST}}"
 	echo -en "${pfx} ${@}"
 }
 
