@@ -122,6 +122,11 @@ __NORETURN__ int svc_exec(int argc, char *argv[]);
  */
 int svc_lock(const char *svc, int flag);
 
+/*
+ * remove service temporary files
+ */
+void svc_zap(const char *svc);
+
 /* handle SIGCHLD/INT setup */
 void rs_sigsetup(void);
 
@@ -236,6 +241,22 @@ int svc_lock(const char *svc, int flag)
 		else
 			return 0;
 	}
+}
+
+void svc_zap(const char *svc)
+{
+	int i;
+	char buf[BUFSIZ];
+
+	for (i = 0; i < ARRAY_SIZE(sv_state_subdirs); i++) {
+		snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR, sv_state_subdirs[i], svc);
+		if (file_test(buf, 0))
+			unlink(buf);
+	}
+
+	snprintf(buf, BUFSIZ, "%s/%s_OPTIONS", SV_TMPDIR, svc);
+	if (file_test(buf, 0))
+		i = unlink(buf);
 }
 
 int svc_mark(const char *svc, int status)
@@ -375,6 +396,12 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 	else {
 		ptr = getenv("RS_TYPE");
 		svc = argv[0];
+	}
+
+	/* do this before anything else */
+	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_ZAP]) == 0) {
+		svc_zap(svc);
+		exit(EXIT_SUCCESS);
 	}
 
 	if (ptr == NULL) {
