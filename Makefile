@@ -163,7 +163,7 @@ all: $(SUBDIRS)
 FORCE:
 
 $(SUBDIRS): FORCE
-	$(MAKE) -C $@
+	$(MAKE) -C $@ VERSION=$(VERSION)
 
 install-all: install install-supervision-svc
 install: install-dir install-dist

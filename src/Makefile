@@ -1,4 +1,4 @@
-override CFLAGS  += -D_DEFAULT_SOURCE -std=c99 -fPIC
+override CFLAGS  += -D_DEFAULT_SOURCE -std=c99 -fPIC -DVERSION=$(VERSION)
 CC      ?= cc
 
 SRCS = error.c helper.c rs-conf.c rs-list.c rs.c
