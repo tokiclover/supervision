@@ -40,7 +40,6 @@ done
 
 :	${SV_LIBDIR:=${0%/sh*}}
 :	${SVC_NAME:=${1##*/}}
-:	${RS_STAGE:=2}
 :	${name=${SVC_NAME}}
 
 case "${1}" in
