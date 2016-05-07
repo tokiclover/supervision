@@ -1,26 +1,20 @@
 #!/bin/sh
 #
 # $Header:  /lib/sv/bin/sp                               Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/04/24 21:09:26                      Exp $
+# $Version: 1.1 2016/05/05 21:09:26                      Exp $
 #
 
 :	${name=sp}
-case "${0}" in
-	(/*) head="${0%/*}"   ;;
-	(*)  head="${PWD}/${0#./}"
-	     head="${head%/*}";;
-esac
-:	${SV_LIBDIR:=${head%/*}}
-source ${SV_LIBDIR}/sh/sv-backend ||
+:	${SV_LIBDIR:=${0%/bin/*}}
+source "${0%/bin/*}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
-svc_backend -C -i
 
-usage()
+help_message()
 {
 	cat <<-EOH
- usage: sp [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
+ usage: sp [OPTIONS] [{SERVICE} {COMAND}] [ARGUMENTS]
    COMMAND: [add|del|remove|reload|start|stop|status|zap]
    COMMAND: (CGroup) cgroup_remove_service
    OPTIONS: add SERVICE [-cdls]
@@ -39,33 +33,31 @@ ${1+exit ${1}}
 
 sv_cmd()
 {
-	local cmd name svc
-	for svc; do
-		case "${CMD}" in
-			(add) cmd=svc_cmd SVC_NAME="${svc}";;
-			(*) cmd="${SV_SVCDIR}/${svc}/run"  ;;
-		esac
-		eval ${cmd} ${CMD} ${ARGS}
-	done
+	local cmd name svc="${1}"
+	case "${2}" in
+		(add) cmd=svc_cmd SVC_NAME="${svc}";;
+		(*) cmd="${SV_SVCDIR}/${svc}/run"  ;;
+	esac
+	eval ${cmd} ${2} ${ARGS}
 }
 
-[ ${#} -ge 2 ] || usage 2
+[ ${#} -ge 2 ] || help_message 2
 ARGS="$(getopt \
 	-o DS:cdghls \
 	-l check,debug,down,help,nodeps,log,service,set: \
 	-s sh -n sp -- "${@}")"
-[ ${?} -eq 0 ] || usage 3
+[ ${?} -eq 0 ] || help_message 3
 eval set -- ${ARGS}
-ARGS= SV_OPT=
+ARGS= __SV_NAM__=
 
 while true; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
 		(-g|--debug) set -x;;
-		(-S|--set) SV_OPT="${2}"; shift 2; break;;
+		(-S|--set) __SV_NAM__="${2}"; shift 2; break;;
 		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
-		(*) CMD="${2}"; shift 2; break;;
-		(-h|--help) usage 0;;
+		(*) shift; break;;
+		(-h|--help) help_message 0;;
 	esac
 	shift
 done
@@ -74,66 +66,66 @@ sv_backend()
 {
 local BINS CMDS PREFIX SIGNALS bin env
 
-SIGNALS='SIGSTRT SIGSTOP SIGONCE SIGPAUSE SIGCONT SIGHUP SIGALRM SIGINT
-	SIGTERM SIGKILL SIGEXIT SIGQUIT SIGUSR1 SIGUSR2 SIGWTUP SIGWDWN'
+SIGNALS='__SIGSTRT__ __SIGSTOP__ __SIGSONCE__ __SIGPAUSE__ __SIGCONT__ __SIGHUP__ __SIGALRM__ __SIGINT__
+	__SIGTERM__ __SIGKILL__ __SIGEXIT__ __SIGQUIT__ __SIGUSR1__ __SIGUSR2__ __SIGWTUP__ __SIGWDWN__'
 BINS='envdir envuidgid fghack pgrphack setlock setuidgid softlimit'
-CMDS='SV_CMD SVCCMD CHKCMD STACMD LOGCMD'
+CMDS='__SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ __LOGCMD__'
 
-case ${SV_OPT} in
+case ${__SV_NAM__} in
 	(daemontools)
 		BIN='' PREFIX=''
 		;;
 	(daemontools-encore)
 		BIN='' PREFIX=''
-		SIGQUIT=-q SIGUSR1=-1 SIGUSR2=-2
+		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
 		;;
 	(runit)
-		BIN=chpst CMDS="${CMDS} PRECMD SCANCMD" PREFIX='' SIGNALS="${SIGNALS} SIGRLD"
-		SIGWTUP="'-w 10 up'" SIGWDWN="'-w 10 down'" SCANCMD="'pkill -CONT runsvdir'"
-		SIGSTRT=up SIGSTOP=down SIGONCE=once SIGPAUSE=pause SIGCONT=cont
-		SIGHUP=hup SIGALRM=alarm SIGINT=interrupt SIGQUIT=quit SIGUSR1=1
-		SIGUSR2=2 SIGTERM=term SIGKILL=kill SIGEXIT=exit SIGRLD=reload
-		SV_CMD=runsvdir SVCCMD=sv CHKCMD="'sv check'" STACMD=sv PRECMD=chpst LOGCMD=svlogd
+		BIN=chpst CMDS="${CMDS} __PRECMD__ __SCANCMD__" PREFIX='' SIGNALS="${SIGNALS} __SIGRELD__"
+		__SIGWTUP__="'-w 10 up'" __SIGWDWN__="'-w 10 down'" __SCANCMD__="'pkill -CONT runsvdir'"
+		__SIGSTRT__=up __SIGSTOP__=down __SIGSONCE__=once __SIGPAUSE__=pause __SIGCONT__=cont
+		__SIGHUP__=hup __SIGALRM__=alarm __SIGINT__=interrupt __SIGQUIT__=quit __SIGUSR1__=1
+		__SIGUSR2__=2 __SIGTERM__=term __SIGKILL__=kill __SIGEXIT__=exit __SIGRELD__=reload
+		__SV_CMD__=runsvdir __SVCCMD__=sv __CHKCMD__="'sv check'" __STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
 		;;
 	(s6)
-		BIN='' PREFIX=s6- SIGWTUP="'-U -T 10000'" SIGWDWN="'-D -T 10000'"
-		SIGQUIT=-q SIGUSR1=-1 SIGUSR2=-2
-		CMDS="${CMDS} SCANCMD" SCANCMD='"s6-svscanctl -an ${SV_RUNDIR}"'
-		SV_CMD=s6-svscan SVCCMD=s6-svc CHKCMD=s6-svok STACMD=s6-svsat LOGCMD=s6-log
+		BIN='' PREFIX=s6- __SIGWTUP__="'-U -T 10000'" __SIGWDWN__="'-D -T 10000'"
+		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
+		CMDS="${CMDS} __SCANCMD__" __SCANCMD__='"s6-svscanctl -an ${SV_RUNDIR}"'
+		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok __STACMD__=s6-svsat __LOGCMD__=s6-log
 		;;
 	(*) die "Invalid supervision backend";;
 esac
 
-:	${SIGSTRT:=-u}
-:	${SIGSTOP:=-d}
-:	${SIGONCE:=-o}
-:	${SIGPAUSE:=-p}
-:	${SIGCONT:=-c}
-:	${SIGHUP:=-h}
-:	${SIGALRM:=-a}
-:	${SIGINT:=-i}
-:	${SIGTERM:=-t}
-:	${SIGKILL:=-k}
-:	${SIGEXIT:=-x}
-:	${SVCCMD:=svc}
-:	${SV_CMD:=svscan}
-:	${CHKCMD:=svok}
-:	${STACMD:=svstat}
-:	${LOGCMD:=multilog}
+:	${__SIGSTRT__:=-u}
+:	${__SIGSTOP__:=-d}
+:	${__SIGSONCE__:=-o}
+:	${__SIGPAUSE__:=-p}
+:	${__SIGCONT__:=-c}
+:	${__SIGHUP__:=-h}
+:	${__SIGALRM__:=-a}
+:	${__SIGINT__:=-i}
+:	${__SIGTERM__:=-t}
+:	${__SIGKILL__:=-k}
+:	${__SIGEXIT__:=-x}
+:	${__SVCCMD__:=svc}
+:	${__SV_CMD__:=svscan}
+:	${__CHKCMD__:=svok}
+:	${__STACMD__:=svstat}
+:	${__LOGCMD__:=multilog}
 
-begin "Setting up ${SV_OPT} supervision backend..."
+begin "Setting up ${__SV_NAM__} supervision backend..."
 for bin in ${BINS}; do
 	ln -f -s $(type -p ${PREFIX}${BIN:-${bin%:*}}) ${SV_LIBDIR}/bin/${bin#*:}
 done
 end ${?} Symlinks
-for env in SV_OPT ${CMDS} ${SIGNALS}; do
+for env in __SV_NAM__ ${CMDS} ${SIGNALS}; do
 	eval echo ${env}=\"\${${env}}\"
 	unset ${env}
 done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
 end ${?} SVC_BACKEND
 }
 
-[ -n "${SV_OPT}" ] && sv_backend || sv_cmd "${@}"
+[ -n "${__SV_NAM__}" ] && sv_backend || sv_cmd "${@}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
