@@ -1,23 +1,21 @@
 #!/bin/sh
 #
 # $Header:  /lib/sv/bin/checkpath                        Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Description: Simple & Cheap checkpath/mktemp script   Exp $
-# $Version: 0.8 2015/05/24 21:09:26                      Exp $
+# $Version: 0.8 2016/05/05 21:09:26                      Exp $
 #
 
 NULL=/dev/null
-name="${0##*/}"
-case "${0}" in
-	(/*) head="${0%/*}"   ;;
-	(*)  head="${PWD}/${0#./}"
-	     head="${head%/*}";;
-esac
-:	${SV_LIBDIR:=${head%/*}}
-source ${SV_LIBDIR}/sh/functions ||
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+:	${name=${0##*/}}
+:	${SV_LIBDIR:=${0%/bin/*}}
+source "${0%/bin/*}"/sh/functions ||
 	{ echo "Required file not found." >&2; exit 1; }
+umask 022
 
-usage() {
+help_message() {
 	cat <<-EOH
 usage: ${0##*/} [-p] [-d|-f] [-m mode] [-o owner[:group]] TEMPLATE|DIR|FILE
   -d, --dir           (Create a) directory
@@ -34,13 +32,13 @@ EOH
 exit
 }
 
-[ ${#} -eq 0 ] && usage
+[ ${#} -eq 0 ] && help_message
 ARGS="$(getopt \
 	-o Pcdfg:hm:o:p::q \
 	-l checkpath,dir,file,group:,tmpdir:: \
 	-l help,mode:,owner:,pipe,quiet \
 	-s sh -n ${name} -- "${@}")"
-[ ${?} -eq 0 ] || usage
+[ ${?} -eq 0 ] || help_message
 eval set -- ${ARGS}
 
 TEMP=-XXXXXX TYPE='' ARGS=''
@@ -51,7 +49,7 @@ while true; do
 		(-d|--dir) ARGS=-d TYPE=dir;;
 		(-f|--file)  TYPE=file ;;
 		(-P|--pipe)  TYPE=pipe ;;
-		(-h|--help)  usage     ;;
+		(-h|--help)  help_message;;
 		(-q|--quiet) QUIET=true;;
 		(-m|--mode)  MODE="${2}" ; shift;;
 		(-o|--owner) OWNER="${2}"; shift;;
