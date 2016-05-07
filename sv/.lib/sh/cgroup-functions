@@ -1,17 +1,19 @@
 #
 # $Header:  /lib/sv/sh/cgroup-functions                  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2015/05/04                               Exp $
+# $Version: 1.0 2016/06/06                               Exp $
 #
 # Copyright (c) 2012 Alexander Vershilov <qnikst@gentoo.org>
-# CopyLetf  (c) 2015 -tclover <tokiclover@gmail.com>
+# CopyLetf  (c) 2015 tokiclover <tokiclover@gmail.com>
 #
 
-:	${CG_NAME=supervision}
-:	${CG_ROOT=/sys/fs/cgroup}
-:	${CG_PATH=${CG_ROOT}/${CG_NAME}}
-:	${SYSFS_OPTS=nodev,nosuid,noexec}
-:	${CG_RELEASE_AGENT=${SV_LIBDIR}/sh/cgroup-release-agent}
+__CGROUP_FUNCTIONS__=1
+
+__CGROUP_NAME__=supervision
+__CGROUP_ROOT__=/sys/fs/cgroup
+__CGROUP_PATH__="${__CGROUP_ROOT__}/${__CGROUP_NAME__}"
+__CGROUP_RELEASE_AGENT__="${SV_LIBDIR}/sh/cgroup-release-agent"
+SYSFS_OPTS="nodev,nosuid,noexec"
 
 cgroup_start_sys()
 {
@@ -19,11 +21,11 @@ cgroup_start_sys()
 
 	local opt
 	[ -w /etc/mtab ] || opt=-n
-	if ! mount_info ${CG_PATH}; then
-		mkdir -p ${CG_PATH}
-		mount ${opt} -o none,${SYSFS_OPTS},name=${CG_NAME},release_agent=${CG_RELEASE_AGENT} \
-			-t cgroup  ${CG_NAME} ${CG_PATH}
-		echo 1 > ${CG_PATH}/notify_on_release
+	if ! mount_info ${__CGROUP_PATH__}; then
+		mkdir -p ${__CGROUP_PATH__}
+		mount ${opt} -o none,${SYSFS_OPTS},name=${__CGROUP_NAME__},release_agent=${__CGROUP_RELEASE_AGENT__} \
+			-t cgroup  ${__CGROUP_NAME__} ${__CGROUP_PATH__}
+		echo 1 > ${__CGROUP_PATH__}/notify_on_release
 	fi
 }
 
@@ -45,22 +47,22 @@ cgroup_get_pids()
 	PIDS=
 	while read p; do
 		[ ${p} -eq $$ ] || PIDS="${PIDS} ${p}"
-	done < ${CG_PATH}/${SVC_NAME}/tasks
+	done < ${__CGROUP_PATH__}/${SVC_NAME}/tasks
 	[ -n "${PIDS}" ]
 }
 
 cgroup_get_state()
 {
-	[ -d "${CG_PATH}/${SVC_NAME}" ]
+	[ -d "${__CGROUP_PATH__}/${SVC_NAME}" ]
 }
 
 cgroup_set_values()
 {
-	[ -n "${1}" -a -n "${2}" -a -d "${CG_ROOT}/${1}" ] || return 0
+	[ -n "${1}" -a -n "${2}" -a -d "${__CGROUP_ROOT__}/${1}" ] || return 0
 
 	local group head ctrl
 	ctrl="${1}"; head=$(cgroup_find_path "${1}")
-	group="${CG_ROOT}/${1}${head}${CG_NAME}_${SVC_NAME}"
+	group="${__CGROUP_ROOT__}/${1}${head}${__CGROUP_NAME__}_${SVC_NAME}"
 	[ -d "${group}" ] || mkdir -p "${group}"
 
 	set -- ${2}
@@ -101,14 +103,14 @@ cgroup_add_service()
 	#
 	if yesno ${cgroup_inherit:-${CGROUP_INHERIT}}; then
 		local dir
-		for dir in ${CG_ROOT}/*; do
+		for dir in ${__CGROUP_ROOT__}/*; do
 			[ -f "${dir}"/tasks ] && echo $$ > "${dir}"/tasks
 		done
 	fi
 
-	if [ -d "${CG_PATH}" ]; then
+	if [ -d "${__CGROUP_PATH__}" ]; then
 		local group
-		group="${CG_PATH}/${SVC_NAME}"
+		group="${__CGROUP_PATH__}/${SVC_NAME}"
 		mkdir -p "${group}"
 		[ -f "${group}/tasks" ] && echo $$ > "${group}/tasks"
 	fi
