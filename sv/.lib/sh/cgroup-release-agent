@@ -5,9 +5,8 @@
 # $Description: CGroup Release Agent                     Exp $
 #
 
-source "${0%/*}"/cgroup-functions
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-group="/sys/fs/cgroup/${CG_NAME:-supervision}/${1}"
+group="/sys/fs/cgroup/supervision/${1}"
 if [ -d "${group}" ]; then
 	rmdir "${group}" >/dev/null 2>&1
 fi
