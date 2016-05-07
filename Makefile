@@ -42,7 +42,6 @@ dist_SH_LIBS  = \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/runscript-functions \
 	sv/.lib/sh/supervision-functions \
-	sv/.lib/sh/sv-backend
 dist_SV_RUNS  =
 dist_SCRIPTS  = \
 	sv/.opt/cmd
@@ -173,10 +172,7 @@ install: install-dir install-dist
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
-		-i $(DESTDIR)$(LIBDIR)/sv/sh/sv-backend \
-		   $(DESTDIR)$(LIBDIR)/sv/bin/sp \
-		   $(DESTDIR)$(LIBDIR)/sv/bin/sv-shutdown \
-		   $(DESTDIR)$(LIBDIR)/sv/bin/checkpath \
+		   -i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
 		   $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
 	for i in 1 2 3 4 5 6; do \
 		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
