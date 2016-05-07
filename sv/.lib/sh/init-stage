@@ -3,13 +3,16 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2016/01/01                               Exp $
+# $Version: 1.0 2016/05/05                               Exp $
 #
 
 :	${name=${0##*/}}
-source "${0%/*}"/sv-backend ||
-{ echo "Required file not found." >&2; exit 1; }
-svc_backend -i -C
+:	${SV_LIBDIR:=${0%/sh/*}}
+source "${0%/*}"/runscript-functions ||
+	{ echo "Required file not found." >&2; exit 1; }
+source ${SV_SVCDIR}/.opt/SVC_BACKEND
+source ${SV_SVCDIR}/.opt/sv.conf
+umask 022
 
 svc_init()
 {
@@ -50,6 +53,35 @@ svc_init()
 	done
 }
 
+svc_level()
+{
+	case "${1}" in
+		(-0) ACTION=sysinit LEVEL=S;;
+		(-1) ACTION=boot    LEVEL=S;;
+		(-2)
+		case "$(cat /proc/cmdline)" in
+			(*nonetwork*) ACTION=nonetwork LEVEL=2;;
+			(*single*)    ACTION=single  LEVEL=1;;
+			(*default*|*) ACTION=default LEVEL=3;;
+		esac;;
+		(-3) ACTION=${ACTION:=shutdown} LEVEL=${LEVEL:=0};;
+		(*) return;;
+	esac
+
+	if yesno ${RC_INIT_SYS:-YES}; then
+		begin "${MSG:-System ${ACTION}}\n"
+		RUNLEVEL=${LEVEL} rc ${ACTION}
+		end ${?}
+	fi
+	[ -d "${SV_RUNDIR}" ] || tmp_service
+
+	case "${ACTION}" in
+		(single|boot)
+			${SV_LIBDIR}/sh/dep -v ${1} -d "${SV_SERVICE}/.${ACTION}"
+			;;
+	esac
+}
+
 svc_rsh()
 {
 :	${RS_SHELL:=${SHELL:-sh}}
@@ -57,6 +89,40 @@ svc_rsh()
 		(*sulogin) exec ${RS_SHELL} -p /dev/tty8;;
 		(*sh) exec 2>&1; exec ${RS_SHELL} -aim  ;;
 	esac
+}
+
+svc_shutdown()
+{
+	#
+	# Service halt
+	#
+	begin "Stopping Stage-2"
+	rs -2 stage stop
+	case ${?} in
+		(0)
+		;;
+		(*)
+	eval ${__SVCCMD__} ${__SIGWDWN__-${__SIGEXIT__}} ${SV_RUNDIR}/*
+		;;
+	esac
+	end ${?}
+	#
+	# CGroup clean up
+	#
+	case "${OS_NAME}" in
+		(Linux)
+		SVC_NAME="${__SV_CMD__}" cgroup_remove_service
+		;;
+	esac
+	#
+	# System halt
+	#
+	begin "Stopping Stage-1"
+	rs -1 stage stop
+	end ${?}
+	begin "Starting Stage-3"
+	rs -3 --rs stage
+	end ${?}
 }
 
 begin "Starting Init-Stage${1}"
@@ -69,15 +135,22 @@ case "${1}" in
 	rs -1 --rs stage
 	;;
 	(-2)
-	svc_backend
+	#
+	# Set up CGroup
+	#
+	case "${OS_NAME}" in
+		(Linux)
+		SVC_NAME="${__SV_CMD__}" cgroup_add_service
+		;;
+	esac
 	info "Starting Service Scan"
-	echo $$ >${SV_TMPDIR}/${SV_CMD}.pid
+	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
 	svc_level -2
 	#
 	# Bring up what left and stage-2
 	#
 	sh -c "rs -1 stage; rs -2 stage" &
-	exec ${SV_CMD} ${SV_RUNDIR} "${SV_OPTS}"
+	exec ${__SV_CMD__} ${SV_RUNDIR} "${__SV_NAM__}"
 	end ${?}
 	#
 	# Drop into a rescue shell
