@@ -1,11 +1,12 @@
 #!/bin/sh
 #
 # $Header:  /lib/sv/sh/runscript                         Exp $
+# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.3 2015/05/01 21:09:26                      Exp $
+# $Version: 0.3 2015/05/05 21:09:26                      Exp $
 #
 
-rs_help_message() {
+help_message() {
 	cat <<-EOH
  usage: rs [OPTIONS] SERVICE COMMAND [ARGS]
    COMMAND: add|del|remove|restart|start|stop|status|zap
@@ -19,11 +20,11 @@ EOH
 ${1+exit ${1}}
 }
 
-[ ${#} -ge 2 ] || rs_help_message 1
+[ ${#} -ge 2 ] || help_message 1
 ARGS="$(getopt \
 	-o Dghrv -l debug,help,nodeps,rs,sv \
 	-s sh -n rs -- "${@}")"
-[ ${?} -eq 0 ] || rs_help_message 1
+[ ${?} -eq 0 ] || help_message 1
 eval set -- ${ARGS}
 
 while true; do
@@ -32,13 +33,14 @@ while true; do
 		(-r|--rs) RS_TYPE="rs" ;;
 		(-v|--sv) RS_TYPE="sv" ;;
 		(-g|--debug) set -x ;;
-		(-h|--help) rs_help_message 0 ;;
+		(-h|--help) help_message 0 ;;
 		(*) shift;  break   ;;
 	esac
 	shift
 done
+ARGS=
 
-:	${SV_LIBDIR:=${0%/sh*}}
+:	${SV_LIBDIR:=${0%/sh/*}}
 :	${SVC_NAME:=${1##*/}}
 :	${name=${SVC_NAME}}
 
@@ -52,11 +54,10 @@ case "${1}" in
 esac
 shift
 
-source ${SV_LIBDIR}/sh/sv-backend ||
+source "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 :	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
-ARGS=-C
-source "${SV_SVCDIR}"/.opt/SVC_OPTIONS
+source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
 #
 # Handle command
