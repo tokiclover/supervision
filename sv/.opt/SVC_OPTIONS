@@ -6,25 +6,28 @@
 #
 # Set a few default env variables
 #
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
 :	${SV_LIBDIR:=/lib/sv}
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/service}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_SERVICE:=/etc/service}
-:	${SV_BACKEND:=${SV_LIBDIR}/sh/sv-backend}
-PATH=${SV_LIBDIR}/bin:${PATH}
 :	${name:=${SVC_NAME}}
-:	${cmd:=${0##*/}}
-:	${cmd_args:="${@}"}
+:	${__cmd__:=${0##*/}}
+:	${__cmd_args__:="${@}"}
 :	${COLOR:=Yes}
 :	${LOGDIR:=/var/log}
-:	${SVC_PID:=${SV_TMPDIR}/pids/${name}}
+:	${SVC_PID:=${SV_TMPDIR}/${name}.pid}
+PATH=${SV_LIBDIR}/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
 
-[ -z "${SV_INIT}" ] && { source "${SV_BACKEND}"; svc_backend -i ${ARGS}; }
+[ -n "${__RUNSCRIPT_FUNCTIONS__}" ] ||
+	source "${SV_LIBDIR}"/sh/runscript-functions ||
+	{ echo "Required file not found." >&2; exit 1; }
+source ${SV_SVCDIR}/.opt/SVC_BACKEND
+source ${SV_SVCDIR}/.opt/sv.conf
 if [ ! -e "${SV_TMPDIR}"/sv ]; then
 	svc_tmpdir
 fi
+umask 022
 
 case "${RS_TYPE:-sv}" in
 	(rs)
@@ -65,10 +68,10 @@ SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
 case "${OS_NAME}" in
 	(Linux)
 	:	${SV_TERM:=linux}
-		;;
+	;;
 	(*)
 	:	${SV_TERM:=vt100}
-		;;
+	;;
 esac
 
 #
@@ -90,7 +93,7 @@ yesno "${ENV_DIR}" && svc_env
 #
 case "${SVC_NAME}" in
 	(*getty-tty*)
-:	${PRE_CMD:=${PRECMD}}
+:	${PRE_CMD:=${__PRECMD__}}
 :	${SVC_CMD:=agetty}
 :	${TTY:=${SVC_NAME#*-}}
 	case "${TTY}" in
@@ -101,7 +104,7 @@ case "${SVC_NAME}" in
 	:	${SVC_OPTS:=-L 115200 ${TTY_OPTS} ${TTY} vt100}
 		;;
 	esac
-	case "${SV_OPT}" in
+	case "${__SV_NAM__}" in
 		(runit)
 	:	${PRE_OPTS:=-P}
 	:	${FIN_CMD:=utmpset}
@@ -114,7 +117,7 @@ esac
 #
 # Set a few specific log env variables
 #
-case "${cmd_dir}" in
+case "${__cmd_dir__}" in
 	(log)
 :	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
 :	${SVC_USER:=root:adm}
@@ -126,8 +129,8 @@ case "${cmd_dir}" in
 #
 # Set default log options
 #
-:	${LOG_CMD:=${LOGCMD}}
-case "${SV_OPT}" in
+:	${LOG_CMD:=${__LOGCMD__}}
+case "${__SV_NAM__}" in
 	(daemontools*|s6)
 :	${LOGOPT:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
 	;;
