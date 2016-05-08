@@ -596,12 +596,13 @@ void svc_stage(const char *cmd)
 		depends = rs_deplist_load();
 
 		if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0) { /* start */
-			for (i = RS_DEPS_TYPE-1; i > 0; i--)
+			for (i = RS_DEPS_TYPE-1; i >= 0; i--)
 				if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL) {
 					if (nil == NULL)
 						nil = elm;
-					for (j = RS_DEP_PRIORITY-1; j > 0; j--) /* high prio only */
+					for (j = RS_DEP_PRIORITY-1; j > 0; j--) { /* high prio only */
 						rs_svc_exec_list(elm->priority[j], argv, envp);
+					}
 				}
 			rs_svc_exec_list(nil->priority[0], argv, envp);
 		}
@@ -619,6 +620,8 @@ void svc_stage(const char *cmd)
 
 		if (type)
 			break;
+		else
+			nil = NULL;
 	}
 }
 

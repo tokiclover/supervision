@@ -137,6 +137,7 @@ void rs_stringlist_free(RS_StringList_T *list)
 			SLIST_REMOVE_HEAD(list, entries);
 			free(elm);
 		}
+	list = NULL;
 }
 
 
@@ -199,6 +200,7 @@ void rs_deplist_free(RS_DepTypeList_T *list)
 		SLIST_REMOVE_HEAD(list, entries);
 		free(elm);
 	}
+	list = NULL;
 }
 
 RS_String_T *rs_deplist_add_svc(RS_DepType_T *list, const char *str, int index)
