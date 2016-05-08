@@ -332,6 +332,9 @@ int svc_state(const char *svc, int status)
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
 			return file_test(buf, 'r');
+		case 'p':
+			snprintf(buf, BUFSIZ, "%s/%s.pid", SV_TMPDIR, svc);
+			return file_test(buf, 'r');
 		case 's':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_STAR], svc);
@@ -435,7 +438,11 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 		state = 'S';
 
 	if (state == 's' || state == 'S') {
-		status = svc_state(svc, 's');
+		if (strcmp(ptr, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
+			status = svc_state(svc, 'p');
+		else
+			status = svc_state(svc, 's');
+
 		if (status) {
 			if (state == 's') {
 				ERR("%s service is already started.\n", svc);
@@ -505,7 +512,11 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		state = 'S';
 
 	SLIST_FOREACH(svc, list, entries) {
-		status = svc_state(svc->str, 's');
+		if (strcmp(argv[1]+2, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
+			status = svc_state(svc->str, 'p');
+		else
+			status = svc_state(svc->str, 's');
+
 		if (status) {
 			if (state == 's') {
 				ERR("%s service is already started.\n", svc->str);
