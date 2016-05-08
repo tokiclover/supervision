@@ -194,19 +194,18 @@ const char **rs_svc_env(void)
 
 char *rs_svc_find(const char *svc)
 {
-	size_t size = BUFSIZ;
-	char *buf = err_malloc(size);
+	char *buf = err_malloc(BUFSIZ);
 	int err = errno;
 
 	if (!svc)
 		return NULL;
 
-	snprintf(buf, size, "%s/%s", RS_SVCDIR, svc);
-	if (file_test(buf, 'x'))
+	snprintf(buf, BUFSIZ, "%s/%s", RS_SVCDIR, svc);
+	if (file_test(buf, 0))
 		return err_realloc(buf, strlen(buf)+1);
 	errno = 0;
 
-	snprintf(buf, size, "%s/%s", SV_SVCDIR, svc);
+	snprintf(buf, BUFSIZ, "%s/%s", SV_SVCDIR, svc);
 	if (file_test(buf, 'd'))
 		return err_realloc(buf, strlen(buf)+1);
 	errno = err;
@@ -448,11 +447,10 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 			ERR("%s service is not started.\n", svc);
 			exit(EXIT_FAILURE);
 		}
-	}
-
-	if (svc_lock(svc, 1)) {
-		ERR("Failed to lock file for %s service.\n", svc);
-		exit(EXIT_FAILURE);
+		if (svc_lock(svc, 1)) {
+			ERR("Failed to lock file for %s service.\n", svc);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	rs_sigsetup();
@@ -460,7 +458,8 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 
 	if (pid > 0) {
 		waitpid(pid, &status, 0);
-		svc_lock(svc, 0);
+		if (state)
+			svc_lock(svc, 0);
 		if (WIFEXITED(status) && state)
 			svc_mark(svc, state);
 		exit(status);
