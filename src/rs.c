@@ -201,7 +201,7 @@ char *rs_svc_find(const char *svc)
 		return NULL;
 
 	snprintf(buf, BUFSIZ, "%s/%s", RS_SVCDIR, svc);
-	if (file_test(buf, 0))
+	if (file_test(buf, 'r'))
 		return err_realloc(buf, strlen(buf)+1);
 	errno = 0;
 
@@ -237,7 +237,7 @@ int svc_lock(const char *svc, int flag)
 		return -1;
 	}
 	else {
-		if (file_test(buf, 0))
+		if (file_test(buf, 'r'))
 			return unlink(buf);
 		else
 			return 0;
@@ -251,12 +251,12 @@ void svc_zap(const char *svc)
 
 	for (i = 0; i < ARRAY_SIZE(sv_state_subdirs); i++) {
 		snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR, sv_state_subdirs[i], svc);
-		if (file_test(buf, 0))
+		if (file_test(buf, 'r'))
 			unlink(buf);
 	}
 
 	snprintf(buf, BUFSIZ, "%s/%s_OPTIONS", SV_TMPDIR, svc);
-	if (file_test(buf, 0))
+	if (file_test(buf, 'r'))
 		i = unlink(buf);
 }
 
@@ -301,7 +301,7 @@ int svc_mark(const char *svc, int status)
 			}
 			return -1;
 		default:
-			if (file_test(buf, 0))
+			if (file_test(buf, 'r'))
 				return unlink(buf);
 			else
 				return 0;
@@ -321,21 +321,21 @@ int svc_state(const char *svc, int status)
 	switch(status) {
 		case 'e':
 			path = rs_svc_find(svc);
-			retval = file_test(path, 0);
+			retval = file_test(path, 'r');
 			free(path);
 			return retval;
 		case 'f':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_FAIL], svc);
-			return file_test(buf, 0);
+			return file_test(buf, 'r');
 		case 'd':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
-			return file_test(buf, 0);
+			return file_test(buf, 'r');
 		case 's':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_STAR], svc);
-			return file_test(buf, 0);
+			return file_test(buf, 'r');
 		default:
 			errno = EINVAL;
 			return 0;
@@ -692,18 +692,6 @@ int main(int argc, char *argv[])
 					prgname);
 			exit(EXIT_FAILURE);
 		}
-
-		for (i = 0; i < ARRAY_SIZE(rs_svc_cmd); i++)
-			if (strcmp(rs_svc_cmd[i], argv[optind+1]) == 0) {
-				cmd = rs_svc_cmd[i];
-				break;
-			}
-
-		if (cmd == NULL) {
-			ERR("Invalid command.\n", NULL);
-			exit(EXIT_FAILURE);
-		}
-
 		svc_exec(argc-optind, argv+optind);
 	}
 
