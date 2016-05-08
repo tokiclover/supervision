@@ -25,8 +25,8 @@ esac
 :	${SV_LIBDIR=${SV_RUNDIR:-${SV_SVCDIR}}/.lib}
 
 case "${head}" in
-	(*/log) cmd_dir=log;;
-	(*)     cmd_dir='' ;;
+	(*/log) __cmd_dir__=log;;
+	(*)     __cmd_dir__="" ;;
 esac
 unset head
 
@@ -35,7 +35,7 @@ source "${SVC_DIR}"/../.opt/SVC_OPTIONS ||
 #
 # Handle [log/]{finish,run} & exec to the command
 #
-eval ${cmd_dir:-svc}_${cmd} "${@}"
+eval ${__cmd_dir__:-svc}_${__cmd__} "${@}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
