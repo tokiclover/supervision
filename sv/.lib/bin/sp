@@ -19,8 +19,6 @@ help_message()
    COMMAND: (CGroup) cgroup_remove_service
    OPTIONS: add SERVICE [-cdls]
      -D, --nodeps     Disable dependencies
-     -c, --check      Enable binary check
-     -d, --down       Start service as down
      -l, --log        Add log directory
      -s, --service    Add symlink to /service/
    OPTIONS: -S daemontools[-encore]|runit|s6
@@ -42,9 +40,7 @@ sv_cmd()
 }
 
 [ ${#} -ge 2 ] || help_message 2
-ARGS="$(getopt \
-	-o DS:cdghls \
-	-l check,debug,down,help,nodeps,log,service,set: \
+ARGS="$(getopt -o DS:ghls -l debug,help,nodeps,log,service,set: \
 	-s sh -n sp -- "${@}")"
 [ ${?} -eq 0 ] || help_message 3
 eval set -- ${ARGS}
@@ -55,7 +51,7 @@ while true; do
 		(-D|--node*) SVC_DEPS=0 ;;
 		(-g|--debug) set -x;;
 		(-S|--set) __SV_NAM__="${2}"; shift 2; break;;
-		(-[cdls]*|--[cdls]*) ARGS="${ARGS} ${1}";;
+		(-[ls]*|--[ls]*) ARGS="${ARGS} ${1}";;
 		(*) shift; break;;
 		(-h|--help) help_message 0;;
 	esac

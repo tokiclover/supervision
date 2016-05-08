@@ -13,15 +13,10 @@ __SUPERVIONS_FUNCTIONS__=1
 #
 svc_add()
 {
-	local args cmd chk dwn log sym svc name dir
-	args="$(getopt -o cdls -l check,down,log,service -n add -s sh -- "${@}")"
-	[ ${?} = 0 ] || return 128
-	eval set -- ${args}
+	local args cmd log svc name dir
 
 	while [ $# -ge 1 ]; do
 		case "${1}" in
-			(-c|--check) chk=0;;
-			(-d|--down)  dwn=0;;
 			(-l|--log)   log=0;;
 			(-s|--serv*) svc=0;;
 			(*)   shift; break;;
@@ -31,12 +26,6 @@ svc_add()
 :	${name:=${1:-${SVC_NAME}}}
 :	${dir:=${SV_SVCDIR}/${name}}
 
-	if [ -n "${chk}" ]; then
-		if ! command -v ${SVC_CMD:-${name}} >${NULL} 2>&1; then
-			error "Command not found."
-			return 1
-		fi
-	fi
 	[ -e "${SV_RUNDIR}/${name}"  ] && return 0
 	[ -n "${log}" ] && mkdir -p "${dir}"/log || mkdir -p "${dir}"
 
@@ -48,15 +37,8 @@ svc_add()
 	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${name}|" \
 		${SV_SVCDIR}/.opt/OPTIONS.in >${dir}/OPTIONS
 
-	[ -n "${dwn}" ] && svc_down
 	[ -n "${svc}" ] || return 0
-	case ${SV_RUNDIR} in
-		(${SV_SERVICE}) ;;
-		(*) cp -LRpu ${dir} ${SV_RUNDIR};;
-	esac
 	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
-
-	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 }
 
 svc_down()
@@ -71,14 +53,19 @@ svc_start()
 {
 	local val
 
-	svc_state -ps && eval ${__ERR_END__}
+	svc_state -p && eval ${__ERR_END__}
 	#
 	# this is done internaly (rs) already
 	#
 	if [ -z "${RS_STAGE}" ]; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
 	fi
-	svc_mark  -d
+	case ${SV_RUNDIR} in
+		(${SV_SERVICE}) ;;
+		(*) cp -LRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR};;
+	esac
+	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
+	svc_mark -d
 
 	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
@@ -96,7 +83,7 @@ svc_stop()
 {
 	local val
 
-	svc_state -ps || eval ${__ERR_END__}
+	svc_state -p || eval ${__ERR_END__}
 	svc_state -f  && eval ${__ERR_END__}
 	#
 	# this is done internaly (rs) already
@@ -285,6 +272,7 @@ svc_depend()
 
 	DEP_RET=${RET_NEED:-0}
 	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}))
+	return ${DEP_RET}
 }
 
 svc_after()
