@@ -37,6 +37,7 @@ rs_status()
 	local msg
 	svc_state -s && msg=started || msg=stopped
 	echo -n ${msg}
+	[ "${msg}" = "started" ]
 }
 
 rs_add()
@@ -50,7 +51,8 @@ svc_del()
 }
 svc_zap()
 {
-	rm -f ${SV_TMPDIR}/${SVC_NAME}_OPTIONS ${SV_TMPDIR}/*/${SVC_NAME}
+	rm -f ${SV_TMPDIR}/${SVC_NAME}_OPTIONS ${SVC_PIDFILE} \
+		${SV_TMPDIR}/*/${SVC_NAME}
 }
 
 rs_cmd()

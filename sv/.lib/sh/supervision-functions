@@ -71,14 +71,13 @@ svc_start()
 {
 	local val
 
+	svc_state -ps && eval ${__ERR_END__}
 	#
 	# this is done internaly (rs) already
 	#
 	if [ -z "${RS_STAGE}" ]; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
-	svc_state -s && eval ${__ERR_END__}
 	fi
-	svc_add -s || return 5
 	svc_mark  -d
 
 	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
@@ -97,13 +96,13 @@ svc_stop()
 {
 	local val
 
+	svc_state -ps || eval ${__ERR_END__}
+	svc_state -f  && eval ${__ERR_END__}
 	#
 	# this is done internaly (rs) already
 	#
 	if [ -z "${RS_STAGE}" ]; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
-	svc_state -s || eval ${__ERR_END__}
-	svc_state -f && eval ${__ERR_END__}
 	fi
 	svc_mark  -d
 
@@ -120,7 +119,8 @@ svc_stop()
 
 svc_status()
 {
-	eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}"
+	svc_state -p && eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}" ||
+		{ echo -n stopped; return 1; }
 }
 
 svc_reload()
@@ -156,7 +156,7 @@ svc_mark()
 svc_state()
 {
 	local arg args ret
-	args="$(getopt -o defrs -l down,exist,failed,running,start \
+	args="$(getopt -o defprs -l down,exist,failed,pidfile,running,start \
 		-n state -s sh -- "${@}")"
 	[ ${?} = 0 ] || return 128
 	eval set -- ${args}
@@ -168,6 +168,7 @@ svc_state()
 			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
+			(-p|--pid*)  [ -e "${SVC_PIDFILE}" ];;
 			(*) return ${ret};;
 		esac
 		ret=$((${ret} + ${?}))
@@ -256,7 +257,7 @@ svc_post()
 		fi
 		;;
 	esac
-	rm -f ${SVC_PID}
+	rm -f ${SVC_PIDFILE}
 }
 
 #
@@ -443,9 +444,9 @@ svc_run()
 		svc_pre || return
 	fi
 	svc_depend || return
-	echo $$ >${SVC_PID}
+	echo $$ >${SVC_PIDFILE}
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
-	rm -f ${SVC_PID}
+	rm -f ${SVC_PIDFILE}
 }
 
 svc_finish()
@@ -454,7 +455,7 @@ svc_finish()
 	if command -v svc_post >${NULL} 2>&1; then
 		svc_post
 	fi
-	rm -f ${SVC_PID}
+	rm -f ${SVC_PIDFILE}
 	[ -n "${FIN_CMD}" ] || return 0
 	eval exec ${FIN_CMD} ${FIN_OPTS}
 }

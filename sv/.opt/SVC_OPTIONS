@@ -16,7 +16,7 @@
 :	${__cmd_args__:="${@}"}
 :	${COLOR:=Yes}
 :	${LOGDIR:=/var/log}
-:	${SVC_PID:=${SV_TMPDIR}/${name}.pid}
+:	${SVC_PIDFILE:=${SV_TMPDIR}/${name}.pid}
 PATH=${SV_LIBDIR}/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
 
 [ -n "${__RUNSCRIPT_FUNCTIONS__}" ] ||
