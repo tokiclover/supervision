@@ -76,7 +76,9 @@ case "${RS_TYPE}" in
 	(rs) DIR=${RS_RUNDIR} ;;
 	(sv) DIR=${SV_SERVICE};;
 esac
-for svc in "${DIR}"/*; do
+cd ${DIR}
+for svc in *; do
+	[ "${svc}" = "*" ] && continue
 	dep_gen ${svc##*/}
 done
 dep_0="${DEP_0}"
