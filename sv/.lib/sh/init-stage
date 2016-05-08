@@ -73,7 +73,7 @@ svc_level()
 		RUNLEVEL=${LEVEL} rc ${ACTION}
 		end ${?}
 	fi
-	[ -d "${SV_RUNDIR}" ] || tmp_service
+	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 
 	case "${ACTION}" in
 		(single|boot)
