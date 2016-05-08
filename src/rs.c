@@ -629,7 +629,8 @@ void svc_stage(const char *cmd)
 		}
 		rs_deplist_free(depends);
 
-		if (type)
+		/* skip irrelevant cases or because -[rv] passed */
+		if (RS_STAGE.level == 0 || RS_STAGE.level == 3 || type)
 			break;
 		else
 			nil = NULL;
