@@ -2,8 +2,10 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.0 2016/05/05 21:09:26                      Exp $
+# $Version: 3.1 2016/05/05 21:09:26                      Exp $
 #
+
+__SUPERVIONS_FUNCTIONS__=1
 
 #
 # @FUNCTION: Create (supervision) service
@@ -54,7 +56,7 @@ svc_add()
 	esac
 	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
 
-	[ -z "${SCANCMD}" ] || eval ${SCANCMD}
+	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 }
 
 svc_down()
@@ -73,13 +75,13 @@ svc_start()
 	# this is done internaly (rs) already
 	#
 	if [ -z "${RS_STAGE}" ]; then
-	svc_wait 500 || eval ${EBUSY}
-	svc_state -s && eval ${EEND}
+	svc_wait 500 || eval ${__ERR_BUSY__}
+	svc_state -s && eval ${__ERR_END__}
 	fi
 	svc_add -s || return 5
 	svc_mark  -d
 
-	eval ${SVCCMD} ${SIGWTUP:-${SIGSTRT}} "${SV_RUNDIR}/${SVC_NAME}"
+	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
 	if [ -z "${RS_STAGE}" ]; then
 	case "${val}" in
@@ -99,13 +101,13 @@ svc_stop()
 	# this is done internaly (rs) already
 	#
 	if [ -z "${RS_STAGE}" ]; then
-	svc_wait 500 || eval ${EBUSY}
-	svc_state -s || eval ${EEND}
-	svc_state -f && eval ${EEND}
+	svc_wait 500 || eval ${__ERR_BUSY__}
+	svc_state -s || eval ${__ERR_END__}
+	svc_state -f && eval ${__ERR_END__}
 	fi
 	svc_mark  -d
 
-	eval ${SVCCMD} ${SIGWDWN:-${SIGSTOP}} "${SV_RUNDIR}/${SVC_NAME}"
+	eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
 	if [ -z "${RS_STAGE}" ]; then
 	case "${val}" in
@@ -118,15 +120,15 @@ svc_stop()
 
 svc_status()
 {
-	eval ${CHKCMD} "${SV_RUNDIR}/${SVC_NAME}"
+	eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}"
 }
 
 svc_reload()
 {
-	if [ -n "${SIGRLD}" ]; then
-		eval ${SVCCMD} ${SIGRLD} "${SV_RUNDIR}/${SVC_NAME}"
+	if [ -n "${__SIGRELD__}" ]; then
+		eval ${__SVCCMD__} ${__SIGRLD__} "${SV_RUNDIR}/${SVC_NAME}"
 	else
-		eval ${SVCCMD} ${SIGHUP:-${SIGEXIT}} "${SV_RUNDIR}/${SVC_NAME}"
+		eval ${__SVCCMD__} ${__SIGHUP__:-${__SIGEXIT__}} "${SV_RUNDIR}/${SVC_NAME}"
 		svc_start
 	fi
 }
@@ -201,6 +203,17 @@ svc_pre()
 			val=3 eval ${REMOVE_SVC}
 		}
 	fi
+
+	#
+	# Set up CGroup
+	#
+	case "${OS_NAME}" in
+		(Linux)
+		if yesno "${SV_CGROUP}"; then
+			cgroup_add_service
+		fi
+		;;
+	esac
 }
 svc_remove()
 {
@@ -213,16 +226,24 @@ svc_remove()
 #
 svc_post()
 {
-	if yesno "${SV_CGROUP}"; then
-		cgroup_remove_service
-	fi
+	#
+	# Set up CGroup
+	#
+	case "${OS_NAME}" in
+		(Linux)
+		if yesno "${SV_CGROUP}"; then
+			cgroup_remove_service
+		fi
+		;;
+	esac
+
 	if command -v post >${NULL} 2>&1; then
 		post || error "Failed to exec post()"
 	fi
 	#
 	# Handle run return values
 	#
-	case "${cmd_args}" in
+	case "${__cmd_args__}" in
 		(0*)
 		;;
 		(*)
@@ -235,6 +256,7 @@ svc_post()
 		fi
 		;;
 	esac
+	rm -f ${SVC_PID}
 }
 
 #
@@ -245,10 +267,10 @@ svc_depend()
 	local DEP dep
 	case "${1}" in
 		(stop)
-	DEP="${SV_SOP_DEP_ORD}" dep=0
+	DEP="${__SV_SOP_DEP_ORD__}" dep=0
 		;;
 		(*)
-	DEP="${SV_SRT_DEP_ORD}" dep=1
+	DEP="${__SV_SRT_DEP_ORD__}" dep=1
 		;;
 	esac
 
@@ -262,10 +284,6 @@ svc_depend()
 
 	DEP_RET=${RET_NEED:-0}
 	yesno ${RS_STRICT_DEP:-NO} && DEP_RET=$((${DEP_RET}+${RET_AFTER}))
-	case ${DEP_RET} in
-		(0) echo $$ >${SVC_PID};;
-		(*) return ${DEP_RET}  ;;
-	esac
 }
 
 svc_after()
@@ -418,7 +436,6 @@ svc_env()
 svc_run()
 {
 	if [ ${#} -ge 1 ]; then
-		ARGS=-C
 		svc_cmd "${@}"
 		return
 	fi
@@ -426,7 +443,9 @@ svc_run()
 		svc_pre || return
 	fi
 	svc_depend || return
+	echo $$ >${SVC_PID}
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
+	rm -f ${SVC_PID}
 }
 
 svc_finish()
