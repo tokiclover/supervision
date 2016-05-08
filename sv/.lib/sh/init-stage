@@ -125,6 +125,42 @@ svc_shutdown()
 	end ${?}
 }
 
+svc_tmpdir()
+{
+	#
+	# Handle read-only root-FS and/or static /service/
+	#
+	case "${SV_RUNDIR}" in
+		("${SV_SERVICE}")
+		;;
+		(*/run/*|*/tmp/*)
+		rm -f -r "${SV_RUNDIR}"
+		mkdir -p "${SV_RUNDIR}"
+		cp -LRpu "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
+		;;
+	esac
+	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail \
+		"${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
+	#
+	# Initialization
+	#
+	echo "${__SV_NAM__}:${__SV_CMD__}" >"${SV_TMPDIR}"/sv
+	OS_NAME=$(uname -s)
+	env_sv OS_NAME
+
+	#
+	# Set up CGroup
+	#
+	if yesno ${SV_CGROUP:-YES}; then
+		cgroup_start_sys
+		case ${?} in
+			(0) SV_CGROUP=Yes;;
+			(*) SV_CGROUP=No ;;
+		esac
+		env_sv SV_CGROUP
+	fi
+}
+
 begin "Starting Init-Stage${1}"
 case "${1}" in
 	(-1)
@@ -143,14 +179,18 @@ case "${1}" in
 		SVC_NAME="${__SV_CMD__}" cgroup_add_service
 		;;
 	esac
-	info "Starting Service Scan"
-	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
 	svc_level -2
 	#
-	# Bring up what left and stage-2
+	# Bring up what left and stage-2 assuming `svcscan'
+	# is ready when the following pidfile is present
 	#
-	sh -c "rs -1 stage; rs -2 stage" &
-	exec ${__SV_CMD__} ${SV_RUNDIR} "${__SV_NAM__}"
+	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
+		svc_wait -E 10000 ${__SV_CMD__} ${SV_TMPDIR}/${__SV_CMD__}.pid;
+		rs -1 stage; rs -2 stage;" &
+
+	info "Starting Service Scan"
+	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
+	exec ${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}"
 	end ${?}
 	#
 	# Drop into a rescue shell
@@ -162,7 +202,9 @@ case "${1}" in
 	svc_level -3
 	;;
 esac
-end ${?}
+ret="${?}"
+end "${ret}"
+exit "${ret}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

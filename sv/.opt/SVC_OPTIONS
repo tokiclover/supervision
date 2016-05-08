@@ -24,9 +24,6 @@ PATH=${SV_LIBDIR}/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bi
 	{ echo "Required file not found." >&2; exit 1; }
 source ${SV_SVCDIR}/.opt/SVC_BACKEND
 source ${SV_SVCDIR}/.opt/sv.conf
-if [ ! -e "${SV_TMPDIR}"/sv ]; then
-	svc_tmpdir
-fi
 umask 022
 
 case "${RS_TYPE:-sv}" in

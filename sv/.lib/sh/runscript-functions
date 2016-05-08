@@ -82,42 +82,6 @@ rs_cmd()
 	return ${val}
 }
 
-svc_tmpdir()
-{
-	#
-	# Handle read-only root-FS and/or static /service/
-	#
-	case "${SV_RUNDIR}" in
-		("${SV_SERVICE}")
-		;;
-		(*/run/*|*/tmp/*)
-		rm -f -r "${SV_RUNDIR}"
-		mkdir -p "${SV_RUNDIR}"
-		cp -LRpu "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
-		;;
-	esac
-	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail \
-		"${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
-	#
-	# Initialization
-	#
-	echo "${__SV_NAM__}" >"${SV_TMPDIR}"/sv
-	OS_NAME=$(uname -s)
-	env_sv OS_NAME
-
-	#
-	# Set up CGroup
-	#
-	if yesno ${SV_CGROUP:-YES}; then
-		cgroup_start_sys
-		case ${?} in
-			(0) SV_CGROUP=Yes;;
-			(*) SV_CGROUP=No ;;
-		esac
-		env_sv SV_CGROUP
-	fi
-}
-
 svc_wait()
 {
 	local FILE LIMIT NAME OPT VAL
