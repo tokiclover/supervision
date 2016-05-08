@@ -84,7 +84,6 @@ svc_stop()
 	local val
 
 	svc_state -p || eval ${__ERR_END__}
-	svc_state -f  && eval ${__ERR_END__}
 	#
 	# this is done internaly (rs) already
 	#
