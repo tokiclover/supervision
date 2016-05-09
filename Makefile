@@ -41,7 +41,7 @@ dist_SH_LIBS  = \
 	sv/.lib/sh/functions \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/runscript-functions \
-	sv/.lib/sh/supervision-functions \
+	sv/.lib/sh/supervision-functions
 dist_SV_RUNS  =
 dist_SCRIPTS  = \
 	sv/.opt/cmd
@@ -115,6 +115,7 @@ dist_DIRS  += \
 	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
 	$(SYSCONFDIR)/rs.d \
 	$(MANDIR)/man1 \
+	$(SBINDIR) \
 	$(DOCDIR)/$(PACKAGE)-$(VERSION)
 DISTDIRS    = $(dist_DIRS)
 
