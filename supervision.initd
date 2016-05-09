@@ -4,22 +4,20 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-:	${SV_BACKEND:=/etc/sv/.lib/sh/sv-backend}
-if [ -f "${SV_BACKEND}" ]; then
-	source "${SV_BACKEND}"
-	svc_backend -i -P
-fi
-:	${SV_RUNDIR:=/run/service}
-:	${SV_SERVICE:=/etc/service}
-case "${SV_OPT}" in
+__path__="${PATH}"
+source /etc/sv/.lib/sh/runscript-functions
+source /etc/sv/.opt/SVC_BACKEND
+case "${__SV_NAM__}" in
 	(runit)
 :	${SV_OPTS:='log:............................................................'}
 	;;
 esac
+PATH="${SV_LIBDIR}/bin:${__path__}"
+__path__=
 
-command="${SV_CMD}"
+command="${__SV_CMD__}"
 command_args="${SV_RUNDIR} ${SV_OPTS}"
-pidfile="/run/${SV_CMD}.pid"
+pidfile="/run/${__SV_CMD__}.pid"
 command_background="Yes"
 description="Supervision Daemon Service"
 
@@ -30,33 +28,18 @@ depend()
 
 start_pre()
 {
-	local ret
-	#
-	# Handle read-only root-FS and/or static '/service/'.
-	#
-	ebegin "Setting up Supervision Service/"
-	if command -v svc_backend >/dev/null 2>&1; then
-		svc_backend -2; ret=${?}
-		eend ${ret}; return ${ret}
-	fi
-	case "${SV_RUNDIR}" in
-		("${SV_SERVICE}")
-		;;
-		(*/run/*|*/tmp/*)
-		rm -f -r "${SV_RUNDIR}"
-		mkdir -p "${SV_RUNDIR}"
-		cp -LRTp "${SV_SERVICE}" "${SV_RUNDIR}"
-		;;
-	esac
-	ret=$?; eend ${ret}; return ${ret}
+	svc_tmpdir
+	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
+		svc_wait -E 10000 ${__SV_CMD__} ${pidfile};
+		rs --sv -2 stage;" &
 }
 
 stop_pre()
 {
-	if [ -n "${SVCCMD}" ]; then
+	if [ -n "${__SVCCMD__}" ]; then
 		ebegin "Stopping Supervised Services"
-		svc_stage -2 -S ||
-		eval ${SVCCMD} ${SVC_OPTS} ${SIGWDWN:-${SIGEXIT}} "${SV_RUNDIR}"/*
+		rs --sv -2 stage stop ||
+		eval ${__SVCCMD__} ${SVC_OPTS} ${__SIGWDWN__:-${__SIGEXIT__}} "${SV_RUNDIR}"/*
 		eend "$?"
 	else
 		kill -HUP $(cat ${pidfile})
