@@ -24,7 +24,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	/* get dependency list file */
 	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/%s", SV_DEPDIR,
 			RS_STAGE.level, RS_STAGE.type);
-	if (!file_test(deppath, 'r')) {
+	if (RS_STAGE.level == 2 || !file_test(deppath, 'r')) {
 		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", DEP_GEN,
 				RS_STAGE.level, RS_STAGE.type);
 		if (system(depcmd)) {

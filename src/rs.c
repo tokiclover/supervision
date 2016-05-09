@@ -491,6 +491,7 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	int count = 0, status, retval = 0, i;
 	static int parallel = 0;
 	char **svclist = NULL;
+	char *svcpath;
 	int state;
 
 	if (!parallel)
@@ -512,6 +513,12 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		state = 'S';
 
 	SLIST_FOREACH(svc, list, entries) {
+		svcpath = rs_svc_find(svc->str);
+		if (svcpath)
+			free(svcpath);
+		else
+			continue;
+
 		if (strcmp(argv[1]+2, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
 			status = svc_state(svc->str, 'p');
 		else
@@ -596,13 +603,19 @@ void svc_stage(const char *cmd)
 		type = 0;
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
+	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
+		setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
+		RS_STAGE.type = rs_stage_type[RS_STAGE_RUNSCRIPT];
+	}
 
 	envp = rs_svc_env();
 	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
 
 	for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) {
-		if (!type)
+		if (!type) {
 			RS_STAGE.type = rs_stage_type[k];
+			setenv("RS_TYPE", rs_stage_type[k], 1);
+		}
 		snprintf(opt, 8, "--%s", RS_STAGE.type);
 		depends = rs_deplist_load();
 
@@ -630,7 +643,7 @@ void svc_stage(const char *cmd)
 		rs_deplist_free(depends);
 
 		/* skip irrelevant cases or because -[rv] passed */
-		if (RS_STAGE.level == 0 || RS_STAGE.level == 3 || type)
+		if (type)
 			break;
 		else
 			nil = NULL;
