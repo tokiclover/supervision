@@ -416,7 +416,6 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 		}
 		else {
 			argc--, argv++;
-			args[i++] = opt;
 			args[i++] = ptr;
 			if (strncmp(ptr, RS_SVCDIR, strlen(RS_SVCDIR)) == 0)
 				ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
@@ -467,9 +466,9 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 		waitpid(pid, &status, 0);
 		if (state)
 			svc_lock(svc, 0);
-		if (WIFEXITED(status) && state)
+		if (!WEXITSTATUS(status) && state)
 			svc_mark(svc, state);
-		exit(status);
+		exit(WEXITSTATUS(status));
 	}
 	else if (pid == 0) {
 		/* restore previous signal actions and mask */
@@ -575,10 +574,10 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	for (i = 0; i < count; i++) {
 		waitpid(pidlist[i], &status, 0);
 		svc_lock(svclist[i], 0);
-		if (WIFEXITED(status))
-			svc_mark(svclist[i], state);
-		else
+		if (WEXITSTATUS(status))
 			retval++;
+		else
+			svc_mark(svclist[i], state);
 	}
 	free(pidlist);
 	free(svclist);
