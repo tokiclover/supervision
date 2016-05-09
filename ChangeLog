@@ -1,5 +1,15 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+36:
+
+r35 bug fixes:
+install runscript with execute permission (critical fix);
+mark service status properly (rs binary) by using the right return value.
+
+Added optional sv/.lib/bin/initctl binary and sv/initctl service; for
+SysVinit reboot/shutdocn compatibility. Add SYSVINIT=1 to make to get
+everything.
+
 35:
 
 Added a new rs binary to manage properly service scheduling and start/stop
