@@ -51,14 +51,14 @@ esac
 shift
 done
 case "${__SV_NAM__}" in
-	(daemontoo*) CMD="svc_shutdown" TIME="";;
+	(daemontoo*) CMD="${SV_LIBDIR}/sh/init-stage -3" TIME="";;
 	(runit) CMD="runit-init ${LEVEL}"      ;;
 	(s6) CMD="s6-svscanctl -${LEVEL} ${SV_RUNDIR}";;
 esac
 case "${LEVEL}" in
 	(0) MSG="System halt"   ;;
 	(6) MSG="System reboot" ;;
-	(*) error "-0|-6 required"; usage 1;;
+	(*) error "-0|-6 required"; help_message 1;;
 esac
 
 echo "${@:-${MSG}}" | busybox wall
