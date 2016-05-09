@@ -1,0 +1,10 @@
+#
+# $Header:  /etc/sv/initctl/OPTIONS                      Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="SysVinit shutdown/reboot compatibility service"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
