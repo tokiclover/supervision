@@ -639,10 +639,11 @@ void svc_stage(const char *cmd)
 
 int main(int argc, char *argv[])
 {
-	prgname = argv[0]+strlen(argv[0])-1;
-	for ( ; *prgname != '/'; prgname--)
-		;
-	prgname++;
+	prgname = strrchr(argv[0], '/');
+	if (!prgname)
+		prgname = argv[0];
+	else
+		prgname++;
 
 	const char *cmd = NULL;
 	char *opts;
