@@ -22,7 +22,8 @@ supported.
 INSTALLATION
 ------------
 
-`make CFLAGS=-O2` to build; and then
+`make CFLAGS=-O2` to build (or add `SYSVINIT=1` to get an additional
+SysVinit compatibility binary/service); and then
 `make DESTDIR=/tmp PREFIX=/usr/local RUNIT=1 S6=1 install-all`
 or only `install` (without supervision init script) would suffice.
 (Remove `RUNIT/S6` to avoid installing related Init-Stage-[123].)
