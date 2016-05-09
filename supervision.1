@@ -112,10 +112,10 @@ for more info.
 .TP
 .B SUPERVISION
 If service dependencies matter, usage of Runit/S6 is recommanded.
-Still, before style dependency matters only for service shutdown.
-Cold system boot should be fine because everything is started in parallele;
-so, services with dependencies would reliably wait enough, or else, SV_TRY
-configuration setting would restart (failed) services.
+Cold system boot should be fine because of priority level scheduling which start
+services in parallele depending on the service dependencies; so, services with
+dependencies would reliably wait enough if necessary, or else, SV_TRY (supervision)
+limit configuration setting would restart (failed) services.
 .TP
 .B RUNSCRIPT
 Runscript service can be used to finely bring up & shutdown a system.
@@ -147,7 +147,6 @@ Service configuration file
 T}
 \fBSVC_COMMANDS\fR@T{
 Extra service commands
-T}
 T}
 \fBSVC_PIDFILE\fR@T{
 PID file of (supervised) service
@@ -532,20 +531,21 @@ Default run time '/service/' directory
 .SS @SYSCONFDIR@/runit/
 .TP
 .RB {1,2,3}
-OpenRC friendly Init-Stage-{1,2,3} files to handle system boot/shutdown & supervisor.
+Init-Stage-{1,2,3} files to handle system boot/shutdown & supervisor.
 .TP
 .RB ctrlaltdel
 C-ALT-DEL signal handler (shutdown/reboot)
 .SS @SYSCONFDIR@/s6/
 .TP
 .RB init-stage-1
-OpenRC firendly Init-Stage-{1,2} file to handle system boot
+Init-Stage-{1,2} file to handle system boot with optional OpenRC support (by
+setting RC_INIT_SYS=YES).
 .TP
 .RB {crash,finish}
 OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor crashes.
 .SS @SYSCONFDIR@/{conf,init}.d/supervision
 .TP
-Supervision init script service
+Supervision init script service for OpenRC
 .SS @LIBDIR@/sv/\ (SV_LIBDIR)
 SUPERVISION library directory
 .SS SV_LIBDIR/bin/
