@@ -105,6 +105,10 @@ dist_SCRIPTS += s6/crash s6/finish s6/init-stage-1
 dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
+ifdef SYSVINIT
+dist_SV_SVCS += initctl
+endif
+
 DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) \
 	$(dist_RS_OPTS) $(dist_RS_SVCS) \
@@ -168,6 +172,9 @@ $(SUBDIRS): FORCE
 install-all: install install-supervision-svc
 install: install-dir install-dist
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
+ifdef SYSVINIT
+	$(install_SCRIPT) src/initctl $(DESTDIR)$(LIBDIR)/sv/bin
+endif
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
@@ -247,6 +254,10 @@ install-%-svc:
 
 uninstall-all: uninstall unintsall-supervision-svc
 uninstall: uninstall-doc
+	rm -f $(DESTDIR)$(SBINDIR)/rs
+ifdef SYSVINIT
+	rm -f $(DESTDIR)$(LIBDIR)/sv/bin/initctl
+endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
