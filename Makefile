@@ -33,13 +33,13 @@ dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
 	sv/.lib/bin/sp \
 	sv/.lib/bin/sv-shutdown \
+	sv/.lib/sh/runscript \
 	sv/.lib/sh/init-stage \
 	sv/.lib/sh/cgroup-release-agent \
 	sv/.lib/sh/dep
 dist_SH_LIBS  = \
 	sv/.lib/sh/cgroup-functions \
 	sv/.lib/sh/functions \
-	sv/.lib/sh/runscript \
 	sv/.lib/sh/runscript-functions \
 	sv/.lib/sh/supervision-functions
 dist_SV_RUNS  =
