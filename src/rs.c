@@ -616,27 +616,18 @@ void svc_stage(const char *cmd)
 		snprintf(opt, 8, "--%s", RS_STAGE.type);
 		depends = rs_deplist_load();
 
-		if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0) { /* start */
-			for (i = RS_DEPS_TYPE-1; i >= 0; i--)
-				if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL) {
-					if (nil == NULL)
-						nil = elm;
-					for (j = RS_DEP_PRIORITY-1; j > 0; j--) { /* high prio only */
+		for (i = 0; i < RS_DEPS_TYPE; i++)
+			if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL) {
+				if (nil == NULL)
+					nil = elm;
+				if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+					for (j = RS_DEP_PRIORITY-1; j > 0; j--) /* high prio only */
 						rs_svc_exec_list(elm->priority[j], argv, envp);
-					}
-				}
-			rs_svc_exec_list(nil->priority[0], argv, envp);
-		}
-		else if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0) { /* stop */
-			for (i = 0; i < RS_DEPS_TYPE; i++)
-				if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL) {
-					if (nil == NULL)
-						nil = elm;
-					for (j = 1; j < RS_DEP_PRIORITY; j++)
+				else if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
+					for (j = 1; j < RS_DEP_PRIORITY; j++) /* high prio only */
 						rs_svc_exec_list(elm->priority[j], argv, envp);
-				}
-			rs_svc_exec_list(nil->priority[0], argv, envp);
-		}
+			}
+		rs_svc_exec_list(nil->priority[0], argv, envp);
 		rs_deplist_free(depends);
 
 		/* skip irrelevant cases or because -[rv] passed */

@@ -40,6 +40,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 
 	RS_DepTypeList_T *deplist = rs_deplist_new();
 	RS_DepType_T *dlp;
+	RS_StringList_T *two, *one;
 
 	while (rs_getline(depfile, &line, &len) > 0) {
 		/* get dependency type */
@@ -71,6 +72,12 @@ RS_DepTypeList_T *rs_deplist_load(void)
 		}
 	}
 	fclose(depfile);
+
+	/* revert the priority order of before dependency type
+	 * to get the same natural order as after */
+	dlp = rs_deplist_find(deplist, "before");
+	one = dlp->priority[1], two = dlp->priority[2];
+	dlp->priority[1] = two, dlp->priority[2] = one;
 
 	return deplist;
 }
