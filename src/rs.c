@@ -488,13 +488,10 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	RS_String_T *svc;
 	pid_t pid, *pidlist = NULL;
 	int count = 0, status, retval = 0, i;
-	static int parallel = 0;
+	static int parallel, type;
 	char **svclist = NULL;
 	char *svcpath;
 	int state;
-
-	if (!parallel)
-		parallel = rs_conf_yesno("RS_PARALLEL");
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -504,6 +501,8 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		errno = ENOENT;
 		return -1;
 	}
+	parallel = rs_conf_yesno("RS_PARALLEL");
+	type = strcmp(argv[1]+2, rs_stage_type[RS_STAGE_SUPERVISION]) == 0;
 	rs_sigsetup();
 
 	if (strcmp(argv[3], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
@@ -518,11 +517,10 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		else
 			continue;
 
-		if (strcmp(argv[1]+2, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
+		if (type)
 			status = svc_state(svc->str, 'p');
 		else
 			status = svc_state(svc->str, 's');
-
 		if (status) {
 			if (state == 's') {
 				ERR("%s service is already started.\n", svc->str);
