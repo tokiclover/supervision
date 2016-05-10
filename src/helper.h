@@ -7,8 +7,8 @@
  * new BSD License included in the distriution of this package.
  */
 
-#ifndef __HELPER_H__
-#define __HELPER_H__
+#ifndef _HELPER_H
+#define _HELPER_H
 
 #include "error.h"
 #include <sys/stat.h>
@@ -52,4 +52,4 @@ char *shell_string_value(char *str);
 }
 #endif
 
-#endif /* __HELPERS_H__ */
+#endif /* _HELPERS_H */

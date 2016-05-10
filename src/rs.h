@@ -7,8 +7,8 @@
  * new BSD License included in the distriution of this package.
  */
 
-#ifndef __RS_H__
-#define __RS_H__
+#ifndef _RS_H
+#define _RS_H
 
 #define RS_COPYRIGHT "Copyright (C) 2015-6 tokiclover <tokiclover@gmail.com>\n" \
 	"License 2-clause, new, simplified BSD or MIT (at your name choice)\n" \
@@ -128,4 +128,4 @@ int rs_conf_yesno(const char *env);
 }
 #endif
 
-#endif /* __RS_H__ */
+#endif /* _RS_H */

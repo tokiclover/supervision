@@ -7,8 +7,8 @@
  * new BSD License included in the distriution of this package.
  */
 
-#ifndef __ERROR_H__
-#define __ERROR_H__
+#ifndef _ERROR_H
+#define _ERROR_H
 
 #if __GNUC__ > 2 || defined(__INTEL_COMPILER)
 # define __NORETURN__ __attribute__((__noreturn__))
@@ -63,4 +63,4 @@ __UNUSED__ char *err_strdup(const char *str);
 }
 #endif
 
-#endif /* __ERROR_H__ */
+#endif /* _ERROR_H */

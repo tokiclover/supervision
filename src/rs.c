@@ -596,14 +596,15 @@ void svc_stage(const char *cmd)
 	char opt[8];
 	int i, j, k, type = 1;
 
+	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
+		setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
+		RS_STAGE.type = rs_stage_type[RS_STAGE_RUNSCRIPT];
+		command = rs_svc_cmd[RS_SVC_CMD_START];
+	}
 	if (RS_STAGE.type == NULL) /* -r|-v passed ? */
 		type = 0;
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
-	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
-		setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
-		RS_STAGE.type = rs_stage_type[RS_STAGE_RUNSCRIPT];
-	}
 
 	envp = rs_svc_env();
 	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
