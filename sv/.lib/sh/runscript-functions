@@ -15,7 +15,7 @@ __RUNSCRIPT_FUNCTIONS__=1
 :	${SV_SERVICE:=/etc/service}
 :	${NULL=/dev/null}
 :	${__SV_SRT_DEP_ORD__=need:NEED use:USE before:BEFORE after:AFTER}
-:	${__SV_SOP_DEP_ORD__=after:AFTER after:AFTER use:USE need:NEED}
+:	${__SV_SOP_DEP_ORD__=after:AFTER before:BEFORE use:USE need:NEED}
 
 __ERR_END__='{ end 0; return; };'
 __ERR_BUSY__='{ end 1 busy; return 16; };'

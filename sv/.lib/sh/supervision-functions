@@ -262,8 +262,7 @@ svc_depend()
 	esac
 
 	yesno ${SVC_DEPS:-${dep}} &&
-	for dep in ${DEP}; do
-		eval [ -n \"\${SVC_${dep#*:}}\" ] &&
+	for dep in ${DEP/before:BEFORE/}; do
 		command -v svc_${dep%:*} >${NULL} 2>&1 || continue
 		eval svc_${dep%:*} ${1}
 		eval RET_${dep#*:}=${?}
