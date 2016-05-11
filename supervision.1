@@ -554,10 +554,10 @@ SUPERVISION library directory
 .RB checkpath
 Simple & Cheap checkpath/mktemp binary
 .TP
-.RB sp
-`SV_SVCDIR=sv sv/.lib/bin/sp add --log SERVICE'
+.RB sv-config
+`SV_SVCDIR=sv sv/.lib/bin/sv-config add --log SERVICE'
 and to set up specific supervision Backend e.g.
-`sp -S runit'
+`sv-config -S runit'
 .TP
 .RB sv-shutdown
 Simple script to handle system halt

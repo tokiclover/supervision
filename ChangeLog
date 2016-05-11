@@ -7,6 +7,8 @@ various minor bug fixes of r36 (notably, satisfy {after,before}
 dependencies before {use,need} to attempt to get everything in
 the right order.
 
+Renamed sv/.lib/bin/{sp,sv-config} for clarity.
+
 36:
 
 r35 bug fixes:
