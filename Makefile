@@ -106,6 +106,7 @@ dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
 ifdef SYSVINIT
+dist_SH_BINS += sv/.lib/bin/initctl
 dist_SV_SVCS += initctl
 endif
 
@@ -172,9 +173,6 @@ $(SUBDIRS): FORCE
 install-all: install install-supervision-svc
 install: install-dir install-dist
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
-ifdef SYSVINIT
-	$(install_SCRIPT) src/initctl $(DESTDIR)$(LIBDIR)/sv/bin
-endif
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
