@@ -1,0 +1,314 @@
+/*
+ * Utility providing an interface to SysVinit's halt, reboot, shutdown,
+ * poweroff utilities.
+ *
+ * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * This file is part of Supervision (Scripts Framework).
+ *
+ * The supervision framework is free software; you can redistribute
+ * it and/or modify it under the terms of the 2-clause, simplified,
+ * new BSD License included in the distriution of this package.
+ */
+
+#include "error.h"
+#include "helper.h"
+#include <grp.h>
+#include <pwd.h>
+#include <getopt.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#undef VERSION
+#define VERSION "0.10.0"
+
+const char *prgname;
+
+enum {
+	CP_TYPE_CHECK,
+#define CP_TYPE_CHECK CP_TYPE_CHECK
+	CP_TYPE_MKTEMP,
+#define CP_TYPE_MKTEMP CP_TYPE_MKTEMP
+	CP_TYPE_FILE,
+#define CP_TYPE_FILE CP_TYPE_FILE
+	CP_TYPE_DIR,
+#define CP_TYPE_DIR CP_TYPE_DIR
+	CP_TYPE_PIPE
+#define CP_TYPE_PIPE CP_TYPE_PIPE
+};
+
+static const char *shortopts = "cdfg:hm:o:Pp:qv";
+static const struct option longopts[] = {
+	{ "dir",      0, NULL, 'd' },
+	{ "file",     0, NULL, 'f' },
+	{ "pipe",     0, NULL, 'P' },
+	{ "group",    1, NULL, 'g' },
+	{ "owner",    1, NULL, 'o' },
+	{ "mode",     1, NULL, 'm' },
+	{ "checkpath",0, NULL, 'c' },
+	{ "tmpdir",   1, NULL, 'p' },
+	{ "quiet",    0, NULL, 'q' },
+	{ "help",     0, NULL, 'h' },
+	{ "version",  0, NULL, 'v' },
+	{ 0, 0, 0, 0 }
+};
+static const char *longopts_help[] = {
+	"Create a directory",
+	"Create a regular file",
+	"Create a named pipe (FIFO)",
+	"User group",
+	"User owner[:group]",
+	"Octal permision mode",
+	"Enable checkpath mode (default)",
+	"Enable mktemp mode",
+	"Enable quiet mode",
+	"Print help massage",
+	"Print version string",
+	NULL
+};
+
+
+__NORETURN__ static void help_message(int status)
+{
+	int i;
+
+	printf("Usage: %s [-p/tmp] [-d|-f] [-m mode] [-o owner[:group]]"
+			" <TEMPLATE>|<DIR>|<FILE>\n", prgname);
+	for (i = 0; longopts_help[i]; i++) {
+		printf("    -%c, --%-9s", longopts[i].val, longopts[i].name);
+		if (longopts[i].has_arg)
+			printf("<ARG>    ");
+		else
+			printf("         ");
+		puts(longopts_help[i]);
+	}
+
+	exit(status);
+}
+
+static void getpwgrp(char *pwnam, char *grnam, struct passwd **pwd,
+		struct group **grp)
+{
+	char *grn, *pwn = pwnam, *ptr = NULL;
+	int id;
+
+	if (pwnam) {
+		ptr = pwn = err_strdup(pwnam);
+		grn = strchr(pwn, ':');
+		if (grn)
+			*grn++ = '\0';
+	}
+	if (grnam)
+		grn = grnam;
+
+	if (pwn) {
+		if (sscanf(pwn, "%d", &id) == 1)
+			*pwd = getpwuid((uid_t) id);
+		else
+			*pwd = getpwnam(pwn);
+	}
+	if (grn) {
+		if (sscanf(grn, "%d", &id) == 1)
+			*grp = getgrgid((gid_t) id);
+		else
+			*grp = getgrnam(grn);
+	}
+	free(ptr);
+}
+
+static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode,
+		int task, int type)
+{
+	char path[2048], *tmp;
+	int fd, len, off = 0;
+	static mode_t m = 0;
+	struct stat stb;
+	
+	memset(&stb, 0, sizeof(stb));
+	if (task != CP_TYPE_MKTEMP)
+		lstat(file, &stb);
+	if (!m)
+		m = umask(0);
+
+	if (task == CP_TYPE_MKTEMP) {
+		len = strlen(file);
+		if (strcmp(file+len-6, "XXXXXX")) {
+			ERR("Invalid template: `%s'\n", file);
+			return -1;
+		}
+
+		if (file[0] == '/')
+			off++;
+		snprintf(path, sizeof(path), "%s/%s", tmpdir, file+off);
+
+		if (type == CP_TYPE_FILE) {
+			fd = mkstemp(path);
+			if (fd < 0) {
+				ERR("Failed to create `%s' file: %s\n", path,
+						strerror(errno));
+				return -1;
+			}
+			close(fd);
+		}
+		else if (type == CP_TYPE_DIR)
+			tmp = mkdtemp(path);
+		else {
+			ERR("Invalid arguments.\n", NULL);
+			return -1;
+		}
+
+		if (strlen(path))
+			puts(path);
+		else {
+			ERR("Failed to create `%s'\n", file);
+			return -1;
+		}
+		tmp = path;
+	}
+	else if (type == CP_TYPE_PIPE) {
+		if (!S_ISFIFO(stb.st_mode)) {
+			if (!mode) /* 0600 */
+				mode = S_IRUSR | S_IWUSR;
+			fd = mkfifo(file, mode);
+			if (fd < 0) {
+				ERR("Failed to create `%s' named pipe (FIFO): %s\n", file,
+						strerror(errno));
+				return -1;
+			}
+		}
+		tmp = file;
+	}
+	else if (type == CP_TYPE_DIR) {
+		if (!S_ISDIR(stb.st_mode)) {
+			if (!mode) /* 0755 */
+				mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+			fd = mkdir(file, mode);
+			if (fd < 0) {
+				ERR("Failed to create `%s' directory: %s\n", file, strerror(errno));
+				return -1;
+			}
+		}
+		tmp = file;
+	}
+	else if (type == CP_TYPE_FILE) {
+		if (!S_ISREG(stb.st_mode)) {
+			if (!mode) /* 0644 */
+				mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+			fd = open(file, O_CREAT | O_WRONLY | O_NOFOLLOW, mode);
+			if (fd < 0) {
+				ERR("Failed to create `%s' file: %s\n", file, strerror(errno));
+				return -1;
+			}
+		}
+		tmp = file;
+	}
+
+	if (mode && (stb.st_mode & 0777) != mode) {
+		if (S_ISLNK(stb.st_mode)) {
+			ERR("Not changing permission mode for `%s' (symlink)\n", tmp);
+			return -1;
+		}
+		if (chmod(tmp, mode)) {
+			ERR("Failed to change permision mode for `%s': %s\n", tmp,
+					strerror(errno));
+		}
+	}
+
+	if (uid && gid && (stb.st_uid != uid) || (stb.st_gid != gid)) {
+		if (S_ISLNK(stb.st_mode)) {
+			ERR("Not changing owner for `%s' (symlink)\n", tmp);
+			return -1;
+		}
+		if (chown(tmp, uid, gid)) {
+			ERR("Failed to change owner for `%s': %s\n", tmp, strerror(errno));
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+	uid_t uid = geteuid();
+	gid_t gid = getegid();
+	mode_t mode = 0;
+	int opt, retval, task, type = CP_TYPE_CHECK;
+	char *grnam = NULL, *pwnam = NULL, *tmpdir = NULL;
+	struct passwd *pwd = NULL;
+	struct group *grp = NULL;
+
+	prgname = strrchr(argv[0], '/');
+	if (prgname == NULL)
+		prgname = argv[0];
+	else
+		prgname++;
+
+	/* Parse options */
+	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
+		switch (opt) {
+		case 'c':
+			task = CP_TYPE_CHECK;
+			break;
+		case 'f':
+			type = CP_TYPE_FILE;
+			break;
+		case 'd':
+			type = CP_TYPE_DIR;
+			break;
+		case 'P':
+			type = CP_TYPE_PIPE;
+			break;
+		case 'm':
+			sscanf(optarg, "%o", &mode);
+			break;
+		case 'o':
+			pwnam = optarg;
+			break;
+		case 'g':
+			grnam = optarg;
+			break;
+		case 'q': /* ignored */
+			break;
+		case 'v':
+			printf("%s version %s\n", prgname, VERSION);
+			exit(EXIT_SUCCESS);
+		case 'p':
+			task = CP_TYPE_MKTEMP;
+			tmpdir = optarg;
+			break;
+		case '?':
+		case 'h':
+			help_message(EXIT_SUCCESS);
+		default:
+			help_message(EXIT_FAILURE);
+		}
+	}
+
+	if ((argc-optind) < 1) {
+		ERR("Insufficient arguments.\n", NULL);
+		help_message(EXIT_FAILURE);
+	}
+
+	getpwgrp(pwnam, grnam, &pwd, &grp);
+	if (pwnam && pwd == NULL) {
+		ERR("Failed to get owner[:group].\n", NULL);
+		exit(EXIT_FAILURE);
+	}
+	if (grnam && grp == NULL) {
+		ERR("Failed to get group.\n", NULL);
+		exit(EXIT_FAILURE);
+	}
+
+	if (pwd != NULL)
+		uid = pwd->pw_uid;
+	if (grp != NULL)
+		gid = grp->gr_gid;
+
+	while (argv[optind]) {
+		if (checkpath(argv[optind], tmpdir, uid, gid, mode, task, type))
+			retval++;
+		optind++;
+	}
+
+	exit(retval);
+}
