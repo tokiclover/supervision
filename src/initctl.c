@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 	int fd;
 	int len;
 	char arg[512];
+	mode_t m;
 
 	prgname = strrchr(argv[0], '/');
 	if (!prgname)
@@ -37,9 +38,12 @@ int main(int argc, char *argv[])
 	else
 		prgname++;
 
-	if (!file_test(INIT_FIFO, 0))
+	if (!file_test(INIT_FIFO, 'p')) {
+		m = umask(0);
 		if (mkfifo(INIT_FIFO, 0600) < 0)
 			ERROR("Failed to create %s FIFO", INIT_FIFO);
+		umask(m);
+	}
 	if ((fd = open(INIT_FIFO, O_RDONLY)) < 0)
 		ERROR("Failed to open %s", INIT_FIFO);
 
