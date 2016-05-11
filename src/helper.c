@@ -57,6 +57,7 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 		case 'd': return S_ISDIR(st_buf.st_mode);
 		case 'b': return S_ISBLK(st_buf.st_mode);
 		case 'c': return S_ISCHR(st_buf.st_mode);
+		case 'p': return S_ISFIFO(st_buf.st_mode);
 		case 's': return st_buf.st_size > 0;
 		case 'h':
 		case 'L': return S_ISLNK(st_buf.st_mode);
