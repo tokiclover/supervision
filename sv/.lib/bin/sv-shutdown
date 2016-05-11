@@ -51,7 +51,7 @@ esac
 shift
 done
 case "${__SV_NAM__}" in
-	(daemontoo*) CMD="${SV_LIBDIR}/sh/init-stage -3" TIME="";;
+	(daemontoo*) CMD="ACTION=${ACTION} LEVEL=${LEVEL} ${SV_LIBDIR}/sh/init-stage -3";;
 	(runit) CMD="runit-init ${LEVEL}"      ;;
 	(s6) CMD="s6-svscanctl -${LEVEL} ${SV_RUNDIR}";;
 esac
