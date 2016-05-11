@@ -1,5 +1,12 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+37:
+
+Added C conversion to sv/.lib/bin/checkpath for efficiency;
+various minor bug fixes of r36 (notably, satisfy {after,before}
+dependencies before {use,need} to attempt to get everything in
+the right order.
+
 36:
 
 r35 bug fixes:
