@@ -218,6 +218,7 @@ int svc_lock(const char *svc, int flag)
 {
 	char buf[BUFSIZ];
 	int fd;
+	mode_t m;
 
 	if (!svc) {
 		errno = ENOENT;
@@ -228,7 +229,9 @@ int svc_lock(const char *svc, int flag)
 			sv_state_subdirs[SV_SUBDIR_WAIT], svc);
 
 	if (flag) {
+		m = umask(0);
 		fd = open(buf, O_CREAT|O_EXCL|O_WRONLY, 0644);
+		umask(m);
 		if (fd >= 0) {
 			close(fd);
 			return 0;
@@ -264,6 +267,7 @@ int svc_mark(const char *svc, int status)
 {
 	char buf[BUFSIZ], *path;
 	int fd;
+	mode_t m;
 
 	if (!svc) {
 		errno = ENOENT;
@@ -294,7 +298,9 @@ int svc_mark(const char *svc, int status)
 		case 'd':
 		case 'f':
 		case 's':
+			m = umask(0);
 			fd = open(buf, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+			umask(m);
 			if (fd >= 0) {
 				close(fd);
 				return 0;
