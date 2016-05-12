@@ -85,36 +85,6 @@ __NORETURN__ static void help_message(int status)
 	exit(status);
 }
 
-static void getpwgrp(char *pwnam, char *grnam, struct passwd **pwd,
-		struct group **grp)
-{
-	char *grn, *pwn = pwnam, *ptr = NULL;
-	int id;
-
-	if (pwnam) {
-		ptr = pwn = err_strdup(pwnam);
-		grn = strchr(pwn, ':');
-		if (grn)
-			*grn++ = '\0';
-	}
-	if (grnam)
-		grn = grnam;
-
-	if (pwn) {
-		if (sscanf(pwn, "%d", &id) == 1)
-			*pwd = getpwuid((uid_t) id);
-		else
-			*pwd = getpwnam(pwn);
-	}
-	if (grn) {
-		if (sscanf(grn, "%d", &id) == 1)
-			*grp = getgrgid((gid_t) id);
-		else
-			*grp = getgrnam(grn);
-	}
-	free(ptr);
-}
-
 static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode,
 		int task, int type)
 {
@@ -232,7 +202,8 @@ int main(int argc, char *argv[])
 	uid_t uid = geteuid();
 	gid_t gid = getegid();
 	mode_t mode = 0;
-	int opt, retval, task, type = CP_TYPE_CHECK;
+	int id, opt, retval, task, type = CP_TYPE_CHECK;
+	char *grn = NULL, *pwn = NULL, *ptr = NULL;
 	char *grnam = NULL, *pwnam = NULL, *tmpdir = NULL;
 	struct passwd *pwd = NULL;
 	struct group *grp = NULL;
@@ -289,20 +260,40 @@ int main(int argc, char *argv[])
 		help_message(EXIT_FAILURE);
 	}
 
-	getpwgrp(pwnam, grnam, &pwd, &grp);
-	if (pwnam && pwd == NULL) {
-		ERR("Failed to get owner[:group].\n", NULL);
-		exit(EXIT_FAILURE);
+	if (pwnam) {
+		ptr = pwn = err_strdup(pwnam);
+		grn = strchr(pwn, ':');
+		if (grn)
+			*grn++ = '\0';
 	}
-	if (grnam && grp == NULL) {
-		ERR("Failed to get group.\n", NULL);
-		exit(EXIT_FAILURE);
-	}
+	if (grnam)
+		grn = grnam;
 
-	if (pwd != NULL)
-		uid = pwd->pw_uid;
-	if (grp != NULL)
-		gid = grp->gr_gid;
+	if (pwn) {
+		if (sscanf(pwn, "%d", &id) == 1)
+			pwd = getpwuid((uid_t) id);
+		else
+			pwd = getpwnam(pwn);
+		if (pwd)
+			uid = pwd->pw_uid;
+		else {
+			ERR("Failed to get owner.\n", NULL);
+			exit(EXIT_FAILURE);
+		}
+	}
+	if (grn) {
+		if (sscanf(grn, "%d", &id) == 1)
+			grp = getgrgid((gid_t) id);
+		else
+			grp = getgrnam(grn);
+		if (grp)
+			gid = grp->gr_gid;
+		else {
+			ERR("Failed to get group.\n", NULL);
+			exit(EXIT_FAILURE);
+		}
+	}
+	free(ptr);
 
 	while (argv[optind]) {
 		if (checkpath(argv[optind], tmpdir, uid, gid, mode, task, type))
