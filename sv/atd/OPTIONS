@@ -11,8 +11,8 @@ SVC_USE=syslog
 
 pre()
 {
-	checkpath -q -d -m 1770 -o ${SVC_USER}:${SVC_GROUP} ${SVC_SPOOLDIR}/atjobs
-	checkpath -q -d -m 1770 -o ${SVC_USER}:${SVC_GROUP} ${SVC_SPOOLDIR}/atspool
+	checkpath -q -d -m 1770 -o ${SVC_USER}:${SVC_GROUP} ${SVC_SPOOLDIR}/atjobs \
+		${SVC_SPOOLDIR}/atspool
 }
 
 #

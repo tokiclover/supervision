@@ -17,9 +17,8 @@ SVC_USE='syslog dns'
 pre()
 {
 	[ -n "${SVC_LOGFILE}" ] && DHCP_OPTS="${DHCP_OPTS} -tf ${SVC_LOGFILE}"
-	checkpath -q -d -o dhcp:dhcp /var/run/dhcp
-	checkpath -q -d -o dhcp:dhcp ${SVC_LIBDIR}
-	checkpath -q -f -o dhcp:dhcp ${SVC_LIBDIR}/dhcpd.leases
+	checkpath -q -d -o dhcp:dhcp /var/run/dhcp ${SVC_LIBDIR} \
+		${SVC_LIBDIR}/dhcpd.leases
 }
 
 check_config()

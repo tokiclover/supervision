@@ -9,9 +9,8 @@ SVC_AFTER='syslog'
 
 pre()
 {
-	checkpath -q -d -m 0775 -o root:lp    /var/cache/cups
-	checkpath -q -d -m 0775 -o root:lp    /var/cache/cups/rss
-	checkpath -q -d -m 0755 -o root:lp    /var/run/cups
+	checkpath -q -d -m 0775 -o root:lp /var/cache/cups /var/cache/cups/rss \
+		/var/run/cups
 	checkpath -q -d -m 0511 -o lp:lpadmin /var/run/cups/certs
 }
 
