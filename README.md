@@ -5,6 +5,10 @@ by using a shell,--to be able to switch between backend & share a few helpers,--
 optional [OpenRC][7] support, to not have to write system boot/halt from scratch.
 (A Gentoo [ebuild][2] is available.)
 
+Note: [busybox](http://www.busybox.net/) has an integrated runit suite which has
+the same command line options as `runsvdir/sv`; so support for this variant is
+almost guaranted to function as expected.
+
 ---
 
 INTRODUCTION
