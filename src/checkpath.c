@@ -1,6 +1,5 @@
 /*
- * Utility providing an interface to SysVinit's halt, reboot, shutdown,
- * poweroff utilities.
+ * Simple utility providing providing checkpath/mktemp
  *
  * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision (Scripts Framework).
@@ -16,7 +15,6 @@
 #include <pwd.h>
 #include <getopt.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #undef VERSION
 #define VERSION "0.10.0"
