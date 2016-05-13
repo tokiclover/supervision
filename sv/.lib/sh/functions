@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/05/05 21:09:26                      Exp $
+# $Version: 1.3 2016/05/08 21:09:26                      Exp $
 #
 
 __FUNCTIONS__=1
@@ -172,33 +172,44 @@ fi
 
 #
 # @FUNCTION: Mount/fstab info helper
-# @ARG: [-f] DIR
+# @ARG: [OPTIONS] DIR
 #
 mount_info()
 {
-	local DIR DST SRC args d opts ret
+	local arg args fs src opts opt ret
 
-	SRC=/proc/mounts
-	args="$(getopt -o F:f -l fstab,fsys: -n mount_info -s sh -- "${@}")"
+	src=/proc/mounts
+	args="$(getopt -o F:fo: -l fstab,fsys:,options: -n mount_info -s sh -- "${@}")"
 	eval set -- ${args}
 
 	while true; do
 	case "${1}" in
-		(-f|--fstab) SRC=/etc/fstab;;
-		(-F|--fsys*) FS=${2}; shift;;
+		(-f|--fstab) src=/etc/fstab;;
+		(-F|--fsys*) fs="${2}"; shift;;
+		(-o|--options) opts="${2}"; shift;;
 		(*) shift; break;;
 	esac
 	shift
 	done
-	DIR=${1}
-	DST="$(sed -nre "s|(^[^#].*${1}[[:space:]].*${FS})[[:space:]].*$|\1|p" ${SRC})"
 
-	for d in ${DST}; do
-		case "${DIR}" in
-			("${d}") ret=0; break;;
-		esac
-	done
-	return ${ret:-1}
+	arg="${1}"
+	eval set -- $(sed -nre "s|(^[^#].*${1}[[:space:]].*${fs})[[:space:]].*$|\1|p" ${src})
+	[ -z "${1}" ] && return 1
+
+	if [ -n "${opts}" ]; then
+		local IFS="${IFS},"
+		for opt in ${opts}; do
+			case "${opts}" in
+				(*${opt}*)  ;;
+				(*) return 1;;
+			esac
+		done
+	fi
+
+	case "${arg}" in
+		(${1}|${2}) return 0;;
+	esac
+	return 1
 }
 
 #
