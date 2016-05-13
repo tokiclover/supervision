@@ -1,5 +1,7 @@
 src/*.o
-src/initctl
 src/rs
+sv/.lib/bin/checkpath
+sv/.lib/bin/initctl
+sv/.lib/bin/sv-shutdown
 sv/*/supervise
 sv/*/log/supervise
