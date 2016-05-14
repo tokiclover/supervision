@@ -199,8 +199,8 @@ mount_info()
 	if [ -n "${opts}" ]; then
 		local IFS="${IFS},"
 		for opt in ${opts}; do
-			case "${opts}" in
-				(*${opt}*)  ;;
+			case "${opt}" in
+				(*${4}*)  ;;
 				(*) return 1;;
 			esac
 		done
