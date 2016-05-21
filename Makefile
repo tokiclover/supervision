@@ -125,11 +125,8 @@ dist_DIRS  += \
 DISTDIRS    = $(dist_DIRS)
 
 ifdef STATIC
-getty_CMD   = cp -a sv/getty
-dist_SV_VIRT += cron:fcron dns:dnsmasq \
-	httpd:busybox-httpd ntp:busybox-ntpd syslog:socklog
-else
-getty_CMD   = ln -s $(SYSCONFDIR)/sv/getty
+dist_SV_VIRT += fcron:cron dnsmask:dns \
+	busybox-httpd:httpd busybox-ntpd:ntp socklog:syslog
 endif
 getty_NAME  = $(shell which agetty >/dev/null 2>&1 && echo -n agetty || echo -n getty)
 
@@ -180,19 +177,34 @@ install: install-dir install-dist
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		   -i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
 		   $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
-	for i in 1 2 3 4 5 6; do \
-		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
-		$(getty_CMD) $(DESTDIR)$(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i}; \
-	done
 	ln -fns $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
 	for dir in .lib .opt; do \
 		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
 ifdef STATIC
 	$(call rem_sym,sv,$(dist_SV_VIRT))
-endif
+	for svc in $(dist_SV_VIRT); do \
+		cp -a sv/$${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+		if test -e sv/$${svc#*:}/OPTIONS.$${svc%:*}; then \
+			mv -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.$${svc%:*} \
+				$(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS; \
+			rm -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.*; \
+		fi; \
+	done
+	for i in 1 2 3 4 5 6; do \
+		cp -a sv/getty $(DESTDIR)$(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i}; \
+	done
+else
 	$(call svc_sym,sv,$(dist_SV_VIRT))
+	for i in 1 2 3 4 5 6; do \
+		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i}; \
+	done
+endif
 	$(call svc_sym,rs.d,$(dist_RS_VIRT))
+	for i in 1 2 3 4 5 6; do \
+		ln -s $(SYSCONFDIR)/sv$(getty_NAME)-tty$${i} \
+			$(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
+	done
 	for i in 0 1 2 3; do \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}; \
 		echo >$(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}/.keep_stage-$${i}; \
