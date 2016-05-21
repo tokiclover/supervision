@@ -28,8 +28,12 @@ pre()
 		:	${SOCK_LOGDIR:=/var/log/socklog}
 		;;
 	esac
-	checkpath -q -d ${SVC_USER:--o} ${SVC_USER} ${SVC_GROUP:--g} \
-			${SVC_GROUP} ${SOCK_LOGDIR}
+
+	if [ -n "${SVC_USER}" ]; then
+		checkpath -q -d -o ${SVC_USER}${SVC_GROUP:+:$SVC_GROUP} ${SOCK_LOGDIR}
+	else
+		return 0
+	fi
 }
 
 #
