@@ -50,6 +50,7 @@ case "${1}" in
 	;;
 	(*/sv/*)
 :	${RS_TYPE:=sv}
+:	${RS_STAGE:=2}
 	;;
 esac
 shift
