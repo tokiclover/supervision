@@ -1,5 +1,9 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+38:
+
+Bug-fix of r37: fix checkpath return value, and static /service/ installation.
+
 37:
 
 Added C conversion to sv/.lib/bin/{checkpath,sv-shutdown} for efficiency;
