@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 	uid_t uid = geteuid();
 	gid_t gid = getegid();
 	mode_t mode = 0;
-	int id, opt, retval, task, type = CP_TYPE_CHECK;
+	int id, opt, retval = 0, task, type = CP_TYPE_CHECK;
 	char *grn = NULL, *pwn = NULL, *ptr = NULL;
 	char *grnam = NULL, *pwnam = NULL, *tmpdir = NULL;
 	struct passwd *pwd = NULL;
