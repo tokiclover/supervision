@@ -37,10 +37,12 @@ Standard LSB along with {restart,zap} and {add,desc,cgroup_remove_service}
 extra commands are supported.
 `@SBINDIR@/rs [OPTIONS] SERVICE COMMAND [ARGS]' can be used for any service
 type and efficiency; or the following for a particular service type.
+Some commands, like `add' need a service type `--rs|--sv' and a stage level
+`-(0|1|2|3)' to get the appropriate result.
 .TP
 .B SUPERVISION
 And
-.R `@SYSCONFDIR@/SERVICE/run [OPTS] COMMAND [ARGS]'
+.R `@SYSCONFDIR@/sv/SERVICE/run [OPTS] COMMAND [ARGS]'
 for supervision services.
 .TP
 .B RUNSCRIPT
