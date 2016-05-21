@@ -202,7 +202,7 @@ else
 endif
 	$(call svc_sym,rs.d,$(dist_RS_VIRT))
 	for i in 1 2 3 4 5 6; do \
-		ln -s $(SYSCONFDIR)/sv$(getty_NAME)-tty$${i} \
+		ln -s $(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i} \
 			$(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
 	done
 	for i in 0 1 2 3; do \
