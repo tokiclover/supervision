@@ -84,7 +84,7 @@ case ${__SV_NAM__} in
 		__SV_CMD__=runsvdir __SVCCMD__=sv __CHKCMD__="'sv check'" __STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
 		;;
 	(s6)
-		BIN='' PREFIX=s6- __SIGWTUP__="'-U -T 10000'" __SIGWDWN__="'-D -T 10000'"
+		BIN='' PREFIX=s6- __SIGWTUP__="'-wU -T10000'" __SIGWDWN__="'-wD -T10000'"
 		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
 		CMDS="${CMDS} __SCANCMD__" __SCANCMD__='"s6-svscanctl -an ${SV_RUNDIR}"'
 		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok __STACMD__=s6-svsat __LOGCMD__=s6-log
