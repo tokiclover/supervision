@@ -72,7 +72,7 @@ dist_SV_SVCS  = \
 	udev
 dist_SV_VIRT  = \
 	net:dhcp \
-	socklog-inet:syslog socklog-ucspi:syslog
+	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
 	dns/OPTIONS.dnsmasq \
 	dhcp/OPTIONS.dhcpcd dhcp/OPTIONS.dhcpd \
@@ -203,6 +203,7 @@ endif
 	done
 	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/service/.single
 	ln -fs $(SYSCONFDIR)/sv/syslog  $(DESTDIR)$(SYSCONFDIR)/service/.boot
+	ln -fs $(SYSCONFDIR)/sv/socklog-unix $(DESTDIR)$(SYSCONFDIR)/service/.boot
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
