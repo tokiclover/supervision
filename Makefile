@@ -215,7 +215,6 @@ endif
 	done
 	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/service/.single
 	ln -fs $(SYSCONFDIR)/sv/syslog  $(DESTDIR)$(SYSCONFDIR)/service/.boot
-	ln -fs $(SYSCONFDIR)/sv/socklog-unix $(DESTDIR)$(SYSCONFDIR)/service/.boot
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
