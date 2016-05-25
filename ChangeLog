@@ -1,5 +1,11 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+39:
+
+Added C variant of mount_info() shell function (WARN: command line arguments
+changed!) named simply mountinfo to get current mountpoints info; and
+fstabinfo to get fstab(5) information with ease and simplicity.
+
 38:
 
 Bug-fix of r37: fix checkpath return value, and static /service/ installation.
