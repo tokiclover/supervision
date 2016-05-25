@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2016-05-05" "35" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2016-05-25" "39" "Supervision Scripts Framework"
 .SH NAME
 Supervision \- Supervision Scripts Framework
 .SH DESCRIPTION
@@ -234,6 +234,9 @@ T}
 .TE
 .SS FUNCTIONS
 Extra service commands along with supported functions are defined as shell functions.
+.B WARNING:
+A few functions starting with `(svc|rs)_' prefix are used for internal usage;
+use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
 .TP
 .B SUPERVISION
 .TS
@@ -300,8 +303,14 @@ T}
 \fBend [MSG]\fR@T{
 Print ending message to standard output
 T}
-\fBmount_info [-f] DIR\fR@T{
-Get mount/fstab status of a directory/device
+\fBfstabinfo [OPTIONS] MOUNTPOINTS\fR@T{
+Get information of fstab(5) entries
+T}
+\fBmountinfo [OPTIONS] MOUNTPOINTS\fR@T{
+Get information of current mountpoints
+T}
+\fBmount_info [OPTIONS] MOUNTPOINTS\fR@T{
+Shell short-cut link to mountinfo
 T}
 \fBSOURCE [-e|-d] FILES\fR@T{
 Source wrapper (with file existance check)
@@ -554,7 +563,13 @@ SUPERVISION library directory
 .SS SV_LIBDIR/bin/
 .TP
 .RB checkpath
-Simple & Cheap checkpath/mktemp binary
+Simple and cheap checkpath/mktemp binary
+.TP
+.RB fstabinfo
+Simple and cheap fstab(5) utility
+.TP
+.RB mountinfo
+Simple and cheap mountpoints utility
 .TP
 .RB sv-config
 `SV_SVCDIR=sv sv/.lib/bin/sv-config add --log SERVICE'
@@ -562,7 +577,7 @@ and to set up specific supervision Backend e.g.
 `sv-config -S runit'
 .TP
 .RB sv-shutdown
-Simple script to handle system halt
+Simple utility to handle system halt
 .TP
 .B SYMLINKS\ (backend binary symlinks)
 .RB \| envdir \|\ \c
