@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+#define VERSION "0.10.0"
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
 /* !!! order matter (defined constant/enumeration) !!! */
@@ -368,24 +369,17 @@ void rs_sigsetup(void)
 	sa_ign.sa_flags = 0;
 	sigemptyset(&sa_ign.sa_mask);
 
-	if (sigaction(SIGINT, &sa_ign, &sa_sigint) < 0) {
+	if (sigaction(SIGINT, &sa_ign, &sa_sigint) < 0)
 		ERROR("%s: sigaction(SIGINT)", __func__);
-		exit(EXIT_FAILURE);
-	}
-	if (sigaction(SIGQUIT, &sa_ign, &sa_sigquit) < 0) {
+	if (sigaction(SIGQUIT, &sa_ign, &sa_sigquit) < 0)
 		ERROR("%s: sigaction(SIGQUIT)", __func__);
-		exit(EXIT_FAILURE);
-	}
 	sigemptyset(&ss_child);
 	sigaddset(&ss_child, SIGCHLD);
 	sigsetup = 1;
 
 	/* block SIGCHLD */
-	if (sigprocmask(SIG_BLOCK, &ss_child, &ss_savemask) < 0) {
+	if (sigprocmask(SIG_BLOCK, &ss_child, &ss_savemask) < 0)
 		ERROR("%s: sigprocmask(SIG_BLOCK)", __func__);
-		exit(EXIT_FAILURE);
-	}
-
 }
 
 __NORETURN__ int svc_exec(int argc, char *argv[]) {
@@ -682,7 +676,7 @@ int main(int argc, char *argv[])
 				setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
 				break;
 			case 'V':
-				printf("%s version %u\n\n", prgname, VERSION);
+				printf("%s version %s\n\n", prgname, VERSION);
 				puts(RS_COPYRIGHT);
 				exit(EXIT_SUCCESS);
 			case 'v':

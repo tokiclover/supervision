@@ -18,7 +18,6 @@
 #include <getopt.h>
 #include <fcntl.h>
 
-#undef VERSION
 #define VERSION "0.10.0"
 
 #ifndef SYSCONFDIR
