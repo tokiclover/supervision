@@ -380,7 +380,7 @@ svc_commands()
 
 svc_cmd()
 {
-	local arg cmd opt pfx; pfx=svc_
+	local arg cmd opt pfx=svc_ ret
 	for arg; do
 		case "${1}" in
 			(add|del|desc|remove|zap)    cmd=${1} ;;
@@ -405,7 +405,9 @@ svc_cmd()
 	esac
 	begin "service ${cmd}: "
 	eval ${pfx}${cmd} ${opt}
-	end "${?}"
+	ret="${?}"
+	end "${ret}"
+	return "${ret}"
 }
 
 svc_env()
