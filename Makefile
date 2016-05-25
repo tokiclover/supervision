@@ -31,6 +31,7 @@ dist_COMMON = \
 	sv/.opt/sv.conf
 dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
+	sv/.lib/bin/mountinfo \
 	sv/.lib/bin/sv-config \
 	sv/.lib/bin/sv-shutdown \
 	sv/.lib/sh/runscript \

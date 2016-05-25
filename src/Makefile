@@ -8,12 +8,13 @@ dist_HDRS := error.h helper.h
 .SECONDEXPANSION:
 checkpath_SRCS := checkpath.c $(dist_SRCS)
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
+mountinfo_SRCS := mountinfo.c error.c
 
 rs_SRCS   := rs-conf.c rs-list.c rs.c
 rs_HDRS   := rs.h
 
 HDRRS      = $(dist_HDRS) $(rs_HDRS)
-simple_BINS := checkpath sv-shutdown
+simple_BINS := checkpath mountinfo sv-shutdown
 dist_BINS  = $(simple_BINS) rs
 
 ifdef STATIC
