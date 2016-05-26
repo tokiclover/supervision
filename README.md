@@ -43,15 +43,12 @@ or `${DESTDIR}/lib/sv/bin/sv-config -S BACKEND` after installation.
 DOCUMENTATION/USAGE
 -------------
 
-The recommanded way to use this package for service management is using
-`sv/.lib/sh/init-stage -(0|1|2|3)` to start a runlevel. And then use
+The recommanded way to use this package for service management is to use
+`sv/.lib/sh/init-stage -(1|2|3)` to start particular stage. And then use
 `rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services.
-This will ensure proper service dependency scheduling. Otherwise, just set up
-`SV_RUNDIR` (see `sv/.lib/sh/init-stage` for the actual steps); execute a
-supervision daemon, e.g. `svcscan ${SV_RUNDIR}` for daemontools*, and bring
-up a particular runlevel by using `rs -(1|2[3) stage` (sysinit runlevel or
-stage-0 is unnecessary); or else, start/stop (or other supported LSB commands)
-with `rs SERVICE start|stop`, e.g. `rs acpid start`.
+Or else, use the magic `-0` command line argument to set up `/service/` and
+`svscan`, and then use `rs --sv -2 stage start|stop` to start/stop daemons.
+This will ensure proper service dependency scheduling.
 
 See supervision(1) man page for more information.
 
