@@ -6,6 +6,9 @@ Added C variant of mount_info() shell function (WARN: command line arguments
 changed!) named simply mountinfo to get current mountpoints info; and
 fstabinfo to get fstab(5) information with ease and simplicity.
 
+Bug-fix of previous release (retun value of svc_{mark,state}()); removed
+usage of getopt(1) for portability compliance.
+
 38:
 
 Bug-fix of r37: fix checkpath return value, and static /service/ installation.
