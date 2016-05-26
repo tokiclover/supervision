@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2016/05/05                               Exp $
+# $Version: 1.0 2016/05/25                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -16,11 +16,11 @@ umask 022
 
 svc_init()
 {
-	local dir opt procfs
+	local dir opt procfs OS_NAME="$(uname -s)"
 	[ -w /etc/mtab ] || opt=-n
 
 	procfs=proc
-	case "$(uname -s)" in
+	case "${OS_NAME}" in
 		(GNU/kFreeBSD) procfs=linprocfs;;
 	esac
 
@@ -30,6 +30,8 @@ svc_init()
 		end ${?}
 	fi
 
+	case "${OS_NAME}" in
+		(Linux)
 	if [ ! -d /run ]; then
 		begin "Creating /run"
 		mkdir -m 0755 -p /run
@@ -51,6 +53,9 @@ svc_init()
 			;;
 		esac
 	done
+		;;
+	esac
+
 }
 
 svc_level()
@@ -161,8 +166,13 @@ svc_tmpdir()
 	fi
 }
 
-begin "Starting Init-Stage${1}"
+begin "Starting Init-Stage${1}\n"
 case "${1}" in
+	(-0)
+	svc_tmpdir
+	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
+	${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}" &
+	;;
 	(-1)
 	svc_init
 	svc_level -0
@@ -188,10 +198,8 @@ case "${1}" in
 		svc_wait -E 10000 ${__SV_CMD__} ${SV_TMPDIR}/${__SV_CMD__}.pid;
 		rs -1 stage; rs -2 stage;" &
 
-	info "Starting Service Scan"
 	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
 	exec ${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}"
-	end ${?}
 	#
 	# Drop into a rescue shell
 	#
