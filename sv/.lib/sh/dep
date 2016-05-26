@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.2 2016/05/05 21:09:26                      Exp $
+# $Version: 0.3 2016/05/25 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -13,16 +13,14 @@ source "${0%/*}"/runscript-functions ||
 
 umask 022
 mkdir -p ${SV_TMPDIR}/deps
-ARGS="$(getopt -o 0123Sd:rv -l dir:,rs,sv -n dep -s sh -- "${@}")"
-eval set -- ${ARGS}
 
-while true; do
+while [ ${#} -gt 0 ]; do
 case "${1}" in
 	(-r|--rs) RS_TYPE=rs;;
 	(-v|--sv) RS_TYPE=sv;;
-	(-[0123]) RS_STAGE=${1#*-};;
+	(-[0123]) RS_STAGE="${1#*-}";;
 	(-d|--dir) DIR="${2}" ;;
-	(*) break;;
+	(*) error "illegal option -- ${@}"; exit 1;;
 esac
 shift
 done
