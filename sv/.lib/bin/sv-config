@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/bin/sv-config                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.1 2016/05/05 21:09:26                      Exp $
+# $Version: 1.2 2016/05/05 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -31,7 +31,11 @@ ${1+exit ${1}}
 
 sv_cmd()
 {
-	local cmd name svc="${1}"
+	local cmd svc="${1}"
+	if [ ${#} -lt 2 ]; then
+		error "Insufficient number of arguments"
+		exit 2
+	fi
 	case "${2}" in
 		(add) cmd=svc_cmd SVC_NAME="${svc}";;
 		(*) cmd="${SV_SVCDIR}/${svc}/run"  ;;
@@ -39,21 +43,23 @@ sv_cmd()
 	eval ${cmd} ${2} ${ARGS}
 }
 
-[ ${#} -ge 2 ] || help_message 2
-ARGS="$(getopt -o DS:ghls -l debug,help,nodeps,log,service,set: \
-	-s sh -n sp -- "${@}")"
-[ ${?} -eq 0 ] || help_message 3
-eval set -- ${ARGS}
+[ ${#} -ge 1 ] || help_message 1
 ARGS= __SV_NAM__=
 
-while true; do
+while [ ${#} -gt 0 ]; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
 		(-g|--debug) set -x;;
-		(-S|--set) __SV_NAM__="${2}"; shift 2; break;;
-		(-[ls]*|--[ls]*) ARGS="${ARGS} ${1}";;
-		(*) shift; break;;
+		(-S|--set)
+			if [ -z "${2}" ]; then
+				error "-S|--set require an argument"
+				exit 1
+			fi
+			__SV_NAM__="${2}"; shift 2; break;;
+		(-[ls]|--log|--service) ARGS="${ARGS} ${1}";;
 		(-h|--help) help_message 0;;
+		(-*) error "illegal option -- ${@}"; exit 1;;
+		(*) break ;;
 	esac
 	shift
 done
