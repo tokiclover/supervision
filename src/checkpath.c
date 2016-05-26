@@ -21,16 +21,16 @@
 const char *prgname;
 
 enum {
-	CP_TYPE_CHECK,
-#define CP_TYPE_CHECK CP_TYPE_CHECK
-	CP_TYPE_MKTEMP,
-#define CP_TYPE_MKTEMP CP_TYPE_MKTEMP
-	CP_TYPE_FILE,
-#define CP_TYPE_FILE CP_TYPE_FILE
-	CP_TYPE_DIR,
-#define CP_TYPE_DIR CP_TYPE_DIR
-	CP_TYPE_PIPE
-#define CP_TYPE_PIPE CP_TYPE_PIPE
+	TYPE_FILE   = 0x01,
+#define TYPE_FILE TYPE_FILE
+	TYPE_DIR    = 0x02,
+#define TYPE_DIR TYPE_DIR
+	TYPE_PIPE   = 0x04
+#define TYPE_PIPE TYPE_PIPE
+	TYPE_CHECK  = 0x10,
+#define TYPE_CHECK TYPE_CHECK
+	TYPE_MKTEMP = 0x20
+#define TYPE_MKTEMP TYPE_MKTEMP
 };
 
 static const char *shortopts = "cdfg:hm:o:Pp:qv";
@@ -83,7 +83,7 @@ __NORETURN__ static void help_message(int status)
 }
 
 static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode,
-		int task, int type)
+		int type)
 {
 	char path[2048], *tmp;
 	int fd, len, off = 0;
@@ -91,12 +91,12 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 	struct stat stb;
 	
 	memset(&stb, 0, sizeof(stb));
-	if (task != CP_TYPE_MKTEMP)
+	if (type & TYPE_CHECK)
 		lstat(file, &stb);
 	if (!m)
 		m = umask(0);
 
-	if (task == CP_TYPE_MKTEMP) {
+	if (type & TYPE_MKTEMP) {
 		len = strlen(file);
 		if (strcmp(file+len-6, "XXXXXX")) {
 			ERR("Invalid template: `%s'\n", file);
@@ -107,7 +107,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 			off++;
 		snprintf(path, sizeof(path), "%s/%s", tmpdir, file+off);
 
-		if (type == CP_TYPE_FILE) {
+		if (type & TYPE_FILE) {
 			fd = mkstemp(path);
 			if (fd < 0) {
 				ERR("Failed to create `%s' file: %s\n", path,
@@ -116,7 +116,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 			}
 			close(fd);
 		}
-		else if (type == CP_TYPE_DIR)
+		else if (type & TYPE_DIR)
 			tmp = mkdtemp(path);
 		else {
 			ERR("Invalid arguments.\n", NULL);
@@ -131,7 +131,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		}
 		tmp = path;
 	}
-	else if (type == CP_TYPE_PIPE) {
+	else if (type & TYPE_PIPE) {
 		if (!S_ISFIFO(stb.st_mode)) {
 			if (!mode) /* 0600 */
 				mode = S_IRUSR | S_IWUSR;
@@ -144,7 +144,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		}
 		tmp = file;
 	}
-	else if (type == CP_TYPE_DIR) {
+	else if (type & TYPE_DIR) {
 		if (!S_ISDIR(stb.st_mode)) {
 			if (!mode) /* 0755 */
 				mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
@@ -156,7 +156,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		}
 		tmp = file;
 	}
-	else if (type == CP_TYPE_FILE) {
+	else if (type & TYPE_FILE) {
 		if (!S_ISREG(stb.st_mode)) {
 			if (!mode) /* 0644 */
 				mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 	uid_t uid = geteuid();
 	gid_t gid = getegid();
 	mode_t mode = 0;
-	int id, opt, retval = 0, task, type = CP_TYPE_CHECK;
+	int id, opt, retval = 0, type = TYPE_CHECK;
 	char *grn = NULL, *pwn = NULL, *ptr = NULL;
 	char *grnam = NULL, *pwnam = NULL, *tmpdir = NULL;
 	struct passwd *pwd = NULL;
@@ -215,16 +215,16 @@ int main(int argc, char *argv[])
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (opt) {
 		case 'c':
-			task = CP_TYPE_CHECK;
+			type |= TYPE_CHECK;
 			break;
 		case 'f':
-			type = CP_TYPE_FILE;
+			type |= TYPE_FILE;
 			break;
 		case 'd':
-			type = CP_TYPE_DIR;
+			type |= TYPE_DIR;
 			break;
 		case 'P':
-			type = CP_TYPE_PIPE;
+			type |= TYPE_PIPE;
 			break;
 		case 'm':
 			sscanf(optarg, "%o", &mode);
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 			printf("%s version %s\n", prgname, VERSION);
 			exit(EXIT_SUCCESS);
 		case 'p':
-			task = CP_TYPE_MKTEMP;
+			type |= TYPE_MKTEMP;
 			tmpdir = optarg;
 			break;
 		case '?':
@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
 	free(ptr);
 
 	while (argv[optind]) {
-		if (checkpath(argv[optind], tmpdir, uid, gid, mode, task, type))
+		if (checkpath(argv[optind], tmpdir, uid, gid, mode, type))
 			retval++;
 		optind++;
 	}
