@@ -134,6 +134,7 @@ svc_mark()
 		esac
 		ret=$((${ret}+${?}))
 	done
+	return "${ret}"
 }
 
 svc_state()
@@ -152,6 +153,7 @@ svc_state()
 		esac
 		ret=$((${ret} + ${?}))
 	done
+	return "${ret}"
 }
 
 #
