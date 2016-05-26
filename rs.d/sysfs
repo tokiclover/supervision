@@ -12,7 +12,7 @@ SVC_COMMANDS=mount_cgroup
 
 mount_sys()
 {
-	mount_info /sys && return 0
+	mountinfo /sys && return 0
 	grep -Eq "[[:space:]]sysfs$" /proc/filesystems || return 1
 
 	if ! mkdir -m 0755 -p /sys; then
@@ -20,9 +20,10 @@ mount_sys()
 		return 2
 	fi
 	begin "Mounting /sys"
-	if mount_info /sys; then
+	if mountinfo /sys; then
 		mount ${arg} -o remount,${SYSFS_OPTS}      /sys >${NULL} 2>&1
 	else
+		fstabinfo --mount /sys >${NULL} 2>&1 ||
 		mount ${arg} -t sysfs -o ${SYSFS_OPTS} sys /sys >${NULL} 2>&1
 	fi
 	end $?
