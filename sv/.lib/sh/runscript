@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/runscript                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.3 2015/05/05 21:09:26                      Exp $
+# $Version: 0.4 2015/05/25 21:09:26                      Exp $
 #
 
 help_message() {
@@ -20,13 +20,7 @@ EOH
 ${1+exit ${1}}
 }
 
-[ ${#} -ge 2 ] || help_message 1
-ARGS="$(getopt \
-	-o Dghrv -l debug,help,nodeps,rs,sv \
-	-s sh -n rs -- "${@}")"
-[ ${?} -eq 0 ] || help_message 1
-eval set -- ${ARGS}
-
+[ ${#} -ge 1 ] || help_message 1
 while true; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
@@ -34,12 +28,10 @@ while true; do
 		(-v|--sv) RS_TYPE="sv" ;;
 		(-g|--debug) set -x ;;
 		(-h|--help) help_message 0 ;;
-		(*) shift;  break   ;;
+		(*) break ;;
 	esac
 	shift
 done
-ARGS=
-
 :	${SV_LIBDIR:=${0%/sh/*}}
 :	${SVC_NAME:=${1##*/}}
 :	${name=${SVC_NAME}}
@@ -54,9 +46,12 @@ case "${1}" in
 	;;
 esac
 shift
-
 source "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
+if [ ${#} -lt 1 ]; then
+	error "Insufficient number of arguments"
+	exit 2
+fi
 :	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
