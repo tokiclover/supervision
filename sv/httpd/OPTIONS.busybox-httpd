@@ -10,5 +10,5 @@ SVC_CMD=busybox
 SVC_OPTS="${name} -v -f -u ${SVC_USER}:${SVC_GROUP} -c ${SVC_CONFIGFILE} ${HTTP_OPTS}"
 
 #
-# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #

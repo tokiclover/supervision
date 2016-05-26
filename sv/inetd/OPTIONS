@@ -7,5 +7,5 @@ description='Internet protocol service daemon - Super-Server'
 name=ipsvd
 
 #
-# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #
