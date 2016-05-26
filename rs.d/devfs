@@ -17,10 +17,11 @@ mount_dev()
 		return 0
 	fi
 	begin "Mounting /dev"
-	if mount_info /dev; then
-		mount ${arg} -o remount,${SYSFS_OPTS} /dev >${NULL} 2>&1
+	if mountinfo /dev; then
+		mount ${OPT} -o remount,${SYSFS_OPTS} /dev >${NULL} 2>&1
 	else
-		mount ${arg} -t ${fs} -o ${SYSFS_OPTS},mode=755,size=${DEV_FS_SIZE:-10M} \
+		fstabinfo --mount /dev >${NULL} 2>&1 ||
+		mount ${OPT} -t ${fs} -o ${SYSFS_OPTS},mode=755,size=${DEV_FS_SIZE:-10M} \
 			dev /dev >${NULL} 2>&1
 	fi
 	end ${?}
@@ -54,19 +55,19 @@ mount_devfs()
 	do
 		set -- ${fs}
 		grep -Eq "[[:space:]]${1}$" /proc/filesystems || continue
-		mount_info ${2} && continue
+		mountinfo ${2} && continue
 		mkdir -m ${3} -p ${2} >${NULL} 2>&1 || continue
 		begin "Mounting ${2}"
-		mount ${arg} -t ${1} -o noexec,nosuid,${4} ${2##*/} ${2} >${NULL} >&1
+		mount ${OPT} -t ${1} -o noexec,nosuid,${4} ${2##*/} ${2} >${NULL} >&1
 		end ${?}
 	done
 }
 
 start()
 {
-	local SYSFS_OPTS arg fs
+	local SYSFS_OPTS OPT fs
 
-	[ -w /etc/mtab ] || arg=-n
+	[ -w /etc/mtab ] || OPT=-n
 	SYSFS_OPTS=nodev,nosuid,exec
 
 	mount_dev
