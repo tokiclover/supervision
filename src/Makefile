@@ -28,7 +28,7 @@ endif
 ifdef SYSVINIT
 .SECONDEXPANSION:
 simple_BINS  += initctl
-initctl_SRCS := initctl.c
+initctl_SRCS := initctl.c $(dist_SRCS)
 endif
 
 all: $(dist_BINS)
