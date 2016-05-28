@@ -11,12 +11,13 @@
 
 #include "error.h"
 #include "helper.h"
+#include <dirent.h>
 #include <grp.h>
 #include <pwd.h>
 #include <getopt.h>
 #include <fcntl.h>
 
-#define VERSION "0.10.0"
+#define VERSION "0.11.0"
 
 const char *prgname;
 
@@ -29,12 +30,18 @@ enum {
 #define TYPE_PIPE TYPE_PIPE
 	TYPE_CHECK  = 0x10,
 #define TYPE_CHECK TYPE_CHECK
-	TYPE_MKTEMP = 0x20
+	TYPE_MKTEMP = 0x20,
 #define TYPE_MKTEMP TYPE_MKTEMP
+	TYPE_TRUNC  = 0x40,
+#define TYPE_TRUNC TYPE_TRUNC
+	TYPE_WRITE  = 0x80,
+#define TYPE_WRITE TYPE_WRITE
 };
 
-static const char *shortopts = "cdfg:hm:o:Pp:qv";
+static const char *shortopts = "cDdFfg:hm:o:Pp:qv";
 static const struct option longopts[] = {
+	{ "dir-trunc",  0, NULL, 'D' },
+	{ "file-trunc", 0, NULL, 'F' },
 	{ "dir",      0, NULL, 'd' },
 	{ "file",     0, NULL, 'f' },
 	{ "pipe",     0, NULL, 'P' },
@@ -49,6 +56,8 @@ static const struct option longopts[] = {
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
+	"Create an empty directory",
+	"Create an empty file",
 	"Create a directory",
 	"Create a regular file",
 	"Create a named pipe (FIFO)",
@@ -68,10 +77,9 @@ __NORETURN__ static void help_message(int status)
 {
 	int i;
 
-	printf("Usage: %s [-p/tmp] [-d|-f] [-m mode] [-o owner[:group]]"
-			" <TEMPLATE>|<DIR>|<FILE>\n", prgname);
+	printf("Usage: %s [OPTIONS] <TEMPLATES>|<DIRS>|<FILES>\n", prgname);
 	for (i = 0; longopts_help[i]; i++) {
-		printf("    -%c, --%-9s", longopts[i].val, longopts[i].name);
+		printf("    -%c, --%-10s", longopts[i].val, longopts[i].name);
 		if (longopts[i].has_arg)
 			printf("<ARG>    ");
 		else
@@ -87,6 +95,9 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 {
 	char path[2048], *tmp;
 	int fd, len, off = 0;
+	int open_flags;
+	DIR *dir;
+	struct dirent *ent;
 	static mode_t m = 0;
 	struct stat stb;
 	
@@ -154,13 +165,35 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 				return -1;
 			}
 		}
+		else if (type & TYPE_TRUNC) {
+			dir = opendir(file);
+			if (dir == NULL) {
+				ERR("Failed to open `%s' direcotry: %s\n", file, strerror(errno));
+				return -1;
+			}
+			fd = dirfd(dir);
+			if (fd < 0) {
+				ERR("%s\n", strerror(errno), NULL);
+				return -1;
+			}
+			while (ent = readdir(dir)) {
+				if (strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".") == 0)
+					continue;
+				if (unlinkat(fd, ent->d_name, 0) < 0)
+					ERR("Failed to remove \%s/%s\n", file, ent->d_name);
+			}
+			closedir(dir);
+		}
 		tmp = file;
 	}
 	else if (type & TYPE_FILE) {
-		if (!S_ISREG(stb.st_mode)) {
+		if (!S_ISREG(stb.st_mode) || type & TYPE_TRUNC) {
 			if (!mode) /* 0644 */
 				mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-			fd = open(file, O_CREAT | O_WRONLY | O_NOFOLLOW, mode);
+			open_flags |= O_CREAT | O_WRONLY | O_NOFOLLOW;
+			if (type & TYPE_TRUNC)
+				open_flags |= O_TRUNC;
+			fd = open(file, open_flags, mode);
 			if (fd < 0) {
 				ERR("Failed to create `%s' file: %s\n", file, strerror(errno));
 				return -1;
@@ -216,6 +249,12 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'c':
 			type |= TYPE_CHECK;
+			break;
+		case 'F':
+			type |= TYPE_FILE | TYPE_TRUNC;
+			break;
+		case 'D':
+			type |= TYPE_DIR | TYPE_TRUNC;
 			break;
 		case 'f':
 			type |= TYPE_FILE;
