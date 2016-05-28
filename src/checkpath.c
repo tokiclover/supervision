@@ -38,7 +38,7 @@ enum {
 #define TYPE_WRITE TYPE_WRITE
 };
 
-static const char *shortopts = "cDdFfg:hm:o:Pp:qv";
+static const char *shortopts = "DdFfg:hm:o:Pp:qv";
 static const struct option longopts[] = {
 	{ "dir-trunc",  0, NULL, 'D' },
 	{ "file-trunc", 0, NULL, 'F' },
@@ -48,7 +48,6 @@ static const struct option longopts[] = {
 	{ "group",    1, NULL, 'g' },
 	{ "owner",    1, NULL, 'o' },
 	{ "mode",     1, NULL, 'm' },
-	{ "checkpath",0, NULL, 'c' },
 	{ "tmpdir",   1, NULL, 'p' },
 	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
@@ -64,7 +63,6 @@ static const char *longopts_help[] = {
 	"User group",
 	"User owner[:group]",
 	"Octal permision mode",
-	"Enable checkpath mode (default)",
 	"Enable mktemp mode",
 	"Enable quiet mode",
 	"Print help massage",
@@ -247,9 +245,6 @@ int main(int argc, char *argv[])
 	/* Parse options */
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (opt) {
-		case 'c':
-			type |= TYPE_CHECK;
-			break;
 		case 'F':
 			type |= TYPE_FILE | TYPE_TRUNC;
 			break;
