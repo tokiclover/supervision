@@ -1,5 +1,5 @@
 /*
- * Simple utility providing providing checkpath/mktemp
+ * Simple utility providing providing mount point checking
  *
  * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision (Scripts Framework).
