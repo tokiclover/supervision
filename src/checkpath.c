@@ -25,7 +25,7 @@ enum {
 #define TYPE_FILE TYPE_FILE
 	TYPE_DIR    = 0x02,
 #define TYPE_DIR TYPE_DIR
-	TYPE_PIPE   = 0x04
+	TYPE_PIPE   = 0x04,
 #define TYPE_PIPE TYPE_PIPE
 	TYPE_CHECK  = 0x10,
 #define TYPE_CHECK TYPE_CHECK
