@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+40:
+
+Critical bug fix of r39 (bug introduced since r35): initialize static buffers
+in file_test();
+
 39:
 
 Added C variant of mount_info() shell function (WARN: command line arguments
