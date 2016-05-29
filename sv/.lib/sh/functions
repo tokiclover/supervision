@@ -80,16 +80,17 @@ begin()
 #
 end()
 {
-	local suffix
-	case "${1-0}" in
+	local suffix ret="${1:-0}"
+	shift
+	case "${ret}" in
 		(0) suffix="${COLOR_BLU}[${COLOR_GRN}ok${COLOR_BLU}]${COLOR_RST}";;
 		(*) suffix="${COLOR_YLW}[${COLOR_RED}no${COLOR_YLW}]${COLOR_RST}";;
 	esac
-	shift
 	PRINT_LEN=$((${COLUMNS}-${PRINT_LEN}))
 	printf "%*b\n" "${PRINT_LEN}" "${@} ${suffix}"
 	PRINT_EOL=
 	PRINT_LEN=0
+	return "${ret}"
 }
 
 #
