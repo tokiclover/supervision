@@ -93,11 +93,11 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 {
 	char path[2048], *tmp;
 	int fd, len, off = 0;
-	int open_flags;
+	int open_flags, unlink_flags;
 	DIR *dir;
 	struct dirent *ent;
 	static mode_t m = 0;
-	struct stat stb;
+	struct stat stb, std;
 	
 	memset(&stb, 0, sizeof(stb));
 	if (type & TYPE_CHECK)
@@ -177,7 +177,17 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 			while (ent = readdir(dir)) {
 				if (strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".") == 0)
 					continue;
-				if (unlinkat(fd, ent->d_name, 0) < 0)
+
+				memset(&std, 0, sizeof(std));
+				unlink_flags = 0;
+				if (fstatat(fd, ent->d_name, &std, AT_SYMLINK_NOFOLLOW) < 0) {
+					ERR("Failed to fstatat(...%s/%s...): %s\n", file, ent->d_name,
+							strerror(errno));
+					continue;
+				}
+				if (S_ISDIR(std.st_mode))
+					unlink_flags = AT_REMOVEDIR;
+				if (unlinkat(fd, ent->d_name, unlink_flags) < 0)
 					ERR("Failed to remove \%s/%s\n", file, ent->d_name);
 			}
 			closedir(dir);
