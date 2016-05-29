@@ -42,9 +42,14 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 		memcpy(path, pathname, len+1);
 	}
 
-	if (strcmp(path, pathname) != 0)
+	if (strcmp(path, pathname) != 0) {
+		memset(&st_buf, 0, sizeof(st_buf));
+		len = strlen(pathname);
+		path = err_realloc(path, len+1);
+		memcpy(path, pathname, len+1);
 		retval = (mode == 'h' || mode == 'L') ? lstat(pathname, &st_buf) : \
 				 stat(pathname, &st_buf);
+	}
 
 	if (retval < 0) {
 		errno = EBADF;
