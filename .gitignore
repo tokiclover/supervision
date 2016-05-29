@@ -1,7 +1,11 @@
 src/*.o
 src/rs
 sv/.lib/bin/checkpath
+sv/.lib/bin/fstabinfo
+sv/.lib/bin/mountinfo
 sv/.lib/bin/initctl
 sv/.lib/bin/sv-shutdown
+sv/net/*
+sv/socklog*/*
 sv/*/supervise
 sv/*/log/supervise
