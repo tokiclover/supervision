@@ -14,7 +14,7 @@
 #include <mntent.h>
 
 #undef VERSION
-#define VERSION "0.10.0"
+#define VERSION "0.11.0"
 
 const char *prgname;
 
@@ -27,11 +27,12 @@ enum {
 #define MOUNT_ARGS MOUNT_ARGS
 };
 
-static const char *shortopts = "o:t:nhv";
+static const char *shortopts = "o:t:nhqv";
 static const struct option longopts[] = {
 	{ "options",  1, NULL, 'o' },
 	{ "fstype",   1, NULL, 't' },
 	{ "netdev",   0, NULL, 'n' },
+	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
@@ -40,6 +41,7 @@ static const char *longopts_help[] = {
 	"Mount options to find",
 	"Filesystem to find",
 	"Is a network device?",
+	"Enable quiet mode",
 	"Print help massage",
 	"Print version string",
 	NULL
@@ -82,6 +84,7 @@ int main(int argc, char *argv[])
 	struct mntent *ent;
 	char *fsys, *mntopts[64], *ptr;
 	int i, nopts = 0, retval = 0;
+	int quiet = 1;
 
 	prgname = strrchr(argv[0], '/');
 	if (prgname == NULL)
@@ -106,6 +109,9 @@ int main(int argc, char *argv[])
 				*ptr++ = '\0';
 				mntopts[nopts++] = ptr;
 			}
+			break;
+		case 'q':
+			quiet = 0;
 			break;
 		case 'v':
 			printf("%s version %s\n", prgname, VERSION);
@@ -141,7 +147,8 @@ int main(int argc, char *argv[])
 						retval++;
 		}
 		else {
-			ERR("Inexistant mount entry: `%s'\n", argv[optind]);
+			if (quiet)
+				ERR("Inexistant mount entry: `%s'\n", argv[optind]);
 			retval++;
 		}
 		optind++;
