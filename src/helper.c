@@ -34,8 +34,13 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 	static struct stat st_buf;
 	static char *path;
 	static int retval;
+	static int R = S_IRUSR | S_IRGRP | S_IROTH,
+			   W = S_IWUSR | S_IWGRP | S_IWOTH,
+			   X = S_IXUSR | S_IXGRP | S_IXOTH;
 	size_t len;
 
+	if (access(pathname, F_OK))
+		return 0;
 	if (path == NULL) {
 		len = strlen(pathname);
 		path = err_malloc(len+1);
@@ -47,14 +52,13 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 		len = strlen(pathname);
 		path = err_realloc(path, len+1);
 		memcpy(path, pathname, len+1);
+
 		retval = (mode == 'h' || mode == 'L') ? lstat(pathname, &st_buf) : \
 				 stat(pathname, &st_buf);
+		if (retval < 0)
+			return 0;
 	}
 
-	if (retval < 0) {
-		errno = EBADF;
-		return 0;
-	}
 	switch (mode) {
 		case  0 :
 		case 'e': return 1;
@@ -67,9 +71,9 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 		case 'h':
 		case 'L': return S_ISLNK(st_buf.st_mode);
 		case 'S': return S_ISSOCK(st_buf.st_mode);
-		case 'r': return st_buf.st_mode & S_IRUSR;
-		case 'w': return st_buf.st_mode & S_IWUSR;
-		case 'x': return st_buf.st_mode & S_IXUSR;
+		case 'r': return st_buf.st_mode & R;
+		case 'w': return st_buf.st_mode & W;
+		case 'x': return st_buf.st_mode & X;
 		case 'g': return st_buf.st_mode & S_ISGID;
 		case 'u': return st_buf.st_mode & S_ISUID;
 		default: errno = EINVAL; return 0;
