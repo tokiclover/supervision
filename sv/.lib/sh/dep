@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.3 2016/05/25 21:09:26                      Exp $
+# $Version: 0.3 2016/06/06 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -47,12 +47,15 @@ dep_gen()
 		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${RS_TYPE}_${dep%:*}
 	done
 }
+
 dep_tree()
 {
-	local s
+	local i s svc
 	while read line; do
 		DEP_1="${DEP_1} ${line%:*}" DEP_2="${DEP_2} ${line#*:}"
-		DEP_0="${DEP_0/${line%:*}}"
+		case " ${DEP_0} " in
+			(*" ${line%:*} "*) DEP_0="${DEP_0/${line%:*}}";;
+		esac
 	done <${1}
 	for i in 1 2; do
 	eval DEP_${i}=\"$(echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\"
@@ -74,15 +77,18 @@ case "${RS_TYPE}" in
 	(rs) DIR=${RS_RUNDIR} ;;
 	(sv) DIR=${SV_SERVICE};;
 esac
+
 cd ${DIR}
 for svc in *; do
 	[ "${svc}" = "*" ] && continue
 	dep_gen ${svc##*/}
 done
 dep_0="${DEP_0}"
+
 for dep in use need before after; do
 	DEP=${SV_DEPDIR}/${RS_TYPE}_${dep} DEP_0="${dep_0}" DEP_1= DEP_2=
 	[ -f ${DEP} ] && dep_tree ${DEP}
+
 	case ${dep} in
 		(before) dep_1="${DEP_2}"
 		DEP_2="${DEP_1}"; DEP_1="${dep_1}"
