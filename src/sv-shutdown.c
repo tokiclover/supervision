@@ -174,7 +174,7 @@ int sv_shutdown(int action)
 
 int main(int argc, char *argv[])
 {
-	int action = 0, fast = 0, fsck = 0;
+	int action = 0, fd;
 	int message = 0, opt, retval;
 	pid_t pid;
 
@@ -200,7 +200,16 @@ int main(int argc, char *argv[])
 			action = SV_ACTION_REBOOT+1;
 			break;
 		case 'f':
-			fast = 1;
+			if ((fd = open("/fastboot", O_CREAT|O_WRONLY|O_NOFOLLOW,
+						S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 1)
+				ERROR("Failed to create /fastboot", NULL);
+			close(fd);
+			break;
+		case 'F':
+			if ((fd = open("/forcefsck", O_CREAT|O_WRONLY|O_NOFOLLOW,
+						S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 1)
+				ERROR("Failed to create /forcefsck", NULL);
+			close(fd);
 			break;
 		case 't': /* ignored */
 			break;
