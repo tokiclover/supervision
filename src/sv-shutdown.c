@@ -17,6 +17,7 @@
 #include <utmpx.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <sys/reboot.h>
 
 #define VERSION "0.10.0"
 
@@ -37,7 +38,7 @@
 
 const char *prgname;
 
-static const char *shortopts = "06rshHpPfFtkuv";
+static const char *shortopts = "06rshHpPfFEntkuv";
 static const struct option longopts[] = {
 	{ "reboot",   0, NULL, 'r' },
 	{ "shutdown", 0, NULL, 's' },
@@ -45,6 +46,8 @@ static const struct option longopts[] = {
 	{ "poweroff", 0, NULL, 's' },
 	{ "fast",     0, NULL, 'f' },
 	{ "fsck",     0, NULL, 'F' },
+	{ "force",    0, NULL, 'E' },
+	{ "nosync",   0, NULL, 'n' },
 	{ "time",     1, NULL, 't' },
 	{ "message",  0, NULL, 'k' },
 	{ "usage",    0, NULL, 'u' },
@@ -58,6 +61,8 @@ static const char *longopts_help[] = {
 	"System poweroff (-0 alias)",
 	"Skip  fsck(8) on reboot",
 	"Force fsck(8) on reboot",
+	"Force halt/reboot/shutdown",
+	"Disable filesystem synchronizations",
 	"Send signal after waiting",
 	"Broadcast message only",
 	"Print help massage",
@@ -175,6 +180,7 @@ int sv_shutdown(int action)
 int main(int argc, char *argv[])
 {
 	int action = 0, fd;
+	int RB_FLAG, FORCE = 0, SYNC = 1;
 	int message = 0, opt, retval;
 	pid_t pid;
 
@@ -189,15 +195,26 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case '0':
 		case 's':
-		case 'h':
-		case 'H':
 		case 'p':
 		case 'P':
 			action = SV_ACTION_SHUTDOWN+1;
+			RB_FLAG = RB_POWER_OFF;
+			break;
+		case 'h':
+		case 'H':
+			action = SV_ACTION_SHUTDOWN+1;
+			RB_FLAG = RB_HALT_SYSTEM;
 			break;
 		case '6':
 		case 'r':
 			action = SV_ACTION_REBOOT+1;
+			RB_FLAG = RB_AUTOBOOT;
+			break;
+		case 'E':
+			FORCE = 1;
+			break;
+		case 'n':
+			SYNC = 0;
 			break;
 		case 'f':
 			if ((fd = open("/fastboot", O_CREAT|O_WRONLY|O_NOFOLLOW,
@@ -227,14 +244,21 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argv[optind])
-		retval = sv_wall(argv[optind]);
-	if (message == 0 && action == 0) {
-		ERR("-0|-6 required to proceed\n", NULL);
+	if (message == 0 && action-- == 0) {
+		ERR("-0|-6 required to proceed; see `%s -u'\n", prgname);
 		exit(EXIT_FAILURE);
 	}
+
+	if (SYNC)
+		sync();
+	if (argv[optind]) {
+		if (sv_wall(argv[optind]))
+			ERR("Failed to broadcast message\n", NULL);
+	}
+	if (FORCE)
+		retval = reboot(RB_FLAG);
 	else
-		retval = sv_shutdown(--action);
+		retval = sv_shutdown(action);
 
 	exit(retval);
 }
