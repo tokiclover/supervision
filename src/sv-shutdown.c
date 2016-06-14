@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <sys/reboot.h>
 
-#define VERSION "0.10.0"
+#define VERSION "0.11.0"
 
 #ifndef SYSCONFDIR
 # define SYSCONFDIR "/etc"
@@ -74,7 +74,7 @@ __NORETURN__ static void help_message(int status)
 {
 	int i = 0;
 
-	printf("Usage: %s ACTION [-t TIME] [MESSAGE]\n", prgname);
+	printf("Usage: %s [OPTIONS] ACTION [-t TIME] [MESSAGE]\n", prgname);
 	printf("    -6, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
 		longopts_help[i]);
 	i++;
