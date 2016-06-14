@@ -161,8 +161,8 @@ eval_colors()
 	if [ "${1}" = 256 ]; then
 		local i
 		for i in seq 0 255; do
-			eval BG_${i}="'${ESC}${BGD}${i}m'"
-			eval FG_${i}="'${ESC}${FGD}${i}m'"
+			eval BG_${i}="'${ESC}48;5;${i}m'"
+			eval FG_${i}="'${ESC}38;5;${i}m'"
 		done
 	fi
 }
