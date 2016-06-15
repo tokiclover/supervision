@@ -39,10 +39,21 @@ done
 case "${1}" in
 	(*/rs.d/*)
 :	${RS_TYPE:=rs}
+	case "${1}" in
+		(*/stage-[0123]/*)
+	:	${RS_RUNDIR:=${1%/*}}
+	:	${RS_STAGE:=${RS_RUNDIR##*-}}
+	:	${SVC_DIR:=${RS_RUNDIR%/*}}
+		;;
+		(*)
+	:	${SVC_DIR:=${1%/*}}
+		;;
+	esac
 	;;
-	(*/sv/*)
+	(*/sv/*|*/service/*)
 :	${RS_TYPE:=sv}
 :	${RS_STAGE:=2}
+:	${SVC_DIR:=${1}}
 	;;
 esac
 shift

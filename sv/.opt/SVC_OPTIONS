@@ -29,6 +29,8 @@ case "${RS_TYPE:-sv}" in
 	(rs)
 :	${SV_TYPE=RS}
 :	${SVC_DIR:=${RS_SVCDIR}}
+[ -n "${RS_RUNDIR}" ] &&
+SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 	;;
 	(sv)
