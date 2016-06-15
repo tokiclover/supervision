@@ -196,18 +196,29 @@ const char **rs_svc_env(void)
 char *rs_svc_find(const char *svc)
 {
 	char *buf = err_malloc(BUFSIZ);
+	int i;
 	int err = errno;
 
 	if (!svc)
 		return NULL;
 
 	snprintf(buf, BUFSIZ, "%s/%s", RS_SVCDIR, svc);
-	if (file_test(buf, 'r'))
+	if (file_test(buf, 0))
 		return err_realloc(buf, strlen(buf)+1);
 	errno = 0;
+	for (i = 0; i <= 3; i++) {
+		snprintf(buf, BUFSIZ, "%s/stage-%d/%s", RS_SVCDIR, i, svc);
+		if (file_test(buf, 0))
+			return err_realloc(buf, strlen(buf)+1);
+		errno = 0;
+	}
 
 	snprintf(buf, BUFSIZ, "%s/%s", SV_SVCDIR, svc);
-	if (file_test(buf, 'd'))
+	if (file_test(buf, 0))
+		return err_realloc(buf, strlen(buf)+1);
+	errno = 0;
+	snprintf(buf, BUFSIZ, "%s/%s", SV_SERVICE, svc);
+	if (file_test(buf, 0))
 		return err_realloc(buf, strlen(buf)+1);
 	errno = err;
 
@@ -241,7 +252,7 @@ int svc_lock(const char *svc, int flag)
 		return -1;
 	}
 	else {
-		if (file_test(buf, 'r'))
+		if (file_test(buf, 0))
 			return unlink(buf);
 		else
 			return 0;
@@ -255,12 +266,12 @@ void svc_zap(const char *svc)
 
 	for (i = 0; i < ARRAY_SIZE(sv_state_subdirs); i++) {
 		snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR, sv_state_subdirs[i], svc);
-		if (file_test(buf, 'r'))
+		if (file_test(buf, 0))
 			unlink(buf);
 	}
 
 	snprintf(buf, BUFSIZ, "%s/%s_OPTIONS", SV_TMPDIR, svc);
-	if (file_test(buf, 'r'))
+	if (file_test(buf, 0))
 		i = unlink(buf);
 }
 
@@ -308,7 +319,7 @@ int svc_mark(const char *svc, int status)
 			}
 			return -1;
 		default:
-			if (file_test(buf, 'r'))
+			if (file_test(buf, 0))
 				return unlink(buf);
 			else
 				return 0;
@@ -328,24 +339,24 @@ int svc_state(const char *svc, int status)
 	switch(status) {
 		case 'e':
 			path = rs_svc_find(svc);
-			retval = file_test(path, 'r');
+			retval = file_test(path, 0);
 			free(path);
 			return retval;
 		case 'f':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_FAIL], svc);
-			return file_test(buf, 'r');
+			return file_test(buf, 0);
 		case 'd':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
-			return file_test(buf, 'r');
+			return file_test(buf, 0);
 		case 'p':
 			snprintf(buf, BUFSIZ, "%s/%s.pid", SV_TMPDIR, svc);
-			return file_test(buf, 'r');
+			return file_test(buf, 0);
 		case 's':
 			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
 					sv_state_subdirs[SV_SUBDIR_STAR], svc);
-			return file_test(buf, 'r');
+			return file_test(buf, 0);
 		default:
 			errno = EINVAL;
 			return 0;
