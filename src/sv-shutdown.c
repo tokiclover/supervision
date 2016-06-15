@@ -38,12 +38,12 @@
 
 const char *prgname;
 
-static const char *shortopts = "06rshHpPfFEntkuv";
+static const char *shortopts = "06rshpfFEntkuv";
 static const struct option longopts[] = {
 	{ "reboot",   0, NULL, 'r' },
 	{ "shutdown", 0, NULL, 's' },
-	{ "halt",     0, NULL, 's' },
-	{ "poweroff", 0, NULL, 's' },
+	{ "halt",     0, NULL, 'h' },
+	{ "poweroff", 0, NULL, 'p' },
 	{ "fast",     0, NULL, 'f' },
 	{ "fsck",     0, NULL, 'F' },
 	{ "force",    0, NULL, 'E' },
@@ -130,13 +130,15 @@ static int sv_wall(char *message)
 	return 0;
 }
 
-int sv_shutdown(int action)
+__NORETURN__ int sv_shutdown(int action)
 {
 	FILE *fp;
 	size_t len = 0;
-	char *act, cmd[512], *line = NULL, *ptr = NULL;
+	char *line = NULL, *ptr = NULL;
+	char *argv[4], opt[32];
 	const char *ent = "__SV_NAM__";
 	size_t siz = strlen(ent);
+	argv[1] = opt, argv[2] = NULL;
 
 	if ((fp = fopen(SV_SVC_BACKEND, "r")) == NULL)
 		ERROR("Failed to open `%s'", SV_SVC_BACKEND);
@@ -153,34 +155,47 @@ int sv_shutdown(int action)
 
 	if (ptr == NULL) {
 		ERR("Failed to get supervision backend\n", NULL);
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
-	if (strcmp(ptr, "runit") == 0)
-		snprintf(cmd, ARRAY_SIZE(cmd), "runit-init %d", action);
-	else if (strcmp(ptr, "s6") == 0)
-		snprintf(cmd, ARRAY_SIZE(cmd), "s6-svscanctl -%d", action);
+	if (strcmp(ptr, "runit") == 0) {
+		snprintf(opt, ARRAY_SIZE(opt), "%d", action);
+		argv[0] = "runit-init";
+	}
+	else if (strcmp(ptr, "s6") == 0) {
+		snprintf(opt, ARRAY_SIZE(opt), "-%d", action);
+		argv[0] = "s6-svscanctl";
+	}
 	else if (strncmp(ptr, "daemontools", 11) == 0) {
 		if (action)
-			act = "reboot";
+			setenv("ACTION", "reboot", 1);
 		else
-			act = "shutdown";
-		snprintf(cmd, ARRAY_SIZE(cmd), "ACTION=%s LEVEL=%d %s -%d", act,
-				action, SV_INIT_STAGE, action);
+			setenv("ACTION", "shutdown", 1);
+		snprintf(opt, ARRAY_SIZE(opt), "%d", action);
+		setenv("LEVEL", opt, 1);
+		snprintf(opt, ARRAY_SIZE(opt), "-%d", 3);
+		argv[0] = SV_INIT_STAGE;
+		execv(argv[0], argv);
+		ERROR("Failed to execl()", NULL);
 	}
 	else {
 		ERR("Invalid supervision backend\n", NULL);
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 	free(ptr);
 
-	return system(cmd);
+	for (int i=0; argv[i]; i++)
+		puts(argv[i]);
+	execvp(argv[0], argv);
+	ERROR("Failed to execlp()", NULL);
 }
 
 int main(int argc, char *argv[])
 {
-	int action = 0, fd;
-	int RB_FLAG, FORCE = 0, SYNC = 1;
+	int action = -1, fd;
+	int rb_flag, rb_force = 0, rb_sync = 1;
+	int open_flags = O_CREAT|O_WRONLY|O_NOFOLLOW;
+	mode_t open_mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 	int message = 0, opt, retval;
 	pid_t pid;
 
@@ -196,35 +211,31 @@ int main(int argc, char *argv[])
 		case '0':
 		case 's':
 		case 'p':
-		case 'P':
-			action = SV_ACTION_SHUTDOWN+1;
-			RB_FLAG = RB_POWER_OFF;
+			action = SV_ACTION_SHUTDOWN;
+			rb_flag = RB_POWER_OFF;
 			break;
 		case 'h':
-		case 'H':
-			action = SV_ACTION_SHUTDOWN+1;
-			RB_FLAG = RB_HALT_SYSTEM;
+			action = SV_ACTION_SHUTDOWN;
+			rb_flag = RB_HALT_SYSTEM;
 			break;
 		case '6':
 		case 'r':
-			action = SV_ACTION_REBOOT+1;
-			RB_FLAG = RB_AUTOBOOT;
+			action = SV_ACTION_REBOOT;
+			rb_flag = RB_AUTOBOOT;
 			break;
 		case 'E':
-			FORCE = 1;
+			rb_force = 1;
 			break;
 		case 'n':
-			SYNC = 0;
+			rb_sync = 0;
 			break;
 		case 'f':
-			if ((fd = open("/fastboot", O_CREAT|O_WRONLY|O_NOFOLLOW,
-						S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 1)
+			if ((fd = open("/fastboot", open_flags, open_mode)) < 1)
 				ERROR("Failed to create /fastboot", NULL);
 			close(fd);
 			break;
 		case 'F':
-			if ((fd = open("/forcefsck", O_CREAT|O_WRONLY|O_NOFOLLOW,
-						S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 1)
+			if ((fd = open("/forcefsck", open_flags, open_mode)) < 1)
 				ERROR("Failed to create /forcefsck", NULL);
 			close(fd);
 			break;
@@ -244,19 +255,20 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (message == 0 && action-- == 0) {
+
+	if (argv[optind])
+		retval = sv_wall(argv[optind]);
+	if (message)
+		exit(retval);
+	else if (action == -1) {
 		ERR("-0|-6 required to proceed; see `%s -u'\n", prgname);
 		exit(EXIT_FAILURE);
 	}
 
-	if (SYNC)
+	if (rb_sync)
 		sync();
-	if (argv[optind]) {
-		if (sv_wall(argv[optind]))
-			ERR("Failed to broadcast message\n", NULL);
-	}
-	if (FORCE)
-		retval = reboot(RB_FLAG);
+	if (rb_force)
+		retval = reboot(rb_flag);
 	else
 		retval = sv_shutdown(action);
 
