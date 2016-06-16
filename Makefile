@@ -98,9 +98,11 @@ dist_RS_SVCS  = \
 	zram
 dist_RS_OPTS  = \
 	dev \
-	tmpfiles.dev
+	tmpfiles.dev \
+	tmpfiles.setup
 dist_RS_VIRT  = \
 	tmpfiles.dev:tmpfiles \
+	tmpfiles.setup:tmpfiles \
 	networkfs:localfs \
 	dev:mdev
 
@@ -113,6 +115,8 @@ dist_STAGE_1 = \
 	localfs \
 	networkfs \
 	tmpfiles.dev
+dist_STAGE_2 = \
+	tmpfiles.setup:tmpfiles
 
 ifdef RUNIT
 dist_COMMON  += runit/reboot
@@ -236,6 +240,7 @@ endif
 	done
 	$(call stage_sym,0,$(dist_STAGE_0))
 	$(call stage_sym,1,$(dist_STAGE_1))
+	$(call stage_sym,2,$(dist_STAGE_2))
 	for dir in single boot; do \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/service/.$${dir}; \
 		echo >$(DESTDIR)$(SYSCONFDIR)/service/.$${dir}/.keep_dir-$${dir}; \

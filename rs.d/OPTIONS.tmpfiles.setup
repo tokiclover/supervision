@@ -1,0 +1,12 @@
+#
+# $Header: /etc/rs.d/OPTIONS.tmpfiles.setup, 2016/05/24             Exp $
+#
+
+name=tmpfiles.setup
+
+SVC_OPTS='--exclude-prefix=/dev --remove'
+SVC_NEED=localfs
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
