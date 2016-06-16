@@ -86,6 +86,7 @@ dist_SV_OPTS  = \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 
 dist_RS_SVCS  = \
+	checkfs \
 	devfs \
 	mdev \
 	squashdir \

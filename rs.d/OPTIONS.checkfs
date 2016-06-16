@@ -1,0 +1,22 @@
+#
+# $Header: /etc/rs.d/OPTIONS.checkfs, 2016/06/06             Exp $
+#
+
+#
+# Setup extra fsck(8) options
+#
+FSCK_OPTS=
+
+#
+# Enable fsck(8) in stage-3 or system shutdown/halt
+#
+CHECKFS_SHUTDOWN=No
+
+#
+# Force fsck by appending `forcefsck' in kernel command line after
+# using `-E|--force' command line option to sv-shutdown(8)
+#
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
