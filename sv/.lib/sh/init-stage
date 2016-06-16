@@ -141,7 +141,7 @@ svc_tmpdir()
 		(*/run/*|*/tmp/*)
 		rm -f -r "${SV_RUNDIR}"
 		mkdir -p "${SV_RUNDIR}"
-		cp -LRpu "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
+		ln -fs "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 		;;
 	esac
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail \
