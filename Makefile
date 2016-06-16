@@ -94,6 +94,7 @@ dist_RS_SVCS  = \
 	squashdir \
 	sysfs \
 	tmpdir \
+	tmpfiles \
 	zram
 dist_RS_OPTS  = \
 	dev
