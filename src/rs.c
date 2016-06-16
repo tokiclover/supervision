@@ -460,7 +460,7 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 				exit(EXIT_FAILURE);
 			}
 		}
-		else if (state == 'S' && svc_state(svc, 'f')) {
+		else if (state == 'S') {
 			ERR("%s service is not started.\n", svc);
 			exit(EXIT_FAILURE);
 		}
@@ -477,8 +477,10 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 		waitpid(pid, &status, 0);
 		if (state)
 			svc_lock(svc, 0);
-		if (!WEXITSTATUS(status) && state)
+		if (WEXITSTATUS(status) == 0 && state)
 			svc_mark(svc, state);
+		else if (state == 's')
+			svc_mark(svc, 'f');
 		exit(WEXITSTATUS(status));
 	}
 	else if (pid == 0) {
@@ -488,10 +490,10 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 		sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
 
 		execve(RS_RUNSCRIPT, (char *const*)args, (char *const*)envp);
-		exit(127);
+		_exit(127);
 	}
 
-	exit(EXIT_FAILURE);
+	ERROR("%s: Failed to fork()", __func__);
 }
 
 int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[])
@@ -538,7 +540,7 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 				continue;
 			}
 		}
-		else if (state == 'S' && svc_state(svc->str, 'f')) {
+		else if (state == 'S') {
 			ERR("%s service is not started.\n", svc->str);
 			continue;
 		}
@@ -583,8 +585,11 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	for (i = 0; i < count; i++) {
 		waitpid(pidlist[i], &status, 0);
 		svc_lock(svclist[i], 0);
-		if (WEXITSTATUS(status))
+		if (WEXITSTATUS(status)) {
 			retval++;
+			if (state == 's')
+				svc_mark(svclist[i], 'f');
+		}
 		else
 			svc_mark(svclist[i], state);
 	}
