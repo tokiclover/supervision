@@ -97,8 +97,10 @@ dist_RS_SVCS  = \
 	tmpfiles \
 	zram
 dist_RS_OPTS  = \
-	dev
+	dev \
+	tmpfiles.dev
 dist_RS_VIRT  = \
+	tmpfiles.dev:tmpfiles \
 	networkfs:localfs \
 	dev:mdev
 
@@ -109,7 +111,8 @@ dist_STAGE_0 = \
 dist_STAGE_1 = \
 	checkfs \
 	localfs \
-	networkfs
+	networkfs \
+	tmpfiles.dev
 
 ifdef RUNIT
 dist_COMMON  += runit/reboot
