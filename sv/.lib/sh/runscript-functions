@@ -13,6 +13,7 @@ __RUNSCRIPT_FUNCTIONS__=1
 :	${SV_RUNDIR:=/run/service}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_SERVICE:=/etc/service}
+:	${NETWORKFS=afs ceph cifs coda davfs fuse fuse.sshfs gfs glusterfs lustre ncpfs nfs nfs4 ocfs2 shfs smbfs}
 :	${NULL=/dev/null}
 :	${__SV_SRT_DEP_ORD__=need:NEED use:USE before:BEFORE after:AFTER}
 :	${__SV_SOP_DEP_ORD__=after:AFTER before:BEFORE use:USE need:NEED}
@@ -57,8 +58,7 @@ svc_zap()
 
 rs_cmd()
 {
-	local ARGS CMD FAIL cmd val
-	FAIL='{ svc_zap; break; };' cmd="${1}"
+	local ARGS CMD cmd="${1}" val
 
 	case "${cmd}" in
 		(start|stop) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
@@ -75,7 +75,7 @@ rs_cmd()
 		eval ${cmd} ${ARGS}
 		case ${?} in
 			(0) ;;
-			(*) val=2; eval ${FAIL};;
+			(*) val=2; break;;
 		esac
 	done
 	end ${val-${?}}
