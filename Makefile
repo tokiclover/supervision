@@ -35,6 +35,7 @@ dist_SH_BINS  = \
 	sv/.lib/bin/mountinfo \
 	sv/.lib/bin/sv-config \
 	sv/.lib/bin/sv-shutdown \
+	sv/.lib/sh/tmpfiles \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/init-stage \
 	sv/.lib/sh/cgroup-release-agent \
