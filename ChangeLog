@@ -1,5 +1,13 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+41:
+
+Bug fixes of r40: properly mark service state after {stop,start}; stop
+services properly if started only;
+
+Improvements: added -q|--quiet to mountinfo; and added -E|--force to
+sv-shutdown (to be able to write rs.d/checkfs service properly).
+
 40:
 
 Critical bug fix of r39 (bug introduced since r35): initialize static buffers
