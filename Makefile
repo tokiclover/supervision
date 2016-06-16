@@ -88,6 +88,7 @@ dist_SV_OPTS  = \
 dist_RS_SVCS  = \
 	checkfs \
 	devfs \
+	localfs \
 	mdev \
 	squashdir \
 	sysfs \
@@ -96,6 +97,7 @@ dist_RS_SVCS  = \
 dist_RS_OPTS  = \
 	dev
 dist_RS_VIRT  = \
+	networkfs:localfs \
 	dev:mdev
 
 ifdef RUNIT
