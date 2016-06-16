@@ -100,6 +100,15 @@ dist_RS_VIRT  = \
 	networkfs:localfs \
 	dev:mdev
 
+dist_STAGE_0 = \
+	dev \
+	devfs \
+	sysfs
+dist_STAGE_1 = \
+	checkfs \
+	localfs \
+	networkfs
+
 ifdef RUNIT
 dist_COMMON  += runit/reboot
 dist_SCRIPTS += runit/1 runit/2 runit/3 runit/ctrlaltdel
@@ -163,6 +172,12 @@ define rem_svc =
 	done
 endef
 
+define stage_sym =
+	for svc in $(2); do \
+		ln -fs ../$${svc} $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$(1)/$${svc}; \
+	done
+endef
+
 .PHONY: FORCE all install install-doc install-dist install-all
 
 all: $(SUBDIRS)
@@ -214,6 +229,8 @@ endif
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}; \
 		echo >$(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}/.keep_stage-$${i}; \
 	done
+	$(call stage_sym,0,$(dist_STAGE_0))
+	$(call stage_sym,1,$(dist_STAGE_1))
 	for dir in single boot; do \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/service/.$${dir}; \
 		echo >$(DESTDIR)$(SYSCONFDIR)/service/.$${dir}/.keep_dir-$${dir}; \
