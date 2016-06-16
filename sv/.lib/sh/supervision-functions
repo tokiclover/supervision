@@ -13,7 +13,7 @@ __SUPERVIONS_FUNCTIONS__=1
 #
 svc_add()
 {
-	local args cmd log svc name dir
+	local cmd log svc name dir
 
 	while [ $# -ge 1 ]; do
 		case "${1}" in
@@ -69,12 +69,10 @@ svc_start()
 
 	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
-	if [ -z "${RS_STAGE}" ]; then
 	case "${val}" in
 		(0) val=0; svc_mark -s -u;;
 		(*) val=5; svc_mark -S -u;;
 	esac
-	fi
 	svc_down -r
 	return ${val}
 }
@@ -94,12 +92,10 @@ svc_stop()
 
 	eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
-	if [ -z "${RS_STAGE}" ]; then
 	case "${val}" in
 		(0) val=0; svc_mark -S -u;;
 		(*) val=5; svc_mark -f -u;;
 	esac
-	fi
 	return ${val}
 }
 
