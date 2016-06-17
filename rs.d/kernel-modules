@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/rs.d/kmod                                Exp $
+# $Header: /etc/rs.d/kernel-modules                      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 

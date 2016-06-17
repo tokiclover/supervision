@@ -89,7 +89,7 @@ dist_SV_OPTS  = \
 dist_RS_SVCS  = \
 	checkfs \
 	devfs \
-	kmod \
+	kernel-modules \
 	localfs \
 	mdev \
 	sysfs \
@@ -110,7 +110,7 @@ dist_STAGE_0 = \
 	sysfs \
 	tmpfiles.dev
 dist_STAGE_1 = \
-	kmod \
+	kernel-modules \
 	checkfs \
 	localfs \
 	networkfs \
