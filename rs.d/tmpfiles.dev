@@ -1,1 +1,27 @@
-tmpfiles
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/tmpfiles                            Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up tmpfiles.d entries"
+
+if [ "${SVC_NAME}" = tmpfiles.dev ]; then
+	SVC_OPTS='--prefix=/dev'
+	SVC_USE=devfs
+	SVC_BEFORE=dev
+else
+	SVC_OPTS='--exclude-prefix=/dev --remove'
+	SVC_NEED=localfs
+fi
+
+start()
+{
+	${SV_LIBDIR}/sh/tmpfiles --create --boot ${SVC_OPTS}
+	end "${?}"
+	return 0
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
