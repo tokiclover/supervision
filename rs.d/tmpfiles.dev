@@ -10,9 +10,11 @@ if [ "${SVC_NAME}" = tmpfiles.dev ]; then
 	SVC_OPTS='--prefix=/dev'
 	SVC_USE=devfs
 	SVC_BEFORE=dev
+	SVC_OPTS='--prefix=/dev'
 else
 	SVC_OPTS='--exclude-prefix=/dev --remove'
 	SVC_NEED=localfs
+	SVC_OPTS='--exclude-prefix=/dev --remove'
 fi
 
 start()
