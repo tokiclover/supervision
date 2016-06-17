@@ -4,7 +4,7 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-description="kernel modules loader"
+description="Set up kernel modules loader"
 
 start()
 {
