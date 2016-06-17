@@ -180,7 +180,7 @@ endef
 
 define stage_sym =
 	for svc in $(2); do \
-		ln -fs ../$${svc} $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$(1)/$${svc}; \
+		ln -fs $(SYSCONFDIR)/rs.d/$${svc} $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$(1)/$${svc}; \
 	done
 endef
 
