@@ -94,29 +94,26 @@ dist_RS_SVCS  = \
 	squashdir \
 	sysfs \
 	tmpdir \
-	tmpfiles \
+	tmpfiles.dev \
 	zram
 dist_RS_OPTS  = \
-	dev \
-	tmpfiles.dev \
-	tmpfiles.setup
+	dev
 dist_RS_VIRT  = \
-	tmpfiles.dev:tmpfiles \
-	tmpfiles.setup:tmpfiles \
+	tmpfiles.setup:tmpfiles.dev \
 	networkfs:localfs \
 	dev:mdev
 
 dist_STAGE_0 = \
 	dev \
 	devfs \
-	sysfs
+	sysfs \
+	tmpfiles.dev
 dist_STAGE_1 = \
 	checkfs \
 	localfs \
 	networkfs \
-	tmpfiles.dev
-dist_STAGE_2 = \
-	tmpfiles.setup:tmpfiles
+	tmpfiles.setup
+dist_STAGE_2 =
 
 ifdef RUNIT
 dist_COMMON  += runit/reboot
