@@ -18,7 +18,7 @@ let is_bash=1
 runtime! syntax/sh.vim
 unlet b:current_syntax
 
-syn keyword svKwd begin die end error eval_colors info yesno checkpth warn SOURCE
+syn keyword svKwd begin die end error eval_colors info yesno checkpath warn SOURCE
 syn keyword svKwd env_svc env_sv  svc_cmd svc_down svc_env svc_mark svc_state
 syn keyword svKwd env_rs rs_cmd svc_wait svc_zap mount_info mountinfo fstabinfo
 syn keyword svVars SVC_DEBUG SVC_CONFIGFILE SVC_CMD SVC_OPTS SVC_GROUP SVC_USER
