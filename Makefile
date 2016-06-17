@@ -91,10 +91,10 @@ dist_RS_SVCS  = \
 	devfs \
 	localfs \
 	mdev \
-	squashdir \
 	sysfs \
 	tmpdir \
 	tmpfiles.dev \
+	unionfs \
 	zram
 dist_RS_OPTS  = \
 	dev

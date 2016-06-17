@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/rs.d/squashdir                           Exp $
+# $Header: /etc/rs.d/unionfs                             Exp $
 # $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 0.22.0 2016/06/06 12:33:03                   Exp $
@@ -9,10 +9,10 @@
 description="Mount (AUFS|OverlayFS+SquashFS) union filesystems"
 
 :	${sdr:=$(type -p sdr 2>${NULL})}
-:	${squash_rootdir:=/squash}
-case "${squash_filesystem}" in
+:	${unionfs_rootdir:=/unionfs}
+case "${unionfs_filesystem}" in
 	(aufs|overlay) ;;
-	(*) squash_filesystem=;;
+	(*) unionfs_filesystem=;;
 esac
 
 SVC_AFTER=localfs
@@ -24,14 +24,14 @@ start_pre()
 {
 	local mod
 	begin "Setting up kernel modules"
-	for mod in ${squash_filesystem:-aufs overlay} squashfs; do
+	for mod in ${unionfs_filesystem:-aufs overlay} squashfs; do
 		grep -q ${mod} /proc/filesystems || modprobe ${mod} >${NULL} 2>&1 ||
 			case "${mod}" in
 				(overlay|squashfs) { end 1 ${mod}; return 1; };;
 				(aufs) continue;;
 			esac
 		case "${mod}" in
-			(aufs|overlay) squash_filesystem="${mod}"; break;;
+			(aufs|overlay) unionfs_filesystem="${mod}"; break;;
 		esac
 	done
 	end ${?}
@@ -40,8 +40,8 @@ start_pre()
 start()
 {
 	local dir
-	for dir in ${squash_sysdir} ${squash_localdir}; do
-		squash_mount "${squash_rootdir}" "${dir}"
+	for dir in ${unionfs_sysdir} ${unionfs_localdir}; do
+		unionfs_mount "${unionfs_rootdir}" "${dir}"
 	done
 	return 0
 }
@@ -49,11 +49,11 @@ start()
 stop()
 {
 	local dir
-	for dir in ${squash_localdir}; do
-		squash_umount "${squash_rootdir}" "${dir}"
+	for dir in ${unionfs_localdir}; do
+		unionfs_umount "${unionfs_rootdir}" "${dir}"
 	done
-	for dir in ${squashdir_sysdir}; do
-		squash_remount "${dir}" "ro"
+	for dir in ${unionfs_sysdir}; do
+		unionfs_remount "${dir}" "ro"
 	done
 	return 0
 }
@@ -63,30 +63,30 @@ restart()
 	stop
 	start
 	local dir
-	for dir in ${squashdir_sysdir}; do
-		squash_remount "${dir}" "rw"
+	for dir in ${unionfs_sysdir}; do
+		unionfs_remount "${dir}" "rw"
 	done
 	return 0
 }
 
 stop_pre()
 {
-	[ -n "${squash_rebuild_dir}" ] || return 0
+	[ -n "${unionfs_rebuilddir}" ] || return 0
 	[ -n "${sdr}" -a -x "${sdr}" ] || { warn "No suitable sdr found."; return; }
 
-	begin "Rebuilding ${squash_rebuild_dir}"
-	${sdr} -o${offset:-5} -f${squash_filesystem} ${squash_rebuild_dir} >${NULL} 2>&1
+	begin "Rebuilding ${unionfs_rebuilddir}"
+	${sdr} -o${offset:-5} -f${unionfs_filesystem} ${unionfs_rebuilddir} >${NULL} 2>&1
 	end ${?}
 }
 
-squash_mount()
+unionfs_mount()
 {
 	local DIR msg
 	DIR="${1}/${2#/}" dir="/${2#/}"
-	grep -q ${squash_filesystem}:${dir} /proc/mounts && return
+	grep -q ${unionfs_filesystem}:${dir} /proc/mounts && return
 	[ -f ${DIR}.squashfs ] || return
 
-	case "${squash_filesystem}" in
+	case "${unionfs_filesystem}" in
 		(aufs)
 			mkdir -p -m 0755 "${DIR}"/rr "${DIR}"/rw
 			opt="nodev,udba=reval,br:${DIR}/rw:${DIR}/rr"
@@ -97,38 +97,38 @@ squash_mount()
 			msg=OverlayFS;;
 	esac
 
-	begin "Mounting ${squash_filesystem}:${dir}"
+	begin "Mounting ${unionfs_filesystem}:${dir}"
 	if ! grep -q ${DIR}/rr /proc/mounts; then
 		mount -t squashfs -o nodev,ro ${DIR}.squashfs ${DIR}/rr \
 			>${NULL} 2>&1 || { end 1; return 1; }
 	fi
-	mount -t ${squash_filesystem} -o ${opt} \
-		${squash_filesystem}:${dir} ${dir} >${NULL} 2>&1
+	mount -t ${unionfs_filesystem} -o ${opt} \
+		${unionfs_filesystem}:${dir} ${dir} >${NULL} 2>&1
 	end "${?}" "${msg}"
 }
 
-squash_umount()
+unionfs_umount()
 {
 	local DIR opt
 	DIR="${1}/${2#/}" dir="/${2#/}"
 	case "${OS_NAME}" in
 		(Linux) opt="-O no_netdev";;
 	esac
-	case "${squash_filesystem}" in
+	case "${unionfs_filesystem}" in
 		(aufs) auplink ${dir} flush >${NULL} 2>&1;;
 	esac
-	begin "Umounting ${squash_filesystem}:${dir}"
-	umount -l ${opt} ${squash_filesystem}:${dir} >${NULL} 2>&1 ||
-		{ end 1 ${squash_filesystem}; return 1; }
+	begin "Umounting ${unionfs_filesystem}:${dir}"
+	umount -l ${opt} ${unionfs_filesystem}:${dir} >${NULL} 2>&1 ||
+		{ end 1 ${unionfs_filesystem}; return 1; }
 	umount -l ${opt} ${DIR}/rr   >${NULL} 2>&1
 	end ${?} SquashFS
 }
 
-squash_remount()
+unionfs_remount()
 {
 	dir="/${1#/}"
-	begin "Re-Mounting ${squash_filesystem}:${dir}"
-	mount -o remount,${2:-ro} ${squash_filesystem}:${dir} >${NULL} 2>&1
+	begin "Re-Mounting ${unionfs_filesystem}:${dir}"
+	mount -o remount,${2:-ro} ${unionfs_filesystem}:${dir} >${NULL} 2>&1
 	end ${?}
 }
 

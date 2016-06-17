@@ -1,22 +1,22 @@
 #
-# $Header: /etc/rs.d/OPTIONS.squashdir, 2015/05/28       Exp $
+# $Id: /etc/rs.d/OPTIONS.unionfs, 2016/06/06       Exp $
 #
 
 # Squash directory root, where to put the merged hierchy filesystem
-squash_rootdir=/squash
+unionfs_rootdir=/unionfs
 # Filesystem to use for the merged hierachy
 #   Supported value: aufs, overlay; or else, auto-detected
-squash_filesystem=overlay
+unionfs_filesystem=overlay
 
 # System wide squash-ed directory-ies
-#squash_sysdir="/usr /opt"
+#unionfs_sysdir="/usr /opt"
 
 # Local squash-ed directory-ies
-squash_localdir="/var/db /var/cache/edb"
+unionfs_localdir="/var/db /var/cache/edb"
 
 # Squashed directory-ies to rebuild before shutting down the service
-# WARN: This list should be in either squash_sysdir|localdir group
-squash_rebuild_dir=
+# WARN: This list should be in either unionfs_sysdir|localdir group
+unionfs_rebuilddir=
 #
 # Full path to sdr script, else default to $(which sdr)
 sdr=/usr/sbin/sdr
