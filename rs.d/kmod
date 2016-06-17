@@ -1,0 +1,29 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/kmod                                Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="kernel modules loader"
+
+start()
+{
+	local mod modules kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
+
+	IFS=".-"
+	eval set -- $(uname -r)
+
+	kv_major="${1}" kv_minor="${2}" kv_patch="${3}"
+	IFS="${ifs}"
+
+	eval kv_modules="\"\${modules_${kv_major}} \${modules_${kv_major}_${kv_minor}} \
+		\${modules_${kv_major}_${kv_minor}_${kv_patch}}\""
+
+	for mod in ${modules} ${kv_modules}; do
+		modprobe "${mod}"
+	done
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
