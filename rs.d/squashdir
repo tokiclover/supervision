@@ -1,12 +1,12 @@
 #!/sbin/rs
 #
 # $Header: /etc/rs.d/squashdir                           Exp $
-# $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
+# $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.21.0 2015/05/28 12:33:03                   Exp $
+# $Version: 0.22.0 2016/06/06 12:33:03                   Exp $
 #
 
-description="(AUFS+SquashFS) squash-directories"
+description="Mount (AUFS|OverlayFS+SquashFS) union filesystems"
 
 :	${sdr:=$(type -p sdr 2>${NULL})}
 :	${squash_rootdir:=/squash}
@@ -15,8 +15,8 @@ case "${squash_filesystem}" in
 	(*) squash_filesystem=;;
 esac
 
-SVC_AFTER=localmount
-if [ "${RS_STAGE}" = "stage-1" ]; then
+SVC_AFTER=localfs
+if [ "${RS_STAGE}" = 1 ]; then
 	SVC_BEFORE='bootmisc consolefont keymaps'
 fi
 
