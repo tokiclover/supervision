@@ -90,6 +90,7 @@ dist_RS_SVCS  = \
 	checkfs \
 	devfs \
 	kmod \
+	kmod-static-nodes \
 	localfs \
 	mdev \
 	sysfs \
