@@ -4,7 +4,7 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-SVC_USE='dev kernel-modules clock'
+SVC_USE='dev kmod clock'
 
 REBOOT_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --reboot'
 SHUTDOWN_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --shutdown'
