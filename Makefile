@@ -90,6 +90,7 @@ dist_RS_SVCS  = \
 	checkfs \
 	console \
 	devfs \
+	dmesg \
 	kmod \
 	kmod-static-nodes \
 	localfs \
@@ -109,6 +110,7 @@ dist_RS_VIRT  = \
 dist_STAGE_0 = \
 	dev \
 	devfs \
+	dmesg \
 	kmod-static-nodes \
 	sysfs \
 	tmpfiles.dev
