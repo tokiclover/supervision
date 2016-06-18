@@ -1,0 +1,33 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/swaps                               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up swap(file)s"
+if [ "${SVC_NAME}" = swapfiles ]; then
+	SVC_AFTER='localfs'
+fi
+
+start()
+{
+	local swap_opts
+	if [ "${OS_NAME}" = Linux ]; then
+		swap_opts='-e'
+	fi
+	case "${OS_NAME}" in
+		(OpenBSD|NetBSD) swapctl -A -t noblk >${NULL} 2>&1;;
+		(*) swapon -a ${swap_opts} >${NULL} 2>&1;;
+	esac
+}
+stop()
+{
+	case "${OS_NAME}" in
+		(OpenBSD|NetBSD) swapctl -U -t noblk >${NULL} 2>&1;;
+		(*) swapoff -a >${NULL} 2>&1;;
+	esac
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

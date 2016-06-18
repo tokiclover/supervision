@@ -98,6 +98,7 @@ dist_RS_SVCS  = \
 	mtab \
 	rootfs \
 	sysfs \
+	swaps \
 	tmpdir \
 	tmpfiles.dev \
 	unionfs \
@@ -106,6 +107,7 @@ dist_RS_OPTS  = \
 	dev
 dist_RS_VIRT  = \
 	tmpfiles.setup:tmpfiles.dev \
+	swapfiles:swaps \
 	networkfs:localfs \
 	dev:mdev
 
