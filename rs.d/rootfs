@@ -1,0 +1,30 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/rootfs                              Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Mount root filesystem"
+SVC_NEED='checkfs'
+
+start()
+{
+	local mnt_opts
+	case ",$(fstabinfo -o /)," in
+		(*,ro,*) ;;
+		(*)
+			if [ "${OS_NAME}" = Linux ]; then
+				mnt_opts='-n -w -o remount /'
+			else
+				mnt_opts='-u -w /'
+			fi
+			begin "Mounting root filesystem"
+			mount ${mnt_opts}
+			end "${?}"
+			;;
+	esac
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
