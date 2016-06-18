@@ -126,6 +126,7 @@ dist_STAGE_1 = \
 	mtab \
 	networkfs \
 	rootfs \
+	swaps swapfiles \
 	tmpfiles.setup
 dist_STAGE_2 =
 
