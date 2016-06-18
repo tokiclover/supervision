@@ -5,13 +5,11 @@
 #
 
 if [ "${SVC_NAME}" = localfs ]; then
-	SVC_AFTER='lvm kmod dmcrypt'
+	SVC_AFTER='lvm kmod dmcrypt raid'
 	SVC_NEED='checkfs'
-	SVC_USE='lvm dmcrypt kmod mtab'
-	:;
+	SVC_USE='lvm dmcrypt kmod mtab raid'
 elif [ "${SVC_NAME}" = networkfs ]; then
 	SVC_USE='dns'
-	:;
 else
 	error "invalid service name"
 	exit 1
@@ -19,18 +17,15 @@ fi
 
 mount_command()
 {
-	local fusr_cmd fusr_opts fusr_opt fusr_sig=TERM
-	local i mnt_cmd=umount mnt_dir
+	local fusr_cmd fusr_opts='-c -m' fusr_opt='-s ' fusr_sig=TERM
+	local i mnt_cmd=umount mnt_dir mnt_opt
+
 	case "${1}" in
 		([ru]*mount) mnt_cmd="${1}"; shift;;
 	esac
 	mnt_dir="${1}"
 
-	if [ "${OS_NAME}" = Linux ]; then
-		fusr_opts='-m'    fusr_opt='-'
-	else
-		fusr_opts='-c -m' fusr_opt='-s '
-	fi
+	[ "${OS_NAME}" = Linux ] && fusr_opt='-'
 	fusr_cmd=$(command -v fuser 2>${NULL})
 	[ -n "${fusr_cmd}" ] || return 0
 
@@ -41,7 +36,7 @@ mount_command()
 		mountinfo -q ${mnt_dir} || return 0
 
 		begin "${mnt_cmd}ing ${mnt_dir}"
-		if ${mnt_cmd} ${mnt_dir} >${NULL} 2>&1; then
+		if ${mnt_cmd} ${mnt_opt} ${mnt_dir} >${NULL} 2>&1; then
 			end 0
 			return 0
 		elif [ "${i}" = 4 -o "${mnt_cmd}" = remount ]; then
@@ -60,7 +55,10 @@ mount_command()
 				;;
 		esac
 
-		[ "${i}" = 3 ] && fusr_sig=KILL
+		if [ "${i}" = 3 ]; then
+			fusr_sig=KILL
+			[ "${mnt_cmd}" = umount ] && mnt_opt='-r'
+		fi
 		${fusr_cmd} ${fusr_opt}${fusr_sig} ${mnt_dir} >${NULL} 2>&1
 		sleep 1
 	done
@@ -73,7 +71,6 @@ start()
 	if [ "${SVC_NAME}" = localfs ]; then
 		netfs=noproc exclude=no
 	fi
-
 	for fs in ${NETWORKFS} ${EXTRA_NETWORKFS}; do
 		netfs="${netfs},${exclude}${fs}"
 	done
@@ -113,7 +110,7 @@ stop()
 
 	while read mnt_dev mnt_dir mnt_fs mnt_opts mnt_extra; do
 		case ${mnt_dir} in
-			(/|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/usr|/*bin|/lib*|*/tmp)
+			(/|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/usr|/*bin|/lib*|/tmp)
 				continue
 				;;
 			(*)
