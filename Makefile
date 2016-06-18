@@ -88,6 +88,7 @@ dist_SV_OPTS  = \
 
 dist_RS_SVCS  = \
 	checkfs \
+	console \
 	devfs \
 	kmod \
 	kmod-static-nodes \
@@ -112,6 +113,7 @@ dist_STAGE_0 = \
 	tmpfiles.dev
 dist_STAGE_1 = \
 	kmod \
+	console \
 	checkfs \
 	localfs \
 	networkfs \
