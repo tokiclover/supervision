@@ -109,6 +109,7 @@ dist_RS_VIRT  = \
 dist_STAGE_0 = \
 	dev \
 	devfs \
+	kmod-static-nodes \
 	sysfs \
 	tmpfiles.dev
 dist_STAGE_1 = \
