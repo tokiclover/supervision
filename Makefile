@@ -95,6 +95,7 @@ dist_RS_SVCS  = \
 	kmod-static-nodes \
 	localfs \
 	mdev \
+	mtab \
 	rootfs \
 	sysfs \
 	tmpdir \
@@ -120,6 +121,7 @@ dist_STAGE_1 = \
 	console \
 	checkfs \
 	localfs \
+	mtab \
 	networkfs \
 	rootfs \
 	tmpfiles.setup
