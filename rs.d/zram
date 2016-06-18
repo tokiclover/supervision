@@ -1,9 +1,9 @@
 #!/sbin/rs
 #
 # $Header: /etc/rs.d/zram                                Exp $
-# $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
+# $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.22.0 2015/04/18 12:33:03                   Exp $
+# $Version: 0.22.1 2016/06/06 12:33:03                   Exp $
 #
 
 description="Set up & initialize ZRAM devices"
@@ -12,7 +12,7 @@ description_reset="Reset ZRAM devices"
 SVC_BEFORE=bootmisc
 SVC_COMMANDS=reset
 
-:	${ZRAM_DEV:=4}
+:	${ZRAM_DEVICE_NUMBER:=4}
 
 start()
 {
@@ -28,15 +28,15 @@ start()
 		if [ "$(cat /sys/block/${dev##*/}/size)" != 0 ]; then
 			offset=$((${offset}+1)); continue;
 		fi
-		eval set -- \${ZRAM_DEV_${num}}
+		eval set -- \${ZRAM_DEVICE_${num}}
 		size="${1}" fs="${2}" dir="${3}" opt="${4}" mode="${5}"
 		#
 		# Initialize device if defined
 		#
 		DEV="/sys/block/${dev##*/}"
 		[ -n "${size}" ] || break
-		[ -n "${ZRAM_COMP}"   ] && echo ${ZRAM_COMP}   >${DEV}/comp_algorithm
-		[ -n "${ZRAM_STREAM}" ] && echo ${ZRAM_STREAM} >${DEV}/max_comp_streams
+		[ -n "${ZRAM_COMPRESSOR}"    ] && echo ${ZRAM_COMPRESSOR}    >${DEV}/comp_algorithm
+		[ -n "${ZRAM_STREAM_NUMBER}" ] && echo ${ZRAM_STREAM_NUMBER} >${DEV}/max_comp_streams
 		echo ${size} >${DEV}/disksize
 		#
 		# Setup device if requested
@@ -69,12 +69,12 @@ start()
 
 start_pre()
 {
-	case "${ZRAM_COMP}" in
+	case "${ZRAM_COMPRESSOR}" in
 		(lz4|lzo)     ;;
-		(*) ZRAM_COMP=;;
+		(*) ZRAM_COMPRESSOR=;;
 	esac
-	[ -w /sys/block/zram0/comp_algorithm   ] || ZRAM_COMP=
-	[ -w /sys/block/zram0/max_comp_streams ] || ZRAM_STREAM=
+	[ -w /sys/block/zram0/comp_algorithm   ] || ZRAM_COMPRESSOR=
+	[ -w /sys/block/zram0/max_comp_streams ] || ZRAM_STREAM_NUMBER=
 
 	if grep -qw zram /proc/modules; then
 		if ! rmmod zram >${NULL} 2>&1; then
@@ -82,7 +82,7 @@ start_pre()
 				{ warn "Cannot initialize kernel module"; return; }
 		fi
 	fi
-	modprobe zram num_devices=${ZRAM_DEV} >${NULL} 2>&1 || reset
+	modprobe zram num_devices=${ZRAM_DEVICE_NUMBER} >${NULL} 2>&1 || reset
 }
 
 stop()
@@ -96,7 +96,7 @@ stop()
 			case "${dir}" in
 				(*/run|*/tmp) ;;
 				(*)
-				if grep -qw /proc/mounts; then
+				if mountinfo -q "${dir}"; then
 					begin "Unmounting ${dir}"
 					umount -l "${dir}" >${NULL} 2>&1
 					end ${?}
@@ -111,21 +111,13 @@ stop()
 
 reset()
 {
-	local dev force ret
-	svc_state -s || force=1
-
+	local dev ret=0
 	for dev in /dev/zram[0-9]*; do
-		grep -q ${dev} /proc/mounts || continue
-		case ${force-0} in
-			(1)
-			begin "Umounting ${dev}"
-			umount -l ${dev}
-			end ${?};;
-			(0)
-			warn "${dev} zram device is mounted"
+		if grep -qw "${dev} " /proc/mounts || grep -qw "${dev} " /proc/swaps; then
+			warn "${dev} is mounted"
 			ret=$((${ret}+1))
-			continue;;
-		esac
+			continue
+		fi
 		echo 1 >/sys/block/${dev##*/}/reset
 	done
 	return ${ret}
