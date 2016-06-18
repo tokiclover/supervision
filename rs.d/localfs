@@ -5,9 +5,9 @@
 #
 
 if [ "${SVC_NAME}" = localfs ]; then
-	SVC_AFTER='lvm kmod dmcrypt raid'
-	SVC_NEED='checkfs'
-	SVC_USE='lvm dmcrypt kmod mtab raid'
+	SVC_AFTER='kmod lvm dmcrypt raid'
+	SVC_NEED='checkfs rootfs'
+	SVC_USE='kmod lvm dmcrypt raid mtab'
 elif [ "${SVC_NAME}" = networkfs ]; then
 	SVC_USE='dns'
 else
