@@ -90,7 +90,6 @@ dist_RS_SVCS  = \
 	checkfs \
 	devfs \
 	kernel-modules \
-	kmod-static-nodes \
 	localfs \
 	mdev \
 	sysfs \
