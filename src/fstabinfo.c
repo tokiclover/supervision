@@ -40,7 +40,7 @@
 # define MNT_PASS(ent) ent->fs_passno
 #endif
 
-#define VERSION "0.10.0"
+#define VERSION "0.11.0"
 
 const char *prgname;
 
@@ -65,7 +65,7 @@ enum {
 #define FSTAB_REMOUNT FSTAB_REMOUNT
 };
 
-static const char *shortopts = "adthmorv";
+static const char *shortopts = "adthmoqrv";
 static const struct option longopts[] = {
 	{ "mount",    0, NULL, 'm' },
 	{ "remount",  0, NULL, 'r' },
@@ -73,6 +73,7 @@ static const struct option longopts[] = {
 	{ "options",  0, NULL, 'o' },
 	{ "fstype",   0, NULL, 't' },
 	{ "mntargs",  0, NULL, 'a' },
+	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
@@ -84,6 +85,7 @@ static const char *longopts_help[] = {
 	"Print mount options",
 	"Print filesystem",
 	"Print mount arguments",
+	"Enable quiet mode",
 	"Print help massage",
 	"Print version string",
 	NULL
@@ -217,7 +219,7 @@ static int fstab_mount(MNTENT *ent, int flag)
 int main(int argc, char *argv[])
 {
 	MNTENT *ent;
-	int retval = 0, task = 0, opt;
+	int retval = 0, task = 0, opt, quiet = 1;
 
 	prgname = strrchr(argv[0], '/');
 	if (prgname == NULL)
@@ -246,6 +248,9 @@ int main(int argc, char *argv[])
 		case 'o':
 			task |= FSTAB_OPTS;
 			break;
+		case 'q':
+			quiet = 0;
+			break;
 		case 'v':
 			printf("%s version %s\n", prgname, VERSION);
 			exit(EXIT_SUCCESS);
@@ -266,7 +271,8 @@ int main(int argc, char *argv[])
 		if (ent = getent(argv[optind])) {
 			if (task & FSTAB_MOUNT || task & FSTAB_REMOUNT) {
 				if (fstab_mount(ent, task & FSTAB_REMOUNT)) {
-					ERR("Failed to (re)mount: `%s'\n", argv[optind]);
+					if (quiet)
+						ERR("Failed to (re)mount: `%s'\n", argv[optind]);
 					retval++;
 				}
 			}
@@ -284,7 +290,8 @@ int main(int argc, char *argv[])
 			}
 		}
 		else {
-			ERR("Inexistant fstab entry: `%s'\n", argv[optind]);
+			if (quiet)
+				ERR("Inexistant fstab entry: `%s'\n", argv[optind]);
 			retval++;
 		}
 		optind++;
