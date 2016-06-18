@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
 					retval++;
 				}
 			}
-			else if (task & FSTAB_ARGS)
+			if (task & FSTAB_ARGS)
 				printf("-t %s -o %s %s %s\n", MNT_TYPE(ent), MNT_OPTS(ent),
 						MNT_NODE(ent), MNT_FILE(ent));
 			else {
