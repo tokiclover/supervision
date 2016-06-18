@@ -1,11 +1,10 @@
 #!/sbin/rs
 #
-# $Header: /etc/rs.d/devfs                               Exp $
+# $Header: /etc/rs.d/sysfs                               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.1 2015/04/30 21:09:26                      Exp $
 #
 
-:	${CG_ROOT:=/sys/fs/cgroup}
+:	${__CGROUP_ROOT__:=/sys/fs/cgroup}
 :	${SYSFS_OPTS:=nodev,nosuid,noexec}
 
 SVC_COMMANDS=mount_cgroup
@@ -49,21 +48,21 @@ mount_sysfs()
 
 mount_cgroup()
 {
-	[ -d ${CG_ROOT} ] && grep -q cgroup /proc/filesystems || return 1
-	if ! mount_info ${CG_ROOT}; then
-		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CG_FS_SIZE:-10M} \
-			cgroup ${CG_ROOT}
+	[ -d ${__CGROUP_ROOT__} ] && grep -q cgroup /proc/filesystems || return 1
+	if ! mount_info ${__CGROUP_ROOT__}; then
+		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CGROUP_FILESYSTEM_SIZE:-10M} \
+			cgroup ${__CGROUP_ROOT__}
 	fi
-	[ ${?} -eq 0 ] || return 2
+	[ "${?}" = 0 ] || return 2
 
 	local ctrl hirc num enabled exta
 	while read ctrl hirc num enabled extra; do
 		case "${enabled}" in
 			(1)
-			mount_info ${CG_ROOT}/${ctrl} && continue
-			mkdir -p ${CG_ROOT}/${ctrl}
+			mount_info ${__CGROUP_ROOT__}/${ctrl} && continue
+			mkdir -p ${__CGROUP_ROOT__}/${ctrl}
 			mount ${arg} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
-				${ctrl} ${CG_ROOT}/${ctrl}
+				${ctrl} ${__CGROUP_ROOT__}/${ctrl}
 			;;
 		esac
 	done </proc/cgroups
