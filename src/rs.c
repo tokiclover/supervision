@@ -83,7 +83,7 @@ static const char *const env_list[] = {
 	NULL
 };
 
-__NORETURN__ void rs_help_message(int exit_val);
+__NORETURN__ static void help_message(int exit_val);
 /*
  * bring system to a named level or stage
  * @cmd (start|stop|NULL); NULL is the default command
@@ -96,7 +96,7 @@ static void svc_stage(const char *cmd);
  * @status: int value [defrs];
  * @return: true/false;
  */
-int svc_state(const char *svc, int status);
+static int svc_state(const char *svc, int status);
 
 /*
  * set service status
@@ -104,47 +104,46 @@ int svc_state(const char *svc, int status);
  * @status: int value [dfrs]
  * @return: 0 on success;
  */
-int svc_mark(const char *svc, int status);
+static int svc_mark(const char *svc, int status);
+
+/*
+ * lock file for service to start/stop
+ * @flag: true to lock, false to unlock;
+ * @return: zero on success;
+  */
+static int svc_lock(const char *svc, int flag);
 
 /*
  * execute a service with the appended arguments
  */
-__NORETURN__ int svc_exec(int argc, char *argv[]);
-
-/*
- * lock file for service to start/stop
- * @svc: service name;
- * @flag: true to lock, false to unlock;
- * @return: zero on success;
- */
-int svc_lock(const char *svc, int flag);
-
-/*
- * remove service temporary files
- */
-void svc_zap(const char *svc);
-
-/* handle SIGCHLD/INT setup */
-void rs_sigsetup(void);
+__NORETURN__ static int svc_exec(int argc, char *argv[]);
 
 /*
  * execute a service list (called from svc_stage())
  * @return 0 on success or number of failed services
  */
-int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[]);
+static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[]);
+
+/*
+ * remove service temporary files
+ */
+static void svc_zap(const char *svc);
+
+/* handle SIGCHLD/INT setup */
+static void svc_sigsetup(void);
 
 /*
  * find a service
  * @return NULL if nothing found or service path (dir/file)
  */
-char *rs_svc_find(const char *svc);
+static char *svc_find(const char *svc);
 
 /*
  * generate a default environment for service
  */
-const char **rs_svc_env(void);
+static const char **svc_env(void);
 
-__NORETURN__ void rs_help_message(int exit_val)
+__NORETURN__ static void help_message(int exit_val)
 {
 	int i;
 
@@ -162,7 +161,7 @@ __NORETURN__ void rs_help_message(int exit_val)
 	exit(exit_val);
 }
 
-const char **rs_svc_env(void)
+static const char **svc_env(void)
 {
 	const char **envp;
 	size_t size = 1024;
@@ -187,7 +186,7 @@ const char **rs_svc_env(void)
 	return envp;
 }
 
-char *rs_svc_find(const char *svc)
+static char *svc_find(const char *svc)
 {
 	char *buf = err_malloc(BUFSIZ);
 	int i;
@@ -253,7 +252,7 @@ int svc_lock(const char *svc, int flag)
 	}
 }
 
-void svc_zap(const char *svc)
+static void svc_zap(const char *svc)
 {
 	int i;
 	char path[BUFSIZ];
@@ -272,7 +271,7 @@ void svc_zap(const char *svc)
 		unlink(path);
 }
 
-int svc_mark(const char *svc, int status)
+static int svc_mark(const char *svc, int status)
 {
 	char path[BUFSIZ], *ptr;
 	int fd;
@@ -326,7 +325,7 @@ int svc_mark(const char *svc, int status)
 	}
 }
 
-int svc_state(const char *svc, int status)
+static int svc_state(const char *svc, int status)
 {
 	char path[BUFSIZ], *ptr = NULL;
 	int retval;
@@ -368,7 +367,7 @@ int svc_state(const char *svc, int status)
 static struct sigaction sa_sigint, sa_sigquit;
 static sigset_t ss_savemask;
 
-void rs_sigsetup(void)
+static void svc_sigsetup(void)
 {
 	static int sigsetup = 0;
 	static struct sigaction sa_ign;
@@ -395,7 +394,7 @@ void rs_sigsetup(void)
 		ERROR("%s: sigprocmask(SIG_BLOCK)", __func__);
 }
 
-__NORETURN__ int svc_exec(int argc, char *argv[]) {
+__NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	char opt[8];
 	const char *ptr;
 	const char **envp;
@@ -422,7 +421,7 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 	}
 
 	if (ptr == NULL) {
-		ptr = rs_svc_find(argv[0]);
+		ptr = svc_find(argv[0]);
 		if (ptr == NULL) {
 			ERR("Invalid service name `%s'\n", argv[0]);
 			exit(EXIT_FAILURE);
@@ -441,7 +440,7 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 	for ( j = 0; j < argc; j++)
 		args[i++] = argv[j];
 	args[i] = (char *)0;
-	envp = rs_svc_env();
+	envp = svc_env();
 
 	/* get service status before doing anything */
 	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
@@ -466,19 +465,17 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 			ERR("%s service is not started.\n", svc);
 			exit(EXIT_FAILURE);
 		}
-		if (svc_lock(svc, 1)) {
+		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
 			ERR("Failed to lock file for %s service.\n", svc);
 			exit(EXIT_FAILURE);
 		}
 	}
 
-	rs_sigsetup();
+	svc_sigsetup();
 	pid = fork();
 
 	if (pid > 0) {
 		waitpid(pid, &status, 0);
-		if (state)
-			svc_lock(svc, 0);
 		if (WEXITSTATUS(status) == 0 && state)
 			svc_mark(svc, state);
 		else if (state == 's')
@@ -498,7 +495,7 @@ __NORETURN__ int svc_exec(int argc, char *argv[]) {
 	ERROR("%s: Failed to fork()", __func__);
 }
 
-int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[])
+static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[])
 {
 	RS_String_T *svc;
 	pid_t pid, *pidlist = NULL;
@@ -518,7 +515,7 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	}
 	parallel = rs_conf_yesno("RS_PARALLEL");
 	type = strcmp(argv[1]+2, rs_stage_type[RS_STAGE_SUPERVISION]) == 0;
-	rs_sigsetup();
+	svc_sigsetup();
 
 	if (strcmp(argv[3], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state = 's';
@@ -526,10 +523,8 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		state = 'S';
 
 	SLIST_FOREACH(svc, list, entries) {
-		svcpath = rs_svc_find(svc->str);
-		if (svcpath)
-			free(svcpath);
-		else
+		argv[2] = svc_find(svc->str);
+		if (argv[2] == NULL)
 			continue;
 
 		if (type)
@@ -539,11 +534,13 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 		if (status) {
 			if (state == 's') {
 				ERR("%s service is already started.\n", svc->str);
+				free((void*)argv[2]);
 				continue;
 			}
 		}
 		else if (state == 'S') {
 			ERR("%s service is not started.\n", svc->str);
+			free((void*)argv[2]);
 			continue;
 		}
 
@@ -576,7 +573,6 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 			sigaction(SIGQUIT, &sa_sigquit, NULL);
 			sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
 
-			argv[2] = svc->str;
 			execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)envp);
 			_exit(127);
 		}
@@ -601,7 +597,7 @@ int rs_svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp
 	return count;
 }
 
-void svc_stage(const char *cmd)
+static void svc_stage(const char *cmd)
 {
 	RS_STAGE.level = atoi(getenv("RS_STAGE"));
 	RS_STAGE.type  = getenv("RS_TYPE");
@@ -624,7 +620,7 @@ void svc_stage(const char *cmd)
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
 
-	envp = rs_svc_env();
+	envp = svc_env();
 	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
 
 	for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) {
@@ -641,12 +637,12 @@ void svc_stage(const char *cmd)
 					nil = elm;
 				if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 					for (j = RS_DEP_PRIORITY-1; j > 0; j--) /* high prio only */
-						rs_svc_exec_list(elm->priority[j], argv, envp);
+						svc_exec_list(elm->priority[j], argv, envp);
 				else if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
 					for (j = 1; j < RS_DEP_PRIORITY; j++) /* high prio only */
-						rs_svc_exec_list(elm->priority[j], argv, envp);
+						svc_exec_list(elm->priority[j], argv, envp);
 			}
-		rs_svc_exec_list(nil->priority[0], argv, envp);
+		svc_exec_list(nil->priority[0], argv, envp);
 		rs_deplist_free(depends);
 
 		/* skip irrelevant cases or because -[rv] passed */
@@ -671,7 +667,7 @@ int main(int argc, char *argv[])
 
 	/* Show help if insufficient args */
 	if (argc < 2) {
-		rs_help_message(1);
+		help_message(1);
 	}
 
 	/* Parse options */
@@ -702,10 +698,10 @@ int main(int argc, char *argv[])
 				break;
 			case '?':
 			case 'h':
-				rs_help_message(0);
+				help_message(0);
 				break;
 			default:
-				rs_help_message(1);
+				help_message(1);
 				break;
 		}
 	}
