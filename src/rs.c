@@ -14,8 +14,9 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <poll.h>
 
-#define VERSION "0.10.0"
+#define VERSION "0.11.0"
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
 #define SV_TMPDIR_DOWN SV_TMPDIR "/down"
@@ -23,6 +24,18 @@
 #define SV_TMPDIR_PIDS SV_TMPDIR "/pids"
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
+
+struct svcent {
+	char *name;
+	char *path;
+	pid_t pid;
+	int lock;
+};
+
+struct slock {
+	int fd;
+	struct flock *lock;
+};
 
 /* !!! order matter (defined constant/enumeration) !!! */
 const char *const rs_stage_type[] = { "rs", "sv" };
@@ -108,10 +121,24 @@ static int svc_mark(const char *svc, int status);
 
 /*
  * lock file for service to start/stop
- * @flag: true to lock, false to unlock;
- * @return: zero on success;
-  */
-static int svc_lock(const char *svc, int flag);
+ * @svc: service name;
+ * @lock_fd: SVC_LOCK to lock, lock_fd >= 0 to unlock;
+ * @timeout: timeout to use to poll the lockfile (SVC_WAIT_SECS);
+ * @return: fd >= 0 on success; negative (usually -errno) on failure;
+ */
+static int svc_lock(const char *svc, int lock_fd, int timeout);
+#define SVC_LOCK -1 /* magic number to lock a service */
+
+/*
+ * wait for the availability of the lock file;
+ * @svc: service name;
+ * @timeout: timeout to use to poll the lockfile;
+ * @return: 0 on success (lockfile available);
+ */
+static int svc_wait(const char *svc, int timeout, struct slock *lock);
+#define SVC_WAIT_SECS 60    /* default delay */
+#define SVC_WAIT_MSEC 10000 /* interval for displaying warning */
+#define SVC_WAIT_POLL 100   /* poll interval */
 
 /*
  * execute a service with the appended arguments
@@ -219,37 +246,104 @@ static char *svc_find(const char *svc)
 	return NULL;
 }
 
-int svc_lock(const char *svc, int flag)
+static int svc_lock(const char *svc, int lock_fd, int timeout)
 {
-	char buf[BUFSIZ];
+	char f_path[BUFSIZ];
 	int fd;
+	int w;
 	mode_t m;
+	static int f_flags = O_EXCL | O_NONBLOCK | O_CREAT | O_WRONLY;
+	static mode_t f_mode = 0644;
+	struct flock f_lock;
+	struct slock s_lock;
 
-	if (!svc) {
+	if (svc == NULL) {
 		errno = ENOENT;
-		return -1;
+		return -ENOENT;
 	}
+	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, svc);
 
-	snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-			sv_state_subdirs[SV_SUBDIR_WAIT], svc);
-
-	if (flag) {
+	if (lock_fd == SVC_LOCK) {
+		w = file_test(f_path, 0);
 		m = umask(0);
-		fd = open(buf, O_CREAT|O_EXCL|O_WRONLY, 0644);
-		umask(m);
-		if (fd >= 0) {
-			close(fd);
-			return 0;
+		fd = open(f_path, f_flags, f_mode);
+		/* got different behaviours of open(3p)/O_CREAT when the file is locked
+		 * (try that mode | S_ISGID hack of SVR3 to enable mandatory lock?)
+		 */
+		if (w && fd < 0) {
+			switch (errno) {
+				case EWOULDBLOCK:
+				case EEXIST:
+					if (svc_wait(svc, timeout, NULL))
+						return -1;
+					break;
+				default:
+					return -1;
+			}
+			if (file_test(f_path, 0))
+				unlink(f_path);
+			fd = open(f_path, f_flags, f_mode);
 		}
-		errno = EBUSY;
-		return -1;
+		umask(m);
+		if (fd < 0) {
+			ERR("Failed to open(%s...): %s\n", f_path, strerror(errno));
+			return fd;
+		}
+
+		f_lock.l_type   = F_WRLCK;
+		f_lock.l_whence = SEEK_SET;
+		f_lock.l_start  = 0;
+		f_lock.l_len    = 0;
+		s_lock.fd   = fd;
+		s_lock.lock = &f_lock;
+		if (fcntl(fd, F_GETLK, &f_lock) == -1) {
+			ERR("%s: Failed to fcntl(%d, F_GETLK...): %s\n", svc, fd,
+				strerror(errno));
+			close(fd);
+			return -errno;
+		}
+		if (f_lock.l_type == F_UNLCK)
+			f_lock.l_type = F_WRLCK;
+		else if (svc_wait(svc, timeout, &s_lock)) {
+			close(fd);
+			return -1;
+		}
+		if (fcntl(fd, F_SETLK, &f_lock) == -1) {
+			ERR("%s: Failed to fcntl(%d, F_SETLK...): %s\n", svc, fd,
+				strerror(errno));
+			close(fd);
+			return -errno;
+		}
+		return fd;
 	}
-	else {
-		if (file_test(buf, 0))
-			return unlink(buf);
-		else
-			return 0;
+	else if (lock_fd > 0)
+		close(lock_fd);
+	if (file_test(f_path, 0))
+		unlink(f_path);
+	return 0;
+}
+
+static int svc_wait(const char *svc, int timeout, struct slock *lock)
+{
+	int i, j;
+	for (i = 10; i <= SVC_WAIT_SECS; i += 10) {
+		for (j = SVC_WAIT_POLL; j <= SVC_WAIT_MSEC; j += SVC_WAIT_POLL) {
+			if (svc_state(svc, 'w') == 0)
+				return 0;
+			/* add some insurence for failed services */
+			if (lock) {
+				if (fcntl(lock->fd, F_GETLK, lock->lock) == -1)
+					return -1;
+				if (lock->lock->l_type == F_UNLCK)
+					return 0;
+			}
+			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
+			if (poll(0, 0, SVC_WAIT_POLL) < 0)
+				return -1;
+		}
+		WARN("waiting for %s (%d seconds)\n", svc, i);
 	}
+	return svc_state(svc, 'w');
 }
 
 static void svc_zap(const char *svc)
@@ -400,6 +494,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	const char **envp;
 	const char *args[argc+3], *cmd = argv[1], *svc;
 	int i = 0, j, state = 0, status;
+	int lock;
 	pid_t pid;
 	args[i++] = "runscript";
 	args[i++] = opt;
@@ -501,9 +596,8 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	pid_t pid, *pidlist = NULL;
 	int count = 0, status, retval = 0, i;
 	static int parallel, type;
-	char **svclist = NULL;
-	char *svcpath;
-	int state;
+	struct svcent **svclist = NULL;
+	int lock, state;
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -543,28 +637,30 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			free((void*)argv[2]);
 			continue;
 		}
-
-		if (svc_lock(svc->str, 1)) {
+		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
 			ERR("Failed to lock file for %s service.\n", svc->str);
 			continue;
 		}
-		pid = fork();
 
+		pid = fork();
 		if (pid > 0) { /* parent */
 			if (parallel) {
+				svclist = err_realloc(svclist, sizeof(void*) * (count+1));
+				svclist[count] = err_malloc(sizeof(struct svcent));
+				svclist[count]->name = svc->str;
+				svclist[count]->path = (char*)argv[2];
+				svclist[count]->pid = pid;
+				svclist[count]->lock = lock;
 				count++;
-				pidlist = err_realloc(pidlist, sizeof(pid_t) * count);
-				svclist = err_realloc(svclist, sizeof(void*) * count);
-				pidlist[count-1] = pid;
-				svclist[count-1] = svc->str;
 			}
 			else {
 				waitpid(pid, &status, 0);
-				svc_lock(svc->str, 0);
+				svc_lock(svc->str, lock, 0);
 				if (WIFEXITED(status))
 					svc_mark(svc->str, state);
 				else
 					retval++;
+				free((void*)argv[2]);
 			}
 		}
 		else if (pid == 0) { /* child */
@@ -581,20 +677,21 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	}
 
 	for (i = 0; i < count; i++) {
-		waitpid(pidlist[i], &status, 0);
-		svc_lock(svclist[i], 0);
+		waitpid(svclist[i]->pid, &status, 0);
+		svc_lock(svclist[i]->name, svclist[i]->lock, 0);
 		if (WEXITSTATUS(status)) {
 			retval++;
 			if (state == 's')
-				svc_mark(svclist[i], 'f');
+				svc_mark(svclist[i]->name, 'f');
 		}
 		else
-			svc_mark(svclist[i], state);
+			svc_mark(svclist[i]->name, state);
+		free(svclist[i]->path);
+		free(svclist[i]);
 	}
-	free(pidlist);
 	free(svclist);
 
-	return count;
+	return retval;
 }
 
 static void svc_stage(const char *cmd)
