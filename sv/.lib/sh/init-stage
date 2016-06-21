@@ -145,7 +145,7 @@ svc_tmpdir()
 		;;
 	esac
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail \
-		"${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
+		"${SV_TMPDIR}"/pids "${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
 	#
 	# Initialization
 	#

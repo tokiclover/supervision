@@ -40,7 +40,7 @@ SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 	;;
 esac
-:	${SVC_PIDFILE=${SV_TMPDIR}/${name}.pid}
+:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${name}}
 
 #
 # Set debug options
