@@ -18,6 +18,12 @@
 #define VERSION "0.10.0"
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
+#define SV_TMPDIR_DOWN SV_TMPDIR "/down"
+#define SV_TMPDIR_FAIL SV_TMPDIR "/fail"
+#define SV_TMPDIR_PIDS SV_TMPDIR "/pids"
+#define SV_TMPDIR_STAR SV_TMPDIR "/star"
+#define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
+
 /* !!! order matter (defined constant/enumeration) !!! */
 const char *const rs_stage_type[] = { "rs", "sv" };
 const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
@@ -39,18 +45,6 @@ enum {
 static const char *const rs_svc_cmd[] = { "stop", "start",
 	"add", "del", "desc", "remove", "restart", "status", "zap"
 };
-
-/* !!! likewise (state subdirs) !!! */
-enum {
-	SV_SUBDIR_DOWN,
-#define SV_SUBDIR_DOWN SV_SUBDIR_DOWN
-	SV_SUBDIR_FAIL,
-#define SV_SUBDIR_FAIL SV_SUBDIR_FAIL
-	SV_SUBDIR_STAR,
-#define SV_SUBDIR_WAIT SV_SUBDIR_WAIT
-	SV_SUBDIR_WAIT
-};
-const char *const sv_state_subdirs[] = { "down", "fail", "star", "wait" };
 
 static const char *shortopts = "Dg0123rVvh";
 static const struct option longopts[] = {
@@ -262,22 +256,25 @@ int svc_lock(const char *svc, int flag)
 void svc_zap(const char *svc)
 {
 	int i;
-	char buf[BUFSIZ];
+	char path[BUFSIZ];
+	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL,
+		SV_TMPDIR_PIDS, SV_TMPDIR_STAR,
+		SV_TMPDIR_WAIT, NULL };
 
-	for (i = 0; i < ARRAY_SIZE(sv_state_subdirs); i++) {
-		snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR, sv_state_subdirs[i], svc);
-		if (file_test(buf, 0))
-			unlink(buf);
+	for (i = 0; dirs[i]; i++) {
+		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
+		if (file_test(path, 0))
+			unlink(path);
 	}
 
-	snprintf(buf, BUFSIZ, "%s/%s_OPTIONS", SV_TMPDIR, svc);
-	if (file_test(buf, 0))
-		i = unlink(buf);
+	snprintf(path, sizeof(path), "%s/%s_OPTIONS", SV_TMPDIR, svc);
+	if (file_test(path, 0))
+		unlink(path);
 }
 
 int svc_mark(const char *svc, int status)
 {
-	char buf[BUFSIZ], *path;
+	char path[BUFSIZ], *ptr;
 	int fd;
 	mode_t m;
 
@@ -288,30 +285,33 @@ int svc_mark(const char *svc, int status)
 
 	switch(status) {
 		case 'f':
-			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-					sv_state_subdirs[SV_SUBDIR_FAIL], svc);
+			ptr = SV_TMPDIR_FAIL;
 			break;
 		case 'd':
 		case 'u':
-			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
+			ptr = SV_TMPDIR_DOWN;
 			break;
 		case 's':
 		case 'S':
-			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-					sv_state_subdirs[SV_SUBDIR_STAR], svc);
+			ptr = SV_TMPDIR_STAR;
+			break;
+		case 'w':
+		case 'W':
+			ptr = SV_TMPDIR_WAIT;
 			break;
 		default:
 			errno = EINVAL;
 			return -1;
 	}
 
+	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
 	switch (status) {
 		case 'd':
 		case 'f':
 		case 's':
+		case 'w':
 			m = umask(0);
-			fd = open(buf, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 			umask(m);
 			if (fd >= 0) {
 				close(fd);
@@ -319,8 +319,8 @@ int svc_mark(const char *svc, int status)
 			}
 			return -1;
 		default:
-			if (file_test(buf, 0))
-				return unlink(buf);
+			if (file_test(path, 0))
+				return unlink(path);
 			else
 				return 0;
 	}
@@ -328,7 +328,7 @@ int svc_mark(const char *svc, int status)
 
 int svc_state(const char *svc, int status)
 {
-	char buf[BUFSIZ], *path;
+	char path[BUFSIZ], *ptr = NULL;
 	int retval;
 
 	if (!svc) {
@@ -338,29 +338,31 @@ int svc_state(const char *svc, int status)
 
 	switch(status) {
 		case 'e':
-			path = rs_svc_find(svc);
-			retval = file_test(path, 0);
-			free(path);
+			ptr = svc_find(svc);
+			retval = file_test(ptr, 0);
+			free(ptr);
 			return retval;
 		case 'f':
-			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-					sv_state_subdirs[SV_SUBDIR_FAIL], svc);
-			return file_test(buf, 0);
+			ptr = SV_TMPDIR_FAIL;
+			break;
 		case 'd':
-			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-					sv_state_subdirs[SV_SUBDIR_DOWN], svc);
-			return file_test(buf, 0);
+			ptr = SV_TMPDIR_DOWN;
+			break;
 		case 'p':
-			snprintf(buf, BUFSIZ, "%s/%s.pid", SV_TMPDIR, svc);
-			return file_test(buf, 0);
+			ptr = SV_TMPDIR_PIDS;
+			break;
 		case 's':
-			snprintf(buf, BUFSIZ, "%s/%s/%s", SV_TMPDIR,
-					sv_state_subdirs[SV_SUBDIR_STAR], svc);
-			return file_test(buf, 0);
+			ptr = SV_TMPDIR_STAR;
+			break;
+		case 'w':
+			ptr = SV_TMPDIR_WAIT;
+			break;
 		default:
 			errno = EINVAL;
 			return 0;
 	}
+	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
+	return file_test(path, 0);
 }
 
 static struct sigaction sa_sigint, sa_sigquit;
