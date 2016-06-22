@@ -25,7 +25,7 @@
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
-struct svcent {
+struct svcrun {
 	char *name;
 	char *path;
 	pid_t pid;
@@ -596,7 +596,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	pid_t pid, *pidlist = NULL;
 	int count = 0, status, retval = 0, i;
 	static int parallel, type;
-	struct svcent **svclist = NULL;
+	struct svcrun **svclist = NULL;
 	int lock, state;
 
 	if (list == NULL) {
@@ -646,7 +646,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		if (pid > 0) { /* parent */
 			if (parallel) {
 				svclist = err_realloc(svclist, sizeof(void*) * (count+1));
-				svclist[count] = err_malloc(sizeof(struct svcent));
+				svclist[count] = err_malloc(sizeof(struct svcrun));
 				svclist[count]->name = svc->str;
 				svclist[count]->path = (char*)argv[2];
 				svclist[count]->pid = pid;
