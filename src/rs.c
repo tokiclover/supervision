@@ -537,8 +537,8 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	if (ptr == NULL) {
 		ptr = svc_find(argv[0]);
 		if (ptr == NULL) {
-			ERR("Invalid service name `%s'\n", argv[0]);
-			exit(EXIT_FAILURE);
+			WARN("%s: Inexistant service\n", argv[0]);
+			exit(EXIT_SUCCESS);
 		}
 		else {
 			argc--, argv++;
@@ -564,7 +564,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 
 	if (state == 's' || state == 'S') {
 		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			ERR("Failed to lock file for %s service.\n", svc);
+			ERR("%s: Failed to setup lockfile for service\n", svc);
 			exit(EXIT_FAILURE);
 		}
 		if (strcmp(ptr, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
@@ -574,14 +574,14 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 
 		if (status) {
 			if (state == 's') {
-				ERR("%s service is already started.\n", svc);
-				ERR("try zap command beforehand to force start up.\n", NULL);
-				exit(EXIT_FAILURE);
+				WARN("%s: Service is already started\n", svc);
+				WARN("%s: Try zap command beforehand to force start up\n", svc);
+				exit(EXIT_SUCCESS);
 			}
 		}
 		else if (state == 'S') {
-			ERR("%s service is not started.\n", svc);
-			exit(EXIT_FAILURE);
+			WARN("%s: Service is not started\n", svc);
+			exit(EXIT_SUCCESS);
 		}
 	}
 
@@ -590,6 +590,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 
 	if (pid > 0) {
 		waitpid(pid, &status, 0);
+		svc_lock(svc, lock, 0);
 		if (WEXITSTATUS(status) == 0 && state)
 			svc_mark(svc, state);
 		else if (state == 's')
@@ -641,7 +642,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			continue;
 
 		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			DBG("Failed to lock file for %s service.\n", svc->str);
+			DBG("%s: Failed to setup lockfile for service\n", svc->str);
 			continue;
 		}
 		if (type)
@@ -650,13 +651,13 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			status = svc_state(svc->str, 's');
 		if (status) {
 			if (state == 's') {
-				DBG("%s service is already started.\n", svc->str);
+				DBG("%s: Service is already started\n", svc->str);
 				free((void*)argv[2]);
 				continue;
 			}
 		}
 		else if (state == 'S') {
-			DBG("%s service is not started.\n", svc->str);
+			DBG("%s: Service is not started\n", svc->str);
 			free((void*)argv[2]);
 			continue;
 		}
