@@ -24,17 +24,17 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	/* get dependency list file */
 	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/%s", SV_DEPDIR,
 			RS_STAGE.level, RS_STAGE.type);
-	if (RS_STAGE.level == 2 || !file_test(deppath, 'r')) {
+	if (RS_STAGE.level == 2 || file_test(deppath, 0) <= 0) {
 		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", DEP_GEN,
 				RS_STAGE.level, RS_STAGE.type);
 		if (system(depcmd)) {
-			fprintf(stderr, "%s: Failed to execute `%s'\n", prgname, depcmd);
+			ERR("Failed to execute `%s'\n", depcmd);
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	if ((depfile = fopen(deppath, "r")) == NULL) {
-		fprintf(stderr, "%s: Failed to open %s\n", prgname, deppath);
+		ERR("Failed to open %s\n", deppath);
 		exit(EXIT_FAILURE);
 	}
 
