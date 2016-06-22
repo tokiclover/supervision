@@ -387,10 +387,11 @@ static int svc_mark(const char *svc, int status)
 
 	switch(status) {
 		case 'f':
+		case 'F':
 			ptr = SV_TMPDIR_FAIL;
 			break;
 		case 'd':
-		case 'u':
+		case 'D':
 			ptr = SV_TMPDIR_DOWN;
 			break;
 		case 's':
@@ -440,23 +441,32 @@ static int svc_state(const char *svc, int status)
 
 	switch(status) {
 		case 'e':
+		case 'E':
 			ptr = svc_find(svc);
-			retval = file_test(ptr, 0);
+			if (ptr)
+				retval = 1;
+			else
+				retval = 0;
 			free(ptr);
 			return retval;
 		case 'f':
+		case 'F':
 			ptr = SV_TMPDIR_FAIL;
 			break;
 		case 'd':
+		case 'D':
 			ptr = SV_TMPDIR_DOWN;
 			break;
 		case 'p':
+		case 'P':
 			ptr = SV_TMPDIR_PIDS;
 			break;
 		case 's':
+		case 'S':
 			ptr = SV_TMPDIR_STAR;
 			break;
 		case 'w':
+		case 'W':
 			ptr = SV_TMPDIR_WAIT;
 			break;
 		default:
