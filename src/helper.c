@@ -33,7 +33,7 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 {
 	static struct stat st_buf;
 	static char *path;
-	static int retval;
+	static int retval, setup = 1;
 	static int R = S_IRUSR | S_IRGRP | S_IROTH,
 			   W = S_IWUSR | S_IWGRP | S_IWOTH,
 			   X = S_IXUSR | S_IXGRP | S_IXOTH;
@@ -47,7 +47,7 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 		memcpy(path, pathname, len+1);
 	}
 
-	if (strcmp(path, pathname) != 0) {
+	if (setup || strcmp(path, pathname) != 0) {
 		memset(&st_buf, 0, sizeof(st_buf));
 		len = strlen(pathname);
 		path = err_realloc(path, len+1);
@@ -57,6 +57,7 @@ __UNUSED__ int file_test(const char *pathname, int mode)
 				 stat(pathname, &st_buf);
 		if (retval < 0)
 			return 0;
+		setup = 0;
 	}
 
 	switch (mode) {
