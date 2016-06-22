@@ -252,7 +252,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	int fd;
 	int w;
 	mode_t m;
-	static int f_flags = O_EXCL | O_NONBLOCK | O_CREAT | O_WRONLY;
+	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY;
 	static mode_t f_mode = 0644;
 	struct flock f_lock;
 	struct slock s_lock;
@@ -744,7 +744,7 @@ static void svc_stage(const char *cmd)
 			RS_STAGE.type = rs_stage_type[k];
 			setenv("RS_TYPE", rs_stage_type[k], 1);
 		}
-		snprintf(opt, 8, "--%s", RS_STAGE.type);
+		snprintf(opt, sizeof(opt), "--%s", RS_STAGE.type);
 		depends = rs_deplist_load();
 
 		for (i = 0; i < RS_DEPS_TYPE; i++)
