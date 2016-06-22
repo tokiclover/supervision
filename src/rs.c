@@ -326,9 +326,18 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 static int svc_wait(const char *svc, int timeout, struct slock *lock)
 {
 	int i, j;
-	for (i = 10; i <= SVC_WAIT_SECS; i += 10) {
-		for (j = SVC_WAIT_POLL; j <= SVC_WAIT_MSEC; j += SVC_WAIT_POLL) {
-			if (svc_state(svc, 'w') == 0)
+	int msec = SVC_WAIT_MSEC, nsec;
+	if (timeout < 10) {
+		nsec = timeout;
+		msec = 1000*timeout;
+	}
+	else
+		nsec = timeout % 10;
+	nsec = nsec ? nsec : 10;
+
+	for (i = 0; i < timeout; i += 10) {
+		for (j = SVC_WAIT_POLL; j <= msec; j += SVC_WAIT_POLL) {
+			if (svc_state(svc, 'w') <= 0)
 				return 0;
 			/* add some insurence for failed services */
 			if (lock) {
@@ -341,7 +350,7 @@ static int svc_wait(const char *svc, int timeout, struct slock *lock)
 			if (poll(0, 0, SVC_WAIT_POLL) < 0)
 				return -1;
 		}
-		WARN("waiting for %s (%d seconds)\n", svc, i);
+		WARN("waiting for %s (%d seconds)\n", svc, i+nsec);
 	}
 	return svc_state(svc, 'w');
 }
