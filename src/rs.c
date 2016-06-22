@@ -33,8 +33,8 @@ struct svcrun {
 };
 
 struct slock {
-	int fd;
-	struct flock *lock;
+	int f_fd;
+	struct flock *f_lock;
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
@@ -294,8 +294,8 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 		f_lock.l_whence = SEEK_SET;
 		f_lock.l_start  = 0;
 		f_lock.l_len    = 0;
-		s_lock.fd   = fd;
-		s_lock.lock = &f_lock;
+		s_lock.f_fd   = fd;
+		s_lock.f_lock = &f_lock;
 		if (fcntl(fd, F_GETLK, &f_lock) == -1) {
 			ERR("%s: Failed to fcntl(%d, F_GETLK...): %s\n", svc, fd,
 				strerror(errno));
@@ -332,9 +332,9 @@ static int svc_wait(const char *svc, int timeout, struct slock *lock)
 				return 0;
 			/* add some insurence for failed services */
 			if (lock) {
-				if (fcntl(lock->fd, F_GETLK, lock->lock) == -1)
+				if (fcntl(lock->f_fd, F_GETLK, lock->f_lock) == -1)
 					return -1;
-				if (lock->lock->l_type == F_UNLCK)
+				if (lock->f_lock->l_type == F_UNLCK)
 					return 0;
 			}
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
