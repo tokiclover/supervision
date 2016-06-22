@@ -563,6 +563,10 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		state = 'S';
 
 	if (state == 's' || state == 'S') {
+		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+			ERR("Failed to lock file for %s service.\n", svc);
+			exit(EXIT_FAILURE);
+		}
 		if (strcmp(ptr, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
 			status = svc_state(svc, 'p');
 		else
@@ -577,10 +581,6 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		}
 		else if (state == 'S') {
 			ERR("%s service is not started.\n", svc);
-			exit(EXIT_FAILURE);
-		}
-		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			ERR("Failed to lock file for %s service.\n", svc);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -640,24 +640,24 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		if (argv[2] == NULL)
 			continue;
 
+		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+			DBG("Failed to lock file for %s service.\n", svc->str);
+			continue;
+		}
 		if (type)
 			status = svc_state(svc->str, 'p');
 		else
 			status = svc_state(svc->str, 's');
 		if (status) {
 			if (state == 's') {
-				ERR("%s service is already started.\n", svc->str);
+				DBG("%s service is already started.\n", svc->str);
 				free((void*)argv[2]);
 				continue;
 			}
 		}
 		else if (state == 'S') {
-			ERR("%s service is not started.\n", svc->str);
+			DBG("%s service is not started.\n", svc->str);
 			free((void*)argv[2]);
-			continue;
-		}
-		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			ERR("Failed to lock file for %s service.\n", svc->str);
 			continue;
 		}
 
