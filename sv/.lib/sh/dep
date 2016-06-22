@@ -6,6 +6,8 @@
 # $Version: 0.3 2016/06/06 21:09:26                      Exp $
 #
 
+export LC_ALL=C
+
 :	${name=${0##*/}}
 :	${SV_LIBDIR:=${0%/sh/*}}
 source "${0%/*}"/runscript-functions ||
@@ -95,7 +97,7 @@ for dep in use need before after; do
 		;;
 	esac
 	for i in 0 1 2; do
-		eval echo ${dep}_${i}=\\\"$(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\\\"
+		eval echo ${dep}_${i}=\\\" $(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u) \\\"
 	done
 done >${SV_DEPDIR}/${RS_TYPE}
 
