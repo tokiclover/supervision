@@ -245,6 +245,7 @@ svc_depend()
 	local DEP dep
 	case "${1}" in
 		(stop)
+	return 0;
 	DEP="${__SV_SOP_DEP_ORD__}" dep=0
 		;;
 		(*)
@@ -266,37 +267,29 @@ svc_depend()
 
 svc_after()
 {
-	local ret svc SVC
-	SVC=${SVC_NAME}
+	local ret svc
 	for svc in ${2-${SVC_AFTER}}; do
-		SVC_NAME="${svc}"
-		svc_state -s && continue
-		svc_state -r && svc_cmd ${1-start}
+		rs "${svc}" "${1:-start}"
 		ret=$((${ret}+${?}))
 	done
-	SVC_NAME=${SVC}
 	return ${ret}
 }
 
 svc_need()
 {
 	local val
-	if ! svc_use ${1-start} "${2-${SVC_NEED}}"; then
-		val=${?}
-		error "Failed to set up service dependencies."
-		return ${val}
-	fi
+	svc_use "${1:-start}" "${2:-${SVC_NEED}}"
+	val="${?}"
+	[ "${val}" -gt 0 ] && error "Failed to set up service dependencies"
+	return "${val}"
 }
 svc_use()
 {
-	local ret svc SVC
-	SVC=${SVC_NAME}
-	for svc in ${2-${SVC_USE}}; do
-		SVC_NAME="${svc}"
-		svc_state -f && ret=$((${ret}+1)) || svc_cmd ${1-start}
+	local ret svc
+	for svc in ${2:-${SVC_USE}}; do
+		rs "${svc}" "${1:-start}"
 		ret=$((${ret}+${?}))
 	done
-	SVC_NAME=${SVC}
 	return ${ret}
 }
 
