@@ -61,7 +61,9 @@ rs_cmd()
 	local ARGS CMD cmd="${1}" val
 
 	case "${cmd}" in
-		(start|stop) CMD="${cmd}_pre ${cmd} ${cmd}_post";;
+		(start|stop)
+			svc_depend "${cmd}" || return 3
+			CMD="${cmd}_pre ${cmd} ${cmd}_post";;
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
 			CMD="stop_pre stop stop_post
 			   start_pre start start_post";;
