@@ -613,7 +613,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[])
 {
 	RS_String_T *svc;
-	pid_t pid, *pidlist = NULL;
+	pid_t pid;
 	int count = 0, status, retval = 0, i;
 	static int parallel, type;
 	struct svcrun **svclist = NULL;
@@ -719,7 +719,7 @@ static void svc_stage(const char *cmd)
 	RS_STAGE.level = atoi(getenv("RS_STAGE"));
 	RS_STAGE.type  = getenv("RS_TYPE");
 	RS_DepTypeList_T *depends;
-	RS_DepType_T *elm, *nil = NULL;
+	RS_DepType_T *elm;
 	RS_String_T *svc;
 	const char *command = cmd;
 	const char **envp;
@@ -736,6 +736,10 @@ static void svc_stage(const char *cmd)
 		type = 0;
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
+	if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+		j = RS_DEP_PRIORITY-1;
+	else
+		j = 0;
 
 	envp = svc_env();
 	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
@@ -748,25 +752,24 @@ static void svc_stage(const char *cmd)
 		snprintf(opt, sizeof(opt), "--%s", RS_STAGE.type);
 		depends = rs_deplist_load();
 
-		for (i = 0; i < RS_DEPS_TYPE; i++)
-			if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL) {
-				if (nil == NULL)
-					nil = elm;
-				if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
-					for (j = RS_DEP_PRIORITY-1; j > 0; j--) /* high prio only */
-						svc_exec_list(elm->priority[j], argv, envp);
-				else if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
-					for (j = 1; j < RS_DEP_PRIORITY; j++) /* high prio only */
-						svc_exec_list(elm->priority[j], argv, envp);
+		while (j >= 0 && j < RS_DEP_PRIORITY) {
+			for (i = 0; i < RS_DEPS_TYPE; i++) {
+				if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL)
+					svc_exec_list(elm->priority[j], argv, envp);
+				/* try only twice to start/stop everything */
+				if (i == 1 && j == 0)
+					break;
 			}
-		svc_exec_list(nil->priority[0], argv, envp);
+			if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+				--j;
+			else
+				++j;
+		}
 		rs_deplist_free(depends);
 
 		/* skip irrelevant cases or because -[rv] passed */
 		if (type)
 			break;
-		else
-			nil = NULL;
 	}
 }
 
