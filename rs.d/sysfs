@@ -7,6 +7,7 @@
 :	${__CGROUP_ROOT__:=/sys/fs/cgroup}
 :	${SYSFS_OPTS:=nodev,nosuid,noexec}
 
+description='Set up /sys/MISCELLANEOUS filesystems'
 SVC_COMMANDS=mount_cgroup
 
 mount_sys()
