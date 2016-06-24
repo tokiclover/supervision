@@ -40,7 +40,7 @@
 # define MNT_PASS(ent) ent->fs_passno
 #endif
 
-#define VERSION "0.11.0"
+#define VERSION "0.12.0"
 
 const char *prgname;
 
@@ -115,12 +115,14 @@ static struct mntent *getent(const char *path)
 {
 	MNTENT *ent;
 	int i;
-	
+
 	if (mntcnt == 0) {
 		mnttab = err_calloc(mntnum, sizeof(void*));
 		atexit(endent);
 		SETMNTENT;
 	}
+	else if (path[0] == '*')
+		;
 	else {
 		for (i = 0; i < mntcnt; i++)
 			if (strcmp(MNT_FILE(mnttab[i]), path) == 0)
@@ -135,8 +137,10 @@ static struct mntent *getent(const char *path)
 		mnttab[mntcnt] = err_malloc(sizeof(MNTENT));
 		memcpy(mnttab[mntcnt], ent, sizeof(MNTENT));
 
-		if (strcmp(MNT_FILE(mnttab[mntcnt++]), path) == 0)
-			return mnttab[mntcnt-1];
+		if (path[0] == '*')
+			return mnttab[mntcnt++];
+		if (strcmp(MNT_FILE(mnttab[mntcnt]), path) == 0)
+			return mnttab[mntcnt++];
 	}
 
 	return NULL;
@@ -282,6 +286,10 @@ int main(int argc, char *argv[])
 			else {
 				if (task & FSTAB_NODE)
 					printf("%s", MNT_NODE(ent));
+				if (argv[optind][0] == '*') {
+					printf(" %s\n", ent->mnt_dir);
+					continue;
+				}
 				if (task & FSTAB_FSYS)
 					printf(" %s", MNT_TYPE(ent));
 				if (task & FSTAB_OPTS)
@@ -290,8 +298,10 @@ int main(int argc, char *argv[])
 			}
 		}
 		else {
+			if (argv[optind][0] == '*')
+				break;
 			if (quiet)
-				ERR("Inexistant fstab entry: `%s'\n", argv[optind]);
+				ERR("Invalid fstab entry: `%s'\n", argv[optind]);
 			retval++;
 		}
 		optind++;
