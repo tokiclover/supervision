@@ -99,7 +99,7 @@ dist_RS_SVCS  = \
 	rootfs \
 	sysfs \
 	swaps \
-	tmpdir \
+	tmpdirs \
 	tmpfiles.dev \
 	unionfs \
 	zram

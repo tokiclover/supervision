@@ -1,17 +1,17 @@
 #!/sbin/rs
 #
-# $Header: /etc/rs.d/tmpdir                              Exp $
-# $Author: (c) 2012-2015 -tclover <tokiclover@gmail.com> Exp $
+# $Header: /etc/rs.d/tmpdirs                             Exp $
+# $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.20.0 2015/04/18 12:33:03                   Exp $
+# $Version: 0.22.0 2016/06/06 12:33:03                   Exp $
 #
 
-description="Temporary directory (with optional backup) setup"
+description="Set up temporary directories/filesystems (with optional backup)"
 description_restore="Restore temporary directories"
 description_save="Archive temporary directories"
 SVC_COMMANDS="restore save"
 
-:	${compressor:=lz4 -1 -}
+:	${compressor:=lz4 -1}
 :	${extension:=.tar.${compressor%% *}}
 
 if yesno ${use_zram}; then
@@ -91,7 +91,7 @@ restore()
 			continue
 		fi
 		begin  "Restoring ${dir}"
-		${decompress} -cd "${tarball}" | tar -xp
+		tar -xpf "${tarball}" -I "${compressor}"
 		end "${?}"
 	done
 	cd "${swd}" >${NULL} 2>&1
@@ -107,7 +107,7 @@ save()
 			mv -f "${dir}${extension}" "${dir}.old${extension}"
 		fi
 		begin  "Saving ${dir}"
-		tar -Ocp ${dir##*/} | ${compressor} "${dir}${extension}"
+		tar -cpf "${dir}${extension}" -I "${compressor}" ${dir##*/}
 		end "${?}"
 	done
 	cd "${swd}" >${NULL} 2>&1

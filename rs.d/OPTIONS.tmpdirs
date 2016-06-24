@@ -1,5 +1,5 @@
 #
-# $Header: /etc/rs.d/OPTIONS.tmpdir, 2015/04/20          Exp $
+# $Id: /etc/rs.d/OPTIONS.tmpdirs, 2016/06/06          Exp $
 #
 # tmpdir maintain a temporary directory hierarchy on a tmpfs or zram
 # backed device. Keeping the state of a diretory across machine reboot
@@ -18,7 +18,7 @@ tmpdir_saved=
 # Colon separated list of direcory (without saved state, backup)
 tmpdir_unsaved=
 # Set the compressor to use (for state saved directory)
-compressor="lz4 -1 -"
+compressor="lz4 -1"
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
