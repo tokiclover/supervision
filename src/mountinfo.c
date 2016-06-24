@@ -14,9 +14,13 @@
 #include <mntent.h>
 
 #undef VERSION
-#define VERSION "0.11.0"
+#define VERSION "0.12.0"
 
 const char *prgname;
+
+static FILE *mntptr;
+static struct mntent **mnttab;
+static size_t mntcnt = 0, mntnum = 32;
 
 enum {
 	MOUNT_NDEV  = 0x01,
@@ -62,20 +66,48 @@ __NORETURN__ static void help_message(int status)
 	exit(status);
 }
 
+static void endent(void)
+{
+	while (mntcnt)
+		free(mnttab[--mntcnt]);
+	free(mnttab);
+	endmntent(mntptr);
+}
+
 static struct mntent *getent(const char *path)
 {
-	FILE *fp;
 	struct mntent *ent;
+	int i;
 
-	if ((fp = setmntent("/proc/mounts", "r")) == NULL)
-		ERROR("Failed to open `/proc/mounts'", NULL);
+	if (mntcnt == 0) {
+		if ((mntptr = setmntent("/proc/mounts", "r")) == NULL)
+			ERROR("Failed to open `/proc/mounts'", NULL);
+		mnttab = err_calloc(mntnum, sizeof(void*));
+		atexit(endent);
+	}
+	else if (path[0] == '*')
+		;
+	else {
+		for (i = 0; i < mntcnt; i++)
+			if (strcmp(mnttab[i]->mnt_dir, path) == 0)
+				return mnttab[i];
+	}
 
-	while (ent = getmntent(fp))
-		if (strcmp(ent->mnt_dir, path) == 0)
-			break;
-	endmntent(fp);
+	while (ent = getmntent(mntptr)) {
+		if (mntcnt == mntnum) {
+			mntnum += 32;
+			mnttab = err_realloc(mnttab, mntnum*sizeof(void*));
+		}
+		mnttab[mntcnt] = err_malloc(sizeof(struct mntent));
+		memcpy(mnttab[mntcnt], ent, sizeof(struct mntent));
 
-	return ent;
+		if (path[0] == '*')
+			return mnttab[mntcnt++];
+		if (strcmp(mnttab[mntcnt]->mnt_dir, path) == 0)
+			return mnttab[mntcnt++];
+	}
+
+	return NULL;
 }
 
 int main(int argc, char *argv[])
@@ -145,10 +177,16 @@ int main(int argc, char *argv[])
 				for (i = 0; i < nopts; i++)
 					if (hasmntopt(ent, mntopts[i]) == NULL)
 						retval++;
+			if (argv[optind][0] == '*') {
+				printf(" %s\n", ent->mnt_dir);
+				continue;
+			}
 		}
 		else {
+			if (argv[optind][0] == '*')
+				break;
 			if (quiet)
-				ERR("Inexistant mount entry: `%s'\n", argv[optind]);
+				ERR("Invalid mount entry: `%s'\n", argv[optind]);
 			retval++;
 		}
 		optind++;
