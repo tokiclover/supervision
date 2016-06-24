@@ -4,6 +4,7 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
+description='Check filesystems'
 SVC_USE='dev kmod clock'
 
 REBOOT_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --reboot'
@@ -50,7 +51,7 @@ start()
 				eval ${REBOOT_COMMAND}
 			else
 				error "Filesystems have errors"
-				error "Mmanual fsck required"
+				error "Mmanual filesystem check required"
 				eval ${SHUTDOWN_COMMAND}
 			fi
 			;;
