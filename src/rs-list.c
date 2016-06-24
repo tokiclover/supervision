@@ -10,7 +10,7 @@
 #include "helper.h"
 #include "rs.h"
 
-#define DEP_GEN SV_LIBDIR "/sh/dep"
+#define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_DEPDIR SV_TMPDIR "/deps"
 
 RS_DepTypeList_T *rs_deplist_load(void)
@@ -25,7 +25,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/%s", SV_DEPDIR,
 			RS_STAGE.level, RS_STAGE.type);
 	if (RS_STAGE.level == 2 || file_test(deppath, 0) <= 0) {
-		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", DEP_GEN,
+		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", SV_DEPGEN,
 				RS_STAGE.level, RS_STAGE.type);
 		if (system(depcmd)) {
 			ERR("Failed to execute `%s'\n", depcmd);
