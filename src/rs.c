@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <poll.h>
 
-#define VERSION "0.11.0"
+#define VERSION "0.12.0"
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
 #define SV_TMPDIR_DOWN SV_TMPDIR "/down"

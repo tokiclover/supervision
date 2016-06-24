@@ -78,7 +78,7 @@ typedef struct RS_String {
 typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
 
 /* number of priority level per dependency type */
-#define RS_DEP_PRIORITY 3
+#define RS_DEP_PRIORITY 4
 
 typedef struct RS_DepType {
 	/* dependency type {after,before,use,need} */
@@ -95,6 +95,7 @@ RS_String_T *rs_stringlist_add(RS_StringList_T *list, const char *str);
 RS_String_T *rs_stringlist_adu(RS_StringList_T *list, const char *str);
 RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str);
 int          rs_stringlist_del(RS_StringList_T *list, const char *str);
+int          rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
 void         rs_stringlist_free(RS_StringList_T *list);
 
 /* the same used for dependencies list */
