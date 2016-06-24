@@ -1,11 +1,10 @@
 #!/sbin/rs
 #
 # $Header: /etc/rs.d/mdev                                Exp $
-# $Author: (c) 2015 -tclover <tokiclover@gmail.com>      Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.4 2015/04/24 21:09:26                      Exp $
 #
 
+description='Set up (mdev) device manager'
 :	${MDEV_CMD:=/sbin/mdev}
 :	${MDEV_LOGFILE:=/run/mdev.log}
 SVC_NEED='devfs sysfs'
