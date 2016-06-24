@@ -6,9 +6,9 @@
 # $Version: 0.22.0 2016/06/06 12:33:03                   Exp $
 #
 
-description="Mount (AUFS|OverlayFS+SquashFS) union filesystems"
+description="Set up (AUFS|OverlayFS+SquashFS) union filesystems"
 
-:	${sdr:=$(type -p sdr 2>${NULL})}
+:	${sdr:=$(command -v sdr 2>${NULL})}
 :	${unionfs_rootdir:=/unionfs}
 case "${unionfs_filesystem}" in
 	(aufs|overlay) ;;
@@ -17,7 +17,7 @@ esac
 
 SVC_AFTER=localfs
 if [ "${RS_STAGE}" = 1 ]; then
-	SVC_BEFORE='bootmisc consolefont keymaps'
+	SVC_BEFORE='miscfs console'
 fi
 
 start_pre()
@@ -98,7 +98,7 @@ unionfs_mount()
 	esac
 
 	begin "Mounting ${unionfs_filesystem}:${dir}"
-	if ! grep -q ${DIR}/rr /proc/mounts; then
+	if ! mountinfo -q ${DIR}/rr; then
 		mount -t squashfs -o nodev,ro ${DIR}.squashfs ${DIR}/rr \
 			>${NULL} 2>&1 || { end 1; return 1; }
 	fi
@@ -109,17 +109,21 @@ unionfs_mount()
 
 unionfs_umount()
 {
-	local DIR opt
+	local DIR opt msg
 	DIR="${1}/${2#/}" dir="/${2#/}"
+	grep -q ${unionfs_filesystem}:${dir} /proc/mounts || return
+
 	case "${OS_NAME}" in
 		(Linux) opt="-O no_netdev";;
 	esac
 	case "${unionfs_filesystem}" in
-		(aufs) auplink ${dir} flush >${NULL} 2>&1;;
+		(aufs) auplink ${dir} flush >${NULL} 2>&1
+			msg=AUFS;;
+		(*) msg=OverlayFS;;
 	esac
 	begin "Umounting ${unionfs_filesystem}:${dir}"
 	umount -l ${opt} ${unionfs_filesystem}:${dir} >${NULL} 2>&1 ||
-		{ end 1 ${unionfs_filesystem}; return 1; }
+		{ end 1 ${msg}; return 1; }
 	umount -l ${opt} ${DIR}/rr   >${NULL} 2>&1
 	end ${?} SquashFS
 }
@@ -127,6 +131,7 @@ unionfs_umount()
 unionfs_remount()
 {
 	dir="/${1#/}"
+	grep -q ${unionfs_filesystem}:${dir} /proc/mounts || return
 	begin "Re-Mounting ${unionfs_filesystem}:${dir}"
 	mount -o remount,${2:-ro} ${unionfs_filesystem}:${dir} >${NULL} 2>&1
 	end ${?}
