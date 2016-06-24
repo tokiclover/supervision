@@ -2,8 +2,9 @@
 #
 # $Header: /etc/rs.d/devfs                               Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.1 2015/04/30 21:09:26                      Exp $
 #
+
+description='Set up /dev/MISCELLANEOUS filesystems'
 
 mount_dev()
 {
