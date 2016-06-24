@@ -4,6 +4,8 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
+description="Mount ${SVC_NAME%fs} filesystems"
+
 if [ "${SVC_NAME}" = localfs ]; then
 	SVC_AFTER='kmod lvm dmcrypt raid'
 	SVC_NEED='checkfs rootfs'
