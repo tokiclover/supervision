@@ -1,1 +1,6 @@
 CopyLeft (c) 2014-2016 tokiclover <tokiclover@gmail.com>
+
+Many runscript services (rs.d/SERVICES) for stage-[01] are adapted from
+OpenRC-0.13.11; and are thus copyrighted as the following:
+Copyright (c) 2007-2008 Roy Marples <roy@marples.name>
+
