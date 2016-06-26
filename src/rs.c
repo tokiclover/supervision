@@ -782,6 +782,7 @@ static void svc_stage(const char *cmd)
 		for (i = 0; rs_init_stage_0[i]; i++)
 			rs_stringlist_add(init_stage_list, rs_init_stage_0[i]);
 		svc_exec_list(init_stage_list, argv, envp);
+		rs_stringlist_free(init_stage_list);
 	}
 }
 
