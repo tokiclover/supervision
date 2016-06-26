@@ -23,10 +23,10 @@ mount_sys()
 	if mountinfo /sys; then
 		mount ${arg} -o remount,${SYSFS_OPTS}      /sys >${NULL} 2>&1
 	else
-		fstabinfo --mount /sys >${NULL} 2>&1 ||
+		fstabinfo --quiet --mount /sys ||
 		mount ${arg} -t sysfs -o ${SYSFS_OPTS} sys /sys >${NULL} 2>&1
 	fi
-	end $?
+	end "${?}"
 }
 
 mount_sysfs()
