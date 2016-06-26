@@ -1,7 +1,8 @@
 #!/sbin/rs
 #
-# $Header: /etc/rs.d/checkfs                             Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Header: /etc/rs.d/checkfs                               Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+# $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
 #
 
 description='Check filesystems'
@@ -75,7 +76,7 @@ start()
 
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return 0
+	[ "${RS_STAGE}" = 3 ] || return
 	yesno "${CHECKFS_SHUTDOWN}" || return 0
 	start
 }
