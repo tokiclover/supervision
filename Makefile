@@ -99,6 +99,7 @@ dist_RS_SVCS  = \
 	mdev \
 	miscfs \
 	mtab \
+	procfs \
 	rootfs \
 	sysfs \
 	swaps \
