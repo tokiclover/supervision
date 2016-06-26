@@ -88,6 +88,7 @@ dist_SV_OPTS  = \
 
 dist_RS_SVCS  = \
 	checkfs \
+	clock \
 	console \
 	devfs \
 	dmesg \

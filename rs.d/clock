@@ -1,0 +1,109 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/dmesg                                 Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+# $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
+#
+
+description="Set up hardware/system clock"
+description_save="Save the current system clock to hardware clock"
+description_show="Display the current hardware time"
+SVC_COMMANDS="save show"
+
+:	${CLOCK:=UTC}
+if [ "${CLOCK}" = "UTC" ]; then
+	clock_message="UTC"
+	clock_opts="--utc"
+else
+	clock_message="Local Time"
+	clock_opts="--local"
+fi
+
+#
+# hwclock doesn't always return non zero on error
+#
+HWCLOCK()
+{
+	local errors="$(hwclock "${@}" 2>&1 >${NULL})"
+
+	[ -z "${errors}" ] && return 0
+	echo "${errors}" >&2
+	return 1
+}
+
+start_pre()
+{
+	case "${OS_NAME}" in
+		(s930) clock_message="s390";;
+		(*) device_info "cobd" && clock_message="coLinux";;
+	esac
+	case "${clock_message}" in
+		(UTC|'Local Time') ;;
+		(*) clock_opts=;;
+	esac
+}
+
+start()
+{
+	if [ -z "${clock_opts}" ]; then
+		warn "Not setting up clock for ${clock_message}"
+		return 0
+	fi
+
+	if [ -e /proc/modules ]; then
+		local rtc mod
+		for rtc in /dev/rtc /dev/rtc[0-9]*; do
+			[ -e "${rtc}" ] && break
+		done
+		[ -e "${rtc}" ] ||
+		for mod in rtc-cmos rtc genrtc; do
+			modprobe -q "${mod}" && break
+		done
+	fi
+
+	begin "Setting up system clock (${clock_message})"
+	HWCLOCK --systz ${clock_opts} ${CLOCK_ARGS}
+	end "${?}" "Hardware Clock"
+
+	if [ -e /etc/adjtime ] && yesno "${CLOCK_ADJTIME}"; then
+		HWCLOCK --adjust ${clock_opts}
+		end "${?}" "Adjust Clock"
+	fi
+	if yesno "${CLOCK_HCTOSYS}"; then
+		HWCLOCK --hctosys ${clock_opts} ${CLOCK_ARGS}
+		end "${?}" "System Clock"
+	fi
+	return 0
+}
+
+stop()
+{
+	yesno "${CLOCK_SYSTOHC}" || return 0
+	start_pre
+	[ -n "${clock_opts}" ] || return 0
+
+	yesno "${CLOCK_ADJTIME}" ||
+	if LC_ALL=C hwclock --help 2>&1 | grep -qsw "\-\-noadjfile"; then
+		clock_opts="${clock_opts} --noadjfile"
+	fi
+	begin "Setting up hardware clock from system clock (${clock_message})"
+	HWCLOCK ${clock_opts} ${CLOCK_ARGS}
+	end "${?}"
+	return 0
+}
+
+save()
+{
+	CLOCK_SYSTOHC=1
+	stop
+}
+
+show()
+{
+	start_pre
+	hwclock --show ${clock_opts} ${CLOCK_ARGS}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
