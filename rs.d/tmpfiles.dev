@@ -14,13 +14,11 @@ if [ "${SVC_NAME}" = tmpfiles.dev ]; then
 else
 	SVC_OPTS='--exclude-prefix=/dev --remove'
 	SVC_NEED=localfs
-	SVC_OPTS='--exclude-prefix=/dev --remove'
 fi
 
 start()
 {
 	${SV_LIBDIR}/sh/tmpfiles --create --boot ${SVC_OPTS}
-	end "${?}"
 	return 0
 }
 
