@@ -173,6 +173,21 @@ fi
 
 #
 # @FUNCTION: mount info helper
+# @ARG: [OPTIONS] DEVICES
+#
+device_info()
+{
+	local dev ret
+	[ -e /proc/devices ] || return 1
+	for dev; do
+		grep -qsw "${dev}" /proc/devices
+		ret=$((${ret}+${?}))
+	done
+	return "${ret}"
+}
+
+#
+# @FUNCTION: mount info helper
 # @ARG: [OPTIONS] DIR
 #
 mount_info()
