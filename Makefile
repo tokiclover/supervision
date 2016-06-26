@@ -92,6 +92,7 @@ dist_RS_SVCS  = \
 	console \
 	devfs \
 	dmesg \
+	hostname \
 	kmod \
 	kmod-static-nodes \
 	localfs \
