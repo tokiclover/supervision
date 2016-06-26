@@ -9,7 +9,7 @@
 description="Set up & initialize ZRAM devices"
 description_reset="Reset ZRAM devices"
 
-SVC_BEFORE=bootmisc
+SVC_BEFORE=miscfs
 SVC_COMMANDS=reset
 
 :	${ZRAM_DEVICE_NUMBER:=4}

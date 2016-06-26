@@ -6,7 +6,7 @@
 
 description="Set up console (font, keymap, encoding)"
 SVC_NEED='localfs'
-SVC_AFTER='bootmisc'
+SVC_AFTER='miscfs'
 
 :	${RS_TTY_NUMBER:=12}
 :	${RS_TTY_UNICODE:=YES}
@@ -36,7 +36,7 @@ console_encoding()
 #
 console_font()
 {
-	[ -n "${CONSOLE_FONT}" ] || return 0
+	[ -n "${CONSOLE_FONT}" ] || return
 
 	local i=0 ret=0
 	begin "Setting up console font (${CONSOLE_FONT})"
@@ -55,7 +55,7 @@ console_font()
 #
 console_keymap()
 {
-	[ -n "${CONSOLE_KEYMAP}" ] || return 0
+	[ -n "${CONSOLE_KEYMAP}" ] || return
 
 	# Force linux keycodes for PPC
 	[ -f /proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes ] ||
