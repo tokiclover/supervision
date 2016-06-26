@@ -95,6 +95,7 @@ dist_RS_SVCS  = \
 	kmod-static-nodes \
 	localfs \
 	mdev \
+	miscfs \
 	mtab \
 	rootfs \
 	sysfs \
@@ -123,6 +124,7 @@ dist_STAGE_1 = \
 	console \
 	checkfs \
 	localfs \
+	miscfs \
 	mtab \
 	networkfs \
 	rootfs \
