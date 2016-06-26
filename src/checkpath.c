@@ -98,7 +98,11 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 	struct dirent *ent;
 	static mode_t m = 0;
 	struct stat stb, std;
-	
+
+	if ((type & (TYPE_PIPE|TYPE_DIR|TYPE_FILE)) == 0) {
+		ERR("Invalid type argument\n", NULL);
+		return -1;
+	}
 	memset(&stb, 0, sizeof(stb));
 	if (type & TYPE_CHECK)
 		lstat(file, &stb);
@@ -127,10 +131,6 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		}
 		else if (type & TYPE_DIR)
 			tmp = mkdtemp(path);
-		else {
-			ERR("Invalid arguments.\n", NULL);
-			return -1;
-		}
 
 		if (strlen(path))
 			puts(path);
@@ -210,7 +210,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		tmp = file;
 	}
 
-	if (mode && (stb.st_mode & 0777) != mode) {
+	if (mode && (stb.st_mode & 07777) != mode) {
 		if (S_ISLNK(stb.st_mode)) {
 			ERR("Not changing permission mode for `%s' (symlink)\n", tmp);
 			return -1;
