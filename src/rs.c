@@ -37,6 +37,9 @@ struct slock {
 	struct flock *f_lock;
 };
 
+/* list of service to start after sysinit */
+const char *const rs_init_stage_0[] = { "clock", "hostname", NULL };
+
 /* !!! order matter (defined constant/enumeration) !!! */
 const char *const rs_stage_type[] = { "rs", "sv" };
 const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
@@ -721,6 +724,7 @@ static void svc_stage(const char *cmd)
 	RS_DepTypeList_T *depends;
 	RS_DepType_T *elm;
 	RS_String_T *svc;
+	RS_StringList_T *init_stage_list;
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[6] = { "runscript" };
@@ -770,6 +774,14 @@ static void svc_stage(const char *cmd)
 		/* skip irrelevant cases or because -[rv] passed */
 		if (type)
 			break;
+	}
+
+	/* finish sysinit */
+	if (RS_STAGE.level == 0 ) {
+		init_stage_list = rs_stringlist_new();
+		for (i = 0; rs_init_stage_0[i]; i++)
+			rs_stringlist_add(init_stage_list, rs_init_stage_0[i]);
+		svc_exec_list(init_stage_list, argv, envp);
 	}
 }
 
