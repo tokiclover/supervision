@@ -50,7 +50,7 @@ start()
 		return 0
 	fi
 
-	if [ -e /proc/modules ]; then
+	if [ -e /proc/modules ] && ! device_info rtc; then
 		local rtc mod
 		for rtc in /dev/rtc /dev/rtc[0-9]*; do
 			[ -e "${rtc}" ] && break
