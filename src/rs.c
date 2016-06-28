@@ -37,8 +37,11 @@ struct slock {
 	struct flock *f_lock;
 };
 
-/* list of service to start after sysinit */
-const char *const rs_init_stage_0[] = { "clock", "hostname", NULL };
+/* list of service to start/stop before|after a stage */
+const char *const rs_init_stage[][4] = {
+	{ "clock", "hostname", NULL },
+	{ "dmcrypt", NULL }
+};
 
 /* !!! order matter (defined constant/enumeration) !!! */
 const char *const rs_stage_type[] = { "rs", "sv" };
@@ -113,6 +116,13 @@ static void svc_stage(const char *cmd);
  * @return: true/false;
  */
 static int svc_state(const char *svc, int status);
+
+/*
+ * execute a service list (called from svc_stage())
+ * to finish/start particular stages
+ * @return 0 on success or number of failed services
+ */
+static int svc_stage_init(int stage, const char *argv[], const char *envp[]);
 
 /*
  * set service status
@@ -717,6 +727,18 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	return retval;
 }
 
+static int svc_stage_init(int stage, const char *argv[], const char *envp[])
+{
+	int i;
+	RS_StringList_T *init_stage_list;
+
+	init_stage_list = rs_stringlist_new();
+	for (i = 0; rs_init_stage[stage][i]; i++)
+		rs_stringlist_add(init_stage_list, rs_init_stage[stage][i]);
+	svc_exec_list(init_stage_list, argv, envp);
+	rs_stringlist_free(init_stage_list);
+}
+
 static void svc_stage(const char *cmd)
 {
 	RS_STAGE.level = atoi(getenv("RS_STAGE"));
@@ -748,6 +770,10 @@ static void svc_stage(const char *cmd)
 	envp = svc_env();
 	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
 
+	/* initialize boot */
+	if (RS_STAGE.level == 1 )
+		svc_stage_init(1, argv, envp);
+
 	for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) {
 		if (!type) {
 			RS_STAGE.type = rs_stage_type[k];
@@ -777,13 +803,8 @@ static void svc_stage(const char *cmd)
 	}
 
 	/* finish sysinit */
-	if (RS_STAGE.level == 0 ) {
-		init_stage_list = rs_stringlist_new();
-		for (i = 0; rs_init_stage_0[i]; i++)
-			rs_stringlist_add(init_stage_list, rs_init_stage_0[i]);
-		svc_exec_list(init_stage_list, argv, envp);
-		rs_stringlist_free(init_stage_list);
-	}
+	if (RS_STAGE.level == 0 )
+		svc_stage_init(0, argv, envp);
 }
 
 int main(int argc, char *argv[])
