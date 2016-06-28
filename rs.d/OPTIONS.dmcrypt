@@ -5,6 +5,11 @@
 # Everything is configured in crypttab(8); so copy DOCDIR/crypttab
 # to /etc/crypttab and setup everything in that configuration file.
 #
+# If software raid is need or used for this service, add `raid' to
+# SVC_NEED or SVC_USE in this configuration file . Likewise, if LVM
+# is needed or used, just add `lvm' to any of those variables.
+#SVC_USE=lvm
+#SVC_NEED=raid
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
