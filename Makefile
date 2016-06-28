@@ -98,6 +98,7 @@ dist_RS_SVCS  = \
 	kmod \
 	kmod-static-nodes \
 	localfs \
+	lvm \
 	mdev \
 	miscfs \
 	mtab \
