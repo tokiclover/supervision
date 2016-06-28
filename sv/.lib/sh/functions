@@ -177,11 +177,22 @@ fi
 #
 device_info()
 {
-	local dev ret
-	[ -e /proc/devices ] || return 1
+	local dev ret=0 file files opt=false
+	[ -e /proc/devices ] && files=devices
+	[ -e /proc/misc    ] && files="${files} misc"
+	[ -n "${files}"    ] || return 1
+	case "${1}" in
+		(-a|--all) opt=true; shift;;
+	esac
+
 	for dev; do
-		grep -qsw "${dev}" /proc/devices
-		ret=$((${ret}+${?}))
+		for file in ${files}; do
+			grep -qsw "${dev}" /proc/${file}
+			case "${?}" in
+				(0) ${opt} || break  ;;
+				(*) ret=$((${ret}+1));;
+			esac
+		done
 	done
 	return "${ret}"
 }
