@@ -99,10 +99,6 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 	static mode_t m = 0;
 	struct stat stb, std;
 
-	if ((type & (TYPE_PIPE|TYPE_DIR|TYPE_FILE)) == 0) {
-		ERR("Invalid type argument\n", NULL);
-		return -1;
-	}
 	memset(&stb, 0, sizeof(stb));
 	if (type & TYPE_CHECK)
 		lstat(file, &stb);
@@ -296,8 +292,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if ((argc-optind) < 1) {
-		ERR("Insufficient arguments.\n", NULL);
+	if ((argc-optind) < 1 || !(type & ~TYPE_CHECK)) {
+		ERR("Insufficient number of arguments\n", NULL);
 		help_message(EXIT_FAILURE);
 	}
 
