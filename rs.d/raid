@@ -1,0 +1,76 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/raid                                  Exp $
+# $Author: (c) 2016 tokiclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Set up software raid (mdadm)"
+SVC_BEFORE="kmod"
+SVC_CONFIGFILE="/etc/mdadm.conf"
+mdadm="$(command -v mdadm 2>${NULL})"
+
+raid_device_entry
+case "${RAID_DEVICE_LIST}" in
+	(*/dev/mapper/*) SVC_NEED="dmcrypt";;
+esac
+
+raid_device_entry()
+{
+	[ -s "${SVC_CONFIGFILE}" ] || return
+
+	local prefix volume device
+	while read prefix volume device; do
+		case "${prefix}" in
+			([Aa][Rr][Rr][Aa][Yy])
+			RAID_DEVICE_LIST="${RAID_DEVICE_LIST}\n${volume};${device}\n"
+			;;
+		esac
+	done <${SVC_CONFIGFILE}
+}
+
+start()
+{
+	local ifs="${IFS}" device options entry retval=0
+	IFS='
+'
+	#
+	# Handle Linux software RAID
+	#
+	#mdadm --assemble --scan
+	[ -n "${RAID_DEVICE_LIST}" -a -x ${mdadm} ] &&
+	for entry in $(printf ${RAID_DEVICE_LIST}); do
+		IFS=";${ifs}"
+		eval set -- ${entry}
+		device="${1}" options="${2}"
+		[ -b /dev/${device} ] && continue
+		case "${options}" in
+			([Uu][Uu][Ii][Dd]) ;;
+			(*) options=;;
+		esac
+
+		begin "Bringing up ${device} device (software RAID)"
+		${mdadm} --assemble ${options:+--uuid} ${options#*=} --config /etc/mdadm.conf ${device}
+		end "${?}"
+		retval=$((${retval}+${?}))
+	done
+	IFS="${ifs}"
+
+	#
+	# Handle Linux fake ATA-RAID
+	#
+	local format
+	[ -n "${DMRAID_FORMATS}" ] && dmraid="$(command -v dmraid 2>${NULL})" &&
+	for format in ${DMRAID_FORMATS}; do
+		begin "Bringing up ${format} ATA-RAID"
+		${dmraid} --activate y --ignorelocking --ignoremonitoring ${format}
+		end "${?}"
+		retval=$((${retval}+${?}))
+	done
+
+	return ${retval}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

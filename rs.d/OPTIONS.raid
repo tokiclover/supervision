@@ -1,0 +1,11 @@
+#
+# $Id: /etc/rs.d/OPTIONS.raid, 2016/06/06           Exp $
+# 
+# See dmraid(1) for more information about supported format;
+# or else, `dmraid -l'.
+#
+DMRAID_FORMATS=
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
