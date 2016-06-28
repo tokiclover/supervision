@@ -1,5 +1,20 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0:
+
+Changed version numbering in favor of major.minor.revision;
+Added init-system services:
+RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
+kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
+tmpfiles.{de,setup}, lvm, raid;
+RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs
+
+Version bumped sv-shutdown to be able to force reboot/shutdown in early boot
+(for checkfs failure for example);
+Version bumped /sbin/rs to better handle dependencies scheduling;
+Version bumped {fstab,mout}info to use almost the same code and to support '*'
+cach all mountpoints;
+
 41:
 
 Bug fixes of r40: properly mark service state after {stop,start}; stop
