@@ -91,6 +91,7 @@ dist_RS_SVCS  = \
 	clock \
 	console \
 	devfs \
+	dmcrypt \
 	dmesg \
 	hostname \
 	kmod \
@@ -126,6 +127,7 @@ dist_STAGE_1 = \
 	kmod \
 	console \
 	checkfs \
+	dmcrypt \
 	localfs \
 	miscfs \
 	mtab \
