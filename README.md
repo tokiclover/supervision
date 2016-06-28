@@ -2,7 +2,7 @@ Supervision Framework, initialy inspired by [supervision-scripts][1] collection,
 supporting [Daemontools][3], [Daemontools-Encore][4], [Runit][5] or [S6][6]
 supervision backends providing an easy and efficient way to supervision
 by using a shell,--to be able to switch between backend & share a few helpers,--and
-optional [OpenRC][7] support, to not have to write system boot/halt from scratch.
+optional [OpenRC][7] support.
 (A Gentoo [ebuild][2] is available.)
 
 Note: [busybox](http://www.busybox.net/) has an integrated runit suite which has
@@ -56,9 +56,7 @@ REQUIREMENTS
 ------------
 
 Supervision Scripts Framework requires standard GNU coreutils, grep, procps,
-sed & a (POSIX) shell (BusyBox/ash *might* suffice.)
-Init-Stage-[123] & supervision init script service was written mainly for OpenRC
-to alleviate the burden of writting system boot/shutdown scripts (from scratch.)
+sed and a (POSIX) shell. Optional SysVinit for compatibilty with SysVinit's init;
 
 CONTRIBUTORS
 ------------
