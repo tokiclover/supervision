@@ -1,0 +1,134 @@
+#
+# $Id: /etc/crypttab,v 2016/06/06                                       Exp $
+# $Ref: https://www.freedesktop.org/software/systemd/man/crypttab.html  Exp $
+#
+# Configuration file for (dm-crypt) crypted devices
+#
+# Some options differ slightly, from the reference manual page, so everything
+# should be up and running in no time. Otherwise, read the following for more
+# info about the differnces.
+#
+# Format: <volume> <device> <password/keyfile> <options>
+#
+# <volume> being the mapping name to get the `/dev/mapper/<volume>' device.
+#
+# <device> support either file node /dev/sda1, UUID=<uuid> or LABEL=<label>
+#   device specification.
+#
+# <keyfile> can be /dev/[u]random for swap devices, though it would be best
+#   to have a static keyfile, e.g. `/etc/swaps_keyfile' generated regularly
+#   with `openssl rand -base64 48 >/etc/swaps_keyfile' to avoid starving the
+#   system at bootup (not enough entropy).
+#
+#   <password/keyfile> can be any of none|pwd|- to be prompted for a password;
+#   `/path/to/file[:reg]' for a regular keyfile, `:reg' postfix being optional
+#   for systemd compatibility, just like the improper use of `none' for password;
+#   `/path/to/file:luks' for a LUKS crypted keyfile;
+#   `/path/to/file:gpg' for GnuPG crypted keyfile.
+#
+#   FIXME: GnuPG support is not tested! v2.x would require a few hacks because of
+#     the ncurses dependencies; v1.4.x would require only a console/term hack.
+#
+# <options> being a comma separated list of options in the following list:
+#
+# luks|plain|tcrypt|loopaes|swap
+#   Enable a particular mode for the device. LUKS ecnrypted devices would be
+#   LUKS decrypted if a LUKS header is found. {cipher,hash} modes apply only
+#   for dm-crypt `plain' mode.
+#
+#   NOTE: `tcrypt' mode for TrueCrypt; see cryptsetup(8) for info on the modes;
+#     and {keyfile-{offset,size},size} options does not apply.
+#
+#     When using `tcrypt', use `tcrypt-keyfile' option to specify multiple
+#     keyfiles for multiway passphrase. And finaly use `/dev/null' in the third
+#     field to specify an empty password.
+#
+#   NOTE: `swap' mode enforce dm-crypt plain mode; so nothing will be done if a
+#     LUKS header is found.
+#
+#   NOTE: `loopaes' mode filter out keyfile-offset option;
+#
+#   WARN: swap devices would be destroyed at each bootup!
+#
+# remdev=LABEL=<label> (WARN: Extra option not supported by systemd)
+#   Removable device to use to get the keyfile.
+#
+# discard
+#   Pass through discard requests to underlying block device to improve
+#   performence on SSD. WARN: security implications
+#
+# cipher=aes-cbc-essiv:sha256
+#   Cipher to use, see cryptsetup(8) for more info. A cipher with unpredicable
+#   IV value, like the example, is recommended.
+#
+# hash=sha512
+#   Hash to use, see cryptsetup(8) for more info. This can be passed with cipher
+#   option.
+#
+# header=(UUID=<uuid>|LABEL=<label>|/path/to/file)
+#   Use a detached header for LUKS cyphertext which can be a device or regular
+#   file.
+#
+# offset=256
+#   Offset for the backed device in 512 byte sectors, only relevant for 'plain'
+#   devices; see cryptsetup(8) for more info.
+#
+# skip=128
+#   How many 512-byte sectors of the ecnrypted data to skip at the beginning.
+#   This is different from offset option in respect to vector (IV) calculation
+#   or initialization. Using --offset will shift the IV calculation by the same
+#   negative offset. While using --skip will cause the first mapped sector to be
+#   the appended argument (to --skip).
+# 
+# keyfile-offset=2048
+#   Number of bytes to skip at the start of the keyfile; see cryptsetup(8) for
+#   more info.
+#
+# keyfile-size=128
+#   Number of bytes to read from the keyfile; see cryptsetup(8) for possible
+#   values.
+#
+# key-size=128 (WARN: mis-named `size' for systemd!)
+#   Keysize in bits; see cryptsetup(8) for more info about valid values.
+#
+# key-slot=1
+#   Key slot to use (default to the first found); see cryptsetup(8) for more
+#   info.
+#
+# noauto (IGNORED)
+#   Skip device at bootup.
+#
+# nofail
+#   Do not fail bootup if this device cannot be decrypted.
+#
+# readonly (`read-only' is NOT SUPPORTED)
+#
+# tcrypt-hidden
+#   Use a hidden TrueCrypt volume (requires `tcrypt' option).
+#
+# tcrypt-keyfile=/etc/tcrypt_keyfile
+#   Keyfile for TrueCrypt which can specified several times for multiway
+#   passphrase. Only one line is read from keyfile excluding the new line
+#   character. All keyfile should be available; using a removable device
+#   is an option to get everything to decrypt the device.
+#
+# tcrypt-system
+#   Use tcrypt in system encryption mode.
+#
+# timeout=128 (seconds by default, or append `ms' for milliseconds, `min' for
+#   minute and `h' for hour)
+#   Specify the time to use for decryption.
+#
+# tmp (NOT SUPPORTED, an entry to fstab(5) should suffice)
+#
+# tries=3
+#   Specify the number of tries (default to 3).
+#
+# verify (IGNORED)
+#   Verify the password, meaning typing twice.
+#
+
+#data  UUID="abcdefgh-1234-ijkl-56mn-7890opqrstvw" /etc/data_key luks
+#swap  /dev/zram0 /etc/swap_key swap,cipher=aes-cbc-essiv:sha512
+#vault LABEL=VAULT /secret_key  luks,remdev=LABEL=SECRETS,header=UUID="z0cdebga-1234-ijkl-56mn-7890opqrstvw"
+

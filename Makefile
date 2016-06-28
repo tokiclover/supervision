@@ -23,7 +23,8 @@ dist_EXTRA  = \
 	AUTHORS \
 	COPYING \
 	README.md \
-	ChangeLog
+	ChangeLog \
+	crypttab
 dist_COMMON = \
 	sv/.opt/OPTIONS.in \
 	sv/.opt/SVC_OPTIONS \
