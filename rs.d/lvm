@@ -17,7 +17,7 @@ start_pre()
 		device_info --all device-mapper || modporbe dm-mod >${NULL} 2>&1
 	fi
 	checkpath -q -d -m 0700 -o root:root /run/lvm /run/lock/lvm
-	[ -x ${lvm} -a -c /dev/mapper/control -a -f ${SVC_CONFIGFILE} ]
+	[ -n "${lvm}" -a -x "${lvm}" ] && [ -c /dev/mapper/control -a -f ${SVC_CONFIGFILE} ]
 }
 
 start()
