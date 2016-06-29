@@ -631,6 +631,8 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	static int parallel, type;
 	struct svcrun **svclist = NULL;
 	int lock, state;
+	char type_rs[8], type_sv[8];
+	static size_t len;
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -640,9 +642,15 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		errno = ENOENT;
 		return -1;
 	}
+
 	parallel = rs_conf_yesno("RS_PARALLEL");
-	type = strcmp(argv[1]+2, rs_stage_type[RS_STAGE_SUPERVISION]) == 0;
+	if (len == 0) {
+		 len = strlen(RS_SVCDIR);
+		snprintf(type_rs, sizeof(type_rs), "--%s", rs_stage_type[RS_STAGE_RUNSCRIPT]);
+		snprintf(type_sv, sizeof(type_sv), "--%s", rs_stage_type[RS_STAGE_SUPERVISION]);
+	}
 	svc_sigsetup();
+	puts(type_rs), puts(type_sv);
 
 	if (strcmp(argv[3], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state = 's';
@@ -653,6 +661,14 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		argv[2] = svc_find(svc->str);
 		if (argv[2] == NULL)
 			continue;
+		if (strncmp(RS_SVCDIR, argv[2], len) == 0) {
+			type = 0;
+			argv[1] = type_rs;
+		}
+		else {
+			type = 1;
+			argv[1] = type_sv;
+		}
 
 		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
 			DBG("%s: Failed to setup lockfile for service\n", svc->str);
@@ -749,8 +765,7 @@ static void svc_stage(const char *cmd)
 	RS_StringList_T *init_stage_list;
 	const char *command = cmd;
 	const char **envp;
-	const char *argv[6] = { "runscript" };
-	char opt[8];
+	const char *argv[8] = { "runscript" };
 	int i, j, k, type = 1;
 
 	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
@@ -768,7 +783,7 @@ static void svc_stage(const char *cmd)
 		j = 0;
 
 	envp = svc_env();
-	argv[1] = opt, argv[4] = (char *)0, argv[3] = command;
+	argv[4] = (char *)0, argv[3] = command;
 
 	/* initialize boot */
 	if (RS_STAGE.level == 1 )
@@ -779,7 +794,6 @@ static void svc_stage(const char *cmd)
 			RS_STAGE.type = rs_stage_type[k];
 			setenv("RS_TYPE", rs_stage_type[k], 1);
 		}
-		snprintf(opt, sizeof(opt), "--%s", RS_STAGE.type);
 		depends = rs_deplist_load();
 
 		while (j >= 0 && j < RS_DEP_PRIORITY) {
