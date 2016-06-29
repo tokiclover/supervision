@@ -95,6 +95,7 @@ dist_RS_SVCS  = \
 	dmcrypt \
 	dmesg \
 	hostname \
+	iptables \
 	kmod \
 	kmod-static-nodes \
 	localfs \
@@ -113,8 +114,10 @@ dist_RS_SVCS  = \
 	unionfs \
 	zram
 dist_RS_OPTS  = \
+	ip6tables \
 	dev
 dist_RS_VIRT  = \
+	ip6tables:iptables \
 	tmpfiles.setup:tmpfiles.dev \
 	swapfiles:swaps \
 	networkfs:localfs \
@@ -140,7 +143,8 @@ dist_STAGE_1 = \
 	rootfs \
 	swaps swapfiles \
 	tmpfiles.setup
-dist_STAGE_2 =
+dist_STAGE_2 = \
+	iptables
 
 ifdef RUNIT
 dist_COMMON  += runit/reboot

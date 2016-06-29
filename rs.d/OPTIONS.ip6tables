@@ -1,0 +1,19 @@
+#
+# $Id: /etc/rs.d/OPTIONS.ip6tables, 2016/06/06           Exp $
+# 
+# See iptables(8) and or ip6tables(8) for more information.
+#
+# Path of the rules file for saving
+IP6TABLES_SAVE="/var/lib/ip6tables/rules-save"
+
+#
+# Extra save and restore options to pass to ip[6]tables
+SAVE_RESTORE_OPTIONS="-c"
+
+# 
+# Enable rules saving when shutting down the service
+#SAVE_ON_STOP="Yes"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
