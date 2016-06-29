@@ -38,7 +38,7 @@ done
 
 case "${1}" in
 	(*/rs.d/*)
-:	${RS_TYPE:=rs}
+:	${RS_TYPE=rs}
 	case "${1}" in
 		(*/stage-[0123]/*)
 	:	${RS_RUNDIR:=${1%/*}}
@@ -51,7 +51,7 @@ case "${1}" in
 	esac
 	;;
 	(*/sv/*|*/service/*)
-:	${RS_TYPE:=sv}
+:	${RS_TYPE=sv}
 :	${RS_STAGE:=2}
 :	${SVC_DIR:=${1}}
 	;;
