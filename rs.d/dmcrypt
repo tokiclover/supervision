@@ -9,9 +9,9 @@ description="Set up (dm-crypt) crypted devices"
 SVC_AFTER="kmod"
 SVC_BEFORE="checkfs"
 
-blkid="$(command -v blkid 2>${NULL} || exit 1)"
+blkid="$(command -v blkid 2>${NULL})"
 crypttab="/etc/crypttab"
-cryptsetup="$(command -v cryptsetup 2>${NULL} || exit 1)"
+cryptsetup="$(command -v cryptsetup 2>${NULL})"
 
 MKSWAP()
 {
@@ -99,6 +99,12 @@ nofail()
 		[ "${1}" = 0 ] || retval=$((${retval}+1))
 	fi
 	return ${1}
+}
+
+start_pre()
+{
+	[ -n "${blkid}" -a -x "${blkid}" ] && [ -f "${crypttab}" ] &&
+		[ -n "${cryptsetup}" -a -x "${cryptsetup}" ]
 }
 
 start()
