@@ -12,7 +12,7 @@ case "${__SV_NAM__}" in
 :	${SV_OPTS:='log:............................................................'}
 	;;
 esac
-PATH="${SV_LIBDIR}/bin:${__path__}"
+PATH="${__path__}"
 __path__=
 
 command="${__SV_CMD__}"
