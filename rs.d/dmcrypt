@@ -49,15 +49,16 @@ crypt_cleanup()
 }
 
 #
-# Build an entry list beforehand; this list is necessary because the read from
-# crypttab interfere with cryptsetup(8) stdin.
+# Build an entry list beforehand
 #
 crypt_entry()
 {
+	[ -f "${crypttab}" ] || return
+
 	while read volume device keyfile options; do
 		case "${volume}" in
 			([a-zA-Z]*)
-			device_list="${device_list}\n${volume};${device};${keyfile};${options}\n"
+			DMCRYPT_DEVICE_LIST="${DMCRYPT_DEVICE_LIST}\n${volume};${device};${keyfile};${options}\n"
 			;;
 		esac
 	done <${crypttab}
@@ -70,6 +71,7 @@ crypt_header()
 {
 	local blkid_opts
 	[ -e "${header}" ] && return
+
 	case "${header}" in
 		([Uu][Uu][Ii][Dd]=*)     blkid_opts="-U ${header#*=}";;
 		([Ll][Aa][Bb][Ee][Ll]=*) blkid_opts="-L ${header#*=}";;
@@ -111,7 +113,7 @@ start()
 {
 	local NOFAIL='nofail 1; continue;'
 	local retval=0 crypt_opts crypt_type crypt_precmd keymode luks_key
-	local volume device keyfile options device_list ifs="${IFS}" entry
+	local volume device keyfile options ifs="${IFS}" entry
 	local discard cipher hash header offset skip keyfile_offset keyfile_size
 	local key_slot noauto nofail key_size tcrypt_hidden tcrypt_keyfile
 	local tcrypt_system readonly timeout tmp tries verify
@@ -119,7 +121,7 @@ start()
 	crypt_entry
 	IFS='
 '
-	for entry in $(printf ${device_list}); do
+	for entry in $(printf "${DMCRYPT_DEVICE_LIST}"); do
 		IFS=';'
 		eval set -- ${entry}
 		volume="${1}" device="${2}" keyfile="${3}" options="${4}"
@@ -315,12 +317,12 @@ start()
 stop()
 {
 	local retval=0
-	local volume device keyfile options device_list entry ifs="${IFS}"
+	local volume device keyfile options entry ifs="${IFS}"
 
 	crypt_entry
 	IFS='
 '
-	for entry in $(printf ${device_list}); do
+	for entry in $(printf "${DMCRYPT_DEVICE_LIST}"); do
 		IFS=';'
 		eval set -- ${entry}
 		volume="${1}" device="${2}" keyfile="${3}" options="${4}"
