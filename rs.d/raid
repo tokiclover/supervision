@@ -8,6 +8,8 @@
 description="Set up software raid (mdadm)"
 SVC_BEFORE="kmod"
 SVC_CONFIGFILE="/etc/mdadm.conf"
+
+dmraid="$(command -v dmraid 2>${NULL})"
 mdadm="$(command -v mdadm 2>${NULL})"
 
 raid_device_entry
@@ -27,6 +29,12 @@ raid_device_entry()
 			;;
 		esac
 	done <${SVC_CONFIGFILE}
+}
+
+start_pre()
+{
+	[ -n "${mdadm}"  -a -x "${mdadm}"  -a -f "${SVC_CONFIGFILE}" ] ||
+	[ -n "${dmraid}" -a -x "${dmraid}" -a -n "${DMRAID_FORMATS}" ]
 }
 
 start()
@@ -60,7 +68,7 @@ start()
 	# Handle Linux fake ATA-RAID
 	#
 	local format
-	[ -n "${DMRAID_FORMATS}" ] && dmraid="$(command -v dmraid 2>${NULL})" &&
+	[ -n "${DMRAID_FORMATS}" ] &&
 	for format in ${DMRAID_FORMATS}; do
 		begin "Bringing up ${format} ATA-RAID"
 		${dmraid} --activate y --ignorelocking --ignoremonitoring ${format}
