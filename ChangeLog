@@ -1,6 +1,6 @@
 Header: supervision/ChangeLog, 2015/04/24
 
-0.12.0:
+0.12.0_alpha:
 
 Changed version numbering in favor of major.minor.revision;
 Added init-system services:
