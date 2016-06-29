@@ -98,6 +98,7 @@ dist_RS_SVCS  = \
 	kmod \
 	kmod-static-nodes \
 	localfs \
+	loopback \
 	lvm \
 	mdev \
 	miscfs \
@@ -132,6 +133,7 @@ dist_STAGE_1 = \
 	checkfs \
 	dmcrypt \
 	localfs \
+	loopback \
 	miscfs \
 	mtab \
 	networkfs \

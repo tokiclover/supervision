@@ -1,0 +1,25 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/loopback                            Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up loopback interface"
+
+start()
+{
+	case "${OS_NAME}" in
+		(Linux)
+		;;
+		ifconfig lo 127.0.0.1 netmask 255.0.0.0
+		route add -net 127.0.0.0 netmask 255.0.0.0 gw 127.0.0.1
+		(*)
+		ifconfig lo0 127.0.0.1 netmask 255.0.0.0
+		route -q add -inet 127.0.0.0 -netmask 255.0.0.0 127.0.0.1
+		;;
+	esac
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
