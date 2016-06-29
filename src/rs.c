@@ -631,7 +631,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	static int parallel, type;
 	struct svcrun **svclist = NULL;
 	int lock, state;
-	char type_rs[8], type_sv[8];
+	static char type_rs[8], type_sv[8];
 	static size_t len;
 
 	if (list == NULL) {
@@ -650,7 +650,6 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		snprintf(type_sv, sizeof(type_sv), "--%s", rs_stage_type[RS_STAGE_SUPERVISION]);
 	}
 	svc_sigsetup();
-	puts(type_rs), puts(type_sv);
 
 	if (strcmp(argv[3], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state = 's';
