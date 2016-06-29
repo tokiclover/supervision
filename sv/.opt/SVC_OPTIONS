@@ -25,23 +25,6 @@ source ${SV_SVCDIR}/.opt/SVC_BACKEND
 source ${SV_SVCDIR}/.opt/sv.conf
 umask 022
 
-case "${RS_TYPE:-sv}" in
-	(rs)
-:	${SV_TYPE=RS}
-:	${SVC_DIR:=${RS_SVCDIR}}
-[ -n "${RS_RUNDIR}" ] &&
-SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
-SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
-	;;
-	(sv)
-:	${SV_TYPE=SV}
-:	${SVC_DIR:=${PWD%/log}}
-:	${SVC_NAME:=${SVC_DIR##*/}}
-SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
-	;;
-esac
-:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${name}}
-
 #
 # Set debug options
 #
@@ -59,6 +42,23 @@ SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
 SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	;;
 esac
+case "${RS_TYPE:-sv}" in
+	(rs)
+:	${SV_TYPE=RS}
+:	${SVC_DIR:=${RS_SVCDIR}}
+[ -n "${RS_RUNDIR}" ] &&
+SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
+SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
+	;;
+	(sv)
+:	${SV_TYPE=SV}
+:	${SVC_DIR:=${PWD%/log}}
+:	${SVC_NAME:=${SVC_DIR##*/}}
+SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
+	;;
+esac
+:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${name}}
+
 SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
