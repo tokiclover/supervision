@@ -198,9 +198,7 @@ case "${1}" in
 	svc_level -3
 	;;
 esac
-ret="${?}"
-end "${ret}"
-exit "${ret}"
+end "${?}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
