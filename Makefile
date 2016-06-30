@@ -107,6 +107,7 @@ dist_RS_SVCS  = \
 	procfs \
 	raid \
 	rootfs \
+	sysctl \
 	sysfs \
 	swaps \
 	tmpdirs \
@@ -141,6 +142,7 @@ dist_STAGE_1 = \
 	mtab \
 	networkfs \
 	rootfs \
+	sysctl \
 	swaps swapfiles \
 	tmpfiles.setup
 dist_STAGE_2 = \
