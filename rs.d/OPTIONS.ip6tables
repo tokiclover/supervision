@@ -4,7 +4,7 @@
 # See iptables(8) and or ip6tables(8) for more information.
 #
 # Path of the rules file for saving
-IP6TABLES_SAVE="/var/lib/ip6tables/rules-save"
+IP6TABLES_RULES_FILE="/var/lib/ip6tables/rules-save"
 
 #
 # Extra save and restore options to pass to ip[6]tables
