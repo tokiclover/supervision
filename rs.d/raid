@@ -12,11 +12,6 @@ SVC_CONFIGFILE="/etc/mdadm.conf"
 dmraid="$(command -v dmraid 2>${NULL})"
 mdadm="$(command -v mdadm 2>${NULL})"
 
-raid_device_entry
-case "${RAID_DEVICE_LIST}" in
-	(*/dev/mapper/*) SVC_NEED="dmcrypt";;
-esac
-
 raid_device_entry()
 {
 	[ -s "${SVC_CONFIGFILE}" ] || return
@@ -30,6 +25,11 @@ raid_device_entry()
 		esac
 	done <${SVC_CONFIGFILE}
 }
+
+raid_device_entry
+case "${RAID_DEVICE_LIST}" in
+	(*/dev/mapper/*) SVC_NEED="dmcrypt";;
+esac
 
 start_pre()
 {
