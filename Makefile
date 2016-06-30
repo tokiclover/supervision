@@ -95,6 +95,7 @@ dist_RS_SVCS  = \
 	dmcrypt \
 	dmesg \
 	hostname \
+	ipset \
 	iptables \
 	kmod \
 	kmod-static-nodes \
@@ -146,6 +147,7 @@ dist_STAGE_1 = \
 	swaps swapfiles \
 	tmpfiles.setup
 dist_STAGE_2 = \
+	ipset \
 	iptables
 
 ifdef RUNIT

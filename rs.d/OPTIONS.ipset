@@ -1,0 +1,15 @@
+#
+# $Id: /etc/rs.d/OPTIONS.ipset, 2016/06/06           Exp $
+# 
+# See ipset(8) for more information.
+#
+# Path of the rules file for saving
+#IPSET_RULES_FILE="/var/lib/ipset/rules-save"
+
+# 
+# Enable rules saving when shutting down the service
+SAVE_ON_STOP="Yes"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
