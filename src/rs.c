@@ -38,9 +38,9 @@ struct slock {
 };
 
 /* list of service to start/stop before|after a stage */
-const char *const rs_init_stage[][4] = {
+static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
-	{ "dmcrypt", NULL }
+	{ "sysctl", "dmcrypt", NULL },
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
