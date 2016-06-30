@@ -114,6 +114,7 @@ dist_RS_SVCS  = \
 	tmpdirs \
 	tmpfiles.dev \
 	unionfs \
+	zfs \
 	zram
 dist_RS_OPTS  = \
 	ip6tables \

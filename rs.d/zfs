@@ -1,0 +1,68 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/zfs                                   Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Import ZFS pools and volumes"
+SVC_BEFORE="checkfs syslog"
+SVC_NEED="mtab"
+SVC_USE="dmcrypt"
+
+if mountinfo -q -t zfs /; then
+	SVC_BEFORE="${SVC_BEFORE} localfs rootfs"
+else
+	SVC_AFTER="${SVC_AFTER}   localfs rootfs"
+fi
+
+zfs="$(command -v zfs 2>${NULL})"
+zpool="$(command -v zpool 2>${NULL})"
+:	${ZPOOL_CACHE:=/etc/zfs/zpool.cache}
+
+start_pre()
+{
+	if ! device_info zfs; then
+		if [ -d /proc/modules]; then
+			modporbe  >${NULL} 2>&1 && device_info zfs ||
+				{ error "No ZFS kernel support or modules found"; return 1; }
+		else
+			error "No ZFS support found for this kernel"
+			error "No kernel modules loading support"
+			return 1
+		fi
+	fi
+}
+
+start()
+{
+	local zpool_opts zfs_opts
+
+	if [ -f "${ZPOOL_CACHE}" ]; then
+		zpool_opts="${zpool_opts} -c ${ZPOOL_CACHE}"
+	fi
+
+	begin "Importing ZFS pools"
+	${zpool} import -a ${zpool_opts} ${ZPOOL_IMPORT_ARGS}
+	end "${?}"
+
+	begin "Mounting ZFS volumes"
+	${zfs} mount -a ${ZFS_MOUNT_ARGS}
+	end "${?}"
+}
+
+stop()
+{
+	local zfs_opts zpool_opts
+
+	begin "Exporting ZFS pools"
+	${zfs} umount -a ${zfs_opts} ${ZPOOL_EXPORT_ARGS}
+	end "${?}"
+
+	begin "Umounting ZFS volumes"
+	${zpool} export -a ${zpool_opts} ${ZFS_UMOUNT_ARGS}
+	end "${?}"
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
