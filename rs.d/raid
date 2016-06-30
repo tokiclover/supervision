@@ -7,6 +7,7 @@
 
 description="Set up software raid (mdadm)"
 SVC_BEFORE="kmod"
+SVC_USE="dmcrypt"
 SVC_CONFIGFILE="/etc/mdadm.conf"
 
 dmraid="$(command -v dmraid 2>${NULL})"
@@ -26,11 +27,6 @@ raid_device_entry()
 	done <${SVC_CONFIGFILE}
 }
 
-raid_device_entry
-case "${RAID_DEVICE_LIST}" in
-	(*/dev/mapper/*) SVC_NEED="dmcrypt";;
-esac
-
 start_pre()
 {
 	[ -n "${mdadm}"  -a -x "${mdadm}"  -a -f "${SVC_CONFIGFILE}" ] ||
@@ -40,6 +36,7 @@ start_pre()
 start()
 {
 	local ifs="${IFS}" device options entry retval=0
+	raid_device_entry
 	IFS='
 '
 	#
