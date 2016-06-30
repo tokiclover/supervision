@@ -6,7 +6,8 @@ Changed version numbering in favor of major.minor.revision;
 Added init-system services:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
 kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
-tmpfiles.{de,setup}, lvm, raid;
+tmpfiles.{de,setup}, lvm, raid, ipset, iptables, sysctl;
+SUPERVISION/SERVICES: xdm;
 
 RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs;
 SERVICE BEHAVIOR: install getty services using a virtual name instead to ease
