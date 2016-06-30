@@ -1,0 +1,72 @@
+#
+# $Header:  /etc/sv/xdm/OPTIONS                          Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+# 
+
+# Setup a particular display manager and virtual terminal
+name="xdm"
+CHECKVT="7"
+description="Set up display manager"
+
+#
+# XXX: WARN:
+# * should start after getty otherwise xdm would start on VT-2, and
+# * then getty would grab keyboard input causing a "dead" keyboard;
+# * {autofs,ypbind} for network authentication;
+# * lirc to be able to use lirc mouse as input device;
+# * console (display corruption, keymaps issues);
+# * gdm-3 need dbus;
+# * quota for a readable home;
+#
+SVC_AFTER="console getty-tty{1,2,3,4,5,6} gpm openvpn"
+SVC_BEFORE="alsasound"
+SVC_USE="autofs consolekit dbus lircmd quota ybind xfs"
+SVC_OPTS="-nodaemon"
+
+case "${name}" in
+	(gdm) SVC_NEED="dbus";;
+	(lightdm)
+	PRE_CMD="fghack"
+	;;
+	(entrance|slim)
+	SVC_OPTS=
+	;;
+esac
+
+checkvt()
+{
+	if [ -d "${SV_RUNDIR}/getty-tty1" ]; then
+		[ -d "${SV_RUNDIR}/getty-tty${1}" ]
+	elif [ -f /etc/inittab ]; then
+		grep -Eq "^c${1}:.* tty${1} " /etc/inittab
+	elif [ -f /etc/ttys ]; then
+		grep -q "^ttyv$((${1}-1)) " /etc/ttys
+	else
+		return 1
+	fi
+}
+
+pre()
+{
+	case "${name}" in
+		(entrance|kdm|gdm|wdm|gpe-dm|lxdm|lightdm|sddm|slim|xdm)
+		;;
+		(*)
+		error "Unsupported display manager"
+		return 1
+		;;
+	esac
+:	${SVC_CMD:=$(command -v "${name:-xdm}" 2>${NULL})}
+
+	if yesno "${CHECKVT:+1}"; then
+		if checkvt "${CHECKVT}"; then
+			error "Something is already using ${CHECKVT} virtual terminal"
+			return 1
+		fi
+	fi
+	[ -n "${SVC_CMD}" ] && [ ! -f /etc/.noxdm ]
+}
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -73,6 +73,7 @@ dist_SV_SVCS  = \
 	ntp \
 	sshd \
 	wpa_supplicant \
+	xdm \
 	udev
 dist_SV_VIRT  = \
 	net:dhcp \
