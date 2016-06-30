@@ -179,7 +179,6 @@ ifdef STATIC
 dist_SV_VIRT += fcron:cron dnsmask:dns \
 	busybox-httpd:httpd busybox-ntpd:ntp socklog:syslog
 endif
-getty_NAME  = $(shell which agetty >/dev/null 2>&1 && echo -n agetty || echo -n getty)
 
 define svc_dir =
 	$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$(1)
@@ -249,18 +248,18 @@ ifdef STATIC
 		fi; \
 	done
 	for i in 1 2 3 4 5 6; do \
-		cp -a sv/getty $(DESTDIR)$(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i}; \
+		cp -a sv/getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
 else
 	$(call svc_sym,sv,$(dist_SV_VIRT))
 	for i in 1 2 3 4 5 6; do \
-		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i}; \
+		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
 endif
 	$(call svc_sym,rs.d,$(dist_RS_VIRT))
 	for i in 1 2 3 4 5 6; do \
-		ln -s $(SYSCONFDIR)/sv/$(getty_NAME)-tty$${i} \
-			$(DESTDIR)$(SYSCONFDIR)/service/$(getty_NAME)-tty$${i}; \
+		ln -s $(SYSCONFDIR)/sv/getty-tty$${i} \
+			$(DESTDIR)$(SYSCONFDIR)/service/getty-tty$${i}; \
 	done
 	for i in 0 1 2 3; do \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}; \
@@ -347,7 +346,7 @@ endif
 		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
 		rm -f $(DESTDIR)$${file}; \
 	done
-	for dir in .lib .opt $(getty_NAME); do \
+	for dir in .lib .opt getty; do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
 	done
 	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.[ol]*

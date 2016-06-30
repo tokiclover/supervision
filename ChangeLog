@@ -7,7 +7,11 @@ Added init-system services:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
 kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
 tmpfiles.{de,setup}, lvm, raid;
-RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs
+
+RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs;
+SERVICE BEHAVIOR: install getty services using a virtual name instead to ease
+service dependencies if need be; so, set the getty name or binary path in the
+configuration file (default is agetty).
 
 Version bumped sv-shutdown to be able to force reboot/shutdown in early boot
 (for checkfs failure for example);

@@ -5,17 +5,14 @@
 
 name=${SVC_NAME%-*}
 TTY=${SVC_NAME#*-}
+SVC_CMD=agetty
 
 find_issue()
 {
 	[ -f /etc/issue.${TTY} ] && TTY_OPTS="${TTY_OPTS} ${1} /etc/issue.${TTY}"
 }
 
-#
-# Specific /service/{,a,m,min}getty-tty[1-6] symlinks are
-# honored; and so are {,a}getty-ttyS[01].
-#
-case "${name}" in
+case "${SVC_CMD}" in
 	(mgetty)
 	find_issue -i
 	SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
@@ -26,29 +23,18 @@ case "${name}" in
 	SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
 	;;
 	(mingetty)
-	SVC_OPTS=${TTY}
+	SVC_OPTS="${TTY}"
 	;;
 	(*)
 	find_issue -f
-	case "${name}" in
-		(agetty) :;;
-		(*)
-		if type -p agetty >${NULL} 2>&1; then
-			name=agetty
-		else
-			name=getty SVC_CMD=busybox
-		fi;;
-	esac
+	if type -p agetty >${NULL} 2>&1; then
+		name=agetty
+	else
+		SVC_OPTS="getty ${SVC_OPTS}"
+		name=getty SVC_CMD=busybox
+	fi
 	;;
 esac
-:	${SVC_CMD:=${name}}
-
-pre()
-{
-	case "${SVC_CMD}" in
-		(*busybox) SVC_OPTS="getty ${SVC_OPTS}";;
-	esac
-}
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
