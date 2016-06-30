@@ -166,7 +166,6 @@ int main(int argc, char *argv[])
 			if (task & MOUNT_FSYS) {
 				if (strcmp(ent->mnt_type, fsys)) {
 					retval++;
-					continue;
 				}
 			}
 			if (task & MOUNT_NDEV) {
