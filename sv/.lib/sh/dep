@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.3 2016/06/06 21:09:26                      Exp $
+# $Version: 0.4 2016/07/01 21:09:26                      Exp $
 #
 
 export LC_ALL=C
@@ -34,42 +34,72 @@ mkdir -p ${SV_DEPDIR}
 :	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 :	${RS_TYPE:=sv}
 
+append()
+{
+	local var="${1}"
+	shift
+	eval "${var}=\"\${$var} ${*}\""
+}
+append_unique()
+{
+	local val var="${1}"
+	shift
+	for val; do
+		if ! eval is_in "${val} \${$var}"; then
+			eval "${var}=\"\${$var} ${val}\""
+		fi
+	done
+}
+
+remove()
+{
+	local list val="${2}" var="${1}"
+	shift 2
+	eval list="\" \$${var} \""
+	list="${list// ${val} / }"
+	list="${list# }"
+	eval "${var}='${list% }'"
+}
+remove_all()
+{
+	local val var="${1}"
+	shift
+	for val; do
+		remove "${var}" "${val}"
+	done
+}
+is_in()
+{
+	local val="${1}"
+	shift
+	case " ${*} " in
+		(*" ${val} "*) return 0;;
+		(*)            return 1;;
+	esac
+}
+
+add_dep()
+{
+	local dependency svc="${1}" dep="${2%:*}" DEP="${2#*:}"
+	shift 2
+	if [ "${#}" -gt 0 ]; then
+		append "${dep}_1" "${svc}"
+		append_unique "${dep}_2" "${@}"
+		eval "${DEP}=\"\$${DEP}\n${svc}:${@}\""
+	fi
+}
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	case "${RS_TYPE}" in
 		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
 	esac
-	DEP_0="${DEP_0} ${1}"
+	SERVICE_LIST="${SERVICE_LIST} ${1}"
 	SVC_NAME="${1}"
 	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
 	for dep in ${__SV_SRT_DEP_ORD__}; do
-		eval [ -n \"\${SVC_${dep#*:}}\" ] || continue
-		eval echo ${SVC_NAME}:\${SVC_${dep#*:}} >>${SV_DEPDIR}/${RS_TYPE}_${dep%:*}
-	done
-}
-
-dep_tree()
-{
-	local i s svc
-	while read line; do
-		DEP_1="${DEP_1} ${line%:*}" DEP_2="${DEP_2} ${line#*:}"
-		case " ${DEP_0} " in
-			(*" ${line%:*} "*) DEP_0="${DEP_0/${line%:*}}";;
-		esac
-	done <${1}
-	for i in 1 2; do
-	eval DEP_${i}=\"$(echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u)\"
-	done
-	for i in 0 1; do
-	for s in $(eval echo \${DEP_${i}}); do
-		for svc in $(eval echo \${DEP_$((${i}+1))}); do
-			case "${s}" in
-				("${svc}") eval DEP_${i}=\"\${DEP_${i}/${s}}\";;
-			esac
-		done
-	done
+		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}}
 	done
 }
 
@@ -85,19 +115,42 @@ for svc in *; do
 	[ "${svc}" = "*" ] && continue
 	dep_gen ${svc##*/}
 done
-dep_0="${DEP_0}"
 
-for dep in use need before after; do
-	DEP=${SV_DEPDIR}/${RS_TYPE}_${dep} DEP_0="${dep_0}" DEP_1= DEP_2=
-	[ -f ${DEP} ] && dep_tree ${DEP}
+for dep in ${__SV_SRT_DEP_ORD__}; do
+	DEP="${dep#*:}"
+	dep="${dep%:*}"
+	FILE=${SV_DEPDIR}/${RS_TYPE}_${dep}
 
+	#
+	# Swap dependency order to get a natural order like 'after'
+	#
 	case ${dep} in
-		(before) dep_1="${DEP_2}"
-		DEP_2="${DEP_1}"; DEP_1="${dep_1}"
+		(before)
+		eval dep_1="\"\$${dep}_2\""
+		eval "${dep}_2=\"\$${dep}_1\""
+		eval "${dep}_1=\"${dep_1}\""
 		;;
 	esac
-	for i in 0 1 2; do
-		eval echo ${dep}_${i}=\\\" $(eval echo \${DEP_${i}} | sed 's/[[:space:]]/\n/g' | sort -u) \\\"
+
+	eval echo -e "\$${DEP}" >${FILE}
+
+	eval "${dep}_0='${SERVICE_LIST}'"
+	eval remove_all "${dep}_0" "\$${dep}_1" "\$${dep}_2"
+	#
+	# Move up dependency priority if necessary
+	#
+	for val in $(eval echo "\$${dep}_1"); do
+		if eval is_in "${val}" "\$${dep}_2"; then
+			append_unique "${dep}_3" "${val}"
+			remove "${dep}_1" "${val}"
+			remove "${dep}_2" "${val}"
+		fi
+	done
+	#
+	# Print dependency list
+	#
+	for i in 0 1 2 3; do
+		eval echo "${dep}_${i}=\\\" \$${dep}_${i} \\\""
 	done
 done >${SV_DEPDIR}/${RS_TYPE}
 
