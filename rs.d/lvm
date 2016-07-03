@@ -9,7 +9,7 @@ SVC_AFTER="kmod device-mapper"
 SVC_BEFORE="checkfs"
 SVC_CONFIGFILE="/etc/lvm/lvm.conf"
 
-lvm="$(command -v lvm 2>${NULL} || exit 1)"
+lvm="$(command -v lvm 2>${NULL})"
 
 start_pre()
 {
