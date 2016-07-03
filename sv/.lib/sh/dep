@@ -34,20 +34,27 @@ mkdir -p ${SV_DEPDIR}
 :	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 :	${RS_TYPE:=sv}
 
+if (eval "var=1; var+=2; test x${var} = x12 2>${NULL}"); then
+append()
+{
+	local var="${1}"
+	shift
+	eval "${var}+=\" ${*}\""
+}
+else
 append()
 {
 	local var="${1}"
 	shift
 	eval "${var}=\"\${$var} ${*}\""
 }
+fi
 append_unique()
 {
 	local val var="${1}"
 	shift
 	for val; do
-		if ! eval is_in "${val} \${$var}"; then
-			eval "${var}=\"\${$var} ${val}\""
-		fi
+		eval is_in "${val} \${$var}" || append "${var}" "${val}"
 	done
 }
 
@@ -80,7 +87,7 @@ is_in()
 
 add_dep()
 {
-	local dependency svc="${1}" dep="${2%:*}" DEP="${2#*:}"
+	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
 	shift 2
 	if [ "${#}" -gt 0 ]; then
 		append "${dep}_1" "${svc}"
@@ -91,6 +98,8 @@ add_dep()
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
+	local dep
+
 	case "${RS_TYPE}" in
 		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
 	esac
