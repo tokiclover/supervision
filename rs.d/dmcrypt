@@ -22,8 +22,8 @@ MKSWAP()
 	end "${?}"
 
 	if [ "${?}" = 0 ]; then
-		begin "Enabling ${volume} swap volume"
-		swapon /dev/mapper/${volume}
+		begin "Enabling ${1} swap volume"
+		swapon ${1}
 		end "${?}"
 	fi
 }
@@ -117,6 +117,7 @@ start()
 	local discard cipher hash header offset skip keyfile_offset keyfile_size
 	local key_slot noauto nofail key_size tcrypt_hidden tcrypt_keyfile
 	local tcrypt_system readonly timeout tmp tries verify
+	local var val
 
 	crypt_entry
 	IFS='
@@ -137,15 +138,16 @@ start()
 		eval set -- ${options}
 		IFS="${ifs}"
 		while [ "${#}" -gt 0 ]; do
+			var="${1%%=*}" val="${1#*=}"
 			case "${1}" in
 				(tcrypt-keyfile=*)
 					tcrypt_keyfile="${tcrypt_keyfile} --key-file ${1#*=}" ;;
 				(luks|loopaes|plain|swap|tcrypt)
 					crypt_type="${1}" ;;
-				(discard|noauto|nofail|verify)
-					eval "${1}=1" ;;
+				(discard|noauto|nofail|tcrypt-hidden|tcrypt-system|verify)
+					eval "${1/-/_}=1" ;;
 				([chkost]*=*)
-					eval "${1}"   ;;
+					eval "${var//-/_}='${val}'" ;;
 			esac
 			shift
 		done
@@ -284,6 +286,7 @@ start()
 		esac
 
 		crypt_opts="${crypt_opts} \
+	${keyfile:+--key-file} ${keyfile} \
 	${timeout:+--timeout} ${timeout} ${tries:+--tries} ${tries} \
 	${discard:+--allow-discards} ${readonly:+--readonly}"
 
