@@ -8,7 +8,7 @@ description="kernel modules loader"
 
 start()
 {
-	local mod modules kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
+	local mod k_modules kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
 
 	IFS=".-"
 	eval set -- $(uname -r)
@@ -19,9 +19,14 @@ start()
 	eval kv_modules="\"\${modules_${kv_major}} \${modules_${kv_major}_${kv_minor}} \
 		\${modules_${kv_major}_${kv_minor}_${kv_patch}}\""
 
+	#
+	# Build a space separated list to be able to load everything with a single
+	# command
+	#
 	for mod in ${modules} ${kv_modules}; do
-		modprobe "${mod}"
+		k_modules="${k_modules} ${mod}"
 	done
+	modprobe ${k_modules} >${NULL} 2>&1
 }
 
 #
