@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/05/08 21:09:26                      Exp $
+# $Version: 1.3 2016/06/08 21:09:26                      Exp $
 #
 
 __FUNCTIONS__=1
@@ -12,8 +12,14 @@ __FUNCTIONS__=1
 #
 if [ -n "${ZSH_VERSION}" ]; then
 	emulate sh
+	NULLCMD=:
+	setopt NO_GLOB_SUBST
 	setopt SH_WORD_SPLIT
 	disable -r end
+else
+	case "$(set -o 2>${NULL})" in
+		(*posix*) set -o posix;;
+	esac
 fi
 
 #
