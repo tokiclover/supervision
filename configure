@@ -227,7 +227,7 @@ enable_safe(){
 	enable $(sanitize_var_name "$@")
 }
 disable_safe(){
-	disable_safe $(sanitize_var_name "$@")
+	disable $(sanitize_var_name "$@")
 }
 
 enabled(){
