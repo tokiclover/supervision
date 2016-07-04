@@ -513,6 +513,8 @@ HEADERS_LIST="
 	unistd.h
 "
 CMDLINE_ENABLE="
+	runit
+	s6
 	static-service
 	sysvinit
 "
@@ -609,15 +611,20 @@ for opt; do
 		;;
 		--enable-*)
 		optname="${optname#--enable-}"
-		is_in "$optname" $CMDLINE_ENABLE || die_illegal
+		is_in "$optname" $CMDLINE_ENABLE || die_illegal "$opt"
 		eval "${optname//-/_}=yes"
 		;;
+		--disable-*)
+		optname="${optname#--disable-}"
+		is_in "$optname" $CMDLINE_ENABLE || die_illegal "$opt"
+		eval "${optname//-/_}=no"
+		;;
 		--*=*)
-		is_in "$optname" $CMDLINE_SET || die_illegal
+		is_in "$optname" $CMDLINE_SET || die_illegal "$opt"
 		eval "${optname//-/_}='$optvalue'"
 		;;
 		*)
-		die_illegal "$optname"
+		die_illegal "$opt"
 		;;
 	esac
 done
@@ -674,7 +681,8 @@ check_CFLAGS -Wdisabled-optimization
 check_CFLAGS -Wempty-body
 check_LDFLAGS -Wl,--as-needed
 
-for header in $HEADER_LIST ${sysvinit+initreq.h}; do
+enabled sysvinit && HEADER_LIST="${HEADER_LIST} initreq.h"
+for header in $HEADER_LIST; do
 	check_header "$header" || DIE "missing $header header"
 done
 
@@ -721,6 +729,8 @@ Static /service/           : ${static_service-no}
 SysVinit (compatibility)   : ${sysvinit-no}
 Extra runscript services   : $EXTRA_RS_SERVICES
 Extra supervision services : $EXTRA_SV_SERVICES
+Runit init-stage           : ${runit-no}
+S6    init-stage           : ${s6-no}
 SUMMARY_EOF
 
 echo "Genrating $CONFIG_MAK"
@@ -768,6 +778,8 @@ LD_O=$LD_O
 LD_LIB=$LD_LIB
 LD_PATH=$LD_PATH
 LDFLAGS=$LDFLAGS
+RUNIT_INIT_STAGE=${runit-no}
+S6_INIT_STAGE=${s6-no}
 STATIC_SERVICE=${static_service-no}
 SYSVINIT=${sysvinit-no}
 $(print_extra_services)
