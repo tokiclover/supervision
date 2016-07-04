@@ -1,0 +1,809 @@
+#!/bin/sh
+#
+# supervision configure script
+#
+
+name="${0##*/}"
+NULL=/dev/null
+export LC_ALL=C
+
+shell_exec(){
+	echo "Trying to exec $1 shell"
+	command -v "$1" >$NULL 2>&1 && exec "$1"
+}
+
+unset FOO
+(: ${FOO%%BAR}) 2>$NULL
+E1="$?"
+(: ${FOO?}    ) 2>$NULL
+E2="$?"
+
+if test "$E1" != 0 || test "$E2" = 0; then
+	echo "Broken shell detected; trying bash..."
+	export CONFIGURE_EXEC=0
+	if test "$CONFIGURE_EXEC" -lt 1; then
+		CONFIGURE_EXEC=1
+		shell_exec bash "$0" "$@"
+	fi
+	if test "$CONFIGURE_EXEC" -lt 2; then
+		CONFIGURE_EXEC=2
+		shell_exec ksh "$0" "$@"
+	fi
+	if test "$CONFIGURE_EXEC" -lt 3; then
+		CONFIGURE_EXEC=3
+		shell_exec zsh "$0" "$@"
+	fi
+	echo "ERROR: No compatible shell interpreter found" >&2
+	echo "ERROR: Install a POSIX compatible shell like" >&2
+	echo "ERROR: bash, ksh, zsh, and try again" >&2
+	exit 1
+fi
+if ! source sv/.lib/sh/functions; then
+	echo "ERROR: Failed to source required file" >&2
+	exit 1
+fi
+
+unset CDPATH GREP_OPTIONS >$NULL 2>&1
+
+export LOG_FD=3 CONFIG_LOG=config.log
+export CONFIG_H=src/config.h CONFIG_MAK=config.mak
+exec 3>${CONFIG_LOG}
+
+help_message(){
+cat <<-EOH
+Usage: configure [OPTIONS]
+OPTIONS: [default options in square brackets]
+
+Standard options:
+  --help                   print this help message
+  --prefix=PREFIX          install in PREFIX [$prefix]
+  --bindir=DIR             install binaries in DIR [PREFIX/bin]
+  --datadir=DIR            install data files in DIR [PREFIX/share/$package]
+  --docdir=DIR             install documentation in DIR [PREFIX/share/doc/$package]
+  --libdir=DIR             install libs in DIR [PREFIX/lib]
+  --shlibdir=DIR           install shared libs in DIR [LIBDIR]
+  --incdir=DIR             install includes in DIR [PREFIX/include]
+  --mandir=DIR             install man page in DIR [PREFIX/share/man]
+  --sysconfdir=DIR         install system wide data in DIR [$sysconfdir]
+
+Component options:
+  --enable-sysvinit        build and install SysVinit compatibility service
+  --enable-static-service  install a static $sysconfdir/sv,$sysconfdir/service
+
+Toolchain options:
+  --build=BUILD            use build C compiler for CC
+  --host=HOST              use host C compiler for CC
+  --ln_s=LN_S              use symbolic link tool LN_S [$ln_s_default]
+  --cp_f=CP_F              use copy tool CP_F [$cp_f_default]
+  --install=INSTALL        use install tool INSTALL [$install_default]
+  --extra-cflags=ECFLAGS   add ECFLAGS to CFLAGS [$CFLAGS]
+  --extra-cxxflags=ECFLAGS add ECFLAGS to CXXFLAGS [$CXXFLAGS]
+  --extra-cppflags=FLAGS  add FLAGS to OBJCFLAGS [$CFLAGS]
+  --extra-ldflags=ELDFLAGS add ELDFLAGS to LDFLAGS [$LDFLAGS]
+
+EOH
+exit ${1:-0}
+}
+
+log(){
+	echo "$@" >&$LOG_FD
+}
+LOG(){
+	echo "$@"
+	log "$@"
+}
+logfile(){
+	log BEGIN "$1"
+	pr -n -t  "$1" >&$LOG_FD
+	log END   "$1"
+}
+
+die_illegal(){
+	error "illegal option -- $@\nsee $0 --help for availlable options"
+	exit 1
+}
+
+INFO(){
+	log "$@"
+	info "@"
+}
+WARN(){
+	log "WARN: $@"
+	warn "$@"
+}
+ERROR(){
+	log "ERROR: $@"
+	error "$@"
+}
+DIE(){
+	local ret="$?"
+	ERROR "$@"
+
+	cat <<-EOH
+
+Take a look at $CONFIG_LOG and include the file or part of it when reporting.
+
+EOH
+	case "$ret" in
+		0) ret=1;;
+	esac
+	exit $ret
+}
+
+c_escape(){
+	echo "$*" | sed 's/["\\]/\\\0/g'
+}
+sh_quote(){
+	echo "$*" | sed "s/'/'\\\\''/g"
+}
+
+toupper(){
+	echo "$@" | tr '[a-z]' '[A-Z]'
+}
+tolower(){
+	echo "$@" | tr '[A-Z]' '[a-z]'
+}
+
+filter(){
+	local var pat="$1"
+	shift
+	for var; do
+		eval "case $var in $pat) echo $var;; esac;"
+	done
+}
+filter_out(){
+	local var pat="$1"
+	shift
+	for var; do
+		eval "case $var in $pat) ;; *) echo $var;; esac;"
+	done
+}
+
+unique(){
+	local i var="$1" unique
+	for i in $(echo \$$var); do
+		unique="$(filter_out "$i" $unique) $i"
+	done
+	eval "$var='$unique'"
+}
+
+map(){
+	local val map="$1"
+	shift
+	for val; do
+		eval $map
+	done
+}
+
+set_all(){
+	local var val="$1"
+	shift
+	for var; do
+		eval $var=$val
+	done
+}
+set_default(){
+	local var
+	for var; do
+		eval "$var=\"\$$var_default\""
+	done
+}
+set_weak(){
+	local var val="$1"
+	shift
+	for var; do
+		eval : \${$var:=$val}
+	done
+}
+
+sanitize_var_name(){
+	echo "$@" | sed 's/[^a-zA-Z0-9_]/_/g'
+}
+set_safe_var(){
+	local var="$1"
+	shift
+	eval $(sanitize_var_name "$var")='"$*"'
+}
+get_safe_var(){
+	shift
+	eval echo \$$(sanitize_var_name "$1")
+}
+
+enable(){
+	set_all yes $*
+}
+disable(){
+	set_all no "$@"
+}
+
+enable_weak(){
+	set_weak yes "$@"
+}
+disable_weak(){
+	set_weak no "$@"
+}
+
+enable_safe(){
+	enable $(sanitize_var_name "$@")
+}
+disable_safe(){
+	disable_safe $(sanitize_var_name "$@")
+}
+
+enabled(){
+	yesno "\$$1"
+}
+disabled(){
+	enabled && return 1
+}
+
+set_default(){
+	local var
+	for var; do
+		eval : \${$var:=\$${var}_default}
+	done
+}
+
+is_in(){
+	local sep val="$1"
+	shift
+	case "$*" in
+		*','*) sep=',';;
+		*';'*) sep=';';;
+		*':'*) sep=':';;
+		*)     sep=' ';;
+	esac
+	case "$sep$*$sep" in
+		*"$sep$val$sep"*) return 0;;
+		*) return 1;;
+	esac
+}
+
+print_config(){
+    prefx="$1"
+    files="$2"
+    shift 2
+    map 'eval echo "$val \${$val:-no}"' "$@" |
+    awk "BEGIN { split(\"$files\", files) }
+        {
+            config = \"$prefix\" toupper(\$1);
+            value  = \$2;
+            sub(/yes/, 1, value);
+            sub(/no/,  0, value);
+            for (i in files) {
+                file = files[i];
+                if (file ~ /\\.h\$/) {
+                    printf(\"#define %s %d\\n\", config, value) >>file;
+				} else if (file ~ /\\.(mak|mk)\$/) {
+                    number = -value ? \"\" : \"!\";
+                    printf(\"%s%s=yes\\n\", number, config) >>file;
+                }
+			}
+		}"
+ }
+
+print_enabled(){
+	local suffix="$1" val
+	shift
+	for val; do
+		enabled $val && printf "%s\n" ${val%%$suffix}
+	done
+}
+
+print_header(){
+	[ "${1%.h}" = "$1" ] &&
+		echo "#include $1" ||
+		echo "#include <$1>"
+}
+
+if (eval "var=1; var+=2; test x$var = x12 2>${NULL}"); then
+append(){
+	local var="$1"
+	shift
+	eval "$var+=\" $*\""
+}
+else
+append(){
+	local var="$1"
+	shift
+	eval "$var=\"\$$var $*\""
+}
+fi
+prepend(){
+	local var="$1"
+	shift
+	eval "$var=\"$* \$$var\""
+}
+
+append_unique(){
+	local val var="$1"
+	shift
+	for val; do
+		eval is_in "$val \$$var" || append "$var" "$val"
+	done
+}
+prepend_unique(){
+	local val var="$1"
+	shift
+	for val; do
+		eval is_in "$val \$$var" || prepend "$var" "$val"
+	done
+}
+
+add_FLAGS(){
+	append_unique "$@"
+}
+add_CFLAGS(){
+	add_FLAGS CFLAGS "$@"
+}
+add_LDFLAGS(){
+	add_FLAGS LDFLAGS "$@"
+}
+add_CPPFLAGS(){
+	add_FLAGS CPPFLAGS "$@"
+}
+add_CXXFLAGS(){
+	add_FLAGS CXXFLAGS "$@"
+}
+
+check_cmd(){
+	log "$@"
+	"$@" >&$LOG_FD 2>&1
+}
+
+check_code(){
+	log check_code "$@"
+	local type="$1" header headers="$2" code="$3"
+	shift 3
+	{
+		for header in $headers; do
+			print_header "$header"
+		done
+		echo "int main(void) { $code; return 0; }"
+	} | check_$type "$@"
+}
+
+check_CC(){
+	log check_CC "$@"
+	cat >$TMP_C
+	logfile $TMP_C
+	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_C $CC_O $TMP_O $TMP_C
+}
+
+check_CPP(){
+	log check_CPP "$@"
+	cat >$TMP_C
+	logfile $TMP_C
+	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_E $TMP_O $TMP_C
+}
+
+check_LD(){
+	log check_LD "$@"
+	local type="$1"
+	shift
+	local flags="$(filter_out '-l*|*.so' "$@")"
+	local libs="$(filter '-l*|*.so' "$@")"
+	check_$type $flags || return
+	check_cmd $ld $LDFLAGS $flags $LD_O $TMP_E $TMP_O $libs $extralibs
+}
+
+check_FLAGS(){
+	LOG check "$@"
+	local type=FLAGS
+	case "$1" in
+		LDFLAGS) type=LDFLAGS;;
+		STRIPLAGS) type=STRIPLAGS;;
+	esac
+	test_$type "$@" && add_FLAGS "$@"
+}
+check_CFLAGS(){
+	check_FLAGS CFLAGS "$@"
+}
+check_LDFLAGS(){
+	check_FLAGS LDFLAGS "$@"
+}
+check_CPPFLAGS(){
+	check_FLAGS CPPFLAGS "$@"
+}
+check_CXXFLAGS(){
+	check_FLAGS CXXFLAGS "$@"
+}
+
+test_FLAGS(){
+	local type="$1"
+	shift
+	log test_$type "$@"
+	check_CC "$@" <<EOF
+int x;
+EOF
+}
+test_LDFLAGS(){
+	log test "$@"
+	shift
+	check_LD CC "$@" <<EOF
+int main(void) { return 0; }
+EOF
+}
+test_STRIPFLAGS(){
+	log test "$@"
+	check_CC "$@" <<EOF
+int main(void) { return 0; }
+EOF
+	check_cmd $strip $ASMSTRIPFLAGS "$@" $TMP_O
+}
+
+check_header(){
+	LOG check_header "$@"
+	local header="$1"
+	shift
+	disable_safe "$header"
+	check_CPP "$@" <<EOF && enable_safe "$header"
+#include <$header>
+int x;
+EOF
+}
+
+check_func(){
+	LOG check_func "$@"
+	local func="$1"
+	diasable "$func"
+	check_LD "$@" <<EOF && enable $func
+extern int $func();
+int main(void) { $func(); }
+EOF
+}
+
+check_func_headers(){
+	LOG check_func_headers "$@"
+	local header headers="$1" func funcs="$2"
+	shift 2
+	{
+		for header in $headers; do
+			print_header "$header"
+		done
+		for func in $funcs; do
+			echo "long check_$func(void) { rturn (long) $func; }"
+		done
+	} | check_LD "$@" && enable $funcs && enable_safe $headers
+}
+
+check_cpp_condition(){
+	log check_cpp_condition "$@"
+	local header="$1" condition="$2"
+	shift 2
+	check_CPP "$@" <<EOF
+#include <$header>
+#if !($condition)
+#error "unsatisfied condition: $condition
+#endif
+EOF
+}
+
+check_struct(){
+	LOG check_struct "$@"
+	local headers="$1" struct="$2" member="$3"
+	shift 3
+	disable_safe "${struct}_${member}"
+	check_code CC "$headers" "const void *p = &(($struct *)0)->$member" "$@" &&
+		enable_safe "${struct}_${member}"
+}
+
+check_builtin(){
+	LOG check_builtin "$@"
+	local func="$1" headers="$2" builtin="$3"
+	shift 3
+	disable "$func"
+	check_code LD "$headers" "$builtin" CC "$@" && enable "$func"
+}
+
+check_lib(){
+	LOG check_lib "$@"
+	local header="$1" func="$2"
+	shift 2
+	check_header "$header" && check_func "$header" "$func" "$@" &&
+		add_FLAGS EXTRALIBS "$@"
+}
+
+require(){
+	local lib="$1" header="$2" func="$3"
+	shift 3
+	check_lib "$header" "$func" "$@" || die "$lib not found"
+}
+
+tmpfile(){
+	local tmp="$(mktemp "$TMPDIR"/sv-test-tmp.XXXXXXXXXX)"
+	if test "x$2" != x; then
+		mv "$tmp" "$tmp$2"
+		tmp="$tmp$2"
+	fi
+	append TMPFILES "$tmp"
+	eval $1=\"$tmp\"
+}
+
+HEADERS_LIST="
+	dirent.h
+	fcntl.h
+	getopt.h
+	grp.h
+	mntent.h
+	poll.h
+	pwd.h
+	sys/ioctl.h
+	sys/stat.h
+	sys/termios.h
+	sys/type.h
+	sys/wait.h
+	unistd.h
+"
+CMDLINE_ENABLE="
+	static-service
+	sysvinit
+"
+CMDLINE_SET="
+	build
+	host
+	exec-prefix
+	prefix
+	mandir
+	infodir
+	datadir
+	sysconfdir
+	localstatedir
+	libdir docdir
+	install
+	pkg-config
+"
+CMDLINE_APPEND="
+	extra_cflags
+	extra_ldflags
+	extra_cxxflags
+	extra_cppflags
+"
+
+# extra services
+LINUX_RS_SERVICES="
+	dmcrypt
+	ipset
+	iptables
+	lvm
+	raid
+	zram
+"
+LINUX_RS_VIRTUALS="
+	ip6tables:iptables
+"
+LINUX_SV_SERVICES="
+"
+LINUX_SV_VIRTUALS="
+"
+LINUX_STAGE_0="
+"
+LINUX_STAGE_1="
+	dmcrypt
+"
+LINUX_STAGE_2="
+	ipset
+	iptables
+"
+
+# installation paths
+package="supervision"
+prefix_default="/usr/local"
+exec_prefix_default=""
+bindir_default='${EXEC_PREFIX}/bin'
+sbindir_default='${EXEC_PREFIX}/sbin'
+libdir_default='${EXEC_PREFIX}/lib'
+datadir_default='${PREFIX}/share'
+docdir_default='${PREFIX}/share/doc/${PACKAGE}-${VERSION}'
+incdir_default='${PREFIX}/include'
+mandir_default='${PREFIX}/share/man'
+sysconfdir_default='/etc'
+rundir_default="/var/run"
+ln_s_default='ln -f -s'
+mkdir_p_default='mkdir -p'
+install_default='install'
+
+# toolchain
+cc_default="gcc"
+cp_f_default="cp -f"
+ln_s_default="ln -s -f"
+
+# build settings
+CC_C='-c'
+CC_E='-E -o'
+CC_O='-o'
+LD_O='-o'
+LD_LIB='-l%'
+LD_PATH='-L'
+
+for opt; do
+	optvalue="${opt#*=}"
+	optname="${opt%%=*}"
+	case "$opt" in
+		--extra-*flags=*)
+		is_in "${optname#--extra-}" $CMDLINE_APPEND || die_illegal
+		add_FLAGS $(toupper "${optname#--extra-}" "$optvalue")
+		;;
+		--help|-h)
+		help_message
+		;;
+		--disable-access|--enable-conf-applications|--enable-shared|--disable-static)
+		warn "unrecognized options"
+		;;
+		--enable-*)
+		optname="${optname#--enable-}"
+		is_in "$optname" $CMDLINE_ENABLE || die_illegal
+		eval "${optname//-/_}=yes"
+		;;
+		--*=*)
+		is_in "$optname" $CMDLINE_SET || die_illegal
+		eval "${optname//-/_}='$optvalue'"
+		;;
+		*)
+		die_illegal "$optname"
+		;;
+	esac
+done
+
+case "${build:-${host:-$(uname -s)}}" in
+	*[Ll]inux*)
+	rundir="/run"
+	for type in RS SV; do
+		for thing in SERVICES VIRTUALS; do
+			eval append EXTRA_${type}_${thing} \$LINUX_${type}_${thing}
+		done
+	done
+	for i in 0 1 2 3; do
+		eval append EXTRA_STAGE_${i} \$LINUX_STAGE_${i}
+	done
+	;;
+esac
+
+:	${cc:=$build}
+set_default cc exec_prefix prefix bindir sbindir mandir datadir docdir infodir \
+	libdir ln_s cp_f sysconfdir rundir ln_s mkdir_p install
+:	${ld:=$cc}
+:	${TMPDIR:=${TMP:-/tmp}}
+
+umask 77
+if touch "$TMPDIR"/conftest >$NULL 2>&1; then
+	chmod +x "$TMPDIR"/conftest >$NULL 2>&1
+	cat >"$TMPDIR"/conftest <<EOF
+#!/bin/sh
+EOF
+	if ! "$TMPDIR"/conftest; then
+		DIE "Failed to create an excecutable file in $TMPDIR"
+	fi
+	rm "$TMPDIR"/conftest
+else
+	DIE "Failed to create a temporary file in $TMPDIR"
+fi
+trap 'rm -f -- $TMPFILES' EXIT TERM
+
+tmpfile TMP_C .c
+tmpfile TMP_O .o
+tmpfile TMP_H .h
+tmpfile TMP_E
+
+echo -e "$0 $*\n" >&$LOG_FD
+set >&$LOG_FD
+
+prepend_unique CFLAGS -std=c99
+check_CFLAGS -D_DEFAULT_SOURCE ||
+	DIE "Fatal failure; cannot build a test sample"
+check_CFLAGS -fPIC
+check_CFLAGS -Wall
+check_CFLAGS -Wdisabled-optimization
+check_CFLAGS -Wempty-body
+check_LDFLAGS -Wl,--as-needed
+
+for header in $HEADER_LIST ${sysvinit+initreq.h}; do
+	check_header "$header" || DIE "missing $header header"
+done
+
+check_builtin "access" "unistd.h" "access(NULL, 0)" ||
+	DIE "missing access() system builtin"
+check_builtin "execve" "unistd.h" "execve(NULL, (char**)NULL, (char**)NULL)" ||
+	DIE "missing execve() system builtin"
+check_builtin "fnctl" "fcntl.h" "fcntl(F_SETFD, 0, 0)" ||
+	DIE "missing fcntl() system builtin"
+check_builtin "fork" "unistd.h" "fork()" ||
+	DIE "missing fork() system builtin"
+check_builtin "getopt_long" "getopt.h" "getopt_long(0, (char**)0, (void*)0, (struct option*)0, (void*)0)" ||
+	DIE "missing getopt_long() system builtin"
+check_builtin "lstat" "sys/stat.h" "lstat((void*)0, (struct stat*)0); stat((void*)0, (struct stat*)0)" ||
+	DIE "missing [l]stat() system builtin"
+check_builtin "mkdtemp" "stdlib.h" "mkdtemp(NULL)" ||
+	DIE "missing mkdtemp() system builtin"
+check_builtin "mkstemp" "stdlib.h" "mkstemp(NULL)" ||
+	DIE "missing mkstemp() system builtin"
+check_builtin "poll" "poll.h" "poll((struct pollfd*)0, 0, 0)" ||
+	DIE "missing poll() system builtin"
+check_builtin "strerror" "string.h" "strerror(0)" ||
+	DIE "missing strerror() system builtin"
+
+
+if enabled static_service; then
+	add_CPPFLAGS -DSTATIC_SERVICE
+fi
+check_cpp_condition 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \
+	defined(__GLIBC__)) || defined(__GNU__)' &&
+	RUNDIR=/run || RUNDIR=/var/run
+
+echo
+cat <<-SUMMARY_EOF
+Summary:
+package                    : $package
+exec_prefix                : $exec_prefix
+prefix                     : $prefix
+sysconfdir                 : $sysconfdir
+rundir                     : $rundir
+CFLAGS                     : $CFLAGS
+LDFLAGS                    : $LDFLAGS
+Static /service/           : ${static_service-no}
+SysVinit (compatibility)   : ${sysvinit-no}
+Extra runscript services   : $EXTRA_RS_SERVICES
+Extra supervision services : $EXTRA_SV_SERVICES
+SUMMARY_EOF
+
+echo "Genrating $CONFIG_MAK"
+
+print_extra_services(){
+	for type in RS SV; do
+		for thing in SERVICES VIRTUALS; do
+			eval echo EXTRA_${type}_${thing}=\$EXTRA_${type}_${thing}
+		done
+	done
+	for i in 0 1 2 3; do
+		eval echo EXTRA_STAGE_${i}=\$EXTRA_STAGE_${i}
+	done
+}
+
+cat >$CONFIG_MAK <<CONFIG_MAK_EOF
+ifndef SUPERVISION_CONFIG_MAK
+SUPERVISION_CONFIG_MAK=1
+PACKAGE=$package
+EXEC_PREFIX=$exec_prefix
+PREFIX=$prefix
+LIBDIR=$libdir
+BINDIR=$bindir
+SBINDIR=$sbindir
+DATADIR=$datadir
+DOCDIR=$docdir
+MANDIR=$mandir
+PKGCONFIGDIR=$pkgconfigdir
+RUNDIR=$rundir
+SYSCONFDIR=$sysconfdir
+ARCH=$arch
+CC=$cc
+LD=$cc
+INSTALL=$install
+CP_F=$cp_f
+LN_S=$ln_s
+MKDIR_P=$mkdir_p
+CPPFLAGS=$CPPFLAGS
+CFLAGS=$CFLAGS
+CXXFLAGS=$CXXFLAGS
+CC_C=$CC_C
+CC_E=$CC_E
+CC_O=$CC_O
+LD_O=$LD_O
+LD_LIB=$LD_LIB
+LD_PATH=$LD_PATH
+LDFLAGS=$LDFLAGS
+STATIC_SERVICE=${static_service-no}
+SYSVINIT=${sysvinit-no}
+$(print_extra_services)
+endif
+CONFIG_MAK_EOF
+
+echo "Generating $CONFIG_H"
+
+cat >$CONFIG_H <<CONFIG_H_EOF
+#ifndef SUPERVISION_CONFIG_H
+# define SUPERVISION_CONFIG_H
+# define SYSCONFDIR "$sysconfdir"
+# define RUNDIR     "$rundir"
+#endif
+CONFIG_H_EOF
+
