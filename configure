@@ -259,29 +259,6 @@ is_in(){
 	esac
 }
 
-print_config(){
-    prefx="$1"
-    files="$2"
-    shift 2
-    map 'eval echo "$val \${$val:-no}"' "$@" |
-    awk "BEGIN { split(\"$files\", files) }
-        {
-            config = \"$prefix\" toupper(\$1);
-            value  = \$2;
-            sub(/yes/, 1, value);
-            sub(/no/,  0, value);
-            for (i in files) {
-                file = files[i];
-                if (file ~ /\\.h\$/) {
-                    printf(\"#define %s %d\\n\", config, value) >>file;
-				} else if (file ~ /\\.(mak|mk)\$/) {
-                    number = -value ? \"\" : \"!\";
-                    printf(\"%s%s=yes\\n\", number, config) >>file;
-                }
-			}
-		}"
- }
-
 print_enabled(){
 	local suffix="$1" val
 	shift
