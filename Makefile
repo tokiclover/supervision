@@ -1,23 +1,25 @@
-PACKAGE     = supervision
+-include config.mak
+PACKAGE    ?= supervision
 VERSION     = $(shell sed -nre '3s/(.*):/\1/p' ChangeLog)
 
 SUBDIRS    := src
 
-PREFIX      = /usr/local
-SYSCONFDIR  = /etc
-SBINDIR     = /sbin
-LIBDIR      = /lib
-RC_CONFDIR  = $(SYSCONFDIR)/conf.d
-RC_INITDIR  = $(SYSCONFDIR)/init.d
-DATADIR     = $(PREFIX)/share
-DOCDIR      = $(DATADIR)/doc
-MANDIR      = $(DATADIR)/man
-VIMDIR      = $(DATADIR)/vim/vimfiles
+PREFIX     ?= /usr/local
+SYSCONFDIR ?= /etc
+SBINDIR    ?= $(EXEC_PREFIX)/sbin
+LIBDIR     ?= $(EXEC_PREFIX)/lib
+RC_CONFDIR ?= $(SYSCONFDIR)/conf.d
+RC_INITDIR ?= $(SYSCONFDIR)/init.d
+DATADIR    ?= $(PREFIX)/share
+DOCDIR     ?= $(DATADIR)/doc/$(PACKAGE)-$(VERSION)
+MANDIR     ?= $(DATADIR)/man
+VIMDIR     ?= $(DATADIR)/vim/vimfiles
+RUNDIR     ?= /var/run
 
-INSTALL     = install
+INSTALL    ?= install
 install_SCRIPT = $(INSTALL) -m 755
 install_DATA   = $(INSTALL) -m 644
-MKDIR_P     = mkdir -p
+MKDIR_P    ?= mkdir -p
 
 dist_EXTRA  = \
 	AUTHORS \
@@ -50,6 +52,7 @@ dist_SV_RUNS  =
 dist_SCRIPTS  = \
 	sv/.opt/cmd
 dist_SV_SVCS  = \
+	$(EXTRA_SV_SERVICES) \
 	acpid \
 	atd \
 	cgred \
@@ -76,6 +79,7 @@ dist_SV_SVCS  = \
 	xdm \
 	udev
 dist_SV_VIRT  = \
+	$(EXTRA_SV_VIRTUALS) \
 	net:dhcp \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
@@ -88,26 +92,21 @@ dist_SV_OPTS  = \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 
-dist_RS_SVCS  = \
+dist_RS_SVCS  = $(EXTRA_RS_SERVICES) \
 	checkfs \
 	clock \
 	console \
 	devfs \
-	dmcrypt \
 	dmesg \
 	hostname \
-	ipset \
-	iptables \
 	kmod \
 	kmod-static-nodes \
 	localfs \
 	loopback \
-	lvm \
 	mdev \
 	miscfs \
 	mtab \
 	procfs \
-	raid \
 	rootfs \
 	sysctl \
 	sysfs \
@@ -121,13 +120,14 @@ dist_RS_OPTS  = \
 	ip6tables \
 	dev
 dist_RS_VIRT  = \
-	ip6tables:iptables \
+	$(EXTRA_RS_VIRTUALS) \
 	tmpfiles.setup:tmpfiles.dev \
 	swapfiles:swaps \
 	networkfs:localfs \
 	dev:mdev
 
 dist_STAGE_0 = \
+	$(EXTRA_STAGE_0) \
 	dev \
 	devfs \
 	dmesg \
@@ -135,10 +135,10 @@ dist_STAGE_0 = \
 	sysfs \
 	tmpfiles.dev
 dist_STAGE_1 = \
+	$(EXTRA_STAGE_1) \
 	kmod \
 	console \
 	checkfs \
-	dmcrypt \
 	localfs \
 	loopback \
 	miscfs \
@@ -149,8 +149,7 @@ dist_STAGE_1 = \
 	swaps swapfiles \
 	tmpfiles.setup
 dist_STAGE_2 = \
-	ipset \
-	iptables
+	$(EXTRA_STAGE_2)
 
 ifdef RUNIT
 dist_COMMON  += runit/reboot
@@ -173,15 +172,15 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SH_BINS) $(dist_SH_LIBS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
-	$(SYSCONFDIR)/sv/.opt $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh \
+	$(SYSCONFDIR)/sv/.opt $(EXEC_PREFIX)$(LIBDIR)/sv/bin $(EXEC_PREFIX)$(LIBDIR)/sv/sh \
 	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
 	$(SYSCONFDIR)/rs.d \
 	$(MANDIR)/man1 \
-	$(SBINDIR) \
-	$(DOCDIR)/$(PACKAGE)-$(VERSION)
+	$(EXEC_PREFIX)$(SBINDIR) \
+	$(DOCDIR)
 DISTDIRS    = $(dist_DIRS)
 
-ifdef STATIC
+ifeq (STATIC_SERVICE,yes)
 dist_SV_VIRT += fcron:cron dnsmask:dns \
 	busybox-httpd:httpd busybox-ntpd:ntp socklog:syslog
 endif
@@ -231,23 +230,25 @@ $(SUBDIRS): FORCE
 
 install-all: install install-supervision-svc
 install: install-dir install-dist
-	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
+	$(install_SCRIPT) src/rs $(DESTDIR)$(EXEC_PREFIX)$(SBINDIR)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' \
+	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(EXEC_PREFIX)$(LIBDIR)|g' \
+		-e 's|@SBINDIR@|$(EXEC_PREFIX)$(SBINDIR)|g' \
+		-e 's|@RUNDIR|$(RUNDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
-	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
-		   -i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
-		   $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
-	ln -fns $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
+	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(EXEC_PREFIX)$(LIBDIR)|g' \
+		-e 's|/run/|$(RUNDIR)/|g' \
+		 -i $(DESTDIR)$(EXEC_PREFIX)$(LIBDIR)/sv/sh/runscript-functions \
+		 $(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
+	ln -fns $(EXEC_PREFIX)$(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
 	for dir in .lib .opt; do \
 		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
-ifdef STATIC
+ifeq (STATIC_SERVICE,yes)
 	$(call rem_sym,sv,$(dist_SV_VIRT))
 	for svc in $(dist_SV_VIRT); do \
-		cp -a sv/$${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-		if test -e sv/$${svc#*:}/OPTIONS.$${svc%:*}; then \
+		cp -a sv/$${svc\#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+		if test -e sv/$${svc\#*:}/OPTIONS.$${svc%:*}; then \
 			mv -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.$${svc%:*} \
 				$(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS; \
 			rm -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.*; \
@@ -292,11 +293,11 @@ $(dist_COMMON): FORCE
 $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_EXTRA): FORCE
-	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$(PACKAGE)-$(VERSION)/$@
+	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$@
 $(dist_SH_BINS): FORCE
-	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
+	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$@)
 $(dist_SH_LIBS): FORCE
-	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
+	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$@)
 $(dist_SV_SVCS): FORCE
 	if test -d sv/$@/log; then \
 		$(call svc_dir,$@/log); \
@@ -307,7 +308,7 @@ $(dist_SV_SVCS): FORCE
 	-$(call svc_opt,sv/$@/OPTIONS)
 	-$(call svc_cmd,$@)
 $(dist_SV_OPTS): $(dist_SV_SVCS)
-ifdef STATIC
+ifeq (STATIC_SERVICE,yes)
 	sh -c 'ARGS=$(subst /OPTIONS,,$@); set $${ARGS/./ }; \
 	cp -a $(DESTDIR)$(SYSCONFDIR)/sv/$${1} $(DESTDIR)$(SYSCONFDIR)/sv/$${2}; \
 	$(install_DATA) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$${2}/OPTIONS'
@@ -329,15 +330,15 @@ install-%-svc:
 
 uninstall-all: uninstall unintsall-supervision-svc
 uninstall: uninstall-doc
-	rm -f $(DESTDIR)$(SBINDIR)/rs
+	rm -f $(DESTDIR)$(EXEC_PREFIX)$(SBINDIR)/rs
 ifdef SYSVINIT
-	rm -f $(DESTDIR)$(LIBDIR)/sv/bin/initctl
+	rm -f $(DESTDIR)$(EXEC_PREFIX)$(LIBDIR)/sv/bin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-ifdef STATIC
+ifeq (STATIC_SERVICE,yes)
 	for svc in $(dist_SV_OPTS); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc#*.}; \
 	done
@@ -348,8 +349,8 @@ endif
 	$(call rem_svc,rs.d,$(dist_RS_SVCS))
 	$(call rem_svc,rs.d,$(dist_RS_OPTS:%=OPTIONS.%))
 	$(call rem_svc,rs.d,$(dist_RS_SVCS:%=OPTIONS.%))
-	for file in $(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_BINS)) \
-		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
+	for file in $(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$(dist_SH_BINS)) \
+		$(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
 		rm -f $(DESTDIR)$${file}; \
 	done
 	for dir in .lib .opt getty; do \
@@ -359,7 +360,7 @@ endif
 	rm -fr $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
-	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/$(PACKAGE)-$(VERSION)/%)
+	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)
 uninstall-%-svc:
 	rm -f $(DESTDIR)$(svcconfdir)/$*
 	rm -f $(DESTDIR)$(svcinitdir)/$*

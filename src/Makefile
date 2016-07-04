@@ -1,4 +1,4 @@
-override CFLAGS  += -D_DEFAULT_SOURCE -std=c99 -fPIC
+-include ../config.mak
 CC      ?= cc
 
 dist_SRCS := error.c helper.c
@@ -18,14 +18,7 @@ HDRRS      = $(dist_HDRS) $(rs_HDRS)
 simple_BINS := checkpath fstabinfo mountinfo sv-shutdown
 dist_BINS  = $(simple_BINS) rs
 
-ifdef STATIC
-override CFLAGS  += -DSTATIC_SERVICE
-endif
-ifdef SYSCONFDIR
-override CFLAGS  += -DSYSCONFDIR=\"$(SYSCONFDIR)\"
-endif
-
-ifdef SYSVINIT
+ifeq (SYSVINIT,yes)
 .SECONDEXPANSION:
 simple_BINS  += initctl
 initctl_SRCS := initctl.c $(dist_SRCS)
