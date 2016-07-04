@@ -151,12 +151,12 @@ dist_STAGE_1 = \
 dist_STAGE_2 = \
 	$(EXTRA_STAGE_2)
 
-ifdef RUNIT
+ifdef RUNIT_INIT_STAGE
 dist_COMMON  += runit/reboot
 dist_SCRIPTS += runit/1 runit/2 runit/3 runit/ctrlaltdel
 dist_DIRS    += $(SYSCONFDIR)/runit
 endif
-ifdef S6
+ifdef S6_INIT_STAGE
 dist_SCRIPTS += s6/crash s6/finish s6/init-stage-1
 dist_DIRS    += $(SYSCONFDIR)/s6
 endif
@@ -180,7 +180,7 @@ dist_DIRS  += \
 	$(DOCDIR)
 DISTDIRS    = $(dist_DIRS)
 
-ifeq (STATIC_SERVICE,yes)
+ifdef STATIC_SERVICE
 dist_SV_VIRT += fcron:cron dnsmask:dns \
 	busybox-httpd:httpd busybox-ntpd:ntp socklog:syslog
 endif
@@ -244,11 +244,11 @@ install: install-dir install-dist
 	for dir in .lib .opt; do \
 		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
-ifeq (STATIC_SERVICE,yes)
+ifdef STATIC_SERVICE
 	$(call rem_sym,sv,$(dist_SV_VIRT))
 	for svc in $(dist_SV_VIRT); do \
-		cp -a sv/$${svc\#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-		if test -e sv/$${svc\#*:}/OPTIONS.$${svc%:*}; then \
+		cp -a sv/$${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+		if test -e sv/$${svc#*:}/OPTIONS.$${svc%:*}; then \
 			mv -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.$${svc%:*} \
 				$(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS; \
 			rm -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.*; \
@@ -308,7 +308,7 @@ $(dist_SV_SVCS): FORCE
 	-$(call svc_opt,sv/$@/OPTIONS)
 	-$(call svc_cmd,$@)
 $(dist_SV_OPTS): $(dist_SV_SVCS)
-ifeq (STATIC_SERVICE,yes)
+ifdef STATIC_SERVICE
 	sh -c 'ARGS=$(subst /OPTIONS,,$@); set $${ARGS/./ }; \
 	cp -a $(DESTDIR)$(SYSCONFDIR)/sv/$${1} $(DESTDIR)$(SYSCONFDIR)/sv/$${2}; \
 	$(install_DATA) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$${2}/OPTIONS'
@@ -338,7 +338,7 @@ endif
 	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-ifeq (STATIC_SERVICE,yes)
+ifdef STATIC_SERVICE
 	for svc in $(dist_SV_OPTS); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc#*.}; \
 	done

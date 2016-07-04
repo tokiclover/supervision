@@ -778,10 +778,10 @@ LD_O=$LD_O
 LD_LIB=$LD_LIB
 LD_PATH=$LD_PATH
 LDFLAGS=$LDFLAGS
-RUNIT_INIT_STAGE=${runit-no}
-S6_INIT_STAGE=${s6-no}
-STATIC_SERVICE=${static_service-no}
-SYSVINIT=${sysvinit-no}
+RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
+S6_INIT_STAGE=$(yesno "$s6" && echo 1)
+STATIC_SERVICE=$(yesno "$static_service" && echo 1)
+SYSVINIT=$(yesno "$sysvinit" && echo 1)
 $(print_extra_services)
 endif
 CONFIG_MAK_EOF
