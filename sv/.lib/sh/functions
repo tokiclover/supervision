@@ -43,7 +43,7 @@ error()
 #
 die()
 {
-	local ret=${?}; pr_error "${@}"; exit ${ret}
+	local ret=${?}; error "${@}"; exit ${ret}
 }
 
 #
