@@ -20,6 +20,8 @@ Version bumped /sbin/rs to better handle dependencies scheduling;
 Version bumped {fstab,mout}info to use almost the same code and to support '*'
 cach all mountpoints;
 
+Added a proper configure script for easy setup.
+
 41:
 
 Bug fixes of r40: properly mark service state after {stop,start}; stop
