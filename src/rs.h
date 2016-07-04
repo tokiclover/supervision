@@ -17,6 +17,7 @@
 
 
 #include "queue.h"
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +31,7 @@ extern "C" {
 #define SV_SVCDIR SYSCONFDIR "/sv"
 #define SV_SERVICE SYSCONFDIR "/service"
 #if defined(STATIC_SERVICE)
-#define SV_RUNDIR SV_SERVICE
+# define SV_RUNDIR SV_SERVICE
 #elif defined(__linux__) || (defined(__FreeBSD_kernel__) && \
 		defined(__GLIBC__)) || defined(__GNU__)
 #define SV_RUNDIR "/run/service"
