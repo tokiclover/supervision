@@ -113,9 +113,7 @@ dist_RS_SVCS  = $(EXTRA_RS_SERVICES) \
 	swaps \
 	tmpdirs \
 	tmpfiles.dev \
-	unionfs \
-	zfs \
-	zram
+	zfs
 dist_RS_OPTS  = \
 	ip6tables \
 	dev
@@ -144,6 +142,7 @@ dist_STAGE_1 = \
 	miscfs \
 	mtab \
 	networkfs \
+	procfs \
 	rootfs \
 	sysctl \
 	swaps swapfiles \
