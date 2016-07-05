@@ -34,7 +34,7 @@ mkdir -p ${SV_DEPDIR}
 :	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 :	${RS_TYPE:=sv}
 
-if (eval "var=1; var+=2; test x${var} = x12 2>${NULL}"); then
+if (eval "var=1; var+=2 2>${NULL}; test x\${var} = x12 2>${NULL}"); then
 append()
 {
 	local var="${1}"
@@ -145,16 +145,6 @@ for dep in ${__SV_SRT_DEP_ORD__}; do
 
 	eval "${dep}_0='${SERVICE_LIST}'"
 	eval remove_all "${dep}_0" "\$${dep}_1" "\$${dep}_2"
-	#
-	# Move up dependency priority if necessary
-	#
-	for val in $(eval echo "\$${dep}_1"); do
-		if eval is_in "${val}" "\$${dep}_2"; then
-			append_unique "${dep}_3" "${val}"
-			remove "${dep}_1" "${val}"
-			remove "${dep}_2" "${val}"
-		fi
-	done
 	#
 	# Print dependency list
 	#
