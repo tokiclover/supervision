@@ -47,7 +47,7 @@ unset CDPATH GREP_OPTIONS >$NULL 2>&1
 
 export LOG_FD=3 CONFIG_LOG=config.log
 export CONFIG_H=src/config.h CONFIG_MAK=config.mak
-exec 3>${CONFIG_LOG}
+exec 3>$CONFIG_LOG
 
 help_message(){
 cat <<-EOH
@@ -64,11 +64,11 @@ Standard options:
   --shlibdir=DIR           install shared libs in DIR [LIBDIR]
   --incdir=DIR             install includes in DIR [PREFIX/include]
   --mandir=DIR             install man page in DIR [PREFIX/share/man]
-  --sysconfdir=DIR         install system wide data in DIR [$sysconfdir]
+  --sysconfdir=DIR         install system wide data in DIR [$sysconfdir_default]
 
 Component options:
   --enable-sysvinit        build and install SysVinit compatibility service
-  --enable-static-service  install a static $sysconfdir/sv,$sysconfdir/service
+  --enable-static-service  install a static $sysconfdir_default/{sv,service}
 
 Toolchain options:
   --build=BUILD            use build C compiler for CC
@@ -78,7 +78,7 @@ Toolchain options:
   --install=INSTALL        use install tool INSTALL [$install_default]
   --extra-cflags=ECFLAGS   add ECFLAGS to CFLAGS [$CFLAGS]
   --extra-cxxflags=ECFLAGS add ECFLAGS to CXXFLAGS [$CXXFLAGS]
-  --extra-cppflags=FLAGS  add FLAGS to OBJCFLAGS [$CFLAGS]
+  --extra-cppflags=FLAGS   add FLAGS to OBJCFLAGS [$CFLAGS]
   --extra-ldflags=ELDFLAGS add ELDFLAGS to LDFLAGS [$LDFLAGS]
 
 EOH
@@ -533,10 +533,10 @@ CMDLINE_SET="
 	pkg-config
 "
 CMDLINE_APPEND="
-	extra_cflags
-	extra_ldflags
-	extra_cxxflags
-	extra_cppflags
+	extra-cflags
+	extra-ldflags
+	extra-cxxflags
+	extra-cppflags
 "
 
 # extra services
@@ -601,8 +601,8 @@ for opt; do
 	optname="${opt%%=*}"
 	case "$opt" in
 		--extra-*flags=*)
-		is_in "${optname#--extra-}" $CMDLINE_APPEND || die_illegal
-		add_FLAGS $(toupper "${optname#--extra-}" "$optvalue")
+		is_in "${optname#--}" $CMDLINE_APPEND || die_illegal
+		add_$(toupper "${optname#--extra-}") "$optvalue"
 		;;
 		--help|-h)
 		help_message
