@@ -273,7 +273,7 @@ print_header(){
 		echo "#include <$1>"
 }
 
-if (eval "var=1; var+=2; test x$var = x12 2>${NULL}"); then
+if (eval "var=1; var+=2 2>$NULL; test x\$var = x12 2>$NULL"); then
 append(){
 	local var="$1"
 	shift
@@ -546,6 +546,7 @@ LINUX_RS_SERVICES="
 	iptables
 	lvm
 	raid
+	unionfs
 	zram
 "
 LINUX_RS_VIRTUALS="
