@@ -7,5 +7,10 @@
 DMRAID_FORMATS=
 
 #
+# this service need or use dmcrypt?
+#
+#SVC_USE="dmcrypt"
+
+#
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #
