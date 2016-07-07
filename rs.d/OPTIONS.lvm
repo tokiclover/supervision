@@ -4,6 +4,7 @@
 # See lvm(8), lvchange(8), vgchange(8) etc for more information.
 #
 # Enable this for crypted physical volumes
+#
 #SVC_NEED="dmcrypt"
 
 #
