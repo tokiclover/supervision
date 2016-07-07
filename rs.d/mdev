@@ -33,12 +33,12 @@ start()
 	fi
 	touch /dev/mdev.seq
 	echo "${MDEV_CMD}" >/proc/sys/kernel/hotplug
+	[ -d /lib/mdev/devices ] && cp -RPp /lib/mdev/devices/* /dev 2>${NULL}
 	#
 	# Populate /dev
 	#
 	${MDEV_CMD} -s
 	end ${?}
-	[ -d /lib/mdev/devices ] && cp -RPp /lib/mdev/devices/* /dev 2>${NULL}
 }
 
 #
