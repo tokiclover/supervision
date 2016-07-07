@@ -22,10 +22,17 @@ start()
 			begin "Mounting root filesystem"
 			mount ${mnt_opts} /
 			ret="${?}"
+
 			#
 			# FIXME: add more insurance?
 			#
-			fstabinfo -qr /run /usr /tmp /var
+			local mnt_dir
+			for mnt_dir in /run /usr /tmp /var; do
+				mountinfo --quiet ${mnt_dir} && mnt_opts='--remount' ||
+					mnt_opts='--mount'
+				fstabinfo --quiet ${mnt_opt} ${mnt_dir}
+			done
+
 			end "${ret}"
 			;;
 	esac
