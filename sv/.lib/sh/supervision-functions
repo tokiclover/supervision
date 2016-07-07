@@ -242,19 +242,18 @@ svc_post()
 #
 svc_depend()
 {
-	local DEP dep
+	local dep
 	case "${1}" in
 		(stop)
 	return 0;
-	DEP="${__SV_SOP_DEP_ORD__}" dep=0
 		;;
 		(*)
-	DEP="${__SV_SRT_DEP_ORD__}" dep=1
+	dep=1
 		;;
 	esac
 
 	yesno ${SVC_DEPS:-${dep}} &&
-	for dep in ${DEP/before:BEFORE/}; do
+	for dep in ${__SV_DEPS_ORDER__/before:BEFORE/}; do
 		command -v svc_${dep%:*} >${NULL} 2>&1 || continue
 		eval svc_${dep%:*} ${1}
 		eval RET_${dep#*:}=${?}

@@ -107,7 +107,7 @@ dep_gen()
 	SVC_NAME="${1}"
 	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
-	for dep in ${__SV_SRT_DEP_ORD__}; do
+	for dep in ${__SV_DEPS_ORDER__}; do
 		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}}
 	done
 }
@@ -125,7 +125,7 @@ for svc in *; do
 	dep_gen ${svc##*/}
 done
 
-for dep in ${__SV_SRT_DEP_ORD__}; do
+for dep in ${__SV_DEPS_ORDER__}; do
 	DEP="${dep#*:}"
 	dep="${dep%:*}"
 	FILE=${SV_DEPDIR}/${RS_TYPE}_${dep}
