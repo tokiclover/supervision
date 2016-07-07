@@ -18,14 +18,14 @@ mount_dev()
 		warn "/dev will not be mounted."
 		return 0
 	fi
-	local sysfs_opts="${SYSFS_OPTS/noexec/exec}"
+
+	local sysfs_opts="nosuid,exec,mode=755"
 	begin "Mounting /dev"
 	if mountinfo -q /dev; then
 		mount ${OPT} -o remount,${sysfs_opts} /dev >${NULL} 2>&1
 	else
 		fstabinfo --quiet --mount /dev >${NULL} 2>&1 ||
-		mount ${OPT} -t ${fs} -o ${sysfs_opts},mode=755,size=${DEV_FS_SIZE:-10M} \
-			dev /dev >${NULL} 2>&1
+		mount ${OPT} -t ${fs} -o ${sysfs_opts},size=${DEV_FS_SIZE:-10M} dev /dev >${NULL} 2>&1
 	fi
 	end ${?}
 }
