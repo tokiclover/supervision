@@ -67,7 +67,7 @@ static const char *const rs_svc_cmd[] = { "stop", "start",
 	"add", "del", "desc", "remove", "restart", "status", "zap"
 };
 
-static const char *shortopts = "Dg0123rVvh";
+static const char *shortopts = "Dg0123qrVvh";
 static const struct option longopts[] = {
 	{ "nodeps",   0, NULL, 'D' },
 	{ "debug",    0, NULL, 'g' },
@@ -77,6 +77,7 @@ static const struct option longopts[] = {
 	{ "shutdown", 0, NULL, '3' },
 	{ "rs",       0, NULL, 'r' },
 	{ "sv",       0, NULL, 'v' },
+	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'V' },
 	{ 0, 0, 0, 0 }
@@ -90,6 +91,7 @@ static const char *longopts_help[] = {
 	"Select stage-3 run level",
 	"Select runscript backend",
 	"Select supervision backend",
+	"Enable quiet mode",
 	"Show help and exit",
 	"Show version and exit",
 	NULL
@@ -100,8 +102,8 @@ static const char *const env_list[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES", "SVC_DEPS", "SVC_DEBUG", "RS_STAGE", "RS_TYPE",
-	NULL
+	"COLUMNS", "LINES", "SVC_DEPS", "SVC_DEBUG", "SVC_QUIET",
+	"RS_STAGE", "RS_TYPE", NULL
 };
 
 __NORETURN__ static void help_message(int exit_val);
@@ -530,6 +532,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	int i = 0, j, state = 0, status;
 	int lock;
 	pid_t pid;
+	int quiet = 1;
 	args[i++] = "runscript";
 	args[i++] = opt;
 
@@ -566,6 +569,8 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	}
 	snprintf(opt, sizeof(opt), "--%s", ptr);
 
+	if (getenv("SVC_QUIET"))
+		quiet = 0;
 	for ( j = 0; j < argc; j++)
 		args[i++] = argv[j];
 	args[i] = (char *)0;
@@ -585,17 +590,21 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 
 		if (status) {
 			if (state == 's') {
-				WARN("%s: Service is already started\n", svc);
-				WARN("%s: Try zap command beforehand to force start up\n", svc);
+				if (quiet) {
+					WARN("%s: Service is already started\n", svc);
+					WARN("%s: Try zap command beforehand to force start up\n", svc);
+				}
 				exit(EXIT_SUCCESS);
 			}
 		}
 		else if (state == 'S') {
-			WARN("%s: Service is not started\n", svc);
+			if (quiet)
+				WARN("%s: Service is not started\n", svc);
 			exit(EXIT_SUCCESS);
 		}
 		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			ERR("%s: Failed to setup lockfile for service\n", svc);
+			if (quiet)
+				ERR("%s: Failed to setup lockfile for service\n", svc);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -836,6 +845,7 @@ int main(int argc, char *argv[])
 	const char *cmd = NULL;
 	char *opts;
 	int i, opt;
+	char quiet[8];
 
 	/* Show help if insufficient args */
 	if (argc < 2) {
@@ -858,6 +868,10 @@ int main(int argc, char *argv[])
 			case '3':
 				setenv("RS_STAGE", argv[optind-1]+1, 1);
 				break;
+			case 'q':
+				snprintf(quiet, sizeof(quiet) , "%c", 1);
+				setenv("SVC_QUIET", quiet, 1);
+				break;
 			case 'r':
 				setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
 				break;
@@ -879,6 +893,8 @@ int main(int argc, char *argv[])
 	}
 
 	if (strcmp(argv[optind], "stage") == 0) {
+		snprintf(quiet, sizeof(quiet) , "%c", 1);
+		setenv("SVC_QUIET", quiet, 1);
 		if (getenv("RS_STAGE"))
 			svc_stage(argv[optind+1]);
 		else {
