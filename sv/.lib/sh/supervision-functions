@@ -268,7 +268,7 @@ svc_after()
 {
 	local ret svc
 	for svc in ${2-${SVC_AFTER}}; do
-		rs "${svc}" "${1:-start}"
+		rs -q "${svc}" "${1:-start}"
 		ret=$((${ret}+${?}))
 	done
 	return ${ret}
@@ -286,7 +286,7 @@ svc_use()
 {
 	local ret svc
 	for svc in ${2:-${SVC_USE}}; do
-		rs "${svc}" "${1:-start}"
+		rs -q "${svc}" "${1:-start}"
 		ret=$((${ret}+${?}))
 	done
 	return ${ret}
