@@ -12,7 +12,7 @@ SVC_COMMANDS=mount_cgroup
 
 mount_sys()
 {
-	mountinfo /sys && return 0
+	mountinfo --quiet /sys && return 0
 	grep -Eq "[[:space:]]sysfs$" /proc/filesystems || return 1
 
 	if ! mkdir -m 0755 -p /sys; then
@@ -20,7 +20,7 @@ mount_sys()
 		return 2
 	fi
 	begin "Mounting /sys"
-	if mountinfo /sys; then
+	if mountinfo --quiet /sys; then
 		mount ${arg} -o remount,${SYSFS_OPTS}      /sys >${NULL} 2>&1
 	else
 		fstabinfo --quiet --mount /sys ||
@@ -40,7 +40,7 @@ mount_sysfs()
 	do
 		set -- ${fs}
 		[ -d ${1} ] && grep -q ${2} /proc/filesystems || continue
-		mount_info ${1} && continue
+		mountinfo --quiet ${1} && continue
 		begin "Mounting ${1}"
 		mount ${arg} -t ${2} -o ${SYSFS_OPTS} ${2} ${1} >${NULL} 2>&1
 		end ${?}
@@ -50,7 +50,7 @@ mount_sysfs()
 mount_cgroup()
 {
 	[ -d ${__CGROUP_ROOT__} ] && grep -q cgroup /proc/filesystems || return 1
-	if ! mount_info ${__CGROUP_ROOT__}; then
+	if ! mountinfo --quiet ${__CGROUP_ROOT__}; then
 		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CGROUP_FILESYSTEM_SIZE:-10M} \
 			cgroup ${__CGROUP_ROOT__}
 	fi
@@ -60,7 +60,7 @@ mount_cgroup()
 	while read ctrl hirc num enabled extra; do
 		case "${enabled}" in
 			(1)
-			mount_info ${__CGROUP_ROOT__}/${ctrl} && continue
+			mountinfo --quiet ${__CGROUP_ROOT__}/${ctrl} && continue
 			mkdir -p ${__CGROUP_ROOT__}/${ctrl}
 			mount ${arg} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
 				${ctrl} ${__CGROUP_ROOT__}/${ctrl}
