@@ -6,7 +6,7 @@
 # $Version: 0.4 2016/07/01 21:09:26                      Exp $
 #
 
-export LC_ALL=C
+export LC_ALL=C LANG=C
 
 :	${name=${0##*/}}
 :	${SV_LIBDIR:=${0%/sh/*}}
@@ -125,6 +125,7 @@ for svc in *; do
 	dep_gen ${svc##*/}
 done
 
+exec 3>${SV_DEPDIR}/${RS_TYPE}
 for dep in ${__SV_DEPS_ORDER__}; do
 	DEP="${dep#*:}"
 	dep="${dep%:*}"
@@ -150,8 +151,8 @@ for dep in ${__SV_DEPS_ORDER__}; do
 	#
 	for i in 0 1 2 3; do
 		eval echo "${dep}_${i}=\\\" \$${dep}_${i} \\\""
-	done
-done >${SV_DEPDIR}/${RS_TYPE}
+	done >&3
+done
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
