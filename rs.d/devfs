@@ -5,6 +5,7 @@
 #
 
 description='Set up /dev/MISCELLANEOUS filesystems'
+:	${SYSFS_OPTS=nodev,nosuid,noexec}
 
 mount_dev()
 {
@@ -17,12 +18,13 @@ mount_dev()
 		warn "/dev will not be mounted."
 		return 0
 	fi
+	local sysfs_opts="${SYSFS_OPTS/noexec/exec}"
 	begin "Mounting /dev"
-	if mountinfo /dev; then
-		mount ${OPT} -o remount,${SYSFS_OPTS} /dev >${NULL} 2>&1
+	if mountinfo -q /dev; then
+		mount ${OPT} -o remount,${sysfs_opts} /dev >${NULL} 2>&1
 	else
-		fstabinfo --mount /dev >${NULL} 2>&1 ||
-		mount ${OPT} -t ${fs} -o ${SYSFS_OPTS},mode=755,size=${DEV_FS_SIZE:-10M} \
+		fstabinfo --quiet --mount /dev >${NULL} 2>&1 ||
+		mount ${OPT} -t ${fs} -o ${sysfs_opts},mode=755,size=${DEV_FS_SIZE:-10M} \
 			dev /dev >${NULL} 2>&1
 	fi
 	end ${?}
@@ -56,20 +58,19 @@ mount_devfs()
 	do
 		set -- ${fs}
 		grep -Eq "[[:space:]]${1}$" /proc/filesystems || continue
-		mountinfo ${2} && continue
+		mountinfo -q ${2} && continue
 		mkdir -m ${3} -p ${2} >${NULL} 2>&1 || continue
 		begin "Mounting ${2}"
-		mount ${OPT} -t ${1} -o noexec,nosuid,${4} ${2##*/} ${2} >${NULL} >&1
+		mount ${OPT} -t ${1} -o noexec,nosuid,${4} ${2##*/} ${2} >${NULL} 2>&1
 		end ${?}
 	done
 }
 
 start()
 {
-	local SYSFS_OPTS OPT fs
+	local OPT fs
 
 	[ -w /etc/mtab ] || OPT=-n
-	SYSFS_OPTS=nodev,nosuid,exec
 
 	mount_dev
 	mount_devfs
