@@ -174,7 +174,7 @@ dist_DIRS  += \
 	$(SYSCONFDIR)/sv/.opt $(EXEC_PREFIX)$(LIBDIR)/sv/bin $(EXEC_PREFIX)$(LIBDIR)/sv/sh \
 	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
 	$(SYSCONFDIR)/rs.d \
-	$(MANDIR)/man1 \
+	$(MANDIR)/man1 $(MANDIR)/man8 \
 	$(EXEC_PREFIX)$(SBINDIR) \
 	$(DOCDIR)
 DISTDIRS    = $(dist_DIRS)
@@ -235,6 +235,7 @@ install: install-dir install-dist
 		-e 's|@SBINDIR@|$(EXEC_PREFIX)$(SBINDIR)|g' \
 		-e 's|@RUNDIR|$(RUNDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
+	$(install_DATA) rs.8 $(DESTDIR)$(MANDIR)/man8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(EXEC_PREFIX)$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|/sbin/rs|$(EXEC_PREFIX)$(SBINDIR)/rs|g' \
@@ -335,7 +336,7 @@ ifdef SYSVINIT
 	rm -f $(DESTDIR)$(EXEC_PREFIX)$(LIBDIR)/sv/bin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1*
+	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 ifdef STATIC_SERVICE

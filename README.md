@@ -60,7 +60,7 @@ Or else, use the magic `-0` command line argument to set up `/service/` and
 `svscan`, and then use `rs --sv -2 stage start|stop` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
-See supervision(1) man page for more information.
+See supervision(1) and or rs(8) man page for more information.
 
 REQUIREMENTS
 ------------

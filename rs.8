@@ -1,0 +1,88 @@
+.\"
+.\" CopyLeft (c) 2016 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH RS 8 "2016-06-06" "0.12.0" "SERVICE MANAGEMENT UTILITY"
+.SH NAME
+rs \- utility to manage services and init-stage
+.SH DESCRIPTION
+.B rs
+is a utility to manage services and init-stages (bundle of services) or runlevel
+for SysVinit terminology.
+.SH SYNOPSIS
+.B SERVICE
+name can be replaced by the special use case
+.B stage
+to manage a whole bundle of services instead of a single service.
+.br
+.B rs
+.RB [\| OPTIONS \| ]
+.RB \| SERVICE \|
+.RB \| COMMAND \|
+.RB \| [ARGUMENTS] \|
+
+.br
+.B rs
+.RB [\| \-D|\-\-nodeps \|]
+.RB [\| \-g|\-\-debug \]
+.RB [\| \-0|\-\-sysinit \]
+.RB [\| \-1|\-\-boot \|]
+.RB [\| \-2|\-\-default \|]
+.RB [\| \-3|\-\-shutdown \|]\|]
+.RB [\| \-r|\-\-rs \|]\|]
+.RB [\| \-v|\-\-sv \|]
+.RB [\| \-q|\-\-quiet \|]
+.RB  \| SERVICE \|
+.RB \| COMMAND \|
+.RB \| [ARGUMENTS] \|
+
+.br
+.B rs
+.RB [\| \-h|\-\-help \|]
+.RB [\| \-V|\-\-version \|]
+
+.SH OPTIONS
+.TP
+.B \-D|\-\-nodeps
+Disable dependency tracking when starting/stopping services
+.TP
+.B \-g|\-\-debug
+Enable debugging mode
+.TP
+.B \-(0|1|2|3)
+Select a particular stage or runlevel
+.TP
+.B \-r|\-\-rs
+Select runscript service type
+.TP
+.B \-v|\-\-sv
+Select supervision service type
+.TP
+.B \-h|\-\-help
+Print the help message
+.TP
+.B \-q|\-\-quiet
+Print the help message
+.SH "RETURN CODES"
+.TP
+.B 0
+success (and no-existant service, service already started/stopped)
+.TP
+.B 1
+failure
+.TP
+.B errno
+system call failure (fork...)
+.TP
+.B 127
+execve system call failure
+.SH "SEE ALSO"
+.BR supervision (1)
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"
