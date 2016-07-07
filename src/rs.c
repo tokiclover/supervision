@@ -40,7 +40,9 @@ struct slock {
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
+	{                      NULL },
 	{ "sysctl", "dmcrypt", NULL },
+	{ "devfs",  "sysfs",   NULL },
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
@@ -576,10 +578,6 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		state = 'S';
 
 	if (state == 's' || state == 'S') {
-		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			ERR("%s: Failed to setup lockfile for service\n", svc);
-			exit(EXIT_FAILURE);
-		}
 		if (strcmp(ptr, rs_stage_type[RS_STAGE_SUPERVISION]) == 0)
 			status = svc_state(svc, 'p');
 		else
@@ -595,6 +593,10 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		else if (state == 'S') {
 			WARN("%s: Service is not started\n", svc);
 			exit(EXIT_SUCCESS);
+		}
+		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+			ERR("%s: Failed to setup lockfile for service\n", svc);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -669,10 +671,6 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			argv[1] = type_sv;
 		}
 
-		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			DBG("%s: Failed to setup lockfile for service\n", svc->str);
-			continue;
-		}
 		if (type)
 			status = svc_state(svc->str, 'p');
 		else
@@ -687,6 +685,10 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		else if (state == 'S') {
 			DBG("%s: Service is not started\n", svc->str);
 			free((void*)argv[2]);
+			continue;
+		}
+		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+			DBG("%s: Failed to setup lockfile for service\n", svc->str);
 			continue;
 		}
 
@@ -787,6 +789,9 @@ static void svc_stage(const char *cmd)
 	/* initialize boot */
 	if (RS_STAGE.level == 1 )
 		svc_stage_init(1, argv, envp);
+	/* fix a race condition for sysinit */
+	if (RS_STAGE.level == 0 )
+		svc_stage_init(3, argv, envp);
 
 	for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) {
 		if (!type) {
