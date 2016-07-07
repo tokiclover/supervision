@@ -40,7 +40,7 @@ struct slock {
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
-	{ "sysctl", "checkfs", NULL },
+	{ "sysctl", "miscfs",  NULL },
 	{                      NULL },
 	{ "devfs",  "sysfs",   NULL },
 };
