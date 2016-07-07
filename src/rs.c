@@ -555,7 +555,8 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	if (ptr == NULL) {
 		ptr = svc_find(argv[0]);
 		if (ptr == NULL) {
-			WARN("%s: Inexistant service\n", argv[0]);
+			if (quiet)
+				WARN("%s: Inexistant service\n", argv[0]);
 			exit(EXIT_SUCCESS);
 		}
 		else {
