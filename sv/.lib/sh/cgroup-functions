@@ -21,7 +21,7 @@ cgroup_start_sys()
 
 	local opt
 	[ -w /etc/mtab ] || opt=-n
-	if ! mount_info ${__CGROUP_PATH__}; then
+	if ! mountinfo -q ${__CGROUP_PATH__}; then
 		mkdir -p ${__CGROUP_PATH__}
 		mount ${opt} -o none,${SYSFS_OPTS},name=${__CGROUP_NAME__},release_agent=${__CGROUP_RELEASE_AGENT__} \
 			-t cgroup  ${__CGROUP_NAME__} ${__CGROUP_PATH__}

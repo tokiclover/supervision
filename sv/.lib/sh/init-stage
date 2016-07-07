@@ -24,7 +24,7 @@ svc_init()
 		(GNU/kFreeBSD) procfs=linprocfs;;
 	esac
 
-	if ! mount_info /proc; then
+	if ! mountinfo /proc; then
 		begin "Mounting /proc"
 		mount ${opt} -t ${procfs} -o ${SYSFS_OPTS:-nodev} proc /proc
 		end ${?}
@@ -37,7 +37,7 @@ svc_init()
 		mkdir -m 0755 -p /run
 		end ${?}
 	fi
-	if ! mount_info /run; then
+	if ! mountinfo /run; then
 		begin "Mounting /run"
 		mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
 		end ${?}

@@ -20,7 +20,7 @@ pre()
 		error "DevtmpFS is not supported"
 		return 1
 	fi
-	if ! mount_info /dev; then
+	if ! mountinfo -q /dev; then
 		mount -t devtmpfs -o nosuid,mode=755,size=${DEV_FS_SIZE:-10M} \
 			dev /dev >${NULL} 2>&1 ||
 			{ error "Failed to setup devtmpfs"; return 2; }
