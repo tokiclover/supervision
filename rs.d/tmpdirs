@@ -43,7 +43,7 @@ stop()
 		case "${dir}" in
 			(*/log|*/run|*/tmp) continue;;
 		esac
-		mount_info "${dir}" || continue
+		mountinfo --quiet "${dir}" || continue
 		begin  "Unmounting ${dir}"
 		umount -l "${dir}" >${NULL} 2>&1
 		end "${?}"
@@ -59,7 +59,7 @@ start_pre()
 		[ -d "${dir}" ] && save "${dir}" || mkdir -p "${dir}"
 	done
 
-	mount_info "${tmpdir_root}" && return
+	mountinfo --quiet "${tmpdir_root}" && return
 	yesno ${use_zram} && warn "No suitable (zram) root-dir found"
 	mkdir -p "${tmpdir_root}"
 
