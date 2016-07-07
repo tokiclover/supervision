@@ -2,10 +2,11 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/06/08 21:09:26                      Exp $
+# $Version: 1.4 2016/06/08 21:09:26                      Exp $
 #
 
 __FUNCTIONS__=1
+:	${NULL:=/dev/null}
 
 #
 # ZSH compatibility
@@ -201,15 +202,6 @@ device_info()
 		done
 	done
 	return "${ret}"
-}
-
-#
-# @FUNCTION: mount info helper
-# @ARG: [OPTIONS] DIR
-#
-mount_info()
-{
-	${SV_LIBDIR}/bin/mountinfo "${@}"
 }
 
 #
