@@ -28,6 +28,23 @@ export PATH RS_SVCDIR SV_LIBDIR SV_RUNDIR SV_SERVICE SV_SVCDIR SV_TMPDIR
 [ -n "${__SUPERVISIONS_FUNCTIONS__}" ] || source "${SV_LIBDIR}"/sh/supervision-functions
 [ -n "${__CGROUP_FUNCTIONS__}"       ] || source "${SV_LIBDIR}"/sh/cgroup-functions
 
+checkpath()
+{
+	${SV_LIBDIR}/bin/checkpath "${@}"
+}
+fstabinfo()
+{
+	${SV_LIBDIR}/bin/fstabinfo "${@}"
+}
+mountinfo()
+{
+	${SV_LIBDIR}/bin/mountinfo "${@}"
+}
+rs()
+{
+	/sbin/rs "${@}"
+}
+
 env_rs()
 {
 	[ -n "${*}" ] && set_env "RS_OPTIONS" "${@}"
