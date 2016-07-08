@@ -642,7 +642,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	int count = 0, status, retval = 0, i;
 	static int parallel, type;
 	struct svcrun **svclist = NULL;
-	int lock, state;
+	int state;
 	static char type_rs[8], type_sv[8];
 	static size_t len;
 
@@ -697,11 +697,6 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			free((void*)argv[2]);
 			continue;
 		}
-		if ((lock = svc_lock(svc->str, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			DBG("%s: Failed to setup lockfile for service\n", svc->str);
-			continue;
-		}
-
 		pid = fork();
 		if (pid > 0) { /* parent */
 			if (parallel) {
@@ -710,12 +705,11 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 				svclist[count]->name = svc->str;
 				svclist[count]->path = (char*)argv[2];
 				svclist[count]->pid = pid;
-				svclist[count]->lock = lock;
 				count++;
 			}
 			else {
 				waitpid(pid, &status, 0);
-				svc_lock(svc->str, lock, 0);
+				svc_mark(svc->str, 'W');
 				if (WIFEXITED(status))
 					svc_mark(svc->str, state);
 				else
@@ -729,6 +723,13 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			sigaction(SIGQUIT, &sa_sigquit, NULL);
 			sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
 
+			int lock;
+			char *svc_name = strrchr(argv[2], '/')+1;
+			if ((lock = svc_lock(svc_name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+				DBG("%s: Failed to setup lockfile for service\n", svc_name);
+				_exit(EXIT_FAILURE);
+			}
+
 			execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)envp);
 			_exit(127);
 		}
@@ -738,7 +739,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 
 	for (i = 0; i < count; i++) {
 		waitpid(svclist[i]->pid, &status, 0);
-		svc_lock(svclist[i]->name, svclist[i]->lock, 0);
+		svc_mark(svclist[i]->name, 'W');
 		if (WEXITSTATUS(status)) {
 			retval++;
 			if (state == 's')
