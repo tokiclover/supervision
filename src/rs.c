@@ -105,8 +105,8 @@ static const char *const env_list[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES", "SVC_DEPS", "SVC_DEBUG", "SVC_QUIET",
-	"RS_STAGE", "RS_TYPE", NULL
+	"COLUMNS", "LINES",	"RS_STAGE", "RS_STRICT_DEP", "RS_TYPE",
+	"SVC_DEBUG", "SVC_DEPS", NULL
 };
 
 __NORETURN__ static void help_message(int exit_val);
@@ -745,14 +745,17 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 
 static int svc_stage_init(int stage, const char *argv[], const char *envp[])
 {
-	int i;
+	int i, retval;
 	RS_StringList_T *init_stage_list;
 
 	init_stage_list = rs_stringlist_new();
 	for (i = 0; rs_init_stage[stage][i]; i++)
 		rs_stringlist_add(init_stage_list, rs_init_stage[stage][i]);
-	svc_exec_list(init_stage_list, argv, envp);
+
+	retval = svc_exec_list(init_stage_list, argv, envp);
 	rs_stringlist_free(init_stage_list);
+
+	return retval;
 }
 
 static void svc_stage(const char *cmd)
