@@ -7,6 +7,7 @@
 
 description='Set up /tmp /var/MISC'
 SVC_NEED='localfs'
+SVC_USE='zram'
 SVC_BEFORE='syslog'
 SVC_AFTER='clock'
 
@@ -105,7 +106,7 @@ start()
 {
 	rm -fr /tmp/.ICE-unix /tmp/.X11-unix
 	mkdir -m 1777 /tmp/.ICE-unix /tmp/.X11-unix
-	mountinfo -q -t tmpfs /tmp || rundir_cleanup
+	mountinfo -q -t tmpfs /tmp || tmpdir_cleanup
 
 	if yesno "${DMESG_LOG}"; then
 		dmesg >/var/log/dmesg
