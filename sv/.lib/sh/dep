@@ -92,7 +92,7 @@ add_dep()
 	if [ "${#}" -gt 0 ]; then
 		append "${dep}_1" "${svc}"
 		append_unique "${dep}_2" "${@}"
-		eval "${DEP}=\"\$${DEP}\n${svc}:${@}\""
+		DEPS="${DEPS}\n${svc}:${dep}='${@}'"
 	fi
 }
 dep_gen()
@@ -112,7 +112,6 @@ dep_gen()
 	done
 }
 
-rm -f ${SV_DEPDIR}/${RS_TYPE}_*
 [ -n "${DIR}" -a -d "${DIR}" ] ||
 case "${RS_TYPE}" in
 	(rs) DIR=${RS_RUNDIR} ;;
@@ -124,6 +123,8 @@ for svc in *; do
 	[ "${svc}" = "*" ] && continue
 	dep_gen ${svc##*/}
 done
+
+printf "${DEPS}\n" >${SV_DEPDIR}/deps_${RS_TYPE}
 
 exec 3>${SV_DEPDIR}/${RS_TYPE}
 for dep in ${__SV_DEPS_ORDER__}; do
@@ -142,15 +143,13 @@ for dep in ${__SV_DEPS_ORDER__}; do
 		;;
 	esac
 
-	eval echo -e "\$${DEP}" >${FILE}
-
 	eval "${dep}_0='${SERVICE_LIST}'"
 	eval remove_all "${dep}_0" "\$${dep}_1" "\$${dep}_2"
 	#
 	# Print dependency list
 	#
 	for i in 0 1 2 3; do
-		eval echo "${dep}_${i}=\\\" \$${dep}_${i} \\\""
+		eval printf "'${dep}_${i}=\"%s \"\n' \"\$${dep}_${i}\""
 	done >&3
 done
 
