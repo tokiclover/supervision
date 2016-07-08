@@ -7,7 +7,6 @@
 
 description="Set up software raid (mdadm)"
 SVC_BEFORE="kmod"
-SVC_USE="dmcrypt"
 SVC_CONFIGFILE="/etc/mdadm.conf"
 
 dmraid="$(command -v dmraid 2>${NULL})"
