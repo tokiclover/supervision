@@ -92,7 +92,7 @@ add_dep()
 	if [ "${#}" -gt 0 ]; then
 		append "${dep}_1" "${svc}"
 		append_unique "${dep}_2" "${@}"
-		DEPS="${DEPS}\n${svc}:${dep}='${@}'"
+		DEPS="${DEPS}\n${svc}:${dep}=' ${@} '"
 	fi
 }
 dep_gen()
