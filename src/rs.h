@@ -69,7 +69,7 @@ enum {
 extern const char *const rs_stage_name[];
 
 extern const char *const rs_deps_type[];
-#define RS_DEPS_TYPE ARRAY_SIZE(rs_deps_type)
+#define RS_DEPS_TYPE 4
 
 /* singly-linked list using queue(3) */
 typedef struct RS_String {
@@ -101,20 +101,20 @@ typedef SLIST_HEAD(RS_SvcDepsList, RS_SvcDeps) RS_SvcDepsList_T;
 
 /* string list helpers to manage string list using queue(3) */
 RS_StringList_T *rs_stringlist_new(void);
-RS_String_T *rs_stringlist_add(RS_StringList_T *list, const char *str);
-RS_String_T *rs_stringlist_adu(RS_StringList_T *list, const char *str);
+RS_String_T *rs_stringlist_add (RS_StringList_T *list, const char *str);
+RS_String_T *rs_stringlist_adu (RS_StringList_T *list, const char *str);
 RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str);
-int          rs_stringlist_del(RS_StringList_T *list, const char *str);
-int          rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
+int          rs_stringlist_del (RS_StringList_T *list, const char *str);
+int          rs_stringlist_mov (RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
 void         rs_stringlist_free(RS_StringList_T *list);
 
 /* the same used for dependencies list */
 RS_DepTypeList_T *rs_deplist_load(void);
 RS_DepTypeList_T *rs_deplist_new(void);
-RS_DepType_T *rs_deplist_add(RS_DepTypeList_T *list, const char *str);
-RS_DepType_T *rs_deplist_adu(RS_DepTypeList_T *list, const char *str);
+RS_DepType_T *rs_deplist_add (RS_DepTypeList_T *list, const char *str);
+RS_DepType_T *rs_deplist_adu (RS_DepTypeList_T *list, const char *str);
 RS_DepType_T *rs_deplist_find(RS_DepTypeList_T *list, const char *str);
-int           rs_deplist_del(RS_DepTypeList_T *list, const char *str);
+int           rs_deplist_del (RS_DepTypeList_T *list, const char *str);
 void          rs_deplist_free(RS_DepTypeList_T *list);
 
 /* the same used for service dependencies */
