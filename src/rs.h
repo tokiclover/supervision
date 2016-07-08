@@ -90,6 +90,15 @@ typedef struct RS_DepType {
 } RS_DepType_T;
 typedef SLIST_HEAD(RS_DepTypeList, RS_DepType) RS_DepTypeList_T;
 
+typedef struct RS_SvcDeps {
+	/* dependency type {after,before,use,need} */
+	char *svc;
+	/* priority level list [0-RS_DEPS_TYPE] */
+	RS_StringList_T *deps[RS_DEPS_TYPE];
+	SLIST_ENTRY(RS_SvcDeps) entries;
+} RS_SvcDeps_T;
+typedef SLIST_HEAD(RS_SvcDepsList, RS_SvcDeps) RS_SvcDepsList_T;
+
 /* string list helpers to manage string list using queue(3) */
 RS_StringList_T *rs_stringlist_new(void);
 RS_String_T *rs_stringlist_add(RS_StringList_T *list, const char *str);
@@ -108,11 +117,14 @@ RS_DepType_T *rs_deplist_find(RS_DepTypeList_T *list, const char *str);
 int           rs_deplist_del(RS_DepTypeList_T *list, const char *str);
 void          rs_deplist_free(RS_DepTypeList_T *list);
 
-/* and finaly the same applied to service */
-RS_String_T *rs_deplist_add_svc(RS_DepType_T *list, const char *str, int index);
-RS_String_T *rs_deplist_adu_svc(RS_DepType_T *list, const char *str, int index);
-RS_String_T *rs_deplist_find_svc(RS_DepType_T *list, const char *str, int index);
-int          rs_deplist_del_svc(RS_DepType_T *list, const char *str, int index);
+/* the same used for service dependencies */
+RS_SvcDepsList_T *rs_svcdeps_load(void);
+RS_SvcDepsList_T *rs_svcdeps_new(void);
+RS_SvcDeps_T *rs_svcdeps_add (RS_SvcDepsList_T *list, const char *svc);
+RS_SvcDeps_T *rs_svcdeps_adu (RS_SvcDepsList_T *list, const char *svc);
+RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc);
+int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
+void          rs_svcdeps_free(RS_SvcDepsList_T *list);
 
 /*
  * retrieve a configuration value like getenv(3)

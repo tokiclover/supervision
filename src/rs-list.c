@@ -87,6 +87,77 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	return deplist;
 }
 
+RS_SvcDepsList_T *rs_svcdeps_load(void)
+{
+	char depcmd[256], deppath[256], dep[128], type[16];
+	char *line = NULL, *ptr, *tmp, svc[128], old[128];
+	FILE *depfile;
+	size_t len, pos;
+	int t = 0, o = 1;
+
+	/* get dependency list file */
+	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/deps_%s", SV_DEPDIR,
+			RS_STAGE.level, RS_STAGE.type);
+	if (file_test(deppath, 0) <= 0) {
+		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", SV_DEPGEN,
+				RS_STAGE.level, RS_STAGE.type);
+		if (system(depcmd)) {
+			ERR("Failed to execute `%s'\n", depcmd);
+			return NULL;
+		}
+	}
+
+	if ((depfile = fopen(deppath, "r")) == NULL) {
+		ERR("Failed to open %s\n", deppath);
+		return NULL;
+	}
+
+	RS_SvcDepsList_T *deps_list = rs_svcdeps_new();
+	RS_SvcDeps_T *svc_deps;
+
+	while (rs_getline(depfile, &line, &len) > 0) {
+		/* get service name */
+		ptr = strchr(line, ':');
+		*ptr++ = '\0';
+		pos = ptr-line;
+		memcpy(svc, line, pos);
+		/* get dependency type/name */
+		ptr = strchr(ptr, '=');
+		*ptr++ = '\0';
+		memcpy(type, line+pos, ptr-line);
+		while (strcmp(type, rs_deps_type[t]))
+			t++;
+
+		/* add and initialize a service dependency */
+		if (o) {
+			memcpy(old, svc, pos+1);
+			svc_deps = rs_svcdeps_add(deps_list, svc);
+			o = 0;
+		}
+		else if (strcmp(svc, old)) {
+			svc_deps = rs_svcdeps_add(deps_list, svc);
+			memcpy(old, svc, pos+1);
+		}
+
+		/* append service list */
+		ptr = shell_string_value(ptr);
+		while (*ptr) {
+			if ((tmp = strchr(ptr, ' ')) == NULL)
+				pos = strlen(ptr);
+			else
+				pos = tmp-ptr;
+			memcpy(dep, ptr, pos);
+			dep[pos] = '\0';
+			rs_stringlist_add(svc_deps->deps[t], dep);
+			ptr += pos+1;
+		}
+		t = 0;
+	}
+	fclose(depfile);
+
+	return deps_list;
+}
+
 RS_StringList_T *rs_stringlist_new(void)
 {
 	RS_StringList_T *list = err_malloc(sizeof(*list));
@@ -128,7 +199,7 @@ int rs_stringlist_del(RS_StringList_T *list, const char *str)
 RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str)
 {
 	RS_String_T *elm;
-	
+
 	if (list)
 		SLIST_FOREACH(elm, list, entries)
 			if (strcmp(elm->str, str) == 0)
@@ -221,27 +292,62 @@ void rs_deplist_free(RS_DepTypeList_T *list)
 	list = NULL;
 }
 
-RS_String_T *rs_deplist_add_svc(RS_DepType_T *list, const char *str, int index)
+RS_SvcDepsList_T *rs_svcdeps_new(void)
 {
-	return rs_stringlist_add(list->priority[index], str);
+	RS_SvcDepsList_T *list = err_malloc(sizeof(RS_SvcDepsList_T));
+	SLIST_INIT(list);
+	return list;
 }
 
-RS_String_T *rs_deplist_adu_svc(RS_DepType_T *list, const char *str, int index)
+RS_SvcDeps_T *rs_svcdeps_add(RS_SvcDepsList_T *list, const char *svc)
 {
-	RS_String_T *elm = rs_deplist_find_svc(list, str, index);
+	RS_SvcDeps_T *elm = err_malloc(sizeof(RS_SvcDeps_T));
+	elm->svc = err_strdup(svc);
+
+	for (int i = 0; i < RS_DEPS_TYPE; i++)
+		elm->deps[i] = rs_stringlist_new();
+	SLIST_INSERT_HEAD(list, elm, entries);
+
+	return elm;
+}
+
+RS_SvcDeps_T *rs_svcdeps_adu(RS_SvcDepsList_T *list, const char *svc)
+{
+	RS_SvcDeps_T *elm = rs_svcdeps_find(list, svc);
 	if (elm)
 		return elm;
 
-	return rs_stringlist_add(list->priority[index], str);
+	return rs_svcdeps_add(list, svc);
 }
 
-int rs_deplist_del_svc(RS_DepType_T *list, const char *str, int index)
+RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc)
 {
-	return rs_stringlist_del(list->priority[index], str);
+	RS_SvcDeps_T *elm;
+
+	if (list)
+		SLIST_FOREACH(elm, list, entries)
+			if (strcmp(elm->svc, svc) == 0)
+				return elm;
+	return NULL;
 }
 
-RS_String_T *rs_deplist_find_svc(RS_DepType_T *list, const char *str, int index)
+void rs_svcdeps_free(RS_SvcDepsList_T *list)
 {
-	return rs_stringlist_find(list->priority[index], str);
+	int i;
+	RS_SvcDeps_T *elm;
+
+	if (!list)
+		return;
+
+	while (!SLIST_EMPTY(list)) {
+		elm = SLIST_FIRST(list);
+		for (i = 0; i < RS_DEPS_TYPE; i++)
+			rs_stringlist_free(elm->deps[i]);
+
+		free(elm->svc);
+		SLIST_REMOVE_HEAD(list, entries);
+		free(elm);
+	}
+	list = NULL;
 }
 
