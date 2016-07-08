@@ -37,6 +37,9 @@ struct slock {
 	struct flock *f_lock;
 };
 
+static int svc_deps  = 0;
+static int svc_quiet = 1;
+
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
@@ -214,7 +217,7 @@ static const char **svc_env(void)
 	envp = err_calloc(ARRAY_SIZE(env_list), sizeof(void *));
 
 	if (!getenv("COLUMNS")) {
-		snprintf(env, sizeof(env), "%d", get_term_cols());
+		sprintf(env, "%d", get_term_cols());
 		setenv("COLUMNS", env, 1);
 	}
 	free(env);
@@ -524,26 +527,27 @@ static void svc_sigsetup(void)
 		ERROR("%s: sigprocmask(SIG_BLOCK)", __func__);
 }
 
-__NORETURN__ static int svc_exec(int argc, char *argv[]) {
-	char opt[8];
+__NORETURN__ static int svc_exec(int argc, char *args[]) {
 	const char *ptr;
 	const char **envp;
-	const char *args[argc+3], *cmd = argv[1], *svc;
+	const char *argv[argc+3], *cmd = args[1], *svc;
 	int i = 0, j, state = 0, status;
 	int lock;
 	pid_t pid;
-	int quiet = 1;
-	args[i++] = "runscript";
-	args[i++] = opt;
+	argv[i++] = "runscript";
 
-	/* setup argv and envp */
-	if (argv[0][0] == '/') {
-		ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
-		svc = strrchr(argv[0], '/')+1;
+	if (args[0][0] == '/') {
+		ptr = args[0];
+		svc = strrchr(args[0], '/')+1;
 	}
 	else {
-		ptr = getenv("RS_TYPE");
-		svc = argv[0];
+		ptr = svc_find(args[0]);
+		svc = args[0];
+		if (ptr == NULL) {
+			if (svc_quiet)
+				WARN("%s: Inexistant service\n", args[0]);
+			exit(EXIT_SUCCESS);
+		}
 	}
 
 	/* do this before anything else */
@@ -552,28 +556,11 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		exit(EXIT_SUCCESS);
 	}
 
-	if (ptr == NULL) {
-		ptr = svc_find(argv[0]);
-		if (ptr == NULL) {
-			if (quiet)
-				WARN("%s: Inexistant service\n", argv[0]);
-			exit(EXIT_SUCCESS);
-		}
-		else {
-			argc--, argv++;
-			args[i++] = ptr;
-			if (strncmp(ptr, RS_SVCDIR, strlen(RS_SVCDIR)) == 0)
-				ptr = rs_stage_type[RS_STAGE_RUNSCRIPT];
-			else
-				ptr = rs_stage_type[RS_STAGE_SUPERVISION];
-		}
-	}
-	snprintf(opt, sizeof(opt), "--%s", ptr);
-
-	if (getenv("SVC_QUIET"))
-		quiet = 0;
+	/* setup argv and envp */
+	argc--, args++;
+	argv[i++] = ptr;
 	for ( j = 0; j < argc; j++)
-		args[i++] = argv[j];
+		argv[i++] = args[j];
 	args[i] = (char *)0;
 	envp = svc_env();
 
@@ -591,7 +578,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 
 		if (status) {
 			if (state == 's') {
-				if (quiet) {
+				if (svc_quiet) {
 					WARN("%s: Service is already started\n", svc);
 					WARN("%s: Try zap command beforehand to force start up\n", svc);
 				}
@@ -599,12 +586,13 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 			}
 		}
 		else if (state == 'S') {
-			if (quiet)
+			if (svc_quiet)
 				WARN("%s: Service is not started\n", svc);
 			exit(EXIT_SUCCESS);
 		}
+
 		if ((lock = svc_lock(svc, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-			if (quiet)
+			if (svc_quiet)
 				ERR("%s: Failed to setup lockfile for service\n", svc);
 			exit(EXIT_FAILURE);
 		}
@@ -628,7 +616,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		sigaction(SIGQUIT, &sa_sigquit, NULL);
 		sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
 
-		execve(RS_RUNSCRIPT, (char *const*)args, (char *const*)envp);
+		execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)envp);
 		_exit(127);
 	}
 
@@ -651,13 +639,13 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		return -1;
 	}
 	if (argv == NULL || envp == NULL) {
-		errno = ENOENT;
+		errno = EINVAL;
 		return -1;
 	}
 
-	parallel = rs_conf_yesno("RS_PARALLEL");
 	if (len == 0) {
-		 len = strlen(RS_SVCDIR);
+		parallel = rs_conf_yesno("RS_PARALLEL");
+		len = strlen(RS_SVCDIR);
 		snprintf(type_rs, sizeof(type_rs), "--%s", rs_stage_type[RS_STAGE_RUNSCRIPT]);
 		snprintf(type_sv, sizeof(type_sv), "--%s", rs_stage_type[RS_STAGE_SUPERVISION]);
 	}
@@ -773,8 +761,6 @@ static void svc_stage(const char *cmd)
 	RS_STAGE.type  = getenv("RS_TYPE");
 	RS_DepTypeList_T *depends;
 	RS_DepType_T *elm;
-	RS_String_T *svc;
-	RS_StringList_T *init_stage_list;
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
@@ -844,10 +830,7 @@ int main(int argc, char *argv[])
 	else
 		prgname++;
 
-	const char *cmd = NULL;
-	char *opts;
-	int i, opt;
-	char quiet[8];
+	int opt;
 
 	/* Show help if insufficient args */
 	if (argc < 2) {
@@ -859,6 +842,7 @@ int main(int argc, char *argv[])
 	{
 		switch (opt) {
 			case 'D':
+				svc_deps = 0;
 				setenv("SVC_DEPS", "0", 1);
 				break;
 			case 'g':
@@ -871,8 +855,7 @@ int main(int argc, char *argv[])
 				setenv("RS_STAGE", argv[optind-1]+1, 1);
 				break;
 			case 'q':
-				snprintf(quiet, sizeof(quiet) , "%c", 1);
-				setenv("SVC_QUIET", quiet, 1);
+				svc_quiet = 0;
 				break;
 			case 'r':
 				setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
@@ -895,8 +878,12 @@ int main(int argc, char *argv[])
 	}
 
 	if (strcmp(argv[optind], "stage") == 0) {
-		snprintf(quiet, sizeof(quiet) , "%c", 1);
-		setenv("SVC_QUIET", quiet, 1);
+		/* set a few sane environment variables */
+		svc_deps  = 1;
+		setenv("SVC_DEBUG", "0", 1);
+		setenv("SVC_DEPS", "0", 1);
+		setenv("RS_STRICT_DEP", "0", 1);
+
 		if (getenv("RS_STAGE"))
 			svc_stage(argv[optind+1]);
 		else {
