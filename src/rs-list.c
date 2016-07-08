@@ -108,9 +108,7 @@ RS_String_T *rs_stringlist_adu(RS_StringList_T *list, const char *str)
 	if (elm)
 		return elm;
 
-	elm = err_malloc(sizeof(struct RS_String));
-	elm->str = err_strdup(str);
-	return elm;
+	return rs_stringlist_add(list, str);
 }
 
 int rs_stringlist_del(RS_StringList_T *list, const char *str)
