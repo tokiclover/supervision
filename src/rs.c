@@ -37,6 +37,8 @@ struct slock {
 	struct flock *f_lock;
 };
 
+static RS_SvcDepsList_T *service_deps_list;
+static RS_DepTypeList_T *stage_deps_list;
 static int svc_deps  = 0;
 static int svc_quiet = 1;
 
@@ -51,8 +53,13 @@ static const char *const rs_init_stage[][4] = {
 /* !!! order matter (defined constant/enumeration) !!! */
 const char *const rs_stage_type[] = { "rs", "sv" };
 const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
-const char *const rs_deps_type[] = { "after", "before", "use", "need" };
+const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 const char *prgname;
+
+#define RS_DEPS_AFTER  1
+#define RS_DEPS_BEFORE 0
+#define RS_DEPS_USE    2
+#define RS_DEPS_NEED   3
 
 enum {
 	RS_SVC_CMD_STOP,
@@ -115,6 +122,16 @@ __NORETURN__ static void help_message(int exit_val);
  * @cmd (start|stop|NULL); NULL is the default command
  */
 static void svc_stage(const char *cmd);
+
+/*
+ * setup service dependencies
+ * @svc: service name;
+ * @argv and @envp are passed verbatim to svc_exec_list();
+ * @return: 0 on succsess,
+ *        > 0 for non fatals errors
+ *        < 0 for fatals errors;
+ */
+static int svc_depend(const char *svc, const char *argv[], const char *envp[]);
 
 /*
  * querry service status
@@ -206,6 +223,38 @@ __NORETURN__ static void help_message(int exit_val)
 				longopts_help[i]);
 
 	exit(exit_val);
+}
+
+static int svc_depend(const char *svc, const char *argv[], const char *envp[])
+{
+	RS_SvcDeps_T *depend;
+	int i, r, v = 0;
+
+	if (svc_deps == 0)
+		return 0;
+	if (service_deps_list)
+		depend = rs_svcdeps_find(service_deps_list, svc);
+	else
+		return 0;
+	if (depend == NULL)
+		return 0;
+
+	/* skip before deps type */
+	for (i = 1; i < RS_DEPS_TYPE; i++) {
+		r = svc_exec_list(depend->deps[i], argv, envp);
+		if (r) {
+			switch(i) {
+			case RS_DEPS_NEED:
+				v = -r;
+				break;
+			case RS_DEPS_AFTER:
+				if (rs_yesno(getenv("RS_STRICT_DEP")) && v >= 0)
+					v = r;
+				break;
+			}
+		}
+	}
+	return v;
 }
 
 static const char **svc_env(void)
@@ -685,6 +734,14 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			free((void*)argv[2]);
 			continue;
 		}
+		/*
+		else if (svc_depend(svc->str, argv, envp) < 0) {
+			if (svc_quiet)
+				WARN("%s: Failed to setup service dependencies\n", svc->str);
+			continue;
+		}
+		*/
+
 		pid = fork();
 		if (pid > 0) { /* parent */
 			if (parallel) {
@@ -762,7 +819,6 @@ static void svc_stage(const char *cmd)
 {
 	RS_STAGE.level = atoi(getenv("RS_STAGE"));
 	RS_STAGE.type  = getenv("RS_TYPE");
-	RS_DepTypeList_T *depends;
 	RS_DepType_T *elm;
 	const char *command = cmd;
 	const char **envp;
@@ -798,11 +854,14 @@ static void svc_stage(const char *cmd)
 			RS_STAGE.type = rs_stage_type[k];
 			setenv("RS_TYPE", rs_stage_type[k], 1);
 		}
-		depends = rs_deplist_load();
+		stage_deps_list = rs_deplist_load();
+		/*
+		service_deps_list = rs_svcdeps_load();
+		*/
 
 		while (j >= 0 && j < RS_DEP_PRIORITY) {
 			for (i = 0; i < RS_DEPS_TYPE; i++) {
-				if ((elm = rs_deplist_find(depends, rs_deps_type[i])) != NULL)
+				if ((elm = rs_deplist_find(stage_deps_list, rs_deps_type[i])) != NULL)
 					svc_exec_list(elm->priority[j], argv, envp);
 				/* try only twice to start/stop everything */
 				if (i == 1 && j == 0)
@@ -813,7 +872,7 @@ static void svc_stage(const char *cmd)
 			else
 				++j;
 		}
-		rs_deplist_free(depends);
+		rs_deplist_free(stage_deps_list);
 
 		/* skip irrelevant cases or because -[rv] passed */
 		if (type)
