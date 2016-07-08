@@ -15,7 +15,7 @@
 
 RS_DepTypeList_T *rs_deplist_load(void)
 {
-	char depcmd[256], deppath[256], dep[64], buf[64];
+	char depcmd[256], deppath[256], dep[16];
 	char *line = NULL, *ptr, *tmp, svc[128];
 	FILE *depfile;
 	size_t len, pos;
@@ -67,7 +67,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 				pos = tmp-ptr;
 			memcpy(svc, ptr, pos);
 			svc[pos] = '\0';
-			rs_deplist_add_svc(dlp, svc, pri);
+			rs_stringlist_add(dlp->priority[pri], svc);
 			ptr += pos+1;
 		}
 	}
@@ -78,7 +78,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 		dlp = rs_deplist_find(deplist, rs_deps_type[i++]);
 		pld = rs_deplist_find(deplist, rs_deps_type[i++]);
 		SLIST_FOREACH(ent, dlp->priority[2], entries)
-			if (tne = rs_stringlist_find(pld->priority[2], ent->str)) {
+			if ((tne = rs_stringlist_find(pld->priority[2], ent->str))) {
 				rs_stringlist_mov(pld->priority[2], pld->priority[3], tne);
 				rs_stringlist_mov(dlp->priority[2], dlp->priority[3], ent);
 			}
@@ -189,16 +189,13 @@ RS_DepType_T *rs_deplist_adu(RS_DepTypeList_T *list, const char *str)
 	if (elm)
 		return elm;
 
-	elm = err_malloc(sizeof(RS_DepType_T));
-	elm->type = err_strdup(str);
-	SLIST_INSERT_HEAD(list, elm, entries);
-	return elm;
+	return rs_deplist_add(list, str);
 }
 
 RS_DepType_T *rs_deplist_find(RS_DepTypeList_T *list, const char *str)
 {
 	RS_DepType_T *elm;
-	
+
 	if (list)
 		SLIST_FOREACH(elm, list, entries)
 			if (strcmp(elm->type, str) == 0)
