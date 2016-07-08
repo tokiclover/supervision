@@ -22,8 +22,8 @@ zpool="$(command -v zpool 2>${NULL})"
 start_pre()
 {
 	if ! device_info zfs; then
-		if [ -d /proc/modules ]; then
-			modporbe  >${NULL} 2>&1 && device_info zfs ||
+		if [ -e /proc/modules ]; then
+			modporbe zfs >${NULL} 2>&1 && device_info zfs ||
 				{ error "No ZFS kernel support or modules found"; return 1; }
 		else
 			error "No ZFS support found for this kernel"
