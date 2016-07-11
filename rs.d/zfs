@@ -6,13 +6,13 @@
 
 description="Import ZFS pools and volumes"
 SVC_BEFORE="checkfs syslog"
-SVC_NEED="mtab"
 SVC_USE="dmcrypt"
 
 if mountinfo -q -t zfs /; then
 	SVC_BEFORE="${SVC_BEFORE} localfs rootfs"
 else
 	SVC_AFTER="${SVC_AFTER}   localfs rootfs"
+	SVC_NEED="mtab"
 fi
 
 zfs="$(command -v zfs 2>${NULL})"
