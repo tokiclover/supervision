@@ -18,8 +18,8 @@ char *shell_string_value(char *str)
 
 	if (*ptr == '\'' || *ptr == '\"')
 		ptr++;
-	for ( ; *ptr == ' '; *ptr++)
-		;
+	while (*ptr == ' ')
+		(void)*ptr++;
 	if (*end == '\'' || *end == '\"')
 		*end-- = '\0';
 	for ( ; *end == ' '; *end-- = '\0')
@@ -97,40 +97,39 @@ int get_term_cols(void)
 
 ssize_t rs_getline(FILE *stream, char **buf, size_t *size)
 {
-	size_t len = 0;
+	char *ptr;
 	if (!stream) {
 		errno = EBADF;
 		return -1;
 	}
+	*size = 0;
 
 	*buf = err_realloc(*buf, BUFSIZ);
 	memset(*buf, 0, BUFSIZ);
 
-	while (fgets(*buf+len, BUFSIZ, stream)) {
-		if (*(*buf) == '\n')
+	while (fgets(*buf+*size, BUFSIZ, stream)) {
+		if (**buf == '\n')
 			continue;
 
-		len += strlen(*buf);
-		if (*(*buf+len-1) == '\n') {
-			*(*buf+len-1) = '\0';
-			--len;
+		*size += strlen(*buf);
+		ptr = *buf+*size-1;
+		if (*ptr == '\n') {
+			*ptr = '\0';
 			goto retline;
 		}
 		else if (feof(stream)) {
 			goto retline;
 		}
 		else {
-			*buf = err_realloc(*buf, len+1+BUFSIZ);
-			memset(*buf+len+1, 0, BUFSIZ);
+			*buf = err_realloc(*buf, *size+1+BUFSIZ);
+			memset(*buf+*size+1, 0, BUFSIZ);
 		}
 	}
-	len = 0;
 	goto retline;
 
 retline:
-	*buf = err_realloc(*buf, len);
-	*size = len;
-	return len;
+	*buf = err_realloc(*buf, *size);
+	return *size;
 }
 
 int rs_yesno(const char *str)
