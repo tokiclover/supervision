@@ -39,8 +39,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	}
 
 	RS_DepTypeList_T *deplist = rs_deplist_new();
-	RS_DepType_T *dlp, *pld;
-	RS_String_T *ent, *tne;
+	RS_DepType_T *dlp;
 
 	while (rs_getline(depfile, &line, &len) > 0) {
 		/* get dependency type */
@@ -72,17 +71,6 @@ RS_DepTypeList_T *rs_deplist_load(void)
 		}
 	}
 	fclose(depfile);
-
-	/* move up priority level for {after,before} and {use,need} */
-	for (int i = 0; i <= 2; ) {
-		dlp = rs_deplist_find(deplist, rs_deps_type[i++]);
-		pld = rs_deplist_find(deplist, rs_deps_type[i++]);
-		SLIST_FOREACH(ent, dlp->priority[2], entries)
-			if ((tne = rs_stringlist_find(pld->priority[2], ent->str))) {
-				rs_stringlist_mov(pld->priority[2], pld->priority[3], tne);
-				rs_stringlist_mov(dlp->priority[2], dlp->priority[3], ent);
-			}
-	}
 
 	return deplist;
 }
