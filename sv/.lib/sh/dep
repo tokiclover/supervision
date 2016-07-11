@@ -21,7 +21,7 @@ case "${1}" in
 	(-r|--rs) RS_TYPE=rs;;
 	(-v|--sv) RS_TYPE=sv;;
 	(-[0123]) RS_STAGE="${1#*-}";;
-	(-d|--dir) DIR="${2}" ;;
+	(-d|--dir) DIR="${2}"; shift ;;
 	(*) error "illegal option -- ${@}"; exit 1;;
 esac
 shift
