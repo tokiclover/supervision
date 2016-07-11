@@ -5,7 +5,7 @@
 
 SVC_CMD=/sbin/udevd
 SVC_OPTS=
-SVC_BEFORE='checkfs fsck'
+SVC_BEFORE='checkfs'
 SVC_NEED='devfs sysfs'
 UDEV_DEBUG=No
 
