@@ -150,7 +150,7 @@ int rs_deptree_file_save(RS_StringList_T *deptree[])
 	}
 
 	for (p = 0; p < RS_DEPTREE_PRIO; p++) {
-		fprintf(depfile, "dep_%d=' ", p);
+		fprintf(depfile, "dep_%d='", p);
 		SLIST_FOREACH(ent, deptree_list[p], entries)
 			if (ent)
 				fprintf(depfile, "%s ", ent->str);
