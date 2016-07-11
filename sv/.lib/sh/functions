@@ -196,7 +196,11 @@ device_info()
 		for file in ${files}; do
 			grep -qsw "${dev}" /proc/${file}
 			case "${?}" in
-				(0) ${opt} || break  ;;
+				(0)
+				if ! ${opt}; then
+					ret=0
+					break
+				fi;;
 				(*) ret=$((${ret}+1));;
 			esac
 		done
