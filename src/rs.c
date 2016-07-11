@@ -561,7 +561,7 @@ __NORETURN__ static int svc_exec(int argc, char *args[]) {
 	argv[i++] = ptr;
 	for ( j = 0; j < argc; j++)
 		argv[i++] = args[j];
-	args[i] = (char *)0;
+	argv[i] = (char *)0;
 	envp = svc_env();
 
 	/* get service status before doing anything */
@@ -878,6 +878,7 @@ int main(int argc, char *argv[])
 	if (strcmp(argv[optind], "stage") == 0) {
 		/* set a few sane environment variables */
 		svc_deps  = 1;
+		setenv("SVC_DEPS", "1", 1);
 		setenv("SVC_DEBUG", "0", 1);
 		setenv("RS_STRICT_DEP", "0", 1);
 
