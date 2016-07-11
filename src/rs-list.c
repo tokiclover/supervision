@@ -184,6 +184,18 @@ int rs_stringlist_del(RS_StringList_T *list, const char *str)
 	return -1;
 }
 
+int rs_stringlist_rem(RS_StringList_T *list, RS_String_T *elm)
+{
+	if (elm) {
+		SLIST_REMOVE(list, elm, RS_String, entries);
+		free(elm->str);
+		free(elm);
+		return 0;
+	}
+	errno = EINVAL;
+	return -1;
+}
+
 RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str)
 {
 	RS_String_T *elm;
