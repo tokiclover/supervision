@@ -124,16 +124,6 @@ __NORETURN__ static void help_message(int exit_val);
 static void svc_stage(const char *cmd);
 
 /*
- * setup service dependencies
- * @svc: service name;
- * @argv and @envp are passed verbatim to svc_exec_list();
- * @return: 0 on succsess,
- *        > 0 for non fatals errors
- *        < 0 for fatals errors;
- */
-static int svc_depend(const char *svc, const char *argv[], const char *envp[]);
-
-/*
  * querry service status
  * @svc: service name;
  * @status: int value [defrs];
@@ -223,38 +213,6 @@ __NORETURN__ static void help_message(int exit_val)
 				longopts_help[i]);
 
 	exit(exit_val);
-}
-
-static int svc_depend(const char *svc, const char *argv[], const char *envp[])
-{
-	RS_SvcDeps_T *depend;
-	int i, r, v = 0;
-
-	if (svc_deps == 0)
-		return 0;
-	if (service_deps_list)
-		depend = rs_svcdeps_find(service_deps_list, svc);
-	else
-		return 0;
-	if (depend == NULL)
-		return 0;
-
-	/* skip before deps type */
-	for (i = 1; i < RS_DEPS_TYPE; i++) {
-		r = svc_exec_list(depend->deps[i], argv, envp);
-		if (r) {
-			switch(i) {
-			case RS_DEPS_NEED:
-				v = -r;
-				break;
-			case RS_DEPS_AFTER:
-				if (rs_yesno(getenv("RS_STRICT_DEP")) && v >= 0)
-					v = r;
-				break;
-			}
-		}
-	}
-	return v;
 }
 
 static const char **svc_env(void)
@@ -734,13 +692,6 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			free((void*)argv[2]);
 			continue;
 		}
-		/*
-		else if (svc_depend(svc->str, argv, envp) < 0) {
-			if (svc_quiet)
-				WARN("%s: Failed to setup service dependencies\n", svc->str);
-			continue;
-		}
-		*/
 
 		pid = fork();
 		if (pid > 0) { /* parent */
