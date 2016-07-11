@@ -103,9 +103,7 @@ ssize_t rs_getline(FILE *stream, char **buf, size_t *size)
 		return -1;
 	}
 	*size = 0;
-
 	*buf = err_realloc(*buf, BUFSIZ);
-	memset(*buf, 0, BUFSIZ);
 
 	while (fgets(*buf+*size, BUFSIZ, stream)) {
 		if (**buf == '\n')
@@ -117,13 +115,10 @@ ssize_t rs_getline(FILE *stream, char **buf, size_t *size)
 			*ptr = '\0';
 			goto retline;
 		}
-		else if (feof(stream)) {
+		else if (feof(stream))
 			goto retline;
-		}
-		else {
+		else
 			*buf = err_realloc(*buf, *size+1+BUFSIZ);
-			memset(*buf+*size+1, 0, BUFSIZ);
-		}
 	}
 	goto retline;
 
@@ -164,9 +159,6 @@ int rs_yesno(const char *str)
 					return 1;
 				case 'f':
 				case 'F':
-					return 0;
-				default:
-					errno = EINVAL;
 					return 0;
 			}
 		default:
