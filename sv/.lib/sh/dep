@@ -92,7 +92,7 @@ add_dep()
 	if [ "${#}" -gt 0 ]; then
 		append "${dep}_1" "${svc}"
 		append_unique "${dep}_2" "${@}"
-		DEPS="${DEPS}\n${svc}:${dep}=' ${@} '"
+		DEPS="${DEPS}\n${svc}:${dep}='${@}'"
 	fi
 }
 dep_gen()
@@ -124,7 +124,7 @@ for svc in *; do
 	dep_gen ${svc##*/}
 done
 
-printf "${DEPS}\n" >${SV_DEPDIR}/deps_${RS_TYPE}
+printf "${DEPS}" >${SV_DEPDIR}/deps_${RS_TYPE}
 
 exec 3>${SV_DEPDIR}/${RS_TYPE}
 for dep in ${__SV_DEPS_ORDER__}; do
@@ -149,7 +149,7 @@ for dep in ${__SV_DEPS_ORDER__}; do
 	# Print dependency list
 	#
 	for i in 0 1 2 3; do
-		eval printf "'${dep}_${i}=\"%s \"\n' \"\$${dep}_${i}\""
+		eval printf "'${dep}_${i}=\"%s\"\n' \"\${${dep}_${i}## }\""
 	done >&3
 done
 
