@@ -44,11 +44,6 @@ svc_init()
 	fi
 		;;
 	esac
-
-	local svc
-	for svc in devfs sysfs procfs; do
-		rs ${svc} start
-	done
 }
 
 svc_level()
