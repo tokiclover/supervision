@@ -13,6 +13,198 @@
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_DEPDIR SV_TMPDIR "/deps"
 
+static RS_SvcDepsList_T *service_deplist;
+static RS_DepTypeList_T *stage_deplist;
+static RS_StringList_T *deptree_list[RS_DEPTREE_PRIO];
+
+void rs_deptree_free(RS_StringList_T **array)
+{
+	int i;
+	for (i = 0; i < RS_DEPTREE_PRIO; i++)
+		rs_stringlist_free(array[i]);
+}
+
+int rs_deptree_add(int type, int prio, char *svc)
+{
+	RS_SvcDeps_T *svc_deps = rs_svcdeps_find(service_deplist, svc);
+	RS_String_T *ent, *elm;
+	int add, pri = prio+1;
+	int p, t, r;
+	static int lim = RS_DEPTREE_PRIO-1;
+
+	if (svc == NULL)
+		return 0;
+
+	if (pri < RS_DEPTREE_PRIO && svc_deps) {
+		/* handle {after,use,need} type */
+		if (type) {
+			for (t = RS_DEPS_AFTER; t < RS_DEPS_TYPE; t++)
+			SLIST_FOREACH(ent, svc_deps->deps[t], entries) {
+				add = 1;
+				for (p = pri; p <= lim; p++)
+					if ((elm = rs_stringlist_find(deptree_list[p], ent->str))) {
+						add = 0;
+						break;
+					}
+				if (add)
+					rs_deptree_add(t, pri, ent->str);
+			}
+		}
+		else {
+			SLIST_FOREACH(ent, svc_deps->deps[type], entries) {
+				add = 1;
+				for (p = 0; p < prio; p++)
+					if ((elm = rs_stringlist_find(deptree_list[p], ent->str))) {
+						add = 0;
+						break;
+					}
+				/* issue here is to add everything nicely */
+				if (add) {
+					r = rs_deptree_add(RS_DEPS_BEFORE, 2, ent->str);
+					rs_deptree_add(RS_DEPS_AFTER, r, ent->str);
+					r = ++r > prio ? r : prio;
+					rs_deptree_add(type, pri > r ? pri : r, svc);
+				}
+			}
+		}
+	}
+
+	/* add only if necessary */
+	for (p = prio; p < RS_DEPTREE_PRIO; p++)
+		if (rs_stringlist_find(deptree_list[p], svc))
+			return p;
+	prio = prio > lim ? lim : prio;
+	rs_stringlist_add(deptree_list[prio], svc);
+	return prio;
+}
+
+RS_StringList_T **rs_deptree_file_load(void)
+{
+	int p;
+	char deppath[256];
+	char *line = NULL, *ptr, *tmp, svc[128];
+	FILE *depfile;
+	size_t len, pos;
+
+	snprintf(deppath, sizeof(deppath), "%s/stage-%d/deptree_%s", SV_DEPDIR,
+			RS_STAGE.level, RS_STAGE.type);
+	if (file_test(deppath, 0) == 0)
+		return (RS_StringList_T **)0;
+	if ((depfile = fopen(deppath, "r+")) == NULL) {
+		ERR("Failed to open %s\n", deppath);
+		return (RS_StringList_T **)0;
+	}
+
+	/* initialize the list */
+	for (p = 0; p < RS_DEPTREE_PRIO; p++)
+		deptree_list[p] = rs_stringlist_new();
+
+	while (rs_getline(depfile, &line, &len) > 0) {
+		/* get dependency type */
+		ptr = strchr(line, '_');
+		p = atoi(++ptr);
+		ptr = strchr(line, '=');
+		pos = ++ptr-line;
+
+		/* add service to dependency appropriate priority */
+		ptr = shell_string_value(ptr);
+		if (ptr == NULL)
+			continue;
+
+		/* append service list */
+		while (*ptr) {
+			if ((tmp = strchr(ptr, ' ')) == NULL)
+				pos = strlen(ptr);
+			else
+				pos = tmp-ptr;
+			memcpy(svc, ptr, pos);
+			svc[pos] = '\0';
+			rs_stringlist_add(deptree_list[p], svc);
+			ptr += pos+1;
+		}
+	}
+	fclose(depfile);
+
+	return deptree_list;
+}
+
+int rs_deptree_file_save(RS_StringList_T *deptree[])
+{
+	RS_String_T *ent;
+	int p;
+	char deppath[256];
+	FILE *depfile;
+
+	if (deptree == NULL)
+		deptree = deptree_list;
+	if (deptree == NULL) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	snprintf(deppath, sizeof(deppath), "%s/stage-%d/deptree_%s", SV_DEPDIR,
+			RS_STAGE.level, RS_STAGE.type);
+	if ((depfile = fopen(deppath, "wa+")) == NULL) {
+		ERR("Failed to open %s\n", deppath);
+		return -1;
+	}
+
+	for (p = 0; p < RS_DEPTREE_PRIO; p++) {
+		fprintf(depfile, "dep_%d=' ", p);
+		SLIST_FOREACH(ent, deptree_list[p], entries)
+			if (ent)
+				fprintf(depfile, "%s ", ent->str);
+		fprintf(depfile, "'\n");
+	}
+
+	fclose(depfile);
+	return 0;
+}
+
+RS_StringList_T **rs_deptree_load(void)
+{
+	int p, t;
+	RS_DepType_T *deptype[RS_DEPS_TYPE];
+	RS_String_T *ent, *elm;
+	RS_StringList_T **ptr;
+
+	/* try to load the file if any */
+	if ((ptr = rs_deptree_file_load())) {
+		return ptr;
+	}
+	stage_deplist = rs_deplist_load();
+	service_deplist = rs_svcdeps_load();
+
+	for (t = 0; t < RS_DEPS_TYPE; t++)
+		deptype[t] = rs_deplist_find(stage_deplist, rs_deps_type[t]);
+	for (p = 0; p < RS_DEPTREE_PRIO; p++)
+		deptree_list[p] = rs_stringlist_new();
+
+	/* handle high priority first to be sure to satisfy lower prio services */
+	for (t = 0; t < RS_DEPS_TYPE; t++)
+		for (p = RS_DEPS_PRIO-1; p > 0; p--)
+			SLIST_FOREACH(ent, deptype[t]->priority[p], entries) {
+				if ((elm = rs_stringlist_find(deptype[t]->priority[p-1], ent->str)))
+					rs_stringlist_rem(deptype[t]->priority[p-1], elm);
+				rs_deptree_add(t, p, ent->str);
+			}
+
+	/* merge remaining lower priority services */
+	for (t = 0; t < RS_DEPS_TYPE; t++)
+		for (p = 0; p < RS_DEPS_PRIO; p++)
+			SLIST_FOREACH(ent, deptype[t]->priority[p], entries)
+				rs_deptree_add(t, p, ent->str);
+
+	/* save everything to a file */
+	rs_deptree_file_save(deptree_list);
+
+	/* clean unnecessary list */
+	rs_deplist_free(stage_deplist);
+	rs_svcdeps_free(service_deplist);
+
+	return deptree_list;
+}
+
 RS_DepTypeList_T *rs_deplist_load(void)
 {
 	char depcmd[256], deppath[256], dep[16];
@@ -245,7 +437,7 @@ RS_DepType_T *rs_deplist_add(RS_DepTypeList_T *list, const char *str)
 	RS_DepType_T *elm = err_malloc(sizeof(RS_DepType_T));
 	elm->type = err_strdup(str);
 
-	for (int i = 0; i < RS_DEP_PRIORITY; i++)
+	for (int i = 0; i < RS_DEPS_PRIO; i++)
 		elm->priority[i] = rs_stringlist_new();
 	SLIST_INSERT_HEAD(list, elm, entries);
 
@@ -282,7 +474,7 @@ void rs_deplist_free(RS_DepTypeList_T *list)
 
 	while (!SLIST_EMPTY(list)) {
 		elm = SLIST_FIRST(list);
-		for (i = 0; i < RS_DEP_PRIORITY; i++)
+		for (i = 0; i < RS_DEPS_PRIO; i++)
 			rs_stringlist_free(elm->priority[i]);
 
 		free(elm->type);

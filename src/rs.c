@@ -37,15 +37,13 @@ struct slock {
 	struct flock *f_lock;
 };
 
-static RS_SvcDepsList_T *service_deps_list;
-static RS_DepTypeList_T *stage_deps_list;
 static int svc_deps  = 0;
 static int svc_quiet = 1;
 
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
-	{ "sysctl", "miscfs",  NULL },
+	{ "sysctl", "dmcrypt", NULL },
 	{                      NULL },
 	{ "devfs",  "sysfs",   NULL },
 };
@@ -55,11 +53,6 @@ const char *const rs_stage_type[] = { "rs", "sv" };
 const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
 const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 const char *prgname;
-
-#define RS_DEPS_AFTER  1
-#define RS_DEPS_BEFORE 0
-#define RS_DEPS_USE    2
-#define RS_DEPS_NEED   3
 
 enum {
 	RS_SVC_CMD_STOP,
@@ -770,11 +763,12 @@ static void svc_stage(const char *cmd)
 {
 	RS_STAGE.level = atoi(getenv("RS_STAGE"));
 	RS_STAGE.type  = getenv("RS_TYPE");
-	RS_DepType_T *elm;
+	RS_StringList_T **deptree;
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
-	int i, j, k, type = 1;
+	int j, k, type = 1;
+	int svc_start = 1;
 
 	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
 		setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
@@ -786,9 +780,9 @@ static void svc_stage(const char *cmd)
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
 	if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
-		j = RS_DEP_PRIORITY-1;
+		j = RS_DEPTREE_PRIO-1;
 	else
-		j = 0;
+		j = 0, svc_start = 0;
 
 	envp = svc_env();
 	argv[4] = (char *)0, argv[3] = command;
@@ -805,25 +799,16 @@ static void svc_stage(const char *cmd)
 			RS_STAGE.type = rs_stage_type[k];
 			setenv("RS_TYPE", rs_stage_type[k], 1);
 		}
-		stage_deps_list = rs_deplist_load();
-		/*
-		service_deps_list = rs_svcdeps_load();
-		*/
+		deptree = rs_deptree_load();
 
-		while (j >= 0 && j < RS_DEP_PRIORITY) {
-			for (i = 0; i < RS_DEPS_TYPE; i++) {
-				if ((elm = rs_deplist_find(stage_deps_list, rs_deps_type[i])) != NULL)
-					svc_exec_list(elm->priority[j], argv, envp);
-				/* try only twice to start/stop everything */
-				if (i == 1 && j == 0)
-					break;
-			}
-			if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+		while (j >= 0 && j < RS_DEPTREE_PRIO) {
+			svc_exec_list(deptree[j], argv, envp);
+			if (svc_start)
 				--j;
 			else
 				++j;
 		}
-		rs_deplist_free(stage_deps_list);
+		rs_deptree_free(deptree);
 
 		/* skip irrelevant cases or because -[rv] passed */
 		if (type)

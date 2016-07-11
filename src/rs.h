@@ -70,6 +70,10 @@ extern const char *const rs_stage_name[];
 
 extern const char *const rs_deps_type[];
 #define RS_DEPS_TYPE 4
+#define RS_DEPS_AFTER  1
+#define RS_DEPS_BEFORE 0
+#define RS_DEPS_USE    2
+#define RS_DEPS_NEED   3
 
 /* singly-linked list using queue(3) */
 typedef struct RS_String {
@@ -79,13 +83,16 @@ typedef struct RS_String {
 typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
 
 /* number of priority level per dependency type */
-#define RS_DEP_PRIORITY 4
+#define RS_DEPS_PRIO 4
+
+#define RS_DEPTREE_PRIO 16
+RS_StringList_T **rs_deptree_load(void);
 
 typedef struct RS_DepType {
 	/* dependency type {after,before,use,need} */
 	char *type;
-	/* priority level list [0-RS_DEP_PRIORITY] */
-	RS_StringList_T *priority[RS_DEP_PRIORITY];
+	/* priority level list [0-RS_DEPS_PRIO] */
+	RS_StringList_T *priority[RS_DEPS_PRIO];
 	SLIST_ENTRY(RS_DepType) entries;
 } RS_DepType_T;
 typedef SLIST_HEAD(RS_DepTypeList, RS_DepType) RS_DepTypeList_T;
@@ -126,6 +133,9 @@ RS_SvcDeps_T *rs_svcdeps_adu (RS_SvcDepsList_T *list, const char *svc);
 RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc);
 int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
 void          rs_svcdeps_free(RS_SvcDepsList_T *list);
+
+RS_StringList_T **rs_deptree_load(void);
+void              rs_deptree_free(RS_StringList_T **array);
 
 /*
  * retrieve a configuration value like getenv(3)
