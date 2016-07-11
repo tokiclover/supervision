@@ -879,7 +879,6 @@ int main(int argc, char *argv[])
 		/* set a few sane environment variables */
 		svc_deps  = 1;
 		setenv("SVC_DEBUG", "0", 1);
-		setenv("SVC_DEPS", "1", 1);
 		setenv("RS_STRICT_DEP", "0", 1);
 
 		if (getenv("RS_STAGE"))
