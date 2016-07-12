@@ -829,6 +829,7 @@ int main(int argc, char *argv[])
 		prgname++;
 
 	int opt;
+	char on[8] = "1", off[8] = "0";
 
 	/* Show help if insufficient args */
 	if (argc < 2) {
@@ -841,10 +842,10 @@ int main(int argc, char *argv[])
 		switch (opt) {
 			case 'D':
 				svc_deps = 0;
-				setenv("SVC_DEPS", "0", 1);
+				setenv("SVC_DEPS", off, 1);
 				break;
 			case 'g':
-				setenv("SVC_DEBUG", "1", 1);
+				setenv("SVC_DEBUG", on, 1);
 				break;
 			case '0':
 			case '1':
@@ -878,9 +879,9 @@ int main(int argc, char *argv[])
 	if (strcmp(argv[optind], "stage") == 0) {
 		/* set a few sane environment variables */
 		svc_deps  = 1;
-		setenv("SVC_DEPS", "1", 1);
-		setenv("SVC_DEBUG", "0", 1);
-		setenv("RS_STRICT_DEP", "0", 1);
+		setenv("SVC_DEPS", on, 1);
+		setenv("SVC_DEBUG", off, 1);
+		setenv("RS_STRICT_DEP", off, 1);
 
 		if (getenv("RS_STAGE"))
 			svc_stage(argv[optind+1]);
