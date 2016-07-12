@@ -36,7 +36,7 @@ int rs_deptree_add(int type, int prio, char *svc)
 		return 0;
 
 	if (pri < RS_DEPTREE_PRIO && svc_deps) {
-		/* handle {after,use,need} type */
+		/* handle {after,use,need} type  which insert dependencies above */
 		if (type) {
 			for (t = RS_DEPS_AFTER; t < RS_DEPS_TYPE; t++)
 			SLIST_FOREACH(ent, svc_deps->deps[t], entries) {
@@ -51,6 +51,7 @@ int rs_deptree_add(int type, int prio, char *svc)
 			}
 		}
 		else {
+			/* handle before type which incerts dependencies below */
 			SLIST_FOREACH(ent, svc_deps->deps[type], entries) {
 				add = 1;
 				for (p = 0; p < prio; p++)
@@ -60,7 +61,7 @@ int rs_deptree_add(int type, int prio, char *svc)
 					}
 				/* issue here is to add everything nicely */
 				if (add) {
-					r = rs_deptree_add(RS_DEPS_BEFORE, 2, ent->str);
+					r = rs_deptree_add(type, prio > 2 ? prio : 2, ent->str);
 					rs_deptree_add(RS_DEPS_AFTER, r, ent->str);
 					r = ++r > prio ? r : prio;
 					rs_deptree_add(type, pri > r ? pri : r, svc);
@@ -69,6 +70,16 @@ int rs_deptree_add(int type, int prio, char *svc)
 		}
 	}
 
+	/* move up anything found before anything else */
+	for (p = 0; p < prio; p++)
+		if ((elm = rs_stringlist_find(deptree_list[p], svc))) {
+			if (prio < RS_DEPTREE_PRIO) {
+				rs_stringlist_mov(deptree_list[p], deptree_list[prio], elm);
+				if (prio < lim)
+					rs_deptree_add(type, prio, svc);
+			}
+			return prio;
+		}
 	/* add only if necessary */
 	for (p = prio; p < RS_DEPTREE_PRIO; p++)
 		if (rs_stringlist_find(deptree_list[p], svc))
