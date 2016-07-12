@@ -75,7 +75,7 @@ int rs_deptree_add(int type, int prio, char *svc)
 		if ((elm = rs_stringlist_find(deptree_list[p], svc))) {
 			if (prio < RS_DEPTREE_PRIO) {
 				rs_stringlist_mov(deptree_list[p], deptree_list[prio], elm);
-				if (prio < lim)
+				if (type && prio < lim)
 					rs_deptree_add(type, prio, svc);
 			}
 			return prio;
