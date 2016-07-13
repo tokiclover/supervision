@@ -40,7 +40,7 @@ start_pre()
 	done <${IPSET_RULES_FILE}
 	[ -n "${modules}" ] && modprobe ${modules} >${NULL} 2>&1
 
-	checkpath -qd "${IPSET_RULES_FILE/*}"
+	checkpath -qd "${IPSET_RULES_FILE%/*}"
 }
 
 start()
