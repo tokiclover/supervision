@@ -3,6 +3,13 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
+#
+# XXX: Set a syslog choice along with the command to get the service working;
+#      which is not necessary, when using an alias like socklog{,-inet,-ucspi,
+#      -unix}. Or, else, the service would fail to start.
+#
+#name="syslog-ng"
+#SVC_CMD="${name}"
 case "${SVC_NAME}" in
 	(syslog) name=socklog  ;;
 	(*) name=${SVC_NAME%-*};;
