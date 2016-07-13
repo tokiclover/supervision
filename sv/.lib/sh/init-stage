@@ -180,7 +180,7 @@ elif [ "${1}" = "-1" ]; then
 	if [ -e ${SV_SERVICE}/.${ACTION}/dev ]; then
 		echo $$ >${pidfile}
 		${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
-		cp -LRpu ${SV_SERVICE}/.${ACTION}/dev ${SV_RUNDIR}
+		cp -HRpu ${SV_SERVICE}/.${ACTION}/dev ${SV_RUNDIR}
 	fi
 	svc_level -1
 	rs -1 --rs stage
