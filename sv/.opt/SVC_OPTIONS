@@ -26,12 +26,6 @@ source ${SV_SVCDIR}/.opt/sv.conf
 umask 022
 
 #
-# Set debug options
-#
-if yesno "${SVC_DEBUG}"; then
-	set -x
-fi
-#
 # Handle specific (virtual) service backend/instance
 #
 case "${name}" in
@@ -59,6 +53,12 @@ SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 esac
 :	${SVC_PIDFILE=${SV_TMPDIR}/pids/${name}}
 
+#
+# Set debug options
+#
+if yesno "${SVC_DEBUG}"; then
+	set -x
+fi
 SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
