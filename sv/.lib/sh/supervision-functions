@@ -152,31 +152,36 @@ svc_state()
 #
 # @FUNCTION: Pre-Run handler
 #
+svc_config()
+{
+	local f
+	for f in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
+		if [ ! -f "${f}" ]; then
+			error "${f} required file not found"
+			return 1
+		fi
+	done
+}
 svc_pre()
 {
-	local REMOVE_SVC file val
+	local REMOVE_SVC val
 	REMOVE_SVC='{ svc_remove; svc_mark -f; return ${val}; }'
 
-	if [ -x ${SVC_DIR}/RUN ]; then
-		SVC_CMD=${SVC_DIR}/RUN
-	else
+	if ! [ "${SVC_CMD#/}" != "${SVC_CMD}" ]; then
 		SVC_CMD=$(command -v ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
 	fi
 	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
 		error "Command not found."
 		val=1 eval ${REMOVE_SVC}
 	fi
-	for file in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
-		if [ ! -f "${file}" ]; then
-			error "${file} required file not found"
-			val=2 eval ${REMOVE_SVC}
-		fi
-	done
+	if ! svc_config; then
+		val=2 eval ${REMOVE_SVC}
+	fi
 	if command -v pre >${NULL} 2>&1; then
-		pre || {
+		if ! pre; then
 			error "Failed to set up service"
 			val=3 eval ${REMOVE_SVC}
-		}
+		fi
 	fi
 
 	#
