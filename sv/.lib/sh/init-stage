@@ -24,7 +24,7 @@ svc_init()
 		(GNU/kFreeBSD) procfs=linprocfs;;
 	esac
 
-	if ! mountinfo /proc; then
+	if ! mountinfo --quiet /proc 2>${NULL}; then
 		begin "Mounting /proc"
 		mount ${opt} -t ${procfs} -o ${SYSFS_OPTS:-nodev} proc /proc
 		end ${?}
@@ -37,7 +37,7 @@ svc_init()
 		mkdir -m 0755 -p /run
 		end ${?}
 	fi
-	if ! mountinfo /run; then
+	if ! mountinfo --quiet /run; then
 		begin "Mounting /run"
 		mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
 		end ${?}
@@ -146,6 +146,8 @@ svc_tmpdir()
 	# Set up CGroup
 	#
 	if yesno ${SV_CGROUP:-YES}; then
+		rs devfs start &
+		rs sysfs start
 		cgroup_start_sys
 		case ${?} in
 			(0) SV_CGROUP=Yes;;
@@ -166,7 +168,7 @@ begin "Starting Init-Stage${1}\n"
 if [ "${1}" = "-0" ]; then
 	svc_tmpdir
 	echo $$ >${pidfile}
-	${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}" &
+	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
 elif [ "${1}" = "-1" ]; then
 	svc_init
 	svc_level -0
@@ -177,8 +179,8 @@ elif [ "${1}" = "-1" ]; then
 	#
 	if [ -e ${SV_SERVICE}/.${ACTION}/dev ]; then
 		echo $$ >${pidfile}
-		${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}" &
-		cp -LRpu ${SV_TMPDIR}/.${ACTION}/dev ${SV_RUNDIR}
+		${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
+		cp -PRpu ${SV_SERVICE}/.${ACTION}/dev ${SV_RUNDIR}
 	fi
 	svc_level -1
 	rs -1 --rs stage
@@ -195,7 +197,7 @@ elif [ "${1}" = "-2" ]; then
 	# is ready when the following pidfile is present
 	#
 	if [ -e "${pidfile}" ]; then
-		kill -TERM $(cat ${pidfile})
+		kill -TERM $(cat ${pidfile}) 2>${NULL}
 		rm ${pidfile}
 	fi
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
@@ -203,7 +205,7 @@ elif [ "${1}" = "-2" ]; then
 		rs -1 stage; rs -2 stage;" &
 
 	echo $$ >${pidfile}
-	exec ${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}"
+	exec ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
 	#
 	# Drop into a rescue shell
 	#
