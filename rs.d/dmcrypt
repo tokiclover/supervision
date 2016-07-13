@@ -28,6 +28,16 @@ MKSWAP()
 	fi
 }
 
+get_device()
+{
+	case "${1}" in
+		(*[Uu][Uu][Ii][Dd]=*)     blkid_opts="-U";;
+		(*[Ll][Aa][Bb][Ee][Ll]=*) blkid_opts="-L";;
+		(*) echo "${1}"; return;;
+	esac
+	echo "$(${blkid} ${blkid_opts} ${1#*=} 2>${NULL})"
+}
+
 #
 # Clean up remdev mount point and LUKS keyfiles
 #
@@ -71,13 +81,7 @@ crypt_header()
 {
 	local blkid_opts
 	[ -e "${header}" ] && return
-
-	case "${header}" in
-		([Uu][Uu][Ii][Dd]=*)     blkid_opts="-U ${header#*=}";;
-		([Ll][Aa][Bb][Ee][Ll]=*) blkid_opts="-L ${header#*=}";;
-		(*) header=; return 1;;
-	esac
-	header=$(${blkid} ${blkid_opts} 2>${NULL})
+	header="$(get_device "${header}")"
 }
 
 mount_remdev()
@@ -208,6 +212,7 @@ start()
 		#
 		# Setup cryptsetup arguments
 		#
+		device="$(get_device "${device}")"
 		crypt_opts="open ${device} ${volume}"
 
 		if cryptsetup isLuks ${device} >${NULL} 2>&1; then
@@ -313,7 +318,6 @@ start()
 	done
 
 	crypt_cleanup
-
 	return ${retval}
 }
 
