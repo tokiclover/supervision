@@ -155,6 +155,12 @@ svc_tmpdir()
 	fi
 }
 
+case ${__SV_CMD__} in
+	(runsvdir)
+:	${SV_OPTS:=log:...........................................................}
+	;;
+esac
+
 pidfile="${SV_TMPDIR}/${__SV_CMD__}.pid"
 begin "Starting Init-Stage${1}\n"
 if [ "${1}" = "-0" ]; then
