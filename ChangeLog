@@ -4,6 +4,7 @@ Header: supervision/ChangeLog, 2015/04/24
 
 Changed version numbering in favor of major.minor.revision;
 Removed support for static /service/ (too difficult support);
+(Removed ./RUN command support for supervision services);
 
 Added init-system services:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
