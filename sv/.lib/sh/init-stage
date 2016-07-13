@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.0 2016/05/25                               Exp $
+# $Version: 1.1 2016/07/07                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -60,6 +60,7 @@ svc_level()
 		(-3) ACTION=${ACTION:=shutdown} LEVEL=${LEVEL:=0};;
 		(*) return;;
 	esac
+	export ACTION LEVEL
 
 	if yesno ${RC_INIT_SYS:-YES}; then
 		begin "${MSG:-System ${ACTION}}\n"
@@ -154,50 +155,57 @@ svc_tmpdir()
 	fi
 }
 
+pidfile="${SV_TMPDIR}/${__SV_CMD__}.pid"
 begin "Starting Init-Stage${1}\n"
-case "${1}" in
-	(-0)
+if [ "${1}" = "-0" ]; then
 	svc_tmpdir
-	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
+	echo $$ >${pidfile}
 	${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}" &
-	;;
-	(-1)
+elif [ "${1}" = "-1" ]; then
 	svc_init
 	svc_level -0
 	rs -0 --rs stage
+
+	#
+	# Try to bring up the device manager, like udev, as early as possible
+	#
+	if [ -e ${SV_SERVICE}/.${ACTION}/dev ]; then
+		echo $$ >${pidfile}
+		${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}" &
+		cp -LRpu ${SV_TMPDIR}/.${ACTION}/dev ${SV_RUNDIR}
+	fi
 	svc_level -1
 	rs -1 --rs stage
-	;;
-	(-2)
+elif [ "${1}" = "-2" ]; then
 	#
 	# Set up CGroup
 	#
-	case "${OS_NAME}" in
-		(Linux)
+	if [ "${OS_NAME}" = "Linux" ]; then
 		SVC_NAME="${__SV_CMD__}" cgroup_add_service
-		;;
-	esac
+	fi
 	svc_level -2
 	#
 	# Bring up what left and stage-2 assuming `svcscan'
 	# is ready when the following pidfile is present
 	#
+	if [ -e "${pidfile}" ]; then
+		kill -TERM $(cat ${pidfile})
+		rm ${pidfile}
+	fi
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
-		svc_wait -E 10000 ${__SV_CMD__} ${SV_TMPDIR}/${__SV_CMD__}.pid;
+		svc_wait -E 10000 ${__SV_CMD__} ${pidfile};
 		rs -1 stage; rs -2 stage;" &
 
-	echo $$ >${SV_TMPDIR}/${__SV_CMD__}.pid
+	echo $$ >${pidfile}
 	exec ${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}"
 	#
 	# Drop into a rescue shell
 	#
 	svc_rsh
-	;;
-	(-3)
+elif [ "${1}" = "-3" ]; then
 	svc_shutdown
 	svc_level -3
-	;;
-esac
+fi
 end "${?}"
 
 #
