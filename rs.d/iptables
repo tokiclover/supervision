@@ -21,7 +21,7 @@ case "${SVC_NAME}" in
 esac
 iptables_bin="$(command -v ${iptables_name} 2>${NULL})"
 
-case "${IPTABLES_NAME}" in
+case "${iptables_name}" in
 	(iptables)
 	iptables_proc="/proc/net/ip_tables_names"
 	iptables_file="${IPTABLES_RULES_FILE:=/var/lib/${iptables_name}/rules-save}"
@@ -53,7 +53,7 @@ start_pre()
 	[ -n "${iptables_bin}" -a -x "${iptables_bin}" ] ||
 		{ error "No IPTables binary found"; return 1; }
 
-	if [ -d /proc/modules ]; then
+	if [ -e /proc/modules ]; then
 		modprobe ipt_LOG ${iptables_mods} >${NULL} 2>&1
 	fi
 
