@@ -60,7 +60,7 @@ svc_start()
 	if [ -z "${RS_STAGE}" ]; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
 	fi
-	cp -PRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR}
+	cp -LRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 	svc_mark -d
 
