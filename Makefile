@@ -179,11 +179,6 @@ dist_DIRS  += \
 	$(DOCDIR)
 DISTDIRS    = $(dist_DIRS)
 
-ifdef STATIC_SERVICE
-dist_SV_VIRT += fcron:cron dnsmask:dns \
-	busybox-httpd:httpd busybox-ntpd:ntp socklog:syslog
-endif
-
 define svc_dir =
 	$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$(1)
 endef
@@ -245,25 +240,10 @@ install: install-dir install-dist
 	for dir in .lib .opt; do \
 		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
-ifdef STATIC_SERVICE
-	$(call rem_sym,sv,$(dist_SV_VIRT))
-	for svc in $(dist_SV_VIRT); do \
-		cp -a sv/$${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-		if test -e sv/$${svc#*:}/OPTIONS.$${svc%:*}; then \
-			mv -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.$${svc%:*} \
-				$(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS; \
-			rm -f $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}/OPTIONS.*; \
-		fi; \
-	done
-	for i in 1 2 3 4 5 6; do \
-		cp -a sv/getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
-	done
-else
 	$(call svc_sym,sv,$(dist_SV_VIRT))
 	for i in 1 2 3 4 5 6; do \
 		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
-endif
 	$(call svc_sym,rs.d,$(dist_RS_VIRT))
 	for i in 1 2 3 4 5 6; do \
 		ln -s $(SYSCONFDIR)/sv/getty-tty$${i} \
@@ -309,13 +289,7 @@ $(dist_SV_SVCS): FORCE
 	-$(call svc_opt,sv/$@/OPTIONS)
 	-$(call svc_cmd,$@)
 $(dist_SV_OPTS): $(dist_SV_SVCS)
-ifdef STATIC_SERVICE
-	sh -c 'ARGS=$(subst /OPTIONS,,$@); set $${ARGS/./ }; \
-	cp -a $(DESTDIR)$(SYSCONFDIR)/sv/$${1} $(DESTDIR)$(SYSCONFDIR)/sv/$${2}; \
-	$(install_DATA) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$${2}/OPTIONS'
-else
 	$(call svc_opt,sv/$@)
-endif
 $(dist_RS_SVCS):
 	$(install_SCRIPT) rs.d/$@ $(DESTDIR)$(SYSCONFDIR)/rs.d/$@
 	-$(call svc_opt,rs.d/OPTIONS.$@)
@@ -339,11 +313,6 @@ endif
 	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-ifdef STATIC_SERVICE
-	for svc in $(dist_SV_OPTS); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc#*.}; \
-	done
-endif
 	$(call rem_sym,sv,$(dist_SV_VIRT))
 	$(call rem_svc,sv,$(dist_SV_SVCS))
 	$(call rem_sym,rs.d,$(dist_RS_VIRT))

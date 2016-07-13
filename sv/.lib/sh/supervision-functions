@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.2 2016/05/25 21:09:26                      Exp $
+# $Version: 3.3 2016/07/07 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -60,10 +60,7 @@ svc_start()
 	if [ -z "${RS_STAGE}" ]; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
 	fi
-	case ${SV_RUNDIR} in
-		(${SV_SERVICE}) ;;
-		(*) cp -LRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR};;
-	esac
+	cp -LRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 	svc_mark -d
 

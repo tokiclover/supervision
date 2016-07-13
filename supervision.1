@@ -67,10 +67,6 @@ See also
 for an example of multi-providers/instances with
 .I only
 a single symlink and a single service/OPTIONS file.
-.B WARNING:
-Making service instances with symlinks conflict with static /service/!
-Obviously using a single directory for many instances will not work at all,
-so make a copy of the whole directory instead.
 .TP
 .B RUNSCRIPT
 Similarly, runscript service instances use a symlink to the service with an extra
@@ -387,12 +383,17 @@ An extended stage-0 (system initialization) is also supported.
 This is where {dev,sysfs} et al. runscript services should live in.
 .SS RUNLEVELS
 {boot,default,nonetwork,single} run levels are supported.
-Extra services that should be started in {boot,single} run levels should be add
-into SV_SERVICE/.LEVEL,
-e.g. sulogin in single level.
-.B WARING:
-A static /service/ would require to manually remove sulogin (`sv/sulogin/run del')
-service after using single run-level.
+Extra services that should be started in {boot,single,sysinit} run levels should
+be add into SV_SERVICE/.LEVEL,e.g. sulogin in single level.
+Another useful application of this is, putting a symlink of the device manager,
+e.g. `ln -s /etc/sv/udev /etc/service/.sysinit/dev', to get udev started as early
+as possible.
+.B WARNING: mdev
+should not be there because it will be started as default device manager for
+.B Linux
+OSs. Second, the name of the symlink should be only
+.B dev
+(virtual service) and not a particular device manager name.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on

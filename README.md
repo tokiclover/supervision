@@ -32,7 +32,6 @@ INSTALLATION
 `./configure --build=x86_64-pc-linux-gnu`
 
     - add `--enable-sysvinit` to get an additional SysVinit compatibility service;
-    - add `--enable-static-service` for a static `/service/` installation);
     - add `--enable-runit` to get Runit init-stage-[123]; and likewise
 	- add `--enable-s6` for S6 init-stage-[123]; and then
 	- (other standard options are available, see `--help`);
@@ -41,11 +40,6 @@ INSTALLATION
 
 `make DESTDIR=/tmp install-all` or use only `install` (without supervision init
 script for OpenRC) would suffice.
-
-**WARN:** Read-only rootfs is not supported with a static `/service/` because
-`/etc/service` should be writable. Secondly, *do* copy service directory to make
-new instances, e.g. `cp -a /etc/sv/getty /etc/service/getty-ttyS2` instead of
-`ln -s /etc/sv/getty /etc/service/getty-ttyS2`.
 
 And do not forget to run `sv/.lib/bin/sv-config -S BACKEND` afterwards!
 or `${EXEC_PREFIX}${DESTDIR}/lib/sv/bin/sv-config -S BACKEND` after installation.

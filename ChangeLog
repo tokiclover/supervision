@@ -3,6 +3,8 @@ Header: supervision/ChangeLog, 2015/04/24
 0.12.0_alpha:
 
 Changed version numbering in favor of major.minor.revision;
+Removed support for static /service/ (too difficult support);
+
 Added init-system services:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
 kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
