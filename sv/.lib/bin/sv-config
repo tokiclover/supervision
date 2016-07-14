@@ -33,8 +33,8 @@ sv_cmd()
 {
 	local cmd svc="${1}"
 	if [ ${#} -lt 2 ]; then
-		error "Insufficient number of arguments"
-		exit 2
+		error "Insufficient number of arguments\n"
+		help_message 2
 	fi
 	case "${2}" in
 		(add) cmd=svc_cmd SVC_NAME="${svc}";;
@@ -43,8 +43,11 @@ sv_cmd()
 	eval ${cmd} ${2} ${ARGS}
 }
 
-[ ${#} -ge 1 ] || help_message 1
-ARGS= __SV_NAM__=
+if [ ${#} -lt 1 ]; then
+	error "Insufficient number of arguments\n"
+	help_message 1
+fi
+__SV_NAM__=
 
 while [ ${#} -gt 0 ]; do
 	case "${1}" in
@@ -66,23 +69,21 @@ done
 
 sv_backend()
 {
-local BINS CMDS PREFIX SIGNALS bin env
+	local CMD_LINKS COMMANDS PREFIX SIGNALS
 
-SIGNALS='__SIGSTRT__ __SIGSTOP__ __SIGSONCE__ __SIGPAUSE__ __SIGCONT__ __SIGHUP__ __SIGALRM__ __SIGINT__
-	__SIGTERM__ __SIGKILL__ __SIGEXIT__ __SIGQUIT__ __SIGUSR1__ __SIGUSR2__ __SIGWTUP__ __SIGWDWN__'
-BINS='envdir envuidgid fghack pgrphack setlock setuidgid softlimit'
-CMDS='__SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ __LOGCMD__'
+	SIGNALS="__SIGSTRT__ __SIGSTOP__ __SIGSONCE__ __SIGPAUSE__ __SIGCONT__ \
+		__SIGHUP__ __SIGALRM__ __SIGINT__ __SIGTERM__ __SIGKILL__ __SIGEXIT__ \
+		__SIGQUIT__ __SIGUSR1__ __SIGUSR2__ __SIGWTUP__ __SIGWDWN__"
+	CMD_LINKS='envdir envuidgid fghack pgrphack setlock setuidgid softlimit'
+	COMMANDS='__SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ __LOGCMD__'
 
-case ${__SV_NAM__} in
-	(daemontools)
+	if [ "${__SV_NAM__}" = "daemontools" ]; then
 		BIN='' PREFIX=''
-		;;
-	(daemontools-encore)
+	elif [ "${__SV_NAM__}" = "daemontools-encore" ]; then
 		BIN='' PREFIX=''
 		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
-		;;
-	(runit)
-		BIN=chpst CMDS="${CMDS} __PRECMD__ __SCANCMD__"
+	elif [ "${__SV_NAM__}" = "runit" ]; then
+		BIN=chpst COMMANDS="${COMMANDS} __PRECMD__ __SCANCMD__"
 		PREFIX='' SIGNALS="${SIGNALS} __SIGRELD__"
 		__SIGWTUP__="-w 10 up" __SIGWDWN__="-w 10 down"
 		__SCANCMD__='kill -CONT \$(cat \${SV_TMPDIR}/runsvdir.pid)'
@@ -92,16 +93,15 @@ case ${__SV_NAM__} in
 		__SIGKILL__=kill __SIGEXIT__=exit __SIGRELD__=reload
 		__SV_CMD__=runsvdir __SVCCMD__=sv __CHKCMD__='sv check'
 		__STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
-		;;
-	(s6)
+	elif [ "${__SV_NAM__}" = "s6" ]; then
 		BIN='' PREFIX=s6- __SIGWTUP__='-wU -T10000' __SIGWDWN__='-wD -T10000'
 		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
-		CMDS="${CMDS} __SCANCMD__" __SCANCMD__='s6-svscanctl -an \${SV_RUNDIR}'
+		COMMANDS="${COMMANDS} __SCANCMD__" __SCANCMD__='s6-svscanctl -an \${SV_RUNDIR}'
 		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok
 		__STACMD__=s6-svsat __LOGCMD__=s6-log
-		;;
-	(*) die "Invalid supervision backend";;
-esac
+	else
+		die "Invalid supervision backend"
+	fi
 
 :	${__SIGSTRT__:=-u}
 :	${__SIGSTOP__:=-d}
@@ -120,28 +120,31 @@ esac
 :	${__STACMD__:=svstat}
 :	${__LOGCMD__:=multilog}
 
-for var in ${CMDS}; do
-	eval val="\"\$${var}\""
-	eval "${var}=$(command -v "${val%% *}" 2>${NULL})"
-	if test "\"\${${var}#/}\"" = "\"\$${var}\""; then
-		error "${val% *}: Command not found"
-		exit 1
-	fi
-	if [ "${val#* }" != "${val}" ]; then
-		eval "${var}=\"\$${var} ${val#* }\""
-	fi
-done
+	local var val
+	for var in ${COMMANDS}; do
+		eval val="\"\$${var}\""
+		eval "${var}=$(command -v "${val%% *}" 2>${NULL})"
+		if test "\"\${${var}#/}\"" = "\"\$${var}\""; then
+			error "${val% *}: Command not found"
+			exit 1
+		fi
+		if [ "${val#* }" != "${val}" ]; then
+			eval "${var}=\"\$${var} ${val#* }\""
+		fi
+	done
 
-begin "Setting up ${__SV_NAM__} supervision backend..."
-for bin in ${BINS}; do
-	ln -f -s $(command -v ${PREFIX}${BIN:-${bin%:*}}) ${SV_LIBDIR}/bin/${bin#*:}
-done
-end ${?} Symlinks
-for env in __SV_NAM__ ${CMDS} ${SIGNALS}; do
-	eval echo "${env}=\\\"\${${env}}\\\""
-	unset ${env}
-done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
-end ${?} SVC_BACKEND
+	begin "Setting up ${__SV_NAM__} supervision backend..."
+	local cmd
+	for cmd in ${CMD_LINKS}; do
+		ln -f -s $(command -v ${PREFIX}${BIN:-${cmd%:*}} 2>${NULL}) \
+			${SV_LIBDIR}/bin/${cmd#*:}
+	done
+	end "${?}" Symlinks
+	local env
+	for env in __SV_NAM__ ${COMMANDS} ${SIGNALS}; do
+		eval echo "${env}=\\\"\${${env}}\\\""
+	done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
+	end "${?}" SVC_BACKEND
 }
 
 [ -n "${__SV_NAM__}" ] && sv_backend || sv_cmd "${@}"
