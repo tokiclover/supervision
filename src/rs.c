@@ -10,6 +10,7 @@
 #include "error.h"
 #include "helper.h"
 #include "rs.h"
+#include <dirent.h>
 #include <getopt.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -130,6 +131,12 @@ static int svc_state(const char *svc, int status);
  * @return 0 on success or number of failed services
  */
 static int svc_stage_init(int stage, const char *argv[], const char *envp[]);
+
+/*
+ * stop remaining list;
+ * @return: 0 on success;
+ */
+static int rs_stage_stop(const char *argv[], const char *envp[]);
 
 /*
  * set service status
@@ -759,6 +766,30 @@ static int svc_stage_init(int stage, const char *argv[], const char *envp[])
 	return retval;
 }
 
+static int rs_stage_stop(const char *argv[], const char *envp[])
+{
+	int retval;
+	RS_StringList_T *svclist;
+	DIR *d_ptr;
+	struct dirent *d_ent;
+
+	d_ptr = opendir(SV_TMPDIR_STAR);
+	if (d_ptr == NULL) {
+		DBG("Failed to open %s directory: `%s'\n", SV_TMPDIR_STAR, strerror(errno));
+		return -1;
+	}
+	svclist = rs_stringlist_new();
+
+	while ((d_ent = readdir(d_ptr)))
+		if (d_ent->d_name[0] != '.')
+			rs_stringlist_add(svclist, d_ent->d_name);
+	closedir(d_ptr);
+
+	retval = svc_exec_list(svclist, argv, envp);
+	rs_stringlist_free(svclist);
+	return retval;
+}
+
 static void svc_stage(const char *cmd)
 {
 	RS_STAGE.level = atoi(getenv("RS_STAGE"));
@@ -769,6 +800,7 @@ static void svc_stage(const char *cmd)
 	const char *argv[8] = { "runscript" };
 	int j, k, type = 1;
 	int svc_start = 1;
+	int level = 0;
 
 	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
 		setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
@@ -779,11 +811,6 @@ static void svc_stage(const char *cmd)
 		type = 0;
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
-	if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
-		j = RS_DEPTREE_PRIO-1;
-	else
-		j = 0, svc_start = 0;
-
 	envp = svc_env();
 	argv[4] = (char *)0, argv[3] = command;
 
@@ -794,26 +821,54 @@ static void svc_stage(const char *cmd)
 	if (RS_STAGE.level == 0 )
 		svc_stage_init(3, argv, envp);
 
-	for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) {
-		if (!type) {
-			RS_STAGE.type = rs_stage_type[k];
-			setenv("RS_TYPE", rs_stage_type[k], 1);
+	/* do this extra loop to be able to stop stage-1 with RS_STAGE=3; so that,
+	 * {local,network}fs services etc. can be safely stopped
+	 */
+	for (;;) { /* SHUTDOWN_LOOP */
+		if (RS_STAGE.level == 3) {
+			level = 3;
+			RS_STAGE.level = 2;
+			command = rs_svc_cmd[RS_SVC_CMD_STOP];
 		}
-		deptree = rs_deptree_load();
+		else if (level) {
+			RS_STAGE.level = level;
+			level = 0;
+			command = rs_svc_cmd[RS_SVC_CMD_START];
+		}
+		argv[3] = command;
 
-		while (j >= 0 && j < RS_DEPTREE_PRIO) {
-			svc_exec_list(deptree[j], argv, envp);
-			if (svc_start)
-				--j;
+		for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) { /* STAGE_TYPE_LOOP */
+			if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+				j = RS_DEPTREE_PRIO-1;
 			else
-				++j;
-		}
-		rs_deptree_free(deptree);
+				j = 0, svc_start = 0;
 
-		/* skip irrelevant cases or because -[rv] passed */
-		if (type)
+			if (!type) {
+				RS_STAGE.type = rs_stage_type[k];
+				setenv("RS_TYPE", rs_stage_type[k], 1);
+			}
+			deptree = rs_deptree_load();
+
+			while (j >= 0 && j < RS_DEPTREE_PRIO) {
+				svc_exec_list(deptree[j], argv, envp);
+				if (svc_start)
+					--j;
+				else
+					++j;
+			} /* PRIORITY_LEVEL_LOOP */
+			rs_deptree_free(deptree);
+
+			/* skip irrelevant cases or because -[rv] passed */
+			if (type)
+				break;
+		} /* STAGE_TYPE_LOOP */
+
+		/* terminate remaining services before stage-3 */
+		if (level)
+			rs_stage_stop(argv, envp);
+		else
 			break;
-	}
+	} /* SHUTDOWN_LOOP */
 
 	/* finish sysinit */
 	if (RS_STAGE.level == 0 )
