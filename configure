@@ -5,7 +5,7 @@
 
 name="${0##*/}"
 NULL=/dev/null
-export LC_ALL=C
+export LC_ALL=C LANG=C
 
 shell_exec(){
 	echo "Trying to exec $1 shell"
@@ -545,7 +545,7 @@ LINUX_RS_SERVICES="
 	lvm
 	raid
 	unionfs
-	zram
+	zramfs
 "
 LINUX_RS_VIRTUALS="
 	ip6tables:iptables
