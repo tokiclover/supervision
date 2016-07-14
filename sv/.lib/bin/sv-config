@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/bin/sv-config                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2016/05/05 21:09:26                      Exp $
+# $Version: 1.3 2016/07/14 21:09:26                      Exp $
 #
 
 :	${name=${0##*/}}
@@ -82,18 +82,23 @@ case ${__SV_NAM__} in
 		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
 		;;
 	(runit)
-		BIN=chpst CMDS="${CMDS} __PRECMD__ __SCANCMD__" PREFIX='' SIGNALS="${SIGNALS} __SIGRELD__"
-		__SIGWTUP__="'-w 10 up'" __SIGWDWN__="'-w 10 down'" __SCANCMD__="'pkill -CONT runsvdir'"
-		__SIGSTRT__=up __SIGSTOP__=down __SIGSONCE__=once __SIGPAUSE__=pause __SIGCONT__=cont
-		__SIGHUP__=hup __SIGALRM__=alarm __SIGINT__=interrupt __SIGQUIT__=quit __SIGUSR1__=1
-		__SIGUSR2__=2 __SIGTERM__=term __SIGKILL__=kill __SIGEXIT__=exit __SIGRELD__=reload
-		__SV_CMD__=runsvdir __SVCCMD__=sv __CHKCMD__="'sv check'" __STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
+		BIN=chpst CMDS="${CMDS} __PRECMD__ __SCANCMD__"
+		PREFIX='' SIGNALS="${SIGNALS} __SIGRELD__"
+		__SIGWTUP__="-w 10 up" __SIGWDWN__="-w 10 down"
+		__SCANCMD__='kill -CONT \$(cat \${SV_TMPDIR}/runsvdir.pid)'
+		__SIGSTRT__=up __SIGSTOP__=down __SIGSONCE__=once __SIGPAUSE__=pause
+		__SIGCONT__=cont __SIGHUP__=hup __SIGALRM__=alarm __SIGINT__=interrupt
+		__SIGQUIT__=quit __SIGUSR1__=1 __SIGUSR2__=2 __SIGTERM__=term
+		__SIGKILL__=kill __SIGEXIT__=exit __SIGRELD__=reload
+		__SV_CMD__=runsvdir __SVCCMD__=sv __CHKCMD__='sv check'
+		__STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
 		;;
 	(s6)
-		BIN='' PREFIX=s6- __SIGWTUP__="'-wU -T10000'" __SIGWDWN__="'-wD -T10000'"
+		BIN='' PREFIX=s6- __SIGWTUP__='-wU -T10000' __SIGWDWN__='-wD -T10000'
 		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
-		CMDS="${CMDS} __SCANCMD__" __SCANCMD__='"s6-svscanctl -an ${SV_RUNDIR}"'
-		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok __STACMD__=s6-svsat __LOGCMD__=s6-log
+		CMDS="${CMDS} __SCANCMD__" __SCANCMD__='s6-svscanctl -an \${SV_RUNDIR}'
+		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok
+		__STACMD__=s6-svsat __LOGCMD__=s6-log
 		;;
 	(*) die "Invalid supervision backend";;
 esac
@@ -115,13 +120,25 @@ esac
 :	${__STACMD__:=svstat}
 :	${__LOGCMD__:=multilog}
 
+for var in ${CMDS}; do
+	eval val="\"\$${var}\""
+	eval "${var}=$(command -v "${val%% *}" 2>${NULL})"
+	if test "\"\${${var}#/}\"" = "\"\$${var}\""; then
+		error "${val% *}: Command not found"
+		exit 1
+	fi
+	if [ "${val#* }" != "${val}" ]; then
+		eval "${var}=\"\$${var} ${val#* }\""
+	fi
+done
+
 begin "Setting up ${__SV_NAM__} supervision backend..."
 for bin in ${BINS}; do
-	ln -f -s $(type -p ${PREFIX}${BIN:-${bin%:*}}) ${SV_LIBDIR}/bin/${bin#*:}
+	ln -f -s $(command -v ${PREFIX}${BIN:-${bin%:*}}) ${SV_LIBDIR}/bin/${bin#*:}
 done
 end ${?} Symlinks
 for env in __SV_NAM__ ${CMDS} ${SIGNALS}; do
-	eval echo ${env}=\"\${${env}}\"
+	eval echo "${env}=\\\"\${${env}}\\\""
 	unset ${env}
 done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
 end ${?} SVC_BACKEND
