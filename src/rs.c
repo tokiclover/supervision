@@ -130,7 +130,7 @@ static int svc_state(const char *svc, int status);
  * to finish/start particular stages
  * @return 0 on success or number of failed services
  */
-static int svc_stage_init(int stage, const char *argv[], const char *envp[]);
+static int rs_stage_start(int stage, const char *argv[], const char *envp[]);
 
 /*
  * stop remaining list;
@@ -751,7 +751,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	return retval;
 }
 
-static int svc_stage_init(int stage, const char *argv[], const char *envp[])
+static int rs_stage_start(int stage, const char *argv[], const char *envp[])
 {
 	int i, retval;
 	RS_StringList_T *init_stage_list;
@@ -816,10 +816,10 @@ static void svc_stage(const char *cmd)
 
 	/* initialize boot */
 	if (RS_STAGE.level == 1 )
-		svc_stage_init(1, argv, envp);
+		rs_stage_start(1, argv, envp);
 	/* fix a race condition for sysinit */
 	if (RS_STAGE.level == 0 )
-		svc_stage_init(3, argv, envp);
+		rs_stage_start(3, argv, envp);
 
 	/* do this extra loop to be able to stop stage-1 with RS_STAGE=3; so that,
 	 * {local,network}fs services etc. can be safely stopped
@@ -872,7 +872,7 @@ static void svc_stage(const char *cmd)
 
 	/* finish sysinit */
 	if (RS_STAGE.level == 0 )
-		svc_stage_init(0, argv, envp);
+		rs_stage_start(0, argv, envp);
 }
 
 int main(int argc, char *argv[])
