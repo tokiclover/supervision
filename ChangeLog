@@ -9,10 +9,10 @@ Removed support for static /service/ (too difficult support);
 Added init-system services:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
 kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
-tmpfiles.{de,setup}, lvm, raid, ipset, iptables, sysctl;
+tmpfiles.{dev,setup}, lvm, raid, ipset, iptables, sysctl;
 SUPERVISION/SERVICES: xdm;
 
-RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs;
+RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs, zram to zramfs;
 SERVICE BEHAVIOR: install getty services using a virtual name instead to ease
 service dependencies if need be; so, set the getty name or binary path in the
 configuration file (default is agetty).
