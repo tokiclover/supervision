@@ -2,10 +2,39 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.3 2016/07/07 21:09:26                      Exp $
+# $Version: 3.4 2016/07/14 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
+
+envdir()
+{
+	${SV_LIBDIR}/bin/envdir "${@}"
+}
+envuidgid()
+{
+	${SV_LIBDIR}/bin/envuidgid "${@}"
+}
+fghack()
+{
+	${SV_LIBDIR}/bin/fghack "${@}"
+}
+pgrphack()
+{
+	${SV_LIBDIR}/bin/pgrphack "${@}"
+}
+setlock()
+{
+	${SV_LIBDIR}/bin/setlock "${@}"
+}
+setuidgid()
+{
+	${SV_LIBDIR}/bin/setuidgid "${@}"
+}
+softlimit()
+{
+	${SV_LIBDIR}/bin/softlimit "${@}"
+}
 
 #
 # @FUNCTION: Create (supervision) service
