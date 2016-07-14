@@ -1,12 +1,12 @@
 #!/sbin/rs
 #
-# $Header: /etc/rs.d/zram                                Exp $
+# $Header: /etc/rs.d/zramfs                              Exp $
 # $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 0.22.1 2016/06/06 12:33:03                   Exp $
 #
 
-description="Set up & initialize ZRAM devices"
+description="Initialize ZRAM devices and filesystems"
 description_reset="Reset ZRAM devices"
 
 SVC_BEFORE=miscfs
