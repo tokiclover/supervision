@@ -106,7 +106,7 @@ static const char *const env_list[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES",	"RS_STAGE", "RS_STRICT_DEP", "RS_TYPE",
+	"COLUMNS", "LINES",	"RS_STRICT_DEP",
 	"SVC_DEBUG", "SVC_DEPS", "SVC_WAIT", NULL
 };
 
@@ -843,12 +843,9 @@ static void svc_stage(const char *cmd)
 			else
 				j = 0, svc_start = 0;
 
-			if (!type) {
+			if (!type)
 				RS_STAGE.type = rs_stage_type[k];
-				setenv("RS_TYPE", rs_stage_type[k], 1);
-			}
 			deptree = rs_deptree_load();
-
 			while (j >= 0 && j < RS_DEPTREE_PRIO) {
 				svc_exec_list(deptree[j], argv, envp);
 				if (svc_start)
