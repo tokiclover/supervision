@@ -900,6 +900,9 @@ int main(int argc, char *argv[])
 					prgname);
 			exit(EXIT_FAILURE);
 		}
+		/* likewise, set a few sane environment variables */
+		unsetenv("RS_STAGE");
+
 		svc_exec(argc-optind, argv+optind);
 	}
 
