@@ -68,7 +68,7 @@ svc_del()
 }
 svc_zap()
 {
-	rm -f ${SV_TMPDIR}/${SVC_NAME}_OPTIONS ${SVC_PIDFILE} \
+	rm -f ${SV_TMPDIR}/${SVC_NAME}_[EO]* ${SVC_PIDFILE} \
 		${SV_TMPDIR}/*/${SVC_NAME}
 }
 

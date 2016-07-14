@@ -48,6 +48,7 @@ SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 :	${SV_TYPE=SV}
 :	${SVC_DIR:=${PWD%/log}}
 :	${SVC_NAME:=${SVC_DIR##*/}}
+SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 	;;
 esac
