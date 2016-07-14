@@ -106,7 +106,7 @@ static const char *const env_list[] = {
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
 	"COLUMNS", "LINES",	"RS_STAGE", "RS_STRICT_DEP", "RS_TYPE",
-	"SVC_DEBUG", "SVC_DEPS", NULL
+	"SVC_DEBUG", "SVC_DEPS", "SVC_WAIT", NULL
 };
 
 __NORETURN__ static void help_message(int exit_val);
@@ -875,6 +875,9 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
+
+	/* set this to avoid double waiting for a lockfile for supervision */
+	setenv("SVC_WAIT", off, 1);
 
 	if (strcmp(argv[optind], "stage") == 0) {
 		/* set a few sane environment variables */

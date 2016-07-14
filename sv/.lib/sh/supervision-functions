@@ -86,7 +86,7 @@ svc_start()
 	#
 	# this is done internaly (rs) already
 	#
-	if [ -z "${RS_STAGE}" ]; then
+	if yesno "${SVC_WAIT:-1}"; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
 	fi
 	cp -HRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR}
@@ -116,7 +116,7 @@ svc_stop()
 	#
 	# this is done internaly (rs) already
 	#
-	if [ -z "${RS_STAGE}" ]; then
+	if yesno "${SVC_WAIT:-1}"; then
 	svc_wait 500 || eval ${__ERR_BUSY__}
 	fi
 
