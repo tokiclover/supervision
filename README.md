@@ -24,7 +24,8 @@ boot (stage-1), running state (stage-2) and shutdown (stage-3) levels are
 supported.
 
 A new init-system is available since 0.12.0_alpha. (It's almost only stage-[01]
-services plus tweakings... *almost* is not all there is to it.)
+services plus tweakings... *almost* is not all there is to it; there are much
+more bits tweaking and (re-)writing.)
 
 INSTALLATION
 ------------

@@ -24,6 +24,7 @@ Version bumped {fstab,mout}info to use almost the same code and to support '*'
 cach all mountpoints;
 
 Added a proper configure script for easy setup.
+Added misc code and services to handle system initialization.
 
 41:
 
