@@ -7,7 +7,7 @@
 
 description='Set up /tmp /var/MISC'
 SVC_NEED='localfs'
-SVC_USE='zramfs'
+SVC_USE='zram'
 SVC_BEFORE='syslog'
 SVC_AFTER='clock'
 
@@ -89,7 +89,7 @@ vardir_setup()
 
 start_pre()
 {
-	[ "${RS_STAGE}" -le 1 ] || return
+	[ "${RS_STAGE}" = 1 ] || return
 
 	local fhs_dirs
 	if [ "${OS_NAME}" = Linux ]; then
