@@ -13,8 +13,8 @@
 #include <dirent.h>
 #include <getopt.h>
 #include <signal.h>
+#include <sys/file.h>
 #include <sys/wait.h>
-#include <fcntl.h>
 #include <poll.h>
 
 #define VERSION "0.12.0"
@@ -31,11 +31,6 @@ struct svcrun {
 	char *path;
 	pid_t pid;
 	int lock;
-};
-
-struct slock {
-	int f_fd;
-	struct flock *f_lock;
 };
 
 static int svc_deps  = 0;
@@ -281,8 +276,6 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	mode_t m;
 	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY;
 	static mode_t f_mode = 0644;
-	struct flock f_lock;
-	struct slock s_lock;
 
 	if (svc == NULL) {
 		errno = ENOENT;
@@ -301,7 +294,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 			switch (errno) {
 				case EWOULDBLOCK:
 				case EEXIST:
-					if (svc_wait(svc, timeout, NULL))
+					if (svc_wait(svc, timeout, 0) < 0)
 						return -1;
 					break;
 				default:
@@ -317,30 +310,18 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 			return fd;
 		}
 
-		f_lock.l_type   = F_WRLCK;
-		f_lock.l_whence = SEEK_SET;
-		f_lock.l_start  = 0;
-		f_lock.l_len    = 0;
-		s_lock.f_fd   = fd;
-		s_lock.f_lock = &f_lock;
-		if (fcntl(fd, F_GETLK, &f_lock) == -1) {
-			ERR("%s: Failed to fcntl(%d, F_GETLK...): %s\n", svc, fd,
-				strerror(errno));
-			close(fd);
-			return -errno;
-		}
-		if (f_lock.l_type == F_UNLCK)
-			f_lock.l_type = F_WRLCK;
-		else if (svc_wait(svc, timeout, &s_lock)) {
-			close(fd);
-			return -1;
-		}
-		if (fcntl(fd, F_SETLK, &f_lock) == -1) {
-			ERR("%s: Failed to fcntl(%d, F_SETLK...): %s\n", svc, fd,
-				strerror(errno));
-			close(fd);
-			return -errno;
-		}
+		if (flock(fd, LOCK_EX|LOCK_NB) == -1)
+			switch(errno) {
+			case EWOULDBLOCK:
+				if (svc_wait(svc, timeout, lock_fd) > 0)
+					return fd;
+			default:
+				if (svc_quiet)
+					ERR("%s: Failed to flock(%d, LOCK_EX...): %s\n", svc, fd,
+							strerror(errno));
+				close(fd);
+				return -1;
+			}
 		return fd;
 	}
 	else if (lock_fd > 0)
@@ -350,9 +331,10 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	return 0;
 }
 
-static int svc_wait(const char *svc, int timeout, struct slock *lock)
+static int svc_wait(const char *svc, int timeout, int lock_fd)
 {
 	int i, j;
+	int err;
 	int msec = SVC_WAIT_MSEC, nsec;
 	if (timeout < 10) {
 		nsec = timeout;
@@ -367,11 +349,11 @@ static int svc_wait(const char *svc, int timeout, struct slock *lock)
 			if (svc_state(svc, 'w') <= 0)
 				return 0;
 			/* add some insurence for failed services */
-			if (lock) {
-				if (fcntl(lock->f_fd, F_GETLK, lock->f_lock) == -1)
-					return -1;
-				if (lock->f_lock->l_type == F_UNLCK)
-					return 0;
+			if (lock_fd) {
+				err = errno;
+				if (flock(lock_fd, LOCK_EX|LOCK_NB) == 0)
+					return lock_fd;
+				errno = err;
 			}
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, SVC_WAIT_POLL) < 0)
@@ -379,7 +361,7 @@ static int svc_wait(const char *svc, int timeout, struct slock *lock)
 		}
 		WARN("waiting for %s (%d seconds)\n", svc, i+nsec);
 	}
-	return svc_state(svc, 'w');
+	return svc_state(svc, 'w') ? -1 : 0;
 }
 
 static void svc_zap(const char *svc)
