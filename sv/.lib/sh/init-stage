@@ -190,7 +190,7 @@ elif [ "${1}" = "-2" ]; then
 		rm ${pidfile}
 	fi
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
-		svc_wait -E 10000 ${__SV_CMD__} ${pidfile};
+		svc_wait -E 1000 ${SV_CMD} ${pidfile};
 		rs -1 stage; rs -2 stage;" &
 
 	echo $$ >${pidfile}

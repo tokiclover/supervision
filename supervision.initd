@@ -30,7 +30,7 @@ start_pre()
 {
 	svc_tmpdir
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
-		svc_wait -E 10000 ${__SV_CMD__} ${pidfile};
+		svc_wait -E 1000 ${__SV_CMD__} ${pidfile};
 		rs --sv -2 stage;" &
 }
 
