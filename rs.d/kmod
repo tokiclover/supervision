@@ -5,6 +5,7 @@
 #
 
 description="kernel modules loader"
+SVC_AFTER="devfs sysfs"
 
 start()
 {
