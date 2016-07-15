@@ -14,6 +14,8 @@ source ${SV_SVCDIR}/.opt/SVC_BACKEND
 source ${SV_SVCDIR}/.opt/sv.conf
 umask 022
 
+SV_CMD="${__SV_CMD__##*/}"
+
 svc_init()
 {
 	local dir opt procfs OS_NAME="$(uname -s)"
@@ -98,7 +100,7 @@ svc_shutdown()
 	# CGroup clean up
 	#
 	if  [ "${OS_NAME}" = "Linux" ]; then
-		SVC_NAME="${__SV_CMD__}" cgroup_remove_service
+		SVC_NAME="${SV_CMD}" cgroup_remove_service
 	fi
 	#
 	# System halt
@@ -117,8 +119,8 @@ svc_tmpdir()
 		("${SV_SERVICE}")
 		;;
 		(*/run/*|*/tmp/*)
-		rm -f -r "${SV_RUNDIR}"
-		mkdir -p "${SV_RUNDIR}"
+		rm -f -r "${SV_TMPDIR}"
+		mkdir -p "${SV_TMPDIR}"
 		ln -fs "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 		;;
 	esac
@@ -127,7 +129,7 @@ svc_tmpdir()
 	#
 	# Initialization
 	#
-	echo "${__SV_NAM__}:${__SV_CMD__}" >"${SV_TMPDIR}"/sv
+	echo "${__SV_NAM__}:${SV_CMD}" >"${SV_TMPDIR}"/sv
 	OS_NAME=$(uname -s)
 	env_sv OS_NAME
 
@@ -146,13 +148,13 @@ svc_tmpdir()
 	fi
 }
 
-case ${__SV_CMD__} in
+case ${SV_CMD} in
 	(runsvdir)
 :	${SV_OPTS:=log:...........................................................}
 	;;
 esac
 
-pidfile="${SV_TMPDIR}/${__SV_CMD__}.pid"
+pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 begin "Starting Init-Stage${1}\n"
 if [ "${1}" = "-0" ]; then
 	svc_tmpdir
@@ -167,9 +169,9 @@ elif [ "${1}" = "-1" ]; then
 	# Try to bring up the device manager, like udev, as early as possible
 	#
 	if [ -e ${SV_SERVICE}/.${ACTION}/dev ]; then
+		cp -HRpu ${SV_SERVICE}/.${ACTION}/dev ${SV_RUNDIR}
 		echo $$ >${pidfile}
 		${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
-		${SV_SERVICE}/.${ACTION}/dev/run start
 	fi
 	svc_level -1
 	rs -1 --rs stage
@@ -178,7 +180,7 @@ elif [ "${1}" = "-2" ]; then
 	# Set up CGroup
 	#
 	if [ "${OS_NAME}" = "Linux" ]; then
-		SVC_NAME="${__SV_CMD__}" cgroup_add_service
+		SVC_NAME="${SV_CMD}" cgroup_add_service
 	fi
 	svc_level -2
 	#
