@@ -107,6 +107,7 @@ dist_RS_SVCS  = $(EXTRA_RS_SERVICES) \
 	miscfs \
 	mtab \
 	procfs \
+	rdonlyfs \
 	rootfs \
 	sysctl \
 	sysfs \
@@ -149,6 +150,10 @@ dist_STAGE_1 = \
 	tmpfiles.setup
 dist_STAGE_2 = \
 	$(EXTRA_STAGE_2)
+dist_STAGE_3 = \
+	$(EXTRA_STAGE_3) \
+	rdonlyfs
+
 
 ifdef RUNIT_INIT_STAGE
 dist_COMMON  += runit/reboot
@@ -256,6 +261,7 @@ install: install-dir install-dist
 	$(call stage_sym,0,$(dist_STAGE_0))
 	$(call stage_sym,1,$(dist_STAGE_1))
 	$(call stage_sym,2,$(dist_STAGE_2))
+	$(call stage_sym,3,$(dist_STAGE_3))
 	for dir in single boot; do \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/service/.$${dir}; \
 		echo >$(DESTDIR)$(SYSCONFDIR)/service/.$${dir}/.keep_dir-$${dir}; \
