@@ -301,6 +301,9 @@ svc_depend()
 		__SVC_DEPEND__="${DEP_RET}"
 		env_svc __SVC_DEPEND__
 	fi
+	if [ "${DEP_RET}" != 0 ]; then
+		error "Failed to set up service dependencies"
+	fi
 	return ${DEP_RET}
 }
 
@@ -316,12 +319,8 @@ svc_after()
 
 svc_need()
 {
-	local val
 	[ -n "${SVC_NEDD}" ] || return 0
 	svc_use "${1:-start}" "${2:-${SVC_NEED}}"
-	val="${?}"
-	[ "${val}" -gt 0 ] && error "Failed to set up service dependencies"
-	return "${val}"
 }
 svc_use()
 {
