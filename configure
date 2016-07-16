@@ -504,6 +504,7 @@ HEADERS_LIST="
 	mntent.h
 	poll.h
 	pwd.h
+	sys/file.h
 	sys/ioctl.h
 	sys/stat.h
 	sys/termios.h
@@ -695,6 +696,8 @@ check_builtin "fork" "unistd.h" "fork()" ||
 	DIE "missing fork() system builtin"
 check_builtin "getopt_long" "getopt.h" "getopt_long(0, (char**)0, (void*)0, (struct option*)0, (void*)0)" ||
 	DIE "missing getopt_long() system builtin"
+check_builtin "flock" "sys/file.h" "flock(0, LOCK_UN)" ||
+	DIE "missing flock() system builtin"
 check_builtin "lstat" "sys/stat.h" "lstat((void*)0, (struct stat*)0); stat((void*)0, (struct stat*)0)" ||
 	DIE "missing [l]stat() system builtin"
 check_builtin "mkdtemp" "stdlib.h" "mkdtemp(NULL)" ||
