@@ -27,8 +27,8 @@
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
 struct svcrun {
-	char *name;
-	char *path;
+	const char *name;
+	const char *path;
 	pid_t pid;
 	int lock;
 };
@@ -281,7 +281,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		ARGV[i] = argv[i];
 	/* get service path */
 	if (find) {
-		ARGV[2] = svc_find(run->name);
+		run->path = ARGV[2] = svc_find(run->name);
 		if (ARGV[2] == NULL)
 			return -ENOENT;
 	}
@@ -372,7 +372,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 
 reterr:
 	if (find)
-		free((void *)ARGV[2]);
+		free((void *)run->path);
 	free(ARGV);
 	return retval;
 }
