@@ -38,6 +38,26 @@ start()
 	return ${ret}
 }
 
+stop()
+{
+	[ "${RS_STAGE}" = 3 ] || return 1
+
+	local mnt_opts
+	case ",$(fstabinfo -r -o /)," in
+		(*,ro,*) ;;
+		(*)
+		if [ "${OS_NAME}" = Linux ]; then
+			mnt_opts='-n -r -o remount'
+		else
+			mnt_opts='-u -r'
+		fi
+		begin "Mountin rootfs read-only"
+		mount ${mnt_opts} /
+		end "${?}"
+		;;
+	esac
+}
+
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #
