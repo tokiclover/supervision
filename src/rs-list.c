@@ -211,7 +211,9 @@ RS_StringList_T **rs_deptree_load(void)
 
 	/* clean unnecessary list */
 	rs_deplist_free(stage_deplist);
+	/* this is now used in svc_stage()
 	rs_svcdeps_free(service_deplist);
+	*/
 
 	return deptree_list;
 }
@@ -285,6 +287,9 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 	FILE *depfile;
 	size_t len, pos;
 	int t = 0, o = 1;
+
+	if (service_deplist)
+		return service_deplist;
 
 	/* get dependency list file */
 	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/deps_%s", SV_DEPDIR,
