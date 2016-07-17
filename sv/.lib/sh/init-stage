@@ -181,15 +181,6 @@ elif [ "${1}" = "-1" ]; then
 	svc_init
 	svc_level -0
 	rs -0 --rs stage
-
-	#
-	# Try to bring up the device manager, like udev, as early as possible
-	#
-	if [ -e ${SV_SERVICE}/.${ACTION}/dev ]; then
-		cp -HRpu ${SV_SERVICE}/.${ACTION}/dev ${SV_RUNDIR}
-		echo $$ >${pidfile}
-		${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
-	fi
 	svc_level -1
 	rs -1 --rs stage
 elif [ "${1}" = "-2" ]; then
@@ -200,14 +191,6 @@ elif [ "${1}" = "-2" ]; then
 		SVC_NAME="${SV_CMD}" cgroup_add_service
 	fi
 	svc_level -2
-	#
-	# Bring up what left and stage-2 assuming `svcscan'
-	# is ready when the following pidfile is present
-	#
-	if [ -e "${pidfile}" ]; then
-		kill -TERM $(cat ${pidfile}) 2>${NULL}
-		rm ${pidfile}
-	fi
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
 		svc_wait -E 1000 ${SV_CMD} ${pidfile};
 		rs -1 stage; rs -2 stage;" &
