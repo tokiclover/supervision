@@ -215,8 +215,26 @@ elif [ "${1}" = "-2" ]; then
 		kill_svscan
 		rm ${pidfile}
 	fi
+	#
+	# XXX: This hackery is necessary to get the real pid;
+	# this is used to send SIGCONT to runsvdir.
+	#
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
+		pidfile=${pidfile}; pid=; count=0;
 		svc_wait -E 1000 ${SV_CMD} ${pidfile};
+		if [ ${SV_CMD} = runsvdir ]; then
+		while [ -e ${pidfile} ]; do
+			for pid in \$(pgrep ${SV_CMD}); do
+				read cmdline </proc/\${pid}/cmdline;
+				case \${cmdline} in
+					(*${SV_RUNDIR}*) echo \${pid} >${pidfile}; break 2;;
+				esac;
+			done;
+			sleep 0.1;
+			count=\$((\${count}+1));
+			[ \${count} = 100 ] && break;
+		done;
+		fi;
 		rs -1 stage; rs -2 stage;" &
 
 	echo $$ >${pidfile}
