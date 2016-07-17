@@ -1006,6 +1006,9 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
+	if ((argc-optind) < 1) {
+		help_message(1);
+	}
 
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
