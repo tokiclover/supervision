@@ -33,7 +33,7 @@ struct svcrun {
 	int lock;
 };
 
-static int svc_deps  = 0;
+static int svc_deps  = 1;
 static int svc_quiet = 1;
 static RS_SvcDepsList_T *svcdeps;
 
@@ -723,6 +723,8 @@ __NORETURN__ static int svc_exec(int argc, char *args[]) {
 	int cmd_flags = SVC_CMD_WAIT;
 	struct svcrun run;
 
+	if (!svcdeps)
+		svcdeps = rs_svcdeps_load();
 	if (args[0][0] == '/') {
 		argv[2] = args[0];
 		run.name = strrchr(args[0], '/')+1;
