@@ -129,18 +129,9 @@ svc_shutdown()
 
 svc_tmpdir()
 {
-	#
-	# Handle read-only root-FS and/or static /service/
-	#
-	case "${SV_RUNDIR}" in
-		("${SV_SERVICE}")
-		;;
-		(*/run/*|*/tmp/*)
-		rm -f -r "${SV_TMPDIR}"
-		mkdir -p "${SV_TMPDIR}"
-		ln -fs "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
-		;;
-	esac
+	rm -fr "${SV_TMPDIR}"
+	mkdir -p "${SV_TMPDIR}"
+	ln -fs "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/deps "${SV_TMPDIR}"/fail \
 		"${SV_TMPDIR}"/pids "${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
 	#
