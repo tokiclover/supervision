@@ -93,7 +93,7 @@ static struct mntent *getent(const char *path)
 				return mnttab[i];
 	}
 
-	while (ent = getmntent(mntptr)) {
+	while ((ent = getmntent(mntptr))) {
 		if (mntcnt == mntnum) {
 			mntnum += 32;
 			mnttab = err_realloc(mnttab, mntnum*sizeof(void*));
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		case 'o':
 			task |= MOUNT_OPTS;
 			ptr = mntopts[nopts++] = err_strdup(optarg);
-			while (ptr = strchr(ptr, ',')) {
+			while ((ptr = strchr(ptr, ','))) {
 				*ptr++ = '\0';
 				mntopts[nopts++] = ptr;
 			}
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 	}
 
 	while (argv[optind]) {
-		if (ent = getent(argv[optind])) {
+		if ((ent = getent(argv[optind]))) {
 			if (task & MOUNT_FSYS) {
 				if (strcmp(ent->mnt_type, fsys)) {
 					retval++;
