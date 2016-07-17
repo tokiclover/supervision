@@ -142,7 +142,7 @@ sv_backend()
 	end "${?}" Symlinks
 	local env
 	for env in __SV_NAM__ ${COMMANDS} ${SIGNALS}; do
-		eval echo "${env}=\\\"\${${env}}\\\""
+		eval printf \"${env}=\'%s\'\\\n\" \"\${${env}}\"
 	done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
 	end "${?}" SVC_BACKEND
 }
