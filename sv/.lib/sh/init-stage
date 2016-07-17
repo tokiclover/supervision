@@ -156,6 +156,19 @@ svc_tmpdir()
 	fi
 }
 
+kill_svscan()
+{
+	local pid
+	for pid in $(pgrep "${SV_CMD}"); do
+		read cmdline </proc/${pid}/cmdline
+		case "${cmdline}" in
+			(*${SV_RUNDIR}*) break;;
+			(*) pid=;;
+		esac
+	done
+	[ -n "${pid}" ] && kill -TERM ${pid} 2>${NULL}
+}
+
 case ${SV_CMD} in
 	(runsvdir)
 :	${SV_OPTS:=log:...........................................................}
@@ -165,6 +178,9 @@ esac
 pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 begin "Starting Init-Stage${1}\n"
 if [ "${1}" = "-0" ]; then
+	if [ -e "${pidfile}" ]; then
+		kill_svscan
+	fi
 	svc_tmpdir
 	echo $$ >${pidfile}
 	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
@@ -196,7 +212,7 @@ elif [ "${1}" = "-2" ]; then
 	# is ready when the following pidfile is present
 	#
 	if [ -e "${pidfile}" ]; then
-		kill -TERM $(cat ${pidfile}) 2>${NULL}
+		kill_svscan
 		rm ${pidfile}
 	fi
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
