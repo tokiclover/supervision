@@ -17,7 +17,7 @@ __path__=
 
 command="${__SV_CMD__}"
 command_args="${SV_RUNDIR} ${SV_OPTS}"
-pidfile="/run/${__SV_CMD__}.pid"
+pidfile="/run/${__SV_CMD__##*/}.pid"
 command_background="Yes"
 description="Supervision Daemon Service"
 
@@ -41,8 +41,6 @@ stop_pre()
 		rs --sv -2 stage stop ||
 		eval ${__SVCCMD__} ${SVC_OPTS} ${__SIGWDWN__:-${__SIGEXIT__}} "${SV_RUNDIR}"/*
 		eend "$?"
-	else
-		kill -HUP $(cat ${pidfile})
 	fi
 }
 
