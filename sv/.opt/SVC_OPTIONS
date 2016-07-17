@@ -25,17 +25,6 @@ source ${SV_SVCDIR}/.opt/SVC_BACKEND
 source ${SV_SVCDIR}/.opt/sv.conf
 umask 022
 
-#
-# Handle specific (virtual) service backend/instance
-#
-case "${name}" in
-	("${SVC_NAME}")
-SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
-	;;
-	(*)
-SOURCE "${SVC_DIR}"/OPTIONS.${name}
-	;;
-esac
 case "${RS_TYPE:-sv}" in
 	(rs)
 :	${SV_TYPE=RS}
@@ -50,6 +39,17 @@ SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
 :	${SVC_NAME:=${SVC_DIR##*/}}
 SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
+	;;
+esac
+#
+# Handle specific (virtual) service backend/instance
+#
+case "${name}" in
+	("${SVC_NAME}")
+SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
+	;;
+	(*)
+SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	;;
 esac
 :	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
