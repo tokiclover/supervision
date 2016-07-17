@@ -97,7 +97,7 @@ RS_StringList_T **rs_deptree_file_load(void)
 	FILE *depfile;
 	size_t len, pos;
 
-	snprintf(deppath, sizeof(deppath), "%s/stage-%d/deptree_%s", SV_DEPDIR,
+	snprintf(deppath, sizeof(deppath), "%s/%d_deptree_%s", SV_DEPDIR,
 			RS_STAGE.level, RS_STAGE.type);
 	if (file_test(deppath, 0) == 0)
 		return (RS_StringList_T **)0;
@@ -153,7 +153,7 @@ int rs_deptree_file_save(RS_StringList_T *deptree[])
 		return -1;
 	}
 
-	snprintf(deppath, sizeof(deppath), "%s/stage-%d/deptree_%s", SV_DEPDIR,
+	snprintf(deppath, sizeof(deppath), "%s/%d_deptree_%s", SV_DEPDIR,
 			RS_STAGE.level, RS_STAGE.type);
 	if ((depfile = fopen(deppath, "wa+")) == NULL) {
 		ERR("Failed to open %s\n", deppath);
@@ -227,7 +227,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	int pri;
 
 	/* get dependency list file */
-	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/%s", SV_DEPDIR,
+	snprintf(deppath, ARRAY_SIZE(deppath), "%s/%d_prio_%s", SV_DEPDIR,
 			RS_STAGE.level, RS_STAGE.type);
 	if (RS_STAGE.level == 2 || file_test(deppath, 0) <= 0) {
 		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", SV_DEPGEN,

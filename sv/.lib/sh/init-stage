@@ -124,7 +124,7 @@ svc_tmpdir()
 		ln -fs "${SV_SERVICE}"/.[eol]* "${SV_RUNDIR}"
 		;;
 	esac
-	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/fail \
+	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/deps "${SV_TMPDIR}"/fail \
 		"${SV_TMPDIR}"/pids "${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
 	#
 	# Initialization

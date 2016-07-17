@@ -12,9 +12,7 @@ export LC_ALL=C LANG=C
 :	${SV_LIBDIR:=${0%/sh/*}}
 source "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
-
-umask 022
-mkdir -p ${SV_TMPDIR}/deps
+SV_DEPDIR="${SV_TMPDIR}/deps"
 
 while [ ${#} -gt 0 ]; do
 case "${1}" in
@@ -124,12 +122,11 @@ dep_scan()
 }
 dep_prio()
 {
-	exec 3>${SV_DEPDIR}/${RS_TYPE}
+	exec 3>${SV_DEPDIR}/${RS_STAGE}_prio_${RS_TYPE}
 	local DEP dep i
 	for dep in ${__SV_DEPS_ORDER__}; do
 		DEP="${dep#*:}"
 		dep="${dep%:*}"
-		FILE=${SV_DEPDIR}/${RS_TYPE}_${dep}
 
 		#
 		# Swap dependency order to get a natural order like 'after'
@@ -157,8 +154,6 @@ dep_prio()
 # Support legacy code/dpendency priority
 #
 if [ -n "${RS_TYPE}" -a -n "${RS_STAGE}" ]; then
-	SV_DEPDIR=${SV_TMPDIR}/deps/stage-${RS_STAGE}
-	mkdir -p ${SV_DEPDIR}
 :	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 
 	[ -n "${DIR}" -a -d "${DIR}" ] ||
@@ -170,12 +165,12 @@ if [ -n "${RS_TYPE}" -a -n "${RS_STAGE}" ]; then
 	DEP_PRIO=true
 	dep_scan "${DIR}"
 	dep_prio
-	echo ${SERVICE_LIST} >${SV_DEPDIR}/list_${RS_TYPE}
+	echo ${SERVICE_LIST} >${SV_DEPDIR}/${RS_STAGE}_list_${RS_TYPE}
 else
 	DEP_PRIO=false
-	exec 4>${SV_TMPDIR}/deps/svcdeps
+	exec 4>${SV_DEPDIR}/svcdeps
 	dep_scan
-	echo ${SERVICE_LIST} >${SV_TMPDIR}/deps/svclist
+	echo ${SERVICE_LIST} >${SV_DEPDIR}/svclist
 fi
 
 #
