@@ -4,7 +4,7 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-description="Set up device-mapper"
+description="Set up LVM2 devices"
 SVC_AFTER="kmod device-mapper"
 SVC_BEFORE="checkfs"
 SVC_CONFIGFILE="/etc/lvm/lvm.conf"
