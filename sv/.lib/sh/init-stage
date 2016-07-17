@@ -46,6 +46,23 @@ svc_init()
 	fi
 		;;
 	esac
+
+	#
+	# XXX: Add some insurance to get a few services started early (e.g. lvm
+	#   needs /run/lock/lvm which is started before miscfs.) Who need lvm
+	#   for `/var'? Nothing will ever... well, it will with some hassle.
+	#
+	for dir in /var/*; do
+		[ -L "${dir}" ] || continue
+		dir="$(readlink ${dir})"
+		case "${dir}" in
+			(/run*)
+			begin "Creating ${dir}"
+			mkdir -m 0755 -p "${dir}"
+			end ${?}
+			;;
+		esac
+	done
 }
 
 svc_level()
