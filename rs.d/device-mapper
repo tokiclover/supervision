@@ -52,6 +52,7 @@ start()
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 
 	local volume options retval=0 ifs="${IFS}"
+	local dmsetup_opts='--addnodeoncreate --noudevsync'
 	IFS=','
 	set -- ${DM_DEVICE_LIST#,}
 	IFS="${ifs}"
@@ -63,7 +64,7 @@ start()
 		volume_exists "${volume}" && continue
 
 		begin "Creating ${volume} volume"
-		${dmsetup} create "${volume}" --table "${options}"
+		${dmsetup} create "${volume}" ${dmsetup_opts} --table "${options}"
 		end "${?}" || retval=$((${retval}+1))
 	done
 	return ${retval}
@@ -77,7 +78,7 @@ stop()
 	for volume in ${DM_VOLUME_LIST}; do
 		volume_exists "${volume}" || continue
 		begin "Removing ${volume} volume"
-		${dmsetup} remove "${volume}"
+		${dmsetup} remove --noudevsync "${volume}"
 		end "${?}" || retval=$((${retval}+1))
 	done
 	return ${retval}
