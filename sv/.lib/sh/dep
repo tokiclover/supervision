@@ -3,11 +3,11 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.4 2016/07/01 21:09:26                      Exp $
+# $Version: 0.5 2016/07/16 21:09:26                      Exp $
 #
 
+SV_CGROUP=0
 export LC_ALL=C LANG=C
-
 :	${name=${0##*/}}
 :	${SV_LIBDIR:=${0%/sh/*}}
 source "${0%/*}"/runscript-functions ||
@@ -26,13 +26,6 @@ case "${1}" in
 esac
 shift
 done
-
-:	${RS_STAGE:=2}
-SV_DEPDIR=${SV_TMPDIR}/deps/stage-${RS_STAGE}
-SV_CGROUP=0
-mkdir -p ${SV_DEPDIR}
-:	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
-:	${RS_TYPE:=sv}
 
 if (eval "var=1; var+=2 2>${NULL}; test x\${var} = x12 2>${NULL}"); then
 append()
@@ -90,9 +83,12 @@ add_dep()
 	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
 	shift 2
 	if [ "${#}" -gt 0 ]; then
-		append "${dep}_1" "${svc}"
-		append_unique "${dep}_2" "${@}"
-		DEPS="${DEPS}\n${svc}:${dep}='${@}'"
+		if ${DEP_PRIO}; then
+			append "${dep}_1" "${svc}"
+			append_unique "${dep}_2" "${@}"
+		else
+			echo "${svc}:${dep}=\"${@}\"" >&4
+		fi
 	fi
 }
 dep_gen()
@@ -100,8 +96,9 @@ dep_gen()
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	local dep
 
-	case "${RS_TYPE}" in
-		(sv) SVC_DIR=${SV_SVCDIR}/${1};;
+	case "${PWD}" in
+		(${SV_SVCDIR}) SVC_DIR=${SV_SVCDIR}/${1} RS_TYPE=sv;;
+		(${RS_SVCDIR}) SVC_DIR=${RS_SVCDIR}      RS_TYPE=rs;;
 	esac
 	SERVICE_LIST="${SERVICE_LIST} ${1}"
 	SVC_NAME="${1}"
@@ -112,46 +109,74 @@ dep_gen()
 	done
 }
 
-[ -n "${DIR}" -a -d "${DIR}" ] ||
-case "${RS_TYPE}" in
-	(rs) DIR=${RS_RUNDIR} ;;
-	(sv) DIR=${SV_SERVICE};;
-esac
+dep_scan()
+{
+	local dir svc
+	for dir in ${@:-${RS_SVCDIR} ${SV_SVCDIR}}; do
+		cd ${dir}
+		for svc in *; do
+			case "${svc}" in
+				('*'|OPTIONS.*|stage-[0123]) continue;;
+			esac
+			dep_gen ${svc##*/}
+		done
+	done
+}
+dep_prio()
+{
+	exec 3>${SV_DEPDIR}/${RS_TYPE}
+	local DEP dep i
+	for dep in ${__SV_DEPS_ORDER__}; do
+		DEP="${dep#*:}"
+		dep="${dep%:*}"
+		FILE=${SV_DEPDIR}/${RS_TYPE}_${dep}
 
-cd ${DIR}
-for svc in *; do
-	[ "${svc}" = "*" ] && continue
-	dep_gen ${svc##*/}
-done
+		#
+		# Swap dependency order to get a natural order like 'after'
+		#
+		case ${dep} in
+			(before)
+			eval dep_1="\"\$${dep}_2\""
+			eval "${dep}_2=\"\$${dep}_1\""
+			eval "${dep}_1=\"${dep_1}\""
+			;;
+		esac
 
-printf "${DEPS}" >${SV_DEPDIR}/deps_${RS_TYPE}
+		eval "${dep}_0='${SERVICE_LIST}'"
+		eval remove_all "${dep}_0" "\$${dep}_1" "\$${dep}_2"
+		#
+		# Print dependency list
+		#
+		for i in 0 1 2 3; do
+			eval printf "'${dep}_${i}=\"%s\"\n' \"\${${dep}_${i}## }\""
+		done >&3
+	done
+}
 
-exec 3>${SV_DEPDIR}/${RS_TYPE}
-for dep in ${__SV_DEPS_ORDER__}; do
-	DEP="${dep#*:}"
-	dep="${dep%:*}"
-	FILE=${SV_DEPDIR}/${RS_TYPE}_${dep}
+#
+# Support legacy code/dpendency priority
+#
+if [ -n "${RS_TYPE}" -a -n "${RS_STAGE}" ]; then
+	SV_DEPDIR=${SV_TMPDIR}/deps/stage-${RS_STAGE}
+	mkdir -p ${SV_DEPDIR}
+:	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 
-	#
-	# Swap dependency order to get a natural order like 'after'
-	#
-	case ${dep} in
-		(before)
-		eval dep_1="\"\$${dep}_2\""
-		eval "${dep}_2=\"\$${dep}_1\""
-		eval "${dep}_1=\"${dep_1}\""
-		;;
+	[ -n "${DIR}" -a -d "${DIR}" ] ||
+	case "${RS_TYPE}" in
+		(rs) DIR=${RS_RUNDIR} ;;
+		(sv) DIR=${SV_SERVICE};;
 	esac
 
-	eval "${dep}_0='${SERVICE_LIST}'"
-	eval remove_all "${dep}_0" "\$${dep}_1" "\$${dep}_2"
-	#
-	# Print dependency list
-	#
-	for i in 0 1 2 3; do
-		eval printf "'${dep}_${i}=\"%s\"\n' \"\${${dep}_${i}## }\""
-	done >&3
-done
+	DEP_PRIO=true
+	dep_scan "${DIR}"
+	dep_prio
+	echo ${SERVICE_LIST} >${SV_DEPDIR}/list_${RS_TYPE}
+else
+	DEP_PRIO=false
+	exec 4>${SV_TMPDIR}/deps/svcdeps
+	dep_scan
+	echo ${SERVICE_LIST} >${SV_TMPDIR}/deps/svclist
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
