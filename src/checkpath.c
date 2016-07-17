@@ -93,7 +93,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 {
 	char path[2048], *tmp;
 	int fd, len, off = 0;
-	int open_flags, unlink_flags;
+	int open_flags = 0, unlink_flags;
 	DIR *dir;
 	struct dirent *ent;
 	static mode_t m = 0;
@@ -167,10 +167,10 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 			}
 			fd = dirfd(dir);
 			if (fd < 0) {
-				ERR("%s\n", strerror(errno), NULL);
+				ERR("%s\n", strerror(errno));
 				return -1;
 			}
-			while (ent = readdir(dir)) {
+			while ((ent = readdir(dir))) {
 				if (strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".") == 0)
 					continue;
 
