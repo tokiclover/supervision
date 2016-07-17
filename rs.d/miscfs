@@ -7,7 +7,7 @@
 
 description='Set up /tmp /var/MISC'
 SVC_NEED='localfs'
-SVC_USE='zram'
+SVC_USE='zramfs'
 SVC_BEFORE='syslog'
 SVC_AFTER='clock'
 
