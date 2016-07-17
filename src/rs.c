@@ -757,7 +757,7 @@ __NORETURN__ static int svc_exec(int argc, char *args[]) {
 static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *envp[])
 {
 	RS_String_T *svc;
-	size_t n = 0, size = 8;
+	size_t n = 0, size = 32;
 	int retval = 0;
 	int i, r, state, status;
 	static int parallel, setup, cmd_flags = SVC_CMD_FIND;
@@ -801,7 +801,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 		if (parallel) {
 			close(run[n].lock);
 			if (n == size) {
-				size += 8;
+				size += 32;
 				run = err_realloc(run, sizeof(struct svcrun)*size);
 			}
 			n++;
