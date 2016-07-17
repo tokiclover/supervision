@@ -15,7 +15,7 @@ SVC_COMMANDS="restore save"
 :	${extension:=.tar.${compressor%% *}}
 
 if yesno ${use_zram}; then
-	SVC_NEED=zram
+	SVC_NEED=zramfs
 fi
 SVC_BEFORE=syslog
 
