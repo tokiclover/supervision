@@ -540,6 +540,7 @@ CMDLINE_APPEND="
 
 # extra services
 LINUX_DIST_EXTRA="
+	dmtab
 	crypttab
 "
 LINUX_RS_SERVICES="

@@ -1,0 +1,16 @@
+#
+# $Id: /etc/dmtab,v 2016/06/06                      Exp $
+#
+# Configuration file for device-mapper volumes
+#
+# Format: <volume>: <table>
+# Example (fake ATA RAID): isw0: 0 312602976 striped 2 128 /dev/sda 0 /dev/sdb 0
+# Example (LVM2): home: 0 134217728 linear 254:0 134219776
+#
+# Alternatively create all your volumes first, and then generate the file:
+#
+#   dmsetup table >> /etc/dmtab
+#
+# and verify afterwards.
+
+
