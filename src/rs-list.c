@@ -282,7 +282,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 
 RS_SvcDepsList_T *rs_svcdeps_load(void)
 {
-	char depcmd[256], deppath[256], dep[128], type[16];
+	char deppath[256], dep[128], type[16];
 	char *line = NULL, *ptr, *tmp, svc[128], old[128];
 	FILE *depfile;
 	size_t len, pos;
@@ -292,13 +292,10 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 		return service_deplist;
 
 	/* get dependency list file */
-	snprintf(deppath, ARRAY_SIZE(deppath), "%s/stage-%d/deps_%s", SV_DEPDIR,
-			RS_STAGE.level, RS_STAGE.type);
+	snprintf(deppath, ARRAY_SIZE(deppath), "%s/svcdeps", SV_DEPDIR);
 	if (file_test(deppath, 0) <= 0) {
-		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", SV_DEPGEN,
-				RS_STAGE.level, RS_STAGE.type);
-		if (system(depcmd)) {
-			ERR("Failed to execute `%s'\n", depcmd);
+		if (system(SV_DEPGEN)) {
+			ERR("Failed to execute `%s'\n", SV_DEPGEN);
 			return NULL;
 		}
 	}

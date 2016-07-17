@@ -889,6 +889,7 @@ static void svc_stage(const char *cmd)
 	envp = svc_env();
 	argv[4] = (char *)0, argv[3] = command;
 
+	svcdeps = rs_svcdeps_load();
 	/* initialize boot */
 	if (RS_STAGE.level == 1 )
 		rs_stage_start(1, argv, envp);
@@ -921,7 +922,6 @@ static void svc_stage(const char *cmd)
 			if (!type)
 				RS_STAGE.type = rs_stage_type[k];
 			deptree = rs_deptree_load();
-			svcdeps = rs_svcdeps_load();
 			while (j >= 0 && j < RS_DEPTREE_PRIO) {
 				svc_exec_list(deptree[j], argv, envp);
 				if (svc_start)
@@ -930,7 +930,6 @@ static void svc_stage(const char *cmd)
 					++j;
 			} /* PRIORITY_LEVEL_LOOP */
 			rs_deptree_free(deptree);
-			rs_svcdeps_free(svcdeps);
 
 			/* skip irrelevant cases or because -[rv] passed */
 			if (type)
@@ -947,6 +946,7 @@ static void svc_stage(const char *cmd)
 	/* finish sysinit */
 	if (RS_STAGE.level == 0 )
 		rs_stage_start(0, argv, envp);
+	rs_svcdeps_free(svcdeps);
 }
 
 int main(int argc, char *argv[])
