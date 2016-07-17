@@ -539,6 +539,9 @@ CMDLINE_APPEND="
 "
 
 # extra services
+LINUX_DIST_EXTRA="
+	crypttab
+"
 LINUX_RS_SERVICES="
 	device-mapper
 	dmcrypt
@@ -632,6 +635,9 @@ done
 
 case "${build:-${host:-$(uname -s)}}" in
 	*[Ll]inux*)
+	for thing in $LINUX_DIST_EXTRA; do
+		append DIST_EXTRA "$thing"
+	done
 	rundir="/run"
 	for type in RS SV; do
 		for thing in SERVICES VIRTUALS; do
@@ -780,6 +786,7 @@ LDFLAGS=$LDFLAGS
 RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
 S6_INIT_STAGE=$(yesno "$s6" && echo 1)
 SYSVINIT=$(yesno "$sysvinit" && echo 1)
+DIST_EXTRA=$DIST_EXTRA
 $(print_extra_services)
 endif
 CONFIG_MAK_EOF

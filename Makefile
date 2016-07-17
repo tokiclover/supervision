@@ -22,11 +22,11 @@ install_DATA   = $(INSTALL) -m 644
 MKDIR_P    ?= mkdir -p
 
 dist_EXTRA  = \
+	$(DIST_EXTRA) \
 	AUTHORS \
 	COPYING \
 	README.md \
-	ChangeLog \
-	crypttab
+	ChangeLog
 dist_COMMON = \
 	sv/.opt/OPTIONS.in \
 	sv/.opt/SVC_OPTIONS \
