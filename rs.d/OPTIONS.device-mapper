@@ -1,0 +1,12 @@
+#
+# $Id: /etc/rs.d/OPTIONS.device-mapper, 2016/06/06           Exp $
+# 
+# See dmsetup(8) for more information.
+#
+# Enable this for software or fake ATA RAID support for physical volumes
+#
+#SVC_NEED="raid"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

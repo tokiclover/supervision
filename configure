@@ -540,6 +540,7 @@ CMDLINE_APPEND="
 
 # extra services
 LINUX_RS_SERVICES="
+	device-mapper
 	dmcrypt
 	ipset
 	iptables

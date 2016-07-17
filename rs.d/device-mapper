@@ -1,0 +1,88 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/device-mapper                       Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up device-mapper"
+SVC_AFTER="kmod"
+SVC_BEFORE="checkfs"
+
+dmtab="/etc/dmtab"
+dmsetup="$(command -v dmsetup 2>${NULL})"
+
+volume_entries()
+{
+	[ -f "${dmtab}" ] || return
+
+	local volume options
+	while read volume options; do
+		case "${volume}" in
+			([a-zA-Z]*)
+			DM_VOLUME_LIST="${DM_VOLUME_LIST} ${volume%:}"
+			DM_DEVICE_LIST="${DM_DEVICE_LIST},${volume} ${options}"
+			;;
+		esac
+	done <${dmtab}
+	[ -n "${DM_VOLUME_LIST}" ]
+}
+volume_exists()
+{
+	[ -e /dev/mapper/${1} ]
+}
+
+start_pre()
+{
+	if [ -e /proc/modules ]; then
+		device_info --all device-mapper || modporbe dm-mod >${NULL} 2>&1
+	fi
+	checkpath -q -d -m 0700 -o root:root /run/lvm /run/lock/lvm
+
+	[ -n "${dmsetup}" -a -x "${dmsetup}"    ] &&
+	[ -c /dev/mapper/control -a -f ${dmtab} ] &&
+	volume_entries
+}
+stop_pre()
+{
+	volume_entries
+}
+
+start()
+{
+	[ -d /proc/lvm ] || device_info --all device-mapper || return
+
+	local volume options retval=0 ifs="${IFS}"
+	IFS=','
+	set -- ${DM_DEVICE_LIST#,}
+	IFS="${ifs}"
+
+	for volume in "${@}"; do
+		options="${volume#* }"
+		volume="${volume%%:*}"
+		[ -n "${volume}" -a -n "${options}" ] || continue
+		volume_exists "${volume}" && continue
+
+		begin "Creating ${volume} volume"
+		${dmsetup} create "${volume}" --table "${options}"
+		end "${?}" || retval=$((${retval}+1))
+	done
+	return ${retval}
+}
+
+stop()
+{
+	[ -d /proc/lvm ] || device_info --all device-mapper || return
+
+	local volume retval=0
+	for volume in ${DM_VOLUME_LIST}; do
+		volume_exists "${volume}" || continue
+		begin "Removing ${volume} volume"
+		${dmsetup} remove "${volume}"
+		end "${?}" || retval=$((${retval}+1))
+	done
+	return ${retval}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
