@@ -6,10 +6,10 @@ Changed version numbering in favor of major.minor.revision;
 Removed support for static /service/ (too difficult support);
 (Removed ./RUN command support for supervision services);
 
-Added init-system services:
+Added init-system and services for init-system:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
 kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
-tmpfiles.{dev,setup}, lvm, raid, ipset, iptables, sysctl;
+tmpfiles.{dev,setup}, lvm, raid, ipset, iptables, sysctl, device-mapper;
 SUPERVISION/SERVICES: xdm;
 
 RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs, zram to zramfs;
@@ -19,7 +19,9 @@ configuration file (default is agetty).
 
 Version bumped sv-shutdown to be able to force reboot/shutdown in early boot
 (for checkfs failure for example);
-Version bumped /sbin/rs to better handle dependencies scheduling;
+Version bumped /sbin/rs to better handle dependencies scheduling with a simple
+scheduling algorithm which schedule services according to dependency; and take
+care of dependencies handling instead of the internal shell environment;
 Version bumped {fstab,mout}info to use almost the same code and to support '*'
 cach all mountpoints;
 
