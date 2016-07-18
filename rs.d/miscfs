@@ -33,7 +33,7 @@ tmpdir_cleanup()
 	#
 	# Remove sticky bit beforehand
 	#
-	[ -d .private ] && chattr -R -a .private >${NULL} 2>&1
+	[ -d .private ] && chattr -R -a .private
 	find . -maxdepth 1 \
 		! -name . \
 		! -name journal \
@@ -53,7 +53,8 @@ var_rundir_cleanup()
 	local e fusr_cmd=$(command -v fuser 2>${NULL})
 
 	begin "Cleaning /var/run"
-	for e in $(find /var/run ! -type d ! -name 'utmp*' ! \
+	cd /var/run
+	for e in $(find . ! -type d ! -name 'utmp*' ! \
 		-name random-seed ! -name dev.db ! -name 'ld*.so.hints'); do
 		if [ -S "${e}" -a -n "${fusr_cmd}" ]; then
 			${fusr_cmd} "${e}" >${NULL} 2>&1 || rm -- "${e}"
@@ -72,6 +73,7 @@ vardir_setup()
 			dir="$(readlink ${dir})"
 			case "${dir}" in
 				(/run/*)
+				[ -d "${dir}" ] && continue
 				begin "Creating ${dir}"
 				mkdir -p -m 0755 "${dir}"
 				end "${?}"
@@ -103,7 +105,9 @@ start()
 
 	rm -fr /tmp/.ICE-unix /tmp/.X11-unix
 	mkdir -m 1777 /tmp/.ICE-unix /tmp/.X11-unix
-	mountinfo -q -t tmpfs /tmp || tmpdir_cleanup
+	mountinfo -q -t tmpfs /tmp ||
+		grep -qs "/dev/zram.*[[:space:]]/tmp[[:space:]]" /proc/mounts ||
+		tmpdir_cleanup
 
 	if yesno "${DMESG_LOG}"; then
 		dmesg >/var/log/dmesg
