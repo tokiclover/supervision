@@ -9,6 +9,7 @@ description="Mount ${SVC_NAME%fs} filesystems"
 
 if [ "${SVC_NAME}" = localfs ]; then
 	SVC_AFTER='kmod lvm dmcrypt raid'
+	SVC_BEFORE='miscfs unionfs'
 	SVC_NEED='checkfs rootfs'
 	SVC_USE='kmod lvm dmcrypt raid mtab'
 elif [ "${SVC_NAME}" = networkfs ]; then
