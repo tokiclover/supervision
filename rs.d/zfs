@@ -23,7 +23,7 @@ start_pre()
 {
 	if ! device_info zfs; then
 		if [ -e /proc/modules ]; then
-			modporbe zfs 2>${NULL}
+			modprobe zfs 2>${NULL}
 			device_info zfs ||
 				{ error "No ZFS kernel support or modules found"; return 1; }
 		else
