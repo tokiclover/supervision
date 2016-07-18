@@ -17,7 +17,7 @@ esac
 
 SVC_AFTER=localfs
 if [ "${RS_STAGE}" = 1 ]; then
-	SVC_BEFORE='miscfs console'
+	SVC_BEFORE='console'
 fi
 
 start_pre()
