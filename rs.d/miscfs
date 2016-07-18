@@ -9,7 +9,7 @@ description='Set up /tmp /var/MISC'
 SVC_NEED='localfs'
 SVC_USE='zramfs'
 SVC_BEFORE='syslog'
-SVC_AFTER='clock'
+SVC_AFTER='clock rootfs sysctl'
 
 login_setup()
 {
@@ -87,7 +87,7 @@ vardir_setup()
 	done
 }
 
-start_pre()
+start()
 {
 	[ "${RS_STAGE}" = 1 ] || return
 
@@ -95,15 +95,12 @@ start_pre()
 	if [ "${OS_NAME}" = Linux ]; then
 		fhs_dirs=/var/lib/misc
 	fi
-	mkdir -p -m 0755 /var/log /var/run ${fhs_dirs} ||
-		{ error "Failed to create required FHS directories"; return 1; }
+	mkdir -p -m 0755 /var/log ${fhs_dirs} ||
+		warn "Failed to create required FHS directories"
 
 	vardir_setup
 	login_setup
-}
 
-start()
-{
 	rm -fr /tmp/.ICE-unix /tmp/.X11-unix
 	mkdir -m 1777 /tmp/.ICE-unix /tmp/.X11-unix
 	mountinfo -q -t tmpfs /tmp || tmpdir_cleanup
