@@ -10,6 +10,8 @@
 #include "error.h"
 #include "helper.h"
 #include "rs.h"
+#include <stdio.h>
+#include <stdarg.h>
 #include <dirent.h>
 #include <getopt.h>
 #include <signal.h>
@@ -130,6 +132,12 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
  *        < 0 for fatals errors;
  */
 static int svc_depend(const char *svc, const char *argv[], const char *envp[]);
+
+static int svc_log(const char *fmt, ...);
+#define LOG_ERR(fmt, ...)  svc_log("ERROR: %s: " fmt, PRGNAME, __VA_ARGS__)
+#define LOG_WARN(fmt, ...) svc_log( "WARN: %s: " fmt, PRGNAME, __VA_ARGS__)
+
+#define RS_LOGFILE SV_TMPDIR "/rs.log"
 
 /*
  * bring system to a named level or stage
@@ -301,14 +309,12 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 
 		if (status) {
 			if (command == 's') {
-				if (svc_quiet)
-					WARN("%s: Service is already started\n", run->name);
+				LOG_WARN("%s: Service is already started\n", run->name);
 				return -EBUSY;
 			}
 		}
 		else if (command == 'S') {
-			if (svc_quiet)
-				WARN("%s: Service is not started\n", run->name);
+			LOG_WARN("%s: Service is not started\n", run->name);
 			return -EINVAL;
 		}
 
@@ -321,8 +327,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		if (retval == -ENOENT)
 			;
 		else if (retval < 0) {
-			if (svc_quiet)
-				ERR("%s: Failed to set up service dependencies\n", run->name);
+			LOG_ERR("%s: Failed to set up service dependencies\n", run->name);
 			retval = -ECANCELED;
 			goto reterr;
 		}
@@ -334,8 +339,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 	}
 
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-		if (svc_quiet)
-			ERR("%s: Failed to setup lockfile for service\n", run->name);
+		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		retval = -ENOLCK;
 		goto reterr;
 	}
@@ -519,8 +523,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 				if (svc_wait(svc, timeout, lock_fd) > 0)
 					return fd;
 			default:
-				if (svc_quiet)
-					ERR("%s: Failed to flock(%d, LOCK_EX...): %s\n", svc, fd,
+				LOG_ERR("%s: Failed to flock(%d, LOCK_EX...): %s\n", svc, fd,
 							strerror(errno));
 				close(fd);
 				return -1;
@@ -565,6 +568,34 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 		WARN("waiting for %s (%d seconds)\n", svc, i+nsec);
 	}
 	return svc_state(svc, 'w') ? -1 : 0;
+}
+
+static int svc_log(const char *fmt, ...)
+{
+	static FILE *logfp;
+	static int logfd, rs_debug;
+	int retval;
+	va_list ap;
+
+	if (!logfd && !rs_debug) {
+		if (getenv("RS_DEBUG")) {
+			logfd = open(RS_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
+			if (logfd > 0) {
+				rs_debug = 1;
+				logfp = fdopen(logfd, "a+");
+			}
+		}
+		else
+			logfd = -1;
+	}
+
+	va_start(ap, fmt);
+	if (svc_quiet)
+		retval = vfprintf(stderr, fmt, ap);
+	else if (rs_debug)
+		retval = vfprintf(logfp , fmt, ap);
+	va_end(ap);
+	return retval;
 }
 
 static void svc_zap(const char *svc)
