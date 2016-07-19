@@ -9,7 +9,8 @@ Removed support for static /service/ (too difficult support);
 Added init-system and services for init-system:
 RUNSCRIPT/SERVICES: checkfs, clock, console, dmesg, hostname, kmod, dmcrypt,
 kmod-static-nodes, localfs, mtab, networkfs, procfs, rootfs, swaps, swapfiles,
-tmpfiles.{dev,setup}, lvm, raid, ipset, iptables, sysctl, device-mapper;
+tmpfiles.{dev,setup}, lvm, raid, ipset, iptables, sysctl, device-mapper, zfs,
+sysctl, pool;
 SUPERVISION/SERVICES: xdm;
 
 RENAMED SERVICES: squashdir to unionfs, tmpdir to tmpdirs, zram to zramfs;
