@@ -625,7 +625,7 @@ for opt; do
 		eval "${optname//-/_}=no"
 		;;
 		--*=*)
-		is_in "$optname" $CMDLINE_SET || die_illegal "$opt"
+		is_in "${optname#--}" $CMDLINE_SET || die_illegal "$opt"
 		eval "${optname//-/_}='$optvalue'"
 		;;
 		*)
