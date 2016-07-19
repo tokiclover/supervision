@@ -33,10 +33,10 @@ const char *rs_getconf(const char *env)
 
 	const char *ptr;
 	size_t len = strlen(env);
-	int i;
+	int i = 0;
 
-	for (i = 0; ptr = sv_conf[i]; i++)
-		if (strncmp(sv_conf[i], env, len) == 0)
+	while ((ptr = sv_conf[i]))
+		if (strncmp(sv_conf[i++], env, len) == 0)
 			break;
 
 	if (!ptr)
