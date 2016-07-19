@@ -498,7 +498,6 @@ tmpfile(){
 
 HEADERS_LIST="
 	dirent.h
-	fcntl.h
 	getopt.h
 	grp.h
 	mntent.h
@@ -699,8 +698,6 @@ check_builtin "access" "unistd.h" "access(NULL, 0)" ||
 	DIE "missing access() system builtin"
 check_builtin "execve" "unistd.h" "execve(NULL, (char**)NULL, (char**)NULL)" ||
 	DIE "missing execve() system builtin"
-check_builtin "fnctl" "fcntl.h" "fcntl(F_SETFD, 0, 0)" ||
-	DIE "missing fcntl() system builtin"
 check_builtin "fork" "unistd.h" "fork()" ||
 	DIE "missing fork() system builtin"
 check_builtin "getopt_long" "getopt.h" "getopt_long(0, (char**)0, (void*)0, (struct option*)0, (void*)0)" ||
