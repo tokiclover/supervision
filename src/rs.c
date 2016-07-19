@@ -133,11 +133,16 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
  */
 static int svc_depend(const char *svc, const char *argv[], const char *envp[]);
 
+/* simple function to help debug info in a file (vfprintf(3) clone) */
+static FILE *logfp;
+static int logfd, rs_debug;
+
 static int svc_log(const char *fmt, ...);
 #define LOG_ERR(fmt, ...)  svc_log("ERROR: %s: " fmt, PRGNAME, __VA_ARGS__)
 #define LOG_WARN(fmt, ...) svc_log( "WARN: %s: " fmt, PRGNAME, __VA_ARGS__)
+#define LOG_INFO(fmt, ...) svc_log( "INFO: %s: " fmt, PRGNAME, __VA_ARGS__)
 
-#define RS_LOGFILE SV_TMPDIR "/rs.log"
+#define RS_LOGFILE "/var/log/rs.log"
 
 /*
  * bring system to a named level or stage
@@ -572,8 +577,6 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 
 static int svc_log(const char *fmt, ...)
 {
-	static FILE *logfp;
-	static int logfd, rs_debug;
 	int retval;
 	va_list ap;
 
@@ -923,6 +926,8 @@ static void svc_stage(const char *cmd)
 	argv[4] = (char *)0, argv[3] = command;
 
 	svcdeps = rs_svcdeps_load();
+	if (getenv("RS_DEBUG"))
+		LOG_INFO("starting stage-%d\n", RS_STAGE.level);
 	/* initialize boot */
 	if (RS_STAGE.level == 1 )
 		rs_stage_start(1, argv, envp);
@@ -947,6 +952,9 @@ static void svc_stage(const char *cmd)
 		argv[3] = command;
 
 		for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) { /* STAGE_TYPE_LOOP */
+			if (rs_debug)
+				LOG_INFO("starting (%s-)stage-%d\n", RS_STAGE.type,
+						RS_STAGE.level);
 			if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 				j = RS_DEPTREE_PRIO-1;
 			else
@@ -956,6 +964,8 @@ static void svc_stage(const char *cmd)
 				RS_STAGE.type = rs_stage_type[k];
 			deptree = rs_deptree_load();
 			while (j >= 0 && j < RS_DEPTREE_PRIO) {
+				if (rs_debug)
+					LOG_INFO("starting priority-level-%d\n", j);
 				svc_exec_list(deptree[j], argv, envp);
 				if (svc_start)
 					--j;
