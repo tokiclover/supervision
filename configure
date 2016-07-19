@@ -599,6 +599,9 @@ LD_O='-o'
 LD_LIB='-l%'
 LD_PATH='-L'
 
+set_default cc exec_prefix prefix bindir sbindir mandir datadir docdir infodir \
+	libdir ln_s cp_f sysconfdir rundir ln_s mkdir_p install
+
 for opt; do
 	optvalue="${opt#*=}"
 	optname="${opt%%=*}"
@@ -634,6 +637,11 @@ for opt; do
 	esac
 done
 
+cc="${build:+${build}-gcc}"
+:	${cc:=$cc_default}
+ld="$cc"
+:	${TMPDIR:=${TMP:-/tmp}}
+
 case "${build:-${host:-$(uname -s)}}" in
 	*[Ll]inux*)
 	for thing in $LINUX_DIST_EXTRA; do
@@ -650,12 +658,6 @@ case "${build:-${host:-$(uname -s)}}" in
 	done
 	;;
 esac
-
-set_default cc exec_prefix prefix bindir sbindir mandir datadir docdir infodir \
-	libdir ln_s cp_f sysconfdir rundir ln_s mkdir_p install
-:	${cc=${build:-$cc}}
-:	${ld=$cc}
-:	${TMPDIR:=${TMP:-/tmp}}
 
 umask 77
 if touch "$TMPDIR"/conftest >$NULL 2>&1; then
@@ -767,7 +769,7 @@ RUNDIR=$rundir
 SYSCONFDIR=$sysconfdir
 ARCH=$arch
 CC=$cc
-LD=$cc
+LD=$ld
 INSTALL=$install
 CP_F=$cp_f
 LN_S=$ln_s
