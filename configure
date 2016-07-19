@@ -625,6 +625,7 @@ for opt; do
 		eval "${optname//-/_}=no"
 		;;
 		--*=*)
+		optname="${optname#--}"
 		is_in "${optname#--}" $CMDLINE_SET || die_illegal "$opt"
 		eval "${optname//-/_}='$optvalue'"
 		;;
@@ -651,10 +652,10 @@ case "${build:-${host:-$(uname -s)}}" in
 	;;
 esac
 
-:	${cc:=$build}
 set_default cc exec_prefix prefix bindir sbindir mandir datadir docdir infodir \
 	libdir ln_s cp_f sysconfdir rundir ln_s mkdir_p install
-:	${ld:=$cc}
+:	${cc=${build:-$cc}}
+:	${ld=$cc}
 :	${TMPDIR:=${TMP:-/tmp}}
 
 umask 77
