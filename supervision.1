@@ -478,18 +478,51 @@ support: child process (supervisor) will naturally inherit supervision CGroup.
 .TP
 .RB rs
 Multi-purpose binary to run either stage-[0123] or service command, e.g.
-`rs -1 zram add', `rs acpid start' or `rs -0 stage' (to start sysinit/stage-0).
+`rs -1 zram add', `rs acpid start' or `rs -2v stage' (to start daemons).
 .SS @SYSCONFDIR@/rs.d/\ (RS_SVCDIR)
 RUNSCRIPT service directory
 (See RS_SVCDIR/stage-{0,1,2,3} for active services.)
+.B Init-stage-0
+is ready to use;
+.B init-stage-1
+can be modified to include services like
+.B {zramfs,zfs,zpool,unionfs,device-mapper,dmcrypt,raid}
+and so on; likewise for
+.B init-stage-2.
 .TP
 .B SERVICES
+.RB [\| clock \|]\ \c
+.RB [\| console \|]\ \c
 .RB [\| devfs \|]\ \c
+.RB [\| device-mapper \|]\ \c
+.RB [\| dmcrypt \|]\ \c
+.RB [\| dmesg \|]\ \c
+.RB [\| hostname \|]\ \c
+.RB [\| ipset \|]\ \c
+.RB [\| ip[6]tables \|]\ \c
+.RB [\| kmod \|]\ \c
+.RB [\| kmod-static-nodes \|]\ \c
+.RB [\| localfs \|]\ \c
+.RB [\| loopback \|]\ \c
+.RB [\| lvm \|]\ \c
 .RB [\| mdev \|]\ \c
+.RB [\| miscfs \|]\ \c
+.RB [\| mtab \|]\ \c
+.RB [\| networkfs \|]\ \c
+.RB [\| procfs \|]\ \c
+.RB [\| raid \|]\ \c
+.RB [\| rootfs \|]\ \c
 .RB [\| squashdir \|]\ \c
+.RB [\| swaps \|]\ \c
+.RB [\| swapfiles \|]\ \c
+.RB [\| sysctl \|]\ \c
 .RB [\| sysfs \|]\ \c
-.RB [\| tmpdir \|]\ \c
-.RB [\| zram \|]
+.RB [\| tmpdirs \|]\ \c
+.RB [\| tmpfiles.dev \|]\ \c
+.RB [\| tmpfiles.setup \|]\ \c
+.RB [\| zfs \|]\ \c
+.RB [\| zpool \|]\ \c
+.RB [\| zramfs \|]
 .SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
 SUPERVISION service directory
 (See SV_SERVICE for active service.)
@@ -614,6 +647,9 @@ Run-script Functions/helpers library
 .TP
 .RB supervision-functions
 Supervision Functions/Helpers library
+.TP
+.RB tmpfiles
+Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .SH "SEE ALSO"
 .B Shell:
 .BR sh (1p)
