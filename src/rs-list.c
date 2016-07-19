@@ -244,7 +244,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	}
 
 	RS_DepTypeList_T *deplist = rs_deplist_new();
-	RS_DepType_T *dlp;
+	RS_DepType_T *dlp = NULL;
 
 	while (rs_getline(depfile, &line, &len) > 0) {
 		/* get dependency type */
@@ -256,7 +256,7 @@ RS_DepTypeList_T *rs_deplist_load(void)
 		ptr += 2;
 
 		/* add and initialize a dependency type list */
-		if (pri == 0)
+		if (pri == 0 || !dlp)
 			dlp = rs_deplist_add(deplist, dep);
 		/* add service to dependency appropriate priority */
 		ptr = shell_string_value(ptr);
