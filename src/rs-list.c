@@ -317,7 +317,7 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 		/* get dependency type/name */
 		ptr = strchr(ptr, '=');
 		*ptr++ = '\0';
-		memcpy(type, line+pos, ptr-line);
+		memcpy(type, line+pos, ptr-line-pos);
 		while (strcmp(type, rs_deps_type[t]))
 			t++;
 
