@@ -12,7 +12,7 @@ start()
 	sync
 
 	local mnt_opts
-	case ",$(fstabinfo -r -o /)," in
+	case ",$(fstabinfo -o /)," in
 		(*,ro,*) ;;
 		(*)
 		if [ "${OS_NAME}" = Linux ]; then
@@ -20,7 +20,7 @@ start()
 		else
 			mnt_opts='-u -r'
 		fi
-		begin "Mountin rootfs read-only"
+		begin "Mounting rootfs read-only"
 		mount ${mnt_opts} /
 		end "${?}"
 		;;
