@@ -1,0 +1,46 @@
+#!/sbin/rs
+#
+# $Header: /etc/rs.d/zpool                                 Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Set up and import zpools"
+SVC_BEFORE="checkfs"
+SVC_USE="dmcrypt"
+
+zpool="$(command -v zpool 2>${NULL})"
+:	${ZPOOL_CACHE:=/etc/zfs/zpool.cache}
+
+start_pre()
+{
+	if ! device_info zfs; then
+		if [ -e /proc/modules ]; then
+			modprobe zfs 2>${NULL}
+			device_info zfs ||
+				{ error "No ZFS kernel support or modules found"; return 1; }
+		else
+			error "No ZFS support found for this kernel"
+			error "No kernel modules loading support"
+			return 1
+		fi
+	fi
+}
+
+start()
+{
+	local zpool_opts zfs_opts
+	if [ -f "${ZPOOL_CACHE}" ]; then
+		zpool_opts="${zpool_opts} -c ${ZPOOL_CACHE}"
+	fi
+	${zpool} import -N -a ${zpool_opts} ${ZPOOL_IMPORT_ARGS}
+}
+
+stop()
+{
+	local zpool_opts
+	${zpool} export -a ${zpool_opts} ${ZFS_UMOUNT_ARGS}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

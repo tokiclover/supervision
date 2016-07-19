@@ -114,7 +114,8 @@ dist_RS_SVCS  = $(EXTRA_RS_SERVICES) \
 	swaps \
 	tmpdirs \
 	tmpfiles.dev \
-	zfs
+	zfs \
+	zpool
 dist_RS_OPTS  = \
 	ip6tables \
 	dev

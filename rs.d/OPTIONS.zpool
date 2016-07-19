@@ -1,0 +1,15 @@
+#
+# $Id: /etc/rs.d/OPTIONS.zpool, 2016/06/06           Exp $
+# 
+# See zfs(8) and zpool(8) for more information
+#
+#
+# Extra options to pass to `zpool import' besides `-N -a'
+#ZPOOL_IMPORT_ARGS=
+#
+# Extra options to pass to `zpool export' besides `-a'
+#ZPOOL_EXPORT_ARGS=
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
