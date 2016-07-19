@@ -83,7 +83,6 @@ if yesno "${RC_OPTS}"; then
 :	${RC_CONFDIR:=/etc/conf.d}
 :	${RC_INITDIR:=/etc/init.d}
 	SOURCE ${RC_CONFDIR}/${SVC_NAME}
-	SOURCE ${RC_INITDIR}/functions.sh
 fi
 #
 # Use ENV dir(s) if requested
