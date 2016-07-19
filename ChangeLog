@@ -1,5 +1,9 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_alpha1:
+
+Fixed a nasty buffer overflow; and added better logging/debugging facility.
+
 0.12.0_alpha:
 
 Changed version numbering in favor of major.minor.revision;
