@@ -1,20 +1,15 @@
 #
 # $Id: /etc/rs.d/OPTIONS.zfs, 2016/06/06           Exp $
 # 
-# See zfs(8) and zpool(8) for more information
+# See zfs(8) and zpool(8) for more information.
+#
+# WARN: when using zfs service, add also zpool service to stage-1!
 #
 # Extra options to pass to `zfs mount' besides `-a' like `-O' for overlay
 #ZFS_MOUNT_ARGS=-O
 #
 # Extra options to pass to `zfs umount' besides `-a'
 #ZFS_UMOUNT_ARGS=
-
-#
-# Extra options to pass to `zpool import' besides `-a'
-#ZPOOL_IMPORT_ARGS=
-#
-# Extra options to pass to `zpool export' besides `-a'
-#ZPOOL_EXPORT_ARGS=
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
