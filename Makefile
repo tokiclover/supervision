@@ -128,7 +128,6 @@ dist_RS_VIRT  = \
 
 dist_STAGE_0 = \
 	$(EXTRA_STAGE_0) \
-	dev \
 	devfs \
 	dmesg \
 	kmod-static-nodes \
