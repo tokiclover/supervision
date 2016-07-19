@@ -1,0 +1,3 @@
+* [ ] improve performance by removing redundancy (service dependencies);
+* [ ] improve logging and debugging;
+* [ ] more testing on FreeBSD, OpenBS, NetBSB;
