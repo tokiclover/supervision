@@ -242,7 +242,7 @@ install: install-dir install-dist
 		-e 's|/sbin/rs|$(EXEC_PREFIX)$(SBINDIR)/rs|g' \
 		-i $(DESTDIR)$(EXEC_PREFIX)$(LIBDIR)/sv/sh/runscript-functions \
 		$(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
-	ln -fns $(EXEC_PREFIX)$(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
+	ln -fns $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
 	for dir in .lib .opt; do \
 		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
 	done
