@@ -115,7 +115,7 @@ static int sv_wall(char *message)
 	len = strlen(message);
 
 	setutxent();
-	while (utxent = getutxent()) {
+	while ((utxent = getutxent())) {
 		if (utxent->ut_type != USER_PROCESS)
 			continue;
 		snprintf(dev, UT_LINESIZE, "/dev/%s", utxent->ut_line);
@@ -193,11 +193,10 @@ __NORETURN__ int sv_shutdown(int action)
 int main(int argc, char *argv[])
 {
 	int action = -1, fd;
-	int rb_flag, rb_force = 0, rb_sync = 1;
+	int rb_flag = 0, rb_force = 0, rb_sync = 1;
 	int open_flags = O_CREAT|O_WRONLY|O_NOFOLLOW;
 	mode_t open_mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 	int message = 0, opt, retval;
-	pid_t pid;
 
 	prgname = strrchr(argv[0], '/');
 	if (prgname == NULL)
