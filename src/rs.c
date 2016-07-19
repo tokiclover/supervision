@@ -1022,7 +1022,8 @@ static void svc_stage(const char *cmd)
 		if (fd > 0) {
 			rewind(logfp);
 			while ((k = read(logfd, buf, BUFSIZ)))
-				write(fd, buf, k);
+				if ((j = write(fd, buf, k)) < k)
+					fseek(logfp, (long)(j-k), SEEK_CUR);
 			close(fd);
 		}
 		free(buf);
