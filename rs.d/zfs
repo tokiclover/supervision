@@ -26,6 +26,7 @@ start()
 
 stop()
 {
+	[ "${RS_STAGE}" = 3 ] || return
 	local zpool_opts
 	${zfs} umount -a ${zfs_opts} ${ZPOOL_EXPORT_ARGS}
 }

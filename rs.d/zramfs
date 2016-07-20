@@ -87,6 +87,7 @@ start_pre()
 
 stop()
 {
+	[ "${RS_STAGE}" = 3 ] || return
 	local dev fs dir num=0
 	while true; do
 		fs="${2}" dir="${3}"
