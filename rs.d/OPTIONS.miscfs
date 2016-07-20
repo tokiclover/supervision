@@ -1,0 +1,14 @@
+#
+# $Id: /etc/rs.d/OPTIONS.miscfs, 2016/06/06           Exp $
+# 
+# Enable /var/log/dmesg boot log
+#
+DMESG_LOG=Yes
+#
+# Enable wipping of /tmp (temporary files)
+#
+WIPE_TMPDIR=Yes
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
