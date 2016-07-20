@@ -543,6 +543,7 @@ LINUX_DIST_EXTRA="
 	crypttab
 "
 LINUX_RS_SERVICES="
+	alsasound
 	device-mapper
 	dmcrypt
 	ipset
