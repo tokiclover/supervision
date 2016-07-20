@@ -8,10 +8,10 @@
 description="Mount ${SVC_NAME%fs} filesystems"
 
 if [ "${SVC_NAME}" = localfs ]; then
-	SVC_AFTER='kmod lvm dmcrypt raid'
+	SVC_AFTER='kmod lvm device-mapper dmcrypt raid'
 	SVC_BEFORE='miscfs unionfs'
 	SVC_NEED='checkfs rootfs'
-	SVC_USE='kmod lvm dmcrypt raid mtab'
+	SVC_USE='kmod lvm device-mapper dmcrypt raid mtab'
 elif [ "${SVC_NAME}" = networkfs ]; then
 	SVC_USE='dns'
 else
@@ -31,7 +31,6 @@ mount_command()
 
 	[ "${OS_NAME}" = Linux ] && fusr_opt='-'
 	fusr_cmd=$(command -v fuser 2>${NULL})
-	[ -n "${fusr_cmd}" ] || return 0
 
 	#
 	# Send SIGTERM and then SIGKILL to PIDs if necessary between sleep(1)
@@ -43,6 +42,9 @@ mount_command()
 		if ${mnt_cmd} ${mnt_opt} ${mnt_dir} >${NULL} 2>&1; then
 			end 0
 			return 0
+		elif [ -z "${fusr_cmd}" ]; then
+			end 1 "No fuser command found"
+			return 1
 		elif [ "${i}" = 4 -o "${mnt_cmd}" = remount ]; then
 			end 1
 			return 1
