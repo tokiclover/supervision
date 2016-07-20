@@ -204,6 +204,7 @@ elif [ "${1}" = "-2" ]; then
 	if [ "${OS_NAME}" = "Linux" ]; then
 		SVC_NAME="${SV_CMD}" cgroup_add_service
 	fi
+	svc_level -1
 	svc_level -2
 	#
 	# Bring up what left and stage-2 assuming `svcscan'
