@@ -383,10 +383,10 @@ An extended stage-0 (system initialization) is also supported.
 This is where {dev,sysfs} et al. runscript services should live in.
 .SS RUNLEVELS
 {boot,default,nonetwork,single} run levels are supported.
-Extra services that should be started in {boot,single,sysinit} run levels should
+Extra services that should be started in {boot,single} run levels should
 be add into SV_SERVICE/.LEVEL,e.g. sulogin in single level.
 Another useful application of this is, putting a symlink of the device manager,
-e.g. `ln -s /etc/sv/udev /etc/service/.sysinit/dev', to get udev started as early
+e.g. `ln -s /etc/sv/udev /etc/service/.boot/udev', to get udev started as early
 as possible.
 .B WARNING: mdev
 should not be there because it will be started as default device manager for

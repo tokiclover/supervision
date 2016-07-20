@@ -188,15 +188,6 @@ elif [ "${1}" = "-1" ]; then
 	svc_init
 	svc_level -0
 	rs -0 --rs stage
-
-	#
-	# Try to bring up the device manager, like udev, as early as possible
-	#
-	if [ -e ${SV_SERVICE}/.${ACTION}/dev ]; then
-		cp -HRpu ${SV_SERVICE}/.${ACTION}/dev ${SV_RUNDIR}
-		echo $$ >${pidfile}
-		${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
-	fi
 elif [ "${1}" = "-2" ]; then
 	#
 	# Set up CGroup
