@@ -77,7 +77,7 @@ begin()
 	echo -en "${PRINT_EOL}"
 	PRINT_EOL="\n"
 	local msg="${*}"
-	PRINT_LEN=$((${#name}+3+${#msg}))
+	PRINT_LEN=$((${#name}*2+6+${#msg}))
 	local pfx="${name:+${COLOR_MAG}[${COLOR_BLU}${name}${COLOR_MAG}]${COLOR_RST}}"
 	echo -en "${pfx} ${@}"
 }
@@ -90,8 +90,8 @@ end()
 	local suffix ret="${1:-0}"
 	shift
 	case "${ret}" in
-		(0) suffix="${COLOR_BLU}[${COLOR_GRN}ok${COLOR_BLU}]${COLOR_RST}";;
-		(*) suffix="${COLOR_YLW}[${COLOR_RED}no${COLOR_YLW}]${COLOR_RST}";;
+		(0) suffix="${COLOR_BLU}(${name}) [${COLOR_GRN}ok${COLOR_BLU}]${COLOR_RST}";;
+		(*) suffix="${COLOR_YLW}(${name}) [${COLOR_RED}no${COLOR_YLW}]${COLOR_RST}";;
 	esac
 	PRINT_LEN=$((${COLUMNS}-${PRINT_LEN}))
 	printf "%*b\n" "${PRINT_LEN}" "${@} ${suffix}"
