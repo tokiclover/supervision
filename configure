@@ -563,10 +563,10 @@ LINUX_STAGE_0="
 "
 LINUX_STAGE_1="
 	dmcrypt
-"
-LINUX_STAGE_2="
 	ipset
 	iptables
+"
+LINUX_STAGE_2="
 "
 
 # installation paths
