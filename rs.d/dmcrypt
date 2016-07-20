@@ -323,6 +323,7 @@ start()
 
 stop()
 {
+	[ "${RS_STAGE}" = 3 ] || return
 	local retval=0
 	local volume device keyfile options entry ifs="${IFS}"
 

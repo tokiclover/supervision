@@ -23,6 +23,7 @@ start()
 }
 stop()
 {
+	[ "${RS_STAGE}" = 3 ] || return
 	case "${OS_NAME}" in
 		(OpenBSD|NetBSD) swapctl -U -t noblk >${NULL} 2>&1;;
 		(*) swapoff -a >${NULL} 2>&1;;
