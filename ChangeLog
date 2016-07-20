@@ -1,5 +1,11 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_bata2:
+
+Added missing configuration for runscript service (miscfs,clock,hostname);
+Added alsasound runscript service;
+miscellaneous minor fixes for dmcrypt.
+
 0.12.0_beta:
 
 Added since 0.12.0_alpha2:
