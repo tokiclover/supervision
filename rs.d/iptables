@@ -20,15 +20,14 @@ case "${SVC_NAME}" in
 	(*) iptables_name="iptables";;
 esac
 iptables_bin="$(command -v ${iptables_name} 2>${NULL})"
+iptables_file="${IPTABLES_RULES_FILE:=/var/lib/${iptables_name}/rules-save}"
 
 case "${iptables_name}" in
 	(iptables)
-	iptables_file="${IPTABLES_RULES_FILE:=/var/lib/${iptables_name}/rules-save}"
 	iptables_mods="iptable_filter iptable_mangle iptable_raw iptable_nat \
 		ipt_MASQUERADE ipt_REDIRECT ipt_REJECT"
 	;;
 	(ip6tables)
-	iptables_file="${IP6TABLES_RULES_FILE:=/var/lib/${iptables_name}/rules-save}"
 	iptables_mods="ip6table_filter ip6table_mangle ip6table_raw ip6table_nat \
 		ip6t_MASQUERADE ip6t_REDIRECT ip6t_REJECT"
 	;;
