@@ -3,6 +3,10 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
+SVC_AFTER='miscfs'
+SVC_USE='clock'
+SVC_NEED='hostname localfs'
+
 #
 # Set a default system logger {syslog-ng,socklog,rsyslog} by setting the name
 # variable; or else, this will be done automatically when using a socklog alias
