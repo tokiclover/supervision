@@ -926,12 +926,12 @@ static void svc_stage(const char *cmd)
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
-	int j, k, type = 1;
+	int p, r, t, type = 1;
 	int svc_start = 1;
 	int level = 0;
 	char *buf;
 	int fd;
-	time_t t;
+	time_t T;
 
 	if (RS_STAGE.level == 0 || RS_STAGE.level == 3) { /* force stage type */
 		setenv("RS_TYPE", rs_stage_type[RS_STAGE_RUNSCRIPT], 1);
@@ -942,14 +942,17 @@ static void svc_stage(const char *cmd)
 		type = 0;
 	if (command == NULL) /* start|stop passed ? */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
+	if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
+		svc_start = 0;
+
 	envp = svc_env();
 	argv[4] = (char *)0, argv[3] = command;
 	svcdeps = rs_svcdeps_load();
 
-	t = time(NULL);
+	T = time(NULL);
 	rs_debug = 1;
 	svc_log("logging: %s command\n", command);
-	fprintf(logfp, "rs init stage-%d started at %s\n", RS_STAGE.level, ctime(&t));
+	fprintf(logfp, "rs init stage-%d started at %s\n", RS_STAGE.level, ctime(&T));
 
 	/* initialize boot */
 	if (RS_STAGE.level == 1 )
@@ -966,34 +969,46 @@ static void svc_stage(const char *cmd)
 			level = 3;
 			RS_STAGE.level = 2;
 			command = rs_svc_cmd[RS_SVC_CMD_STOP];
+			svc_start = 0;
 		}
 		else if (level) {
 			RS_STAGE.level = level;
 			level = 0;
 			command = rs_svc_cmd[RS_SVC_CMD_START];
+			svc_start = 1;
 		}
 		argv[3] = command;
 
-		for (k = 0; k < ARRAY_SIZE(rs_stage_type); k++) { /* STAGE_TYPE_LOOP */
-			if (rs_debug)
-				LOG_INFO("starting (%s-)stage-%d\n", RS_STAGE.type,
-						RS_STAGE.level);
-			if (strcmp(command, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
-				j = RS_DEPTREE_PRIO-1;
+		for (t = 0; t < ARRAY_SIZE(rs_stage_type); t++) { /* STAGE_TYPE_LOOP */
+			if (rs_debug) {
+				T = time(NULL);
+				fprintf(logfp, "\n\t(%s-)stage-%d (%s) at %s\n", rs_stage_type[t],
+						RS_STAGE.level, command, ctime(&T));
+			}
+			if (svc_start)
+				p = RS_DEPTREE_PRIO-1;
 			else
-				j = 0, svc_start = 0;
+				p = 0;
 
 			if (!type)
-				RS_STAGE.type = rs_stage_type[k];
+				RS_STAGE.type = rs_stage_type[t];
 			deptree = rs_deptree_load();
-			while (j >= 0 && j < RS_DEPTREE_PRIO) {
-				if (rs_debug)
-					fprintf(logfp, "\n\tpriority-level-%d:\n\n", j);
-				svc_exec_list(deptree[j], argv, envp);
-				if (svc_start)
-					--j;
+			while (p >= 0 && p < RS_DEPTREE_PRIO) { /* PRIORITY_LEVEL_LOOP */
+				if (rs_debug) {
+					T = time(NULL);
+					fprintf(logfp, "\n\tpriority-level-%d started at %s\n", p,
+							ctime(&T));
+				}
+				r = svc_exec_list(deptree[p], argv, envp);
+				/* enable dependency tracking only if needed */
+				if (r)
+					svc_deps = 1;
 				else
-					++j;
+					svc_deps = 0;
+				if (svc_start)
+					--p;
+				else
+					++p;
 			} /* PRIORITY_LEVEL_LOOP */
 			rs_deptree_free(deptree);
 
@@ -1012,18 +1027,20 @@ static void svc_stage(const char *cmd)
 	/* finish sysinit */
 	if (RS_STAGE.level == 0 )
 		rs_stage_start(0, argv, envp);
+
+	T = time(NULL);
+	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", RS_STAGE.level, ctime(&T));
 	rs_svcdeps_free(svcdeps);
 
-	t = time(NULL);
-	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", RS_STAGE.level, ctime(&t));
+	/* save logfile if necessary */
 	if (logfd > 0 && rs_conf_yesno("RS_DEBUG")) {
 		buf = err_malloc(BUFSIZ*sizeof(char));
 		fd = open("/var/log/rs.log", O_NONBLOCK|O_CREAT|O_RDWR, 0644);
 		if (fd > 0) {
 			rewind(logfp);
-			while ((k = read(logfd, buf, BUFSIZ)))
-				if ((j = write(fd, buf, k)) < k)
-					fseek(logfp, (long)(j-k), SEEK_CUR);
+			while ((r = read(logfd, buf, BUFSIZ)))
+				if ((t = write(fd, buf, r)) < r)
+					fseek(logfp, (long)(t-r), SEEK_CUR);
 			close(fd);
 		}
 		free(buf);
