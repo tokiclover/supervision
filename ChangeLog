@@ -1,6 +1,15 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_beta:
+
+Added since 0.12.0_alpha2:
+
+Remove too many service start/stop redundency to improve performance (TODO);
+tiny runscript services and init-stage tweaks to get the proper behavior.
+
 0.12.0_alpha2:
+
+Added since 0.12.0_alpha:
 
 Fixed a nasty buffer overflow; and added better logging/debugging facility.
 
