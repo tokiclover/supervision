@@ -177,7 +177,7 @@ esac
 
 pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 begin "Starting Init-Stage${1}\n"
-if [ "${1}" = "-0" ]; then
+if   [ "${1}" = "-0" ]; then
 	if [ -e "${pidfile}" ]; then
 		kill_svscan
 	fi
@@ -197,8 +197,6 @@ elif [ "${1}" = "-1" ]; then
 		echo $$ >${pidfile}
 		${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
 	fi
-	svc_level -1
-	rs -1 --rs stage
 elif [ "${1}" = "-2" ]; then
 	#
 	# Set up CGroup
