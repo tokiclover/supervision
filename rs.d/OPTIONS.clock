@@ -1,0 +1,31 @@
+#
+# $Id: /etc/rs.d/OPTIONS.clock, 2016/06/06           Exp $
+# 
+# Set clock to 'UTC' (also known as Greenwich Mean Time or GMT for short)
+# if the hardware is set up to UTC. Else, set clock to 'local' if the hardware
+# clock is set to 'local'; e.g. Windows dual boot users shall set the clock to
+# 'local'.
+#
+CLOCK="UTC"
+
+#
+# Enable this to set the system time from the current hardware time.
+# Modern kernel with CONFIG_RTC_HCTOSYS=y does not need this if the hardware
+# clock is set to 'UTC'.
+#
+#CLOCK_HCTOSYS="Yes"
+
+#
+# Enable this to set the hardware time from system current time when shutting
+# down the system
+#
+#CLOCK_SYSTOHC="Yes"
+#
+# Append extra argument to pass to hwclock. Alpha users may append --arc or
+# --srm.
+#
+CLOCK_ARGS=""
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
