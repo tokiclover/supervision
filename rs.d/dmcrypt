@@ -30,6 +30,8 @@ MKSWAP()
 
 get_device()
 {
+	local blkid_opts
+
 	case "${1}" in
 		(*[Uu][Uu][Ii][Dd]=*)     blkid_opts="-U";;
 		(*[Ll][Aa][Bb][Ee][Ll]=*) blkid_opts="-L";;
@@ -45,16 +47,16 @@ crypt_cleanup()
 {
 	local dir map
 
-	for map in /dev/mapper/${SVC_NAME}:*; do
-		[ -e "${map}" ] || continue
-		${cryptsetup} close "${map##*/}" >${NULL} 2>&1
-	done
-
 	for dir in ${SV_TMPDIR}/${SVC_NAME}:*; do
 		[ -d "${dir}" ] || continue
 		begin "Umounting ${dir} (removable device)"
 		umount "${dir}" >${NUL} 2>&1
 		end "${?}"
+	done
+
+	for map in /dev/mapper/${SVC_NAME}:*; do
+		[ -e "${map}" ] || continue
+		${cryptsetup} close "${map##*/}" >${NULL} 2>&1
 	done
 }
 
@@ -79,7 +81,6 @@ crypt_entry()
 #
 crypt_header()
 {
-	local blkid_opts
 	[ -e "${header}" ] && return
 	header="$(get_device "${header}")"
 }
@@ -168,7 +169,7 @@ start()
 			# Removable device is only supported for {reg,gpg} keymode
 			#
 			if [ -n "${remdev}" ]; then
-				keyfile="$(mount_remdev "${remdev}")/${keyfile}"
+				keyfile="$(mount_remdev "${remdev}")${keyfile}"
 			fi
 			if [ ! -e "${keyfile}" ]; then
 				error "No keyfile found for ${volume} volume"
@@ -236,6 +237,7 @@ start()
 					eval ${NOFAIL}
 				fi
 			fi
+			crypt_type=luks
 			skip=
 			crypt_opts="${crypt_opts} --type luks ${header:+--header} ${header} \
 	${keyfile_size:+--keyfile-size} ${keyfile_size} \
@@ -260,7 +262,7 @@ start()
 						device=${loop}
 					else
 						error "Failed to setup a loop device (skipping ${volume} volume)"
-						continue
+						eval ${NOFAIL}
 					fi
 				fi
 			fi
@@ -282,6 +284,7 @@ start()
 			warn "Missing type argument for ${volume}"
 			continue
 		esac
+
 		case "${crypt_type}" in
 			(loopaes|luks|plain|swap)
 			crypt_opts="${crypt_opts} ${keyfile:+--key-file} ${keyfile} \
@@ -291,7 +294,6 @@ start()
 		esac
 
 		crypt_opts="${crypt_opts} \
-	${keyfile:+--key-file} ${keyfile} \
 	${timeout:+--timeout} ${timeout} ${tries:+--tries} ${tries} \
 	${discard:+--allow-discards} ${readonly:+--readonly}"
 
