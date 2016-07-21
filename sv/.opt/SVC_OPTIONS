@@ -20,7 +20,6 @@ PATH=${SV_LIBDIR}/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bi
 [ -n "${__RUNSCRIPT_FUNCTIONS__}" ] ||
 	source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
-source ${SV_SVCDIR}/.opt/SVC_BACKEND
 source ${SV_SVCDIR}/.opt/sv.conf
 umask 022
 
@@ -60,6 +59,7 @@ fi
 SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
+[ "${RS_TYPE}" = "sv" ] && source ${SV_SVCDIR}/.opt/SVC_BACKEND
 
 #
 # OS Specific
