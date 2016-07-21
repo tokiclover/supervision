@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.1 2016/07/14                               Exp $
+# $Version: 1.2 2016/07/20                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -89,8 +89,8 @@ svc_level()
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 
 	case "${ACTION}" in
-		(single|boot)
-			${SV_LIBDIR}/sh/dep -v ${1} -d "${SV_SERVICE}/.${ACTION}"
+		(single)
+			${SV_LIBDIR}/sh/dep ${1} -d "${SV_SVCDIR}/.${ACTION}"
 			;;
 	esac
 }
@@ -123,7 +123,7 @@ svc_shutdown()
 	# System halt
 	#
 	begin "Starting Stage-3"
-	rs -3 --rs stage
+	rs -3 stage
 	end "${?}"
 }
 
@@ -187,7 +187,7 @@ if   [ "${1}" = "-0" ]; then
 elif [ "${1}" = "-1" ]; then
 	svc_init
 	svc_level -0
-	rs -0 --rs stage
+	rs -0 stage
 elif [ "${1}" = "-2" ]; then
 	#
 	# Set up CGroup
