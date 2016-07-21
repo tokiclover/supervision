@@ -23,38 +23,25 @@
 extern "C" {
 #endif
 
+#ifndef LIBDIR
+# define LIBDIR "/lib"
+#endif
 #ifndef SYSCONFDIR
 # define SYSCONFDIR "/etc"
 #endif
-#define SV_LIBDIR "/lib/sv"
-#define RS_SVCDIR SYSCONFDIR "/rs.d"
+#define SV_LIBDIR LIBDIR "/sv"
 #define SV_SVCDIR SYSCONFDIR "/sv"
-#define SV_SERVICE SYSCONFDIR "/service"
 #if defined(STATIC_SERVICE)
 # define SV_RUNDIR SV_SERVICE
 #elif defined(__linux__) || (defined(__FreeBSD_kernel__) && \
 		defined(__GLIBC__)) || defined(__GNU__)
-#define SV_RUNDIR "/run/service"
+#define SV_RUNDIR "/run/sv"
 #else
-#define SV_RUNDIR "/var/run/service"
+#define SV_RUNDIR "/var/run/sv"
 #endif
 #define SV_TMPDIR SV_RUNDIR "/.tmp"
 
-struct RS_Stage {
-	int level;
-	const char *type;
-} RS_STAGE;
-
-/*
- * constant definition used with the following const arrays
- */
-enum {
-	RS_STAGE_RUNSCRIPT,
-#define RS_STAGE_RUNSCRIPT RS_STAGE_RUNSCRIPT
-	RS_STAGE_SUPERVISION
-#define RS_STAGE_SUPERVISION RS_STAGE_SUPERVISION
-};
-extern const char *const rs_stage_type[];
+extern int rs_stage;
 
 enum {
 	RS_STAGE_SYSINIT,
@@ -85,7 +72,7 @@ typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
 /* number of priority level per dependency type */
 #define RS_DEPS_PRIO 4
 
-#define RS_DEPTREE_PRIO 16
+#define RS_DEPTREE_PRIO 32
 RS_StringList_T **rs_deptree_load(void);
 
 typedef struct RS_DepType {

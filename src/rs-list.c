@@ -11,7 +11,7 @@
 #include "rs.h"
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
-#define SV_DEPDIR SV_TMPDIR "/deps"
+#define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
 
 static RS_SvcDepsList_T *service_deplist;
 static RS_DepTypeList_T *stage_deplist;
@@ -97,8 +97,7 @@ RS_StringList_T **rs_deptree_file_load(void)
 	FILE *depfile;
 	size_t len, pos;
 
-	snprintf(deppath, sizeof(deppath), "%s/%d_deptree_%s", SV_DEPDIR,
-			RS_STAGE.level, RS_STAGE.type);
+	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
 	if (file_test(deppath, 0) == 0)
 		return (RS_StringList_T **)0;
 	if ((depfile = fopen(deppath, "r+")) == NULL) {
@@ -153,8 +152,7 @@ int rs_deptree_file_save(RS_StringList_T *deptree[])
 		return -1;
 	}
 
-	snprintf(deppath, sizeof(deppath), "%s/%d_deptree_%s", SV_DEPDIR,
-			RS_STAGE.level, RS_STAGE.type);
+	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", SV_TMPDIR_DEPS,	rs_stage);
 	if ((depfile = fopen(deppath, "wa+")) == NULL) {
 		ERR("Failed to open %s\n", deppath);
 		return -1;
@@ -227,11 +225,9 @@ RS_DepTypeList_T *rs_deplist_load(void)
 	int pri;
 
 	/* get dependency list file */
-	snprintf(deppath, ARRAY_SIZE(deppath), "%s/%d_prio_%s", SV_DEPDIR,
-			RS_STAGE.level, RS_STAGE.type);
-	if (RS_STAGE.level == 2 || file_test(deppath, 0) <= 0) {
-		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d --%s", SV_DEPGEN,
-				RS_STAGE.level, RS_STAGE.type);
+	snprintf(deppath, ARRAY_SIZE(deppath), "%s/%d_prio", SV_TMPDIR_DEPS, rs_stage);
+	if (file_test(deppath, 0) <= 0) {
+		snprintf(depcmd, ARRAY_SIZE(depcmd), "%s -%d", SV_DEPGEN, rs_stage);
 		if (system(depcmd)) {
 			ERR("Failed to execute `%s'\n", depcmd);
 			exit(EXIT_FAILURE);
@@ -292,7 +288,7 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 		return service_deplist;
 
 	/* get dependency list file */
-	snprintf(deppath, ARRAY_SIZE(deppath), "%s/svcdeps", SV_DEPDIR);
+	snprintf(deppath, ARRAY_SIZE(deppath), "%s/svcdeps", SV_TMPDIR_DEPS);
 	if (file_test(deppath, 0) <= 0) {
 		if (system(SV_DEPGEN)) {
 			ERR("Failed to execute `%s'\n", SV_DEPGEN);
