@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.5 2016/07/16 21:09:26                      Exp $
+# $Version: 0.6 2016/07/20 21:09:26                      Exp $
 #
 
 SV_CGROUP=0
@@ -13,12 +13,10 @@ export LC_ALL=C LANG=C
 source "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 SV_DEPDIR="${SV_TMPDIR}/deps"
-RS_STAGE= RS_TYPE=
+RS_STAGE=
 
 while [ ${#} -gt 0 ]; do
 case "${1}" in
-	(-r|--rs) RS_TYPE=rs;;
-	(-v|--sv) RS_TYPE=sv;;
 	(-[0123]) RS_STAGE="${1#*-}";;
 	(-d|--dir) DIR="${2}"; shift ;;
 	(*) error "illegal option -- ${@}"; exit 1;;
@@ -95,10 +93,11 @@ dep_gen()
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	local dep
 
-	case "${PWD}" in
-		(${SV_SVCDIR}) SVC_DIR=${SV_SVCDIR}/${1} RS_TYPE=sv;;
-		(${RS_SVCDIR}) SVC_DIR=${RS_SVCDIR}      RS_TYPE=rs;;
-	esac
+	if [ -d "${1}" ]; then
+		SVC_DIR="${SV_SVCDIR}/${1}" RS_TYPE=sv
+	else
+		SVC_DIR="${SV_SVCDIR}"      RS_TYPE=rs
+	fi
 	SERVICE_LIST="${SERVICE_LIST} ${1}"
 	SVC_NAME="${1}"
 	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
@@ -111,19 +110,19 @@ dep_gen()
 dep_scan()
 {
 	local dir svc
-	for dir in ${@:-${RS_SVCDIR} ${SV_SVCDIR}}; do
+	for dir in ${@:-${SV_SVCDIR}}; do
 		cd ${dir}
 		for svc in *; do
 			case "${svc}" in
-				('*'|OPTIONS.*|stage-[0123]) continue;;
+				(OPTIONS.*) continue;;
 			esac
-			dep_gen ${svc##*/}
+			dep_gen "${svc}"
 		done
 	done
 }
 dep_prio()
 {
-	exec 3>${SV_DEPDIR}/${RS_STAGE}_prio_${RS_TYPE}
+	exec 3>${SV_DEPDIR}/${RS_STAGE}_prio
 	local DEP dep i
 	for dep in ${__SV_DEPS_ORDER__}; do
 		DEP="${dep#*:}"
@@ -154,19 +153,13 @@ dep_prio()
 #
 # Support legacy code/dpendency priority
 #
-if [ -n "${RS_TYPE}" -a -n "${RS_STAGE}" ]; then
-:	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
-
-	[ -n "${DIR}" -a -d "${DIR}" ] ||
-	case "${RS_TYPE}" in
-		(rs) DIR=${RS_RUNDIR} ;;
-		(sv) DIR=${SV_SERVICE};;
-	esac
-
+if [ -n "${RS_STAGE}" ]; then
+	RS_RUNDIR="${SV_SVCDIR}/.stage-${RS_STAGE}"
+	[ -n "${DIR}" -a -d "${DIR}" ] || DIR="${RS_RUNDIR}"
 	DEP_PRIO=true
 	dep_scan "${DIR}"
 	dep_prio
-	echo ${SERVICE_LIST} >${SV_DEPDIR}/${RS_STAGE}_list_${RS_TYPE}
+	echo ${SERVICE_LIST} >${SV_DEPDIR}/${RS_STAGE}_list
 else
 	DEP_PRIO=false
 	exec 4>${SV_DEPDIR}/svcdeps
