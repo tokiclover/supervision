@@ -972,17 +972,19 @@ static void svc_stage(const char *cmd)
 
 		deptree = rs_deptree_load();
 		while (p >= 0 && p < RS_DEPTREE_PRIO) { /* PRIORITY_LEVEL_LOOP */
-			if (rs_debug) {
-				t = time(NULL);
-				fprintf(logfp, "\n\tpriority-level-%d started at %s\n", p,
-						ctime(&t));
+			if (!SLIST_EMPTY(deptree[p])) {
+				if (rs_debug) {
+					t = time(NULL);
+					fprintf(logfp, "\n\tpriority-level-%d started at %s\n", p,
+							ctime(&t));
+				}
+				r = svc_exec_list(deptree[p], argv, envp);
+				/* enable dependency tracking only if needed */
+				if (r)
+					svc_deps = 1;
+				else
+					svc_deps = 0;
 			}
-			r = svc_exec_list(deptree[p], argv, envp);
-			/* enable dependency tracking only if needed */
-			if (r)
-				svc_deps = 1;
-			else
-				svc_deps = 0;
 			if (svc_start)
 				--p;
 			else
