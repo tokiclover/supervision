@@ -232,7 +232,7 @@ install: install-dir install-dist
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
-		-e 's|@RUNDIR|$(RUNDIR)|g' \
+		-e 's|@RUNDIR@|$(RUNDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
 	$(install_DATA) rs.8 $(DESTDIR)$(MANDIR)/man8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
