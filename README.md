@@ -52,8 +52,12 @@ The recommanded way to use this package for service management is to use
 `sv/.lib/sh/init-stage -(1|2|3)` to start particular stage. And then use
 `rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services.
 Or else, use the magic `-0` command line argument to set up `/service/` and
-`svscan`, and then use `rs --sv -2 stage start|stop` to start/stop daemons.
+`svscan`, and then use `rs -2 stage start|stop` to start/stop daemons.
 This will ensure proper service dependency scheduling.
+
+And then... a bit more, new supervision services can be easily added by
+running `/lib/sv/bin/sv-config [--log] SERVICE new` (`--log` argument
+would add a *log* directory for the service.)
 
 See supervision(1) and or rs(8) man page for more information.
 
