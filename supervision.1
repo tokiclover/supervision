@@ -4,105 +4,145 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 1 "2016-07-04" "0.12.0" "Supervision Scripts Framework"
+.TH SUPERVISION 1 "2016-07-20" "0.12.0" "Supervision Framework"
 .SH NAME
-Supervision \- Supervision Scripts Framework
+Supervision \- Supervision Framework
 .SH DESCRIPTION
+Supervision package aims to provide and easy, simple and efficient
+service-manager and init-system build to function with a supervision suite.
+Though the init-system part can be bypassed altogether by using only stage-2 and
+thus benefit the easy to use the service-management framework for supervision.
 .SS SUPERVISION
-Supervision aim to provide an easy & efficient way to supervision;
-Deamontools[-encore], Runit & S6 backends are actually supported.
-Services use, by default, a single
+Supervision aims to provide an easy and efficient way to supervision;
+Deamontools[-encore], Runit and S6 backends are actually supported.
+(Supervision-)services use, by default, a single
 .I sv/SERVICE/OPTIONS
-file & \fI./{finish,run}\fR symlinked to \fIsv/.opt/cmd\fR.
+file and \fI./{finish,run}\fR symlinked to \fIsv/.opt/cmd\fR.
 The same goes for the log directory.
 .I Envdir
-variant with a global \fIsv/.env\fR & local \fIsv/SERVICE/env\fR is also supported.
+variant with a global \fIsv/.env\fR and local \fIsv/SERVICE/env\fR is also supported.
 .SS RUNSCRIPT
-It also provide a simple run-script API usable in Stage-[0123] that can be used
-to finely set up the system.
+It also support runscript services usable in stage-[0123] that can be used
+to finely set up and boot a full system.
 The same environment variables are used, minus that, almost only dependencies
 and extra commands are usable in this context.
+(Runscript-)services use a single executable file with an optional configuration
+file
+.I sv/{OPTIONS.,}SERVICE
+which uses the same formating and syntax as improved common
+.B rc
+script file (e.g. OpenRC.) Meaning that, only functions and dependency are
+defined in the files. This is also true for supervision services.
 .SH OVERVIEW
 .SS CONFIGURATION
 Global configuration can be done with
-.IR sv.conf
+.I sv.conf
 file. Do note that, this will affect every service.
 Local, per service, configuration is done with
-.IR OPTIONS
-file. See
-.BR OPTIONS
+.I OPTIONS
+files. See
+.B OPTIONS
 sub-section for more info.
 .SS LSB COMMANDS
-Standard LSB along with {restart,zap} and {add,desc,cgroup_remove_service}
+Standard LSB along with
+.I {restart,zap}
+and
+.I {add,desc}
 extra commands are supported.
+Supervision-services also support
+.I {new,remove,cgroup_remove_service}
+command to create a new service with a template.
+The other command remove the service from
+.B SV_RUNDIR
+(running /service/ directory.)
+And the last to remove Control Group PIDs hierarchy.
 `@SBINDIR@/rs [OPTIONS] SERVICE COMMAND [ARGS]' can be used for any service
 type and efficiency; or the following for a particular service type.
-Some commands, like `add' need a service type `--rs|--sv' and a stage level
+Some commands, like
+.I {add,del}
+require a stage level
 `-(0|1|2|3)' to get the appropriate result.
 .TP
 .B SUPERVISION
 And
-.R `@SYSCONFDIR@/sv/SERVICE/run [OPTS] COMMAND [ARGS]'
-for supervision services.
+.B `@SYSCONFDIR@/sv/SERVICE/run [OPTS] COMMAND [ARGS]'
+can be used instead for supervision services.
 .TP
 .B RUNSCRIPT
 And
-.R `@SYSCONFDIR@/rs.d/SERVICE COMMAND [ARGS]'
-for runscript services.
+.B `@SYSCONFDIR@/sv/SERVICE COMMAND [ARGS]'
+can be used instead for runscript services.
 .SS SERVICE INSTANCE
 .TP
 .B SUPERVISION
 Service supporting many instances can be written in a short manner
 like a virtual service backend with specific
-.IR OPTIONS.instance
+.B OPTIONS.INSTANCE
 file, e.g.
-.IR syslog
+.I syslog
 with
-.IR socklog
-backend (suporting extra {inet,ucspi} instances),
+.I socklog
+backend (suporting extra
+.I {inet,ucspi,unix}
+instances),
 instead of duplicating unecessary directory and symbolic links;
-And then a single extra instance->service symlink would suffice.
+And then a single extra
+.B INSTANCE->SERVICE
+symbolic link would suffice.
 See also
-.IR getty
+.I getty
 for an example of multi-providers/instances with
 .I only
-a single symlink and a single service/OPTIONS file.
+a single symlink and a single
+.B sv/SERVICE/OPTIONS
+file.
 .TP
 .B RUNSCRIPT
 Similarly, runscript service instances use a symlink to the service with an extra
-.B OPTIONS.instance
+.B OPTIONS.INSTANCE
 configuration file if any.
+See
+.I networkfs
+or
+.I tmpfiles.setup
+for actual examples for this.
 .SS VIRTUAL SERVICE
 .TP
 .B SUPERVISION
-Virtual service is done by making a symbolic link to a particular provider
-e.g.
-.IR net
-symlinked to
-.IR dhcp
+Virtual service is done by making a symbolic link to a particular provider,
+for example,
+.I net
+service is symlinked to
+.I dhcp
 service.
 Second variant is made by using a single directory and a specific
-.IR OPTIONS.provider
-file for service that should be in a single instance mode, e.g. a logger (see
-.IR syslog
+.B OPTIONS.PROVIDER
+file for service that should be in a single instance mode, like
+.B syslog
+(see
+.I syslog
 service.)
 WARNING: Explicite usage of
-.IR name=CMD_NAME
+.B name=CMD_NAME
 and
-.IR SVC_CMD=CMD_NAME
+.B SVC_CMD=CMD_NAME
 in
-.IR OPTIONS[.backend]
-file is required.
+.B sv/SERVICE/OPTIONS
+file is required to get the expected behavior.
 .TP
 .B RUNSCRIPT
-Similarly, runscript services use a symlink virtual->service to define a virtual
+Similarly, runscript services use a symlink
+.B VIRTUAL->SERVICE
+to define a virtual
 service; and an extra
-.B OPTIONS.virtual
+.B OPTIONS.VIRTUAL
 configuration file to define the real
-.RB name=SVC_NAME
+.B name=SVC_NAME
 of the provider (e.g. dev virtual service use mdev as a provider.)
 .SS SERVICE USAGE
-Full {after,before,need,use} service dependencies is supported. See
+Full
+.I {after,before,need,use}
+service dependencies is supported. See
 .B DEPENDENCIES
 and
 .B INIT-STAGE
@@ -112,30 +152,29 @@ for more info.
 If service dependencies matter, usage of Runit/S6 is recommanded.
 Cold system boot should be fine because of priority level scheduling which start
 services in parallele depending on the service dependencies; so, services with
-dependencies would reliably wait enough if necessary, or else, SV_TRY (supervision)
-limit configuration setting would restart (failed) services.
+dependencies would reliably wait enough if necessary, or else,
+.I SV_TRY
+(supervision) limit configuration setting would restart (failed) services.
 .TP
 .B RUNSCRIPT
-Runscript service can be used to finely bring up & shutdown a system.
+Runscript service are used to finely bring up and shutdown a system.
 Yet, runscript services do not support launching daemons because this is left
 for supervision services. Launching daemons should be manually handled.
 .SH OPTIONS
 .SS ENVIRONMENT
 The following environment variables are supported.
 The default environment variables are defined in
-.IR sv/.opt/SVC_OPTIONS
+.I sv/.opt/SVC_OPTIONS
 and can be defined in service OPTIONS file(s).
 .TP
 .B SUPERVISION
-Supervision services use
-.I sv/SERVICE/OPTIONS
+Supervision services use \fIsv/\fBSERVICE\fI/OPTIONS\fR
 file or provider file(s) to define environment variables if necessary.
 .TP
 .B RUNSCRIPT
-Runscript services use
-.IR rs.d/[OPTIONS.]SERVICE
-script to define services dependencies and other environment variables or the
-service configuration file for extra variables.
+Runscript services use \fIsv/OPTIONS.\fBSERVICE\fR
+script to define extra services dependencies and other environment variables
+or the service configuration file for extra variables.
 .RE
 .TS
 tab (@);
@@ -231,8 +270,13 @@ T}
 .SS FUNCTIONS
 Extra service commands along with supported functions are defined as shell functions.
 .B WARNING:
-A few functions starting with `(svc|rs)_' prefix are used for internal usage;
+A few functions starting with 
+.I (svc|rs)_
+prefix are used for internal usage;
+and thus are reserved for futur usage;
 use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
+An then, a few functions name have special meaning; read the following for more
+information.
 .TP
 .B SUPERVISION
 .TS
@@ -253,25 +297,28 @@ T}
 .TE
 
 See
-.R sv/.opt/SVC_OPTIONS
+.B sv/.opt/SVC_OPTIONS
 for the default and
-.R OPTIONS
+.B OPTIONS
 file for services like
-.R acpid,
-.R cron,
-.R cgred,
-.R dbus,
-.R sshd
+.I acpid,
+.I cron,
+.I cgred,
+.I dbus,
+.I sshd
 for practical examples.
 .TP
 .B RUNSCRIPT
-Standard {restart,start,stop} along with st{art,op}_p{re,ost}
+Standard
+.I {restart,start,stop}
+along with
+.I st{art,op}_p{re,ost}
 (set/clean up) functions are supported.
 .TS
 tab (@);
 l lx.
 \fBstart{,_{pre,post}}\fR@T{
-Start command (preceded & followed by a set/clean up functions if any.)
+Start command (preceded and followed by a set/clean up functions if any.)
 T}
 \fBstop{,_{pre,post}}\fR@T{
 Same as above for stop command.
@@ -284,19 +331,19 @@ T}
 .TS
 tab (@);
 l lx.
-\fBinfo [MSG]\fR@T{
+\fBinfo [MESSAGE]\fR@T{
 Print notice message to standard output
 T}
-\fBwarn [MSG]\fR@T{
+\fBwarn [MESSAGE]\fR@T{
 Print warning message to standard output
 T}
-\fBerror [MSG]\fR@T{
+\fBerror [MESSAGE]\fR@T{
 Print error message to standard error
 T}
-\fBbegin [MSG]\fR@T{
+\fBbegin [MESSAGE]\fR@T{
 Print beginning message to standard output
 T}
-\fBend [MSG]\fR@T{
+\fBend [MESSAGE]\fR@T{
 Print ending message to standard output
 T}
 \fBfstabinfo [OPTIONS] MOUNTPOINTS\fR@T{
@@ -317,13 +364,13 @@ T}
 \fBdel_env VARS\fR@T{
 Remove persistent environment variables
 T}
-\fBsvc_down -d|-r\fR@T{
+\fBsvc_down -(d|r)\fR@T{
 Set up a service as down (SUPERVISION)
 T}
-\fBsvc_mark [-Sdfsu]\fR@T{
+\fBsvc_mark -(S|d|f|s|u)\fR@T{
 Set defined service status
 T}
-\fBsvc_state [-defrs]\fR@T{
+\fBsvc_state -(a|d|e|f|s)\fR@T{
 Get defined service status
 T}
 \fBsvc_del\fR@T{
@@ -361,62 +408,96 @@ Run a runscript service command
 T}
 .TE
 .SS DEPENDENCIES
-Standard {after,before,need,use} service dependencies is supported.
+Standard
+.I {after,before,need,use}
+service dependencies is supported.
 Still, supervision scan model has the major advantage of parallel
-service management making it simple & cheap to implement but
+service management making it simple and cheap to implement but
 .I before
-dependencies.
-And then, RS_PARALLEL configuration setting can be enabled to start everything
+dependency type.
+And then,
+.B RS_PARALLEL
+configuration setting can be enabled to start everything
 in parallel. This choice is practicable if before style dependency is not used;
-because after counterpart can be used instead.
+because after counterpart can be used instead. And this note is only valid when
+starting a particular service individually, not when starting a stage level.
 
 Mixed service dependencies is also supported. However, this is usable
-only in stage-[12] because of svscan ties to stage-2, and, once stage-3
-is reached, service shutdown is triggered.
-Actually, svscan if executed as early as possible in stage-1 after starting
-runscript services in stage-1 to fully bring up a usable system.
+only in stage-[12] because of
+.B svscan
+ties to stage-2, and, once stage-3
+is reached, system shutdown is triggered; so, no dependency handling can be
+done there without a running
+.B svscan.
+Actually,
+.B svscan
+if executed as early as possible in stage-1 after starting
+runscript services in stage-0 to fully bring up an initialized and usable system.
 .SS INIT-STAGE
 Superivision is organized in three distinct init-stage;
 one for system boot; second for system running state;
 third for system shutdown.
 An extended stage-0 (system initialization) is also supported.
-This is where {dev,sysfs} et al. runscript services should live in.
+This is where
+.I {dev{,fs},sysfs}
+et al. runscript services should live in.
+Booting with
+.B mdev
+as device manager work as expected even with
+.B device-mapper
+and
+.B dmcrypt
+compiled with udev support. And then,
+.B stage-0 (sysinit)
+is very short before a supervised device manager is started. So, having, say,
+.B udev
+in stage-1 would still work as expected.
 .SS RUNLEVELS
-{boot,default,nonetwork,single} run levels are supported.
-Extra services that should be started in {boot,single} run levels should
-be add into SV_SERVICE/.LEVEL,e.g. sulogin in single level.
-Another useful application of this is, putting a symlink of the device manager,
-e.g. `ln -s /etc/sv/udev /etc/service/.boot/udev', to get udev started as early
-as possible.
-.B WARNING: mdev
-should not be there because it will be started as default device manager for
-.B Linux
-OSs. Second, the name of the symlink should be only
-.B dev
-(virtual service) and not a particular device manager name.
+.I {boot,default,nonetwork,single}
+run levels are supported.
+Extra services that should be started in
+.I single
+run levels should be added into
+.I SV_SVCDIR/.single
+like
+.I sulogin
+service in single level.
+In fact,
+.B boot
+runlevel is stage-0;
+.B default
+runlevel is stage-2;
+.B nonetwork
+is only a modified
+.B default
+runlevel without network services. So, in practice,
+.B single
+replaces
+.B default
+runlevel to be able to repair a system.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Scripts Framework support CGroup. CGroup support is autodected on
 start up on Linux. Just enable kernel CGroup support to benefit CGroup resource
 management. Or else, forcibly disable in
-.RB SVC_OPTIONS
+.B SVC_OPTIONS
 by setting
 .RB SV_CGROUP=No.
 Set
-.RB CGROUP_INHERIT=Yes
+.B CGROUP_INHERIT=Yes
 to inherit other CGroups, and/or
-.RB CGROUP_CLEANUP=Yes
+.B CGROUP_CLEANUP=Yes
 to clean up child processes of a \fIgroup\fR or supervised process (in ./finish.)
 
 Global
-.RB (SVC_OPTIONS/sv.conf)
-& Local
-.RB (OPTIONS)
+.B (SVC_OPTIONS/sv.conf)
+and Local
+.B (OPTIONS)
 Resource Management Settings is supported e.g.
 .RB CGROUP_CPU='cpu.shares\ 256'.
 Multi-value of a parameter is supported along with sets of multi-parameter-value.
 .SS ENVIRONMENT
-See the following table & Linux Documentation for more info on Resource Controllers.
+See the following table and Linux Documentation for more info on Resource Controllers.
 .TS
 tab (@);
 l lx.
@@ -447,7 +528,7 @@ T}
 .TE
 .SS SERVICE
 CGRED (CGroup Rules Engine Daemon) service is another alternative to CGroup
-with finely grained rules & automatic PIDs classification.
+with finely grained rules and automatic PIDs classification.
 However, libcgroup should be installed beforehand.
 
 Something like the following can be used to put supervisor processes in CGroup:
@@ -469,7 +550,7 @@ with
 for daemontools[-encore] or
 .IR s6-supervise
 for S6.
-See cgconfig.conf(5) & enable cgred service.
+See cgconfig.conf(5) and enable cgred service.
 
 This is only necessary if not using the bundled Init-Stage-2 which have CGroup
 support: child process (supervisor) will naturally inherit supervision CGroup.
@@ -478,19 +559,23 @@ support: child process (supervisor) will naturally inherit supervision CGroup.
 .TP
 .RB rs
 Multi-purpose binary to run either stage-[0123] or service command, e.g.
-`rs -1 zram add', `rs acpid start' or `rs -2v stage' (to start daemons).
-.SS @SYSCONFDIR@/rs.d/\ (RS_SVCDIR)
-RUNSCRIPT service directory
-(See RS_SVCDIR/stage-{0,1,2,3} for active services.)
+`rs -1 zramfs add' to add
+.B zramfs
+service to stage-1 (boot run level); `rs acpid start' or `rs -2 stage' to start
+daemons and default services (default run level.)
+.SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
+See RS_SVCDIR/.stage-{0,1,2,3} for active services.
+Use `rs -(0|1|2|3) SERVICE add` to add a particular service to a particular
+stage or runlevel.
 .B Init-stage-0
 is ready to use;
 .B init-stage-1
 can be modified to include services like
-.B {zramfs,zfs,zpool,unionfs,device-mapper,dmcrypt,raid}
+.B {zramfs,zfs,zpool,unionfs,device-mapper,raid}
 and so on; likewise for
 .B init-stage-2.
 .TP
-.B SERVICES
+.B RUNSCRIPT SERVICES (included services)
 .RB [\| clock \|]\ \c
 .RB [\| console \|]\ \c
 .RB [\| devfs \|]\ \c
@@ -523,11 +608,8 @@ and so on; likewise for
 .RB [\| zfs \|]\ \c
 .RB [\| zpool \|]\ \c
 .RB [\| zramfs \|]
-.SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
-SUPERVISION service directory
-(See SV_SERVICE for active service.)
 .TP
-.B SERVICES
+.B SUPERVISION SERVICES (included service)
 .RB [\| acpid \|]\ \c
 .RB [\| atd \|]\ \c
 .RB [\| cgred \|]\ \c
@@ -556,40 +638,38 @@ SUPERVISION service directory
 .RB [\| xdm \|]
 .TP
 .B .lib/
-Symbolic link to SV_LIBDIR
+Symbolic link to
+.B SV_LIBDIR
 .SS SV_SVCDIR/.opt/
 .TP
 .RB cmd
-Default {,log/}{finish,run} commands
+Default sv/SERVICE/{,log/}{finish,run} commands
 .TP
 .TP
 .RB SVC_BACKEND
-Specific Backend Environment variable
+Specific supervision (backend) environment
 .TP
 .RB SVC_OPTIONS
-Default service OPTIONS
+Default service (OPTIONS) environment
 .TP
 .RB sv.conf
 Supervision configuration file
-.SS @SYSCONFDIR@/service/ (SV_SERVICE)
-Default supervision '/service/' directory
-.SS /run/service/ (SV_RUNDIR)
+.SS @RUNDIR@/sv/ (SV_RUNDIR)
 Default run time '/service/' directory
 .SS @SYSCONFDIR@/runit/
 .TP
 .RB {1,2,3}
-Init-Stage-{1,2,3} files to handle system boot/shutdown & supervisor.
+Init-Stage-{1,2,3} files to handle system boot/shutdown and supervisor.
 .TP
 .RB ctrlaltdel
 C-ALT-DEL signal handler (shutdown/reboot)
 .SS @SYSCONFDIR@/s6/
 .TP
 .RB init-stage-1
-Init-Stage-{1,2} file to handle system boot with optional OpenRC support (by
-setting RC_INIT_SYS=YES).
+Init-Stage-{1,2} file to handle system boot
 .TP
 .RB {crash,finish}
-OpenRC friendly Init-Stage-3 scripts to handle system shutdown & supervisor crashes.
+Init-Stage-3 scripts to handle system shutdown and supervisor crashes.
 .SS @SYSCONFDIR@/{conf,init}.d/supervision
 .TP
 Supervision init script service for OpenRC
@@ -607,9 +687,8 @@ Simple and cheap fstab(5) utility
 Simple and cheap mountpoints utility
 .TP
 .RB sv-config
-`SV_SVCDIR=sv sv/.lib/bin/sv-config add --log SERVICE'
-and to set up specific supervision Backend e.g.
-`sv-config -S runit'
+`sv/.lib/bin/sv-config [--log] SERVICE new' to create a new supervision service;
+and `sv-config -S runit' to set up specific supervision backend (supervision suite).
 .TP
 .RB sv-shutdown
 Simple utility to handle system halt
@@ -631,7 +710,10 @@ Simple script to list dependencies
 CGroup Release Agent script
 .TP
 .RB init-stage
-Init-Stage-[123] handler
+Init-Stage-[123] handler with optional OpenRC support (by
+setting
+.B RC_INIT_SYS=YES
+in the global configuration file).
 .TP
 .RB cgroup-functions
 CGroup Functions/helper library
