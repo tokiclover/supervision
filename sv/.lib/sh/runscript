@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/runscript                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.5 2016/07/14 21:09:26                      Exp $
+# $Version: 0.6 2016/07/20 21:09:26                      Exp $
 #
 
 help_message() {
@@ -36,23 +36,17 @@ done
 :	${SVC_NAME:=${1##*/}}
 :	${name=${SVC_NAME}}
 
+if [ -z "${RS_TYPE}" ]; then
+	[ -d "${1}" ] && RS_TYPE=sv || RS_TYPE=rs
+fi
+
 case "${1}" in
-	(*/rs.d/*)
-:	${RS_TYPE=rs}
-	case "${1}" in
-		(*/stage-[0123]/*)
-	:	${RS_RUNDIR:=${1%/*}}
-	:	${SVC_DIR:=${RS_RUNDIR%/*}}
-		;;
-		(*)
-	:	${SVC_DIR:=${1%/*}}
-		;;
-	esac
+	(*/sv/.stage-[0-3]*)
+:	${RS_RUNDIR:=${1%/*}}
+:	${SV_SVCDIR:=${RS_RUNDIR%/*}}
 	;;
-	(*/sv/*|*/service/*)
-:	${RS_TYPE=sv}
-:	${RS_STAGE:=2}
-:	${SVC_DIR:=${1}}
+	(*)
+:	${SV_SVCDIR:=${1%/*}}
 	;;
 esac
 shift
