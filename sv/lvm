@@ -1,0 +1,41 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/lvm                                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up LVM2 devices"
+SVC_AFTER="kmod device-mapper"
+SVC_BEFORE="checkfs"
+SVC_CONFIGFILE="/etc/lvm/lvm.conf"
+
+lvm="$(command -v lvm 2>${NULL})"
+
+start_pre()
+{
+	if [ -e /proc/modules ]; then
+		device_info --all device-mapper || modporbe dm-mod >${NULL} 2>&1
+	fi
+	checkpath -q -d -m 0700 -o root:root /run/lvm /run/lock/lvm
+	[ -n "${lvm}" -a -x "${lvm}" ] && [ -c /dev/mapper/control -a -f ${SVC_CONFIGFILE} ]
+}
+
+start()
+{
+	[ -d /proc/lvm ] || device_info --all device-mapper || return
+	${lvm} pvscan
+	${lvm} vgscan --mknodes
+	${lvm} vgchange --noudevsync --sysinit --activate ly
+}
+
+stop()
+{
+	[ "${RS_STAGE}" = 3 ] || return
+	[ -d /proc/lvm ] || device_info --all device-mapper || return
+	${lvm} lvchange --noudevsync --sysinit --activate ln
+	${lvm} vgchange --noudevsync --sysinit --activate ln
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

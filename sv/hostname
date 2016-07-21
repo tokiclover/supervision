@@ -1,0 +1,16 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/dmesg                               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up machine hostname"
+
+start()
+{
+	hostname "${hostname:-${HOSTNAME}}"
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

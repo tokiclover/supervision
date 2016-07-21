@@ -1,0 +1,35 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/kmod                                Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="kernel modules loader"
+SVC_AFTER="devfs sysfs"
+
+start()
+{
+	local mod k_modules kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
+
+	IFS=".-"
+	eval set -- $(uname -r)
+
+	kv_major="${1}" kv_minor="${2}" kv_patch="${3}"
+	IFS="${ifs}"
+
+	eval kv_modules="\"\${modules_${kv_major}} \${modules_${kv_major}_${kv_minor}} \
+		\${modules_${kv_major}_${kv_minor}_${kv_patch}}\""
+
+	#
+	# Build a space separated list to be able to load everything with a single
+	# command
+	#
+	for mod in ${modules} ${kv_modules}; do
+		k_modules="${k_modules} ${mod}"
+	done
+	modprobe ${k_modules} >${NULL} 2>&1
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

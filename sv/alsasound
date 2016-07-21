@@ -1,0 +1,85 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/alsasound                             Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Set up ALSA sound cards"
+description_restore="Restore ALSA mixer settings"
+SVC_AFTER="kmod miscfs"
+SVC_NEED="localfs"
+SVC_COMMANDS="save restore"
+
+ALSA_STATEDIR="/val/lib/alsa"
+ALSA_SCRDIR="/etc/alsa.d"
+ALSA_HOMEDIR="/var/run/alsasound"
+alsactl="$(command -v alsactl 2>${NULL})"
+
+restore()
+{
+	checkpath -q -d -m 0700 ${ALSA_HOMEDIR} || return
+	if [ ! -r ${ALSA_STATEDIR}/asound.state ]; then
+		error "No mixer settings found; sound cards should be unmutted"
+		return 1
+	fi
+
+	local card cards extra temp
+	while read card extra; do
+		case  "${card}" in
+			([0-9]*) cards="${cards} ${card}";;
+		esac
+	done </proc/asound/cards
+	for card in ${cards}; do
+		[ -e /dev/snd/controlC${card} ] || continue
+		${alsactl} -E HOME="${ALSA_HOMEDIR}" -I -f ${ALSA_STATEDIR}/asound.state \
+			restore ${card} || warn "Failed to restore ${card} card"
+	done
+
+	for card in ${ALSA_STATEDIR}/oss/card*_pcm*; do
+		[ -e "${card}" ] || continue
+		temp="${card##*/}"
+		temp="/proc/asound/${temp//_/\/}/oss"
+		[ -e ${temp} ] cat <${card} >${temp}
+	done
+}
+
+save()
+{
+	checkpath -q -d -m 0700 ${ALSA_HOMEDIR} || return
+	if ! ${alsactl} -E HOME="${ALSA_HOMEDIR}" -I -f ${ALSA_STATEDIR}/asound.state \
+		store ${card}; then
+		warn "Failed to store card settings"
+		return 1
+	fi
+
+	mkdir ${ALSA_HOMEDIR}/oss
+	local card temp
+	for card in /proc/asound/card*/pcm*/oss; do
+		[ -e "${card}" ] || continue
+		temp="${card##/proc/asound/}"
+		temp="${ALSA_HOMEDIR}/oss/${temp//\//_}"
+		cat <${card} >${temp}
+	done
+}
+
+start()
+{
+	if yesno "${RESTORE_ON_RESTART}"; then
+		restore
+	else
+		return 0
+	fi
+}
+
+stop()
+{
+	if yesno "${SAVE_ON_STOP}"; then
+		save
+	else
+		return 0
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

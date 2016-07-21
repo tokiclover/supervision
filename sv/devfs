@@ -1,0 +1,82 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/devfs                               Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Set up /dev/MISCELLANEOUS filesystems'
+:	${SYSFS_OPTS=nodev,nosuid,noexec}
+
+mount_dev()
+{
+	if grep -q devtmpfs /proc/filesystems; then
+		fs=devtmpfs
+	elif grep -q tmpfs /proc/filesystems; then
+		fs=tmpfs
+	else
+		warn "{dev,}tmpfs filesystems are not supported;"
+		warn "/dev will not be mounted."
+		return 0
+	fi
+
+	local sysfs_opts="nosuid,exec,mode=755"
+	begin "Mounting /dev"
+	if mountinfo -q /dev; then
+		mount ${OPT} -o remount,${sysfs_opts} /dev >${NULL} 2>&1
+	else
+		fstabinfo --quiet --mount /dev >${NULL} 2>&1 ||
+		mount ${OPT} -t ${fs} -o ${sysfs_opts},size=${DEV_FS_SIZE:-10M} dev /dev >${NULL} 2>&1
+	fi
+	end ${?}
+}
+
+seed_dev()
+{
+	#
+	# Check out/Create some required nodes
+	#
+	[ -c /dev/console ] || mknod -m 600 /dev/console c 5 1
+	[ -c /dev/tty  ] || mknod -m 666 /dev/tty  c 5 0
+	[ -c /dev/tty1 ] || mknod -m 620 /dev/tty1 c 4 1
+	[ -c /dev/null ] || mknod -m 666 /dev/null c 1 3
+	[ -c /dev/kmsg ] || mknod -m 660 /dev/kmsg c 1 11
+	#
+	# Handle std{out,in,err} (not provided by sysfs)
+	#
+	ln -fns /proc/kcore /dev/core
+	ln -fns /proc/self/fd /dev/fd
+	ln -fns fd/0 /dev/stdin
+	ln -fns fd/1 /dev/stdout
+	ln -fns fd/2 /dev/stderr
+}
+mount_devfs()
+{
+	for fs in \
+		'mqueue /dev/mqueue 1777 nodev' \
+		'devpts /dev/pts 0755 gid=5,mode=0620' \
+		'tmpfs  /dev/shm 1777 nodev,mode=1777'
+	do
+		set -- ${fs}
+		grep -Eq "[[:space:]]${1}$" /proc/filesystems || continue
+		mountinfo -q ${2} && continue
+		mkdir -m ${3} -p ${2} >${NULL} 2>&1 || continue
+		begin "Mounting ${2}"
+		mount ${OPT} -t ${1} -o noexec,nosuid,${4} ${2##*/} ${2} >${NULL} 2>&1
+		end ${?}
+	done
+}
+
+start()
+{
+	local OPT fs
+
+	[ -w /etc/mtab ] || OPT=-n
+
+	mount_dev
+	mount_devfs
+	seed_dev
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

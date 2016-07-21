@@ -1,0 +1,16 @@
+#
+# $Id: /etc/sv/OPTIONS.raid, 2016/06/06           Exp $
+# 
+# See dmraid(1) for more information about supported format;
+# or else, `dmraid -l'.
+#
+DMRAID_FORMATS=
+
+#
+# this service need or use dmcrypt?
+#
+#SVC_USE="dmcrypt"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

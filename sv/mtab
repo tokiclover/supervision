@@ -1,0 +1,25 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/mtab                                Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Set up /etc/mtab"
+SVC_NEED='rootfs'
+
+start()
+{
+	if [ -L /etc/mtab ]; then
+		return 0
+	elif [ -e /etc/mtab ]; then
+		warn "using a regular file for /etc/mtab is deprecated"
+		warn "convert it to a symlink: 'ln -fns /proc/self/mounts /etc/mtab'"
+		cat /proc/mounts >/etc/mtab
+	else
+		ln -fns /proc/self/mounts /etc/mtab
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

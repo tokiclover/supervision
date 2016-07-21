@@ -1,0 +1,18 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/dmesg                                 Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+# $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
+#
+
+description="Set up kernel messages level for printing"
+SVC_BEFORE="dev kmod"
+
+start()
+{
+	[ -n "${DMESG_LEVEL}" ] && dmesg -n${DMESG_LEVEL}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

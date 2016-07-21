@@ -1,0 +1,9 @@
+#
+# $Header: /etc/sv/OPTIONS.dev, 2015/04/24             Exp $
+#
+
+name=mdev
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

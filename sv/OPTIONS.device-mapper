@@ -1,0 +1,14 @@
+#
+# $Id: /etc/sv/OPTIONS.device-mapper, 2016/06/06           Exp $
+# 
+# See dmsetup(8) and DOCDIR/supervision/dmtab for more information.
+# Everything is configured in dmtab(8); so copy DOCDIR/supervision/dmtab
+# to /etc/dmtab and setup everything in that configuration file.
+#
+# Enable this for software or fake ATA RAID support for physical volumes
+#
+#SVC_NEED="raid"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

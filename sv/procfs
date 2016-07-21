@@ -1,0 +1,33 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/procfs                                Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+# $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
+#
+
+description='Set up miscellaneous filesystems'
+:	${SYSFS_OPTS:=nodev,nosuid,noexec}
+
+SVC_NEED='devfs kmod'
+
+mount_binfmt_misc()
+{
+	[ -d /sys/module/binfmt_misc ] || modprobe -q binfmt-misc
+	grep -Eq "[[:space:]]binfmt_misc$" /proc/filesystems || return
+
+	begin "Mounting binfmt_misc (miscellaneous binary format) filesystem"
+	mount -t binfmt_misc -o ${SYSFS_OPTS} binfmt_misc /proc/sys/fs/binfmt_misc
+	end "${?}"
+}
+
+start()
+{
+	if [ ! -e /proc/sys/fs/binfmt_misc/register -a -d /proc/sys/fs/binfmt_misc ]; then
+		mount_binfmt_misc
+	fi
+	return 0
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
