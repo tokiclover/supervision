@@ -6,8 +6,8 @@ SUBDIRS    := src
 
 PREFIX     ?= /usr/local
 SYSCONFDIR ?= /etc
-SBINDIR    ?= $(EXEC_PREFIX)/sbin
-LIBDIR     ?= $(EXEC_PREFIX)/lib
+SBINDIR    ?= /sbin
+LIBDIR     ?= /lib
 RC_CONFDIR ?= $(SYSCONFDIR)/conf.d
 RC_INITDIR ?= $(SYSCONFDIR)/init.d
 DATADIR    ?= $(PREFIX)/share
@@ -53,7 +53,7 @@ dist_SV_RUNS  =
 dist_SCRIPTS  = \
 	sv/.opt/cmd
 dist_SV_SVCS  = \
-	$(EXTRA_SV_SERVICES) \
+	$(EXTRA_SUPERVISION_SERVICES) \
 	acpid \
 	atd \
 	cgred \
@@ -79,8 +79,12 @@ dist_SV_SVCS  = \
 	wpa_supplicant \
 	xdm \
 	udev
-dist_SV_VIRT  = \
-	$(EXTRA_SV_VIRTUALS) \
+dist_VIRTUALS  = \
+	$(EXTRA_VIRTUAL_SERVICES) \
+	tmpfiles.setup:tmpfiles.dev \
+	swapfiles:swaps \
+	networkfs:localfs \
+	dev:mdev \
 	net:dhcp \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
@@ -93,7 +97,8 @@ dist_SV_OPTS  = \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 
-dist_RS_SVCS  = $(EXTRA_RS_SERVICES) \
+dist_RS_SVCS  = \
+	$(EXTRA_RUNSCRIPT_SERVICES) \
 	checkfs \
 	clock \
 	console \
@@ -120,12 +125,6 @@ dist_RS_SVCS  = $(EXTRA_RS_SERVICES) \
 dist_RS_OPTS  = \
 	ip6tables \
 	dev
-dist_RS_VIRT  = \
-	$(EXTRA_RS_VIRTUALS) \
-	tmpfiles.setup:tmpfiles.dev \
-	swapfiles:swaps \
-	networkfs:localfs \
-	dev:mdev
 
 dist_STAGE_0 = \
 	$(EXTRA_STAGE_0) \
@@ -147,6 +146,7 @@ dist_STAGE_1 = \
 	procfs \
 	rootfs \
 	sysctl \
+	syslog \
 	swaps swapfiles \
 	tmpfiles.setup
 dist_STAGE_2 = \
@@ -177,12 +177,10 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SH_BINS) $(dist_SH_LIBS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
-	$(SYSCONFDIR)/sv/.opt $(EXEC_PREFIX)$(LIBDIR)/sv/bin $(EXEC_PREFIX)$(LIBDIR)/sv/sh \
-	$(SYSCONFDIR)/service $(SYSCONFDIR)/sv \
-	$(SYSCONFDIR)/rs.d \
-	$(MANDIR)/man1 $(MANDIR)/man8 \
-	$(EXEC_PREFIX)$(SBINDIR) \
-	$(DOCDIR)
+	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh $(DOCDIR) \
+	$(SYSCONFDIR)/sv/.lib $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
+	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
+	$(MANDIR)/man1 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
 DISTDIRS    = $(dist_DIRS)
 
 define svc_dir =
@@ -215,7 +213,7 @@ endef
 
 define stage_sym =
 	for svc in $(2); do \
-		ln -fs $(SYSCONFDIR)/rs.d/$${svc} $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$(1)/$${svc}; \
+		ln -fs $(SYSCONFDIR)/sv/$${svc} $(DESTDIR)$(SYSCONFDIR)/sv/.stage-$(1)/$${svc}; \
 	done
 endef
 
@@ -230,45 +228,34 @@ $(SUBDIRS): FORCE
 
 install-all: install install-supervision-svc
 install: install-dir install-dist
-	$(install_SCRIPT) src/rs $(DESTDIR)$(EXEC_PREFIX)$(SBINDIR)
+	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(EXEC_PREFIX)$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(EXEC_PREFIX)$(SBINDIR)|g' \
+	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR|$(RUNDIR)|g' \
 		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
 	$(install_DATA) rs.8 $(DESTDIR)$(MANDIR)/man8
-	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(EXEC_PREFIX)$(LIBDIR)|g' \
+	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
-		-e 's|/sbin/rs|$(EXEC_PREFIX)$(SBINDIR)/rs|g' \
-		-i $(DESTDIR)$(EXEC_PREFIX)$(LIBDIR)/sv/sh/runscript-functions \
+		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
+		-i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
 		$(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
-	ln -fns $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib
-	for dir in .lib .opt; do \
-		ln -fns $(SYSCONFDIR)/sv/$${dir} $(DESTDIR)$(SYSCONFDIR)/service/$${dir}; \
-	done
-	$(call svc_sym,sv,$(dist_SV_VIRT))
+	$(call svc_sym,sv,$(dist_VIRTUALS))
 	for i in 1 2 3 4 5 6; do \
 		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
-	$(call svc_sym,rs.d,$(dist_RS_VIRT))
-	for i in 1 2 3 4 5 6; do \
-		ln -s $(SYSCONFDIR)/sv/getty-tty$${i} \
-			$(DESTDIR)$(SYSCONFDIR)/service/getty-tty$${i}; \
-	done
 	for i in 0 1 2 3; do \
-		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}; \
-		echo >$(DESTDIR)$(SYSCONFDIR)/rs.d/stage-$${i}/.keep_stage-$${i}; \
+		echo >$(DESTDIR)$(SYSCONFDIR)/sv/.stage-$${i}/.keep_dir-stage-$${i}; \
+	done
+	for i in 1 2 3 4 5 6; do \
+		ln -s ../getty-tty$${i} \
+			$(DESTDIR)$(SYSCONFDIR)/sv/.stage-2/getty-tty$${i}; \
 	done
 	$(call stage_sym,0,$(dist_STAGE_0))
 	$(call stage_sym,1,$(dist_STAGE_1))
 	$(call stage_sym,2,$(dist_STAGE_2))
 	$(call stage_sym,3,$(dist_STAGE_3))
-	for dir in single boot; do \
-		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/service/.$${dir}; \
-		echo >$(DESTDIR)$(SYSCONFDIR)/service/.$${dir}/.keep_dir-$${dir}; \
-	done
-	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/service/.single
-	ln -fs $(SYSCONFDIR)/sv/syslog  $(DESTDIR)$(SYSCONFDIR)/service/.boot
+	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/sv/.single
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
@@ -283,9 +270,9 @@ $(dist_SCRIPTS): FORCE
 $(dist_EXTRA): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$@
 $(dist_SH_BINS): FORCE
-	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$@)
+	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
 $(dist_SH_LIBS): FORCE
-	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$@)
+	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
 $(dist_SV_SVCS): FORCE
 	if test -d sv/$@/log; then \
 		$(call svc_dir,$@/log); \
@@ -298,10 +285,10 @@ $(dist_SV_SVCS): FORCE
 $(dist_SV_OPTS): $(dist_SV_SVCS)
 	$(call svc_opt,sv/$@)
 $(dist_RS_SVCS):
-	$(install_SCRIPT) rs.d/$@ $(DESTDIR)$(SYSCONFDIR)/rs.d/$@
-	-$(call svc_opt,rs.d/OPTIONS.$@)
+	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
+	-$(call svc_opt,sv/OPTIONS.$@)
 $(dist_RS_OPTS):
-	-$(call svc_opt,rs.d/OPTIONS.$@)
+	-$(call svc_opt,sv/OPTIONS.$@)
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -312,29 +299,26 @@ install-%-svc:
 
 uninstall-all: uninstall unintsall-supervision-svc
 uninstall: uninstall-doc
-	rm -f $(DESTDIR)$(EXEC_PREFIX)$(SBINDIR)/rs
+	rm -f $(DESTDIR)$(SBINDIR)/rs
 ifdef SYSVINIT
-	rm -f $(DESTDIR)$(EXEC_PREFIX)$(LIBDIR)/sv/bin/initctl
+	rm -f $(DESTDIR)$(LIBDIR)/sv/bin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-	$(call rem_sym,sv,$(dist_SV_VIRT))
+	$(call rem_sym,sv,$(dist_VIRTUALS))
 	$(call rem_svc,sv,$(dist_SV_SVCS))
-	$(call rem_sym,rs.d,$(dist_RS_VIRT))
-	$(call rem_svc,rs.d,$(dist_RS_SVCS))
-	$(call rem_svc,rs.d,$(dist_RS_OPTS:%=OPTIONS.%))
-	$(call rem_svc,rs.d,$(dist_RS_SVCS:%=OPTIONS.%))
-	for file in $(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$(dist_SH_BINS)) \
-		$(subst sv/.lib,$(EXEC_PREFIX)$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
+	$(call rem_svc,sv,$(dist_RS_SVCS))
+	$(call rem_svc,sv,$(dist_RS_OPTS:%=OPTIONS.%))
+	$(call rem_svc,sv,$(dist_RS_SVCS:%=OPTIONS.%))
+	for file in $(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_BINS)) \
+		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
 		rm -f $(DESTDIR)$${file}; \
 	done
-	for dir in .lib .opt getty; do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/service/$${dir}*; \
+	for dir in lib opt stage-; do \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.$${dir}*; \
 	done
-	rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.[ol]*
-	rm -fr $(DESTDIR)$(SYSCONFDIR)/rs.d/stage-*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)

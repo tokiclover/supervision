@@ -542,7 +542,7 @@ LINUX_DIST_EXTRA="
 	dmtab
 	crypttab
 "
-LINUX_RS_SERVICES="
+LINUX_RUNSCRIPT_SERVICES="
 	alsasound
 	device-mapper
 	dmcrypt
@@ -553,12 +553,10 @@ LINUX_RS_SERVICES="
 	unionfs
 	zramfs
 "
-LINUX_RS_VIRTUALS="
+LINUX_VIRTUAL_SERVICES="
 	ip6tables:iptables
 "
-LINUX_SV_SERVICES="
-"
-LINUX_SV_VIRTUALS="
+LINUX_SUPERVISION_SERVICES="
 "
 LINUX_STAGE_0="
 "
@@ -574,9 +572,9 @@ LINUX_STAGE_2="
 package="supervision"
 prefix_default="/usr/local"
 exec_prefix_default=""
-bindir_default='${EXEC_PREFIX}/bin'
-sbindir_default='${EXEC_PREFIX}/sbin'
-libdir_default='${EXEC_PREFIX}/lib'
+bindir_default='/bin'
+sbindir_default='/sbin'
+libdir_default='/lib'
 datadir_default='${PREFIX}/share'
 docdir_default='${PREFIX}/share/doc/${PACKAGE}-${VERSION}'
 incdir_default='${PREFIX}/include'
@@ -649,14 +647,13 @@ case "${build:-${host:-$(uname -s)}}" in
 		append DIST_EXTRA "$thing"
 	done
 	rundir="/run"
-	for type in RS SV; do
-		for thing in SERVICES VIRTUALS; do
-			eval append EXTRA_${type}_${thing} \$LINUX_${type}_${thing}
-		done
+	for type in RUNSCRIPT SUPERVISION; do
+		eval append EXTRA_${type}_SERVICES \$LINUX_${type}_SERVICES
 	done
 	for i in 0 1 2 3; do
 		eval append EXTRA_STAGE_${i} \$LINUX_STAGE_${i}
 	done
+	append EXTRA_VIRTUAL_SERVICES $LINUX_VIRTUAL_SERVICES
 	;;
 esac
 
@@ -743,10 +740,8 @@ SUMMARY_EOF
 echo "Genrating $CONFIG_MAK"
 
 print_extra_services(){
-	for type in RS SV; do
-		for thing in SERVICES VIRTUALS; do
-			eval echo EXTRA_${type}_${thing}=\$EXTRA_${type}_${thing}
-		done
+	for type in RUNSCRIPT SUPERVISION; do
+		eval echo EXTRA_${type}_SERVICES=\$EXTRA_${type}_SERVICES
 	done
 	for i in 0 1 2 3; do
 		eval echo EXTRA_STAGE_${i}=\$EXTRA_STAGE_${i}
@@ -789,6 +784,7 @@ RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
 S6_INIT_STAGE=$(yesno "$s6" && echo 1)
 SYSVINIT=$(yesno "$sysvinit" && echo 1)
 DIST_EXTRA=$DIST_EXTRA
+EXTRA_VIRTUAL_SERVICES=$EXTRA_VIRTUAL_SERVICES
 $(print_extra_services)
 endif
 CONFIG_MAK_EOF
@@ -799,6 +795,7 @@ cat >$CONFIG_H <<CONFIG_H_EOF
 #ifndef SUPERVISION_CONFIG_H
 # define SUPERVISION_CONFIG_H
 # define SYSCONFDIR "$sysconfdir"
+# define LIBDIR     "$libdir"
 # define RUNDIR     "$rundir"
 #endif
 CONFIG_H_EOF
