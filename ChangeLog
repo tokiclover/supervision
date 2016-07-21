@@ -1,5 +1,12 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_beta3:
+
+Merged {RS,SV}_SVCDIR (service directory) together for efficiency and clarity;
+And thus, /sbin/rs lost the stage type command line argument (-r|--rs,-v|--sv).
+There is no longer a /etc/rs.d or a (useless) /etc/service directories. Now,
+look at sv/.stage-[0-3] directories for active services.
+
 0.12.0_bata2:
 
 Added missing configuration for runscript service (miscfs,clock,hostname);
