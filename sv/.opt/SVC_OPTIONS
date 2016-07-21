@@ -8,9 +8,8 @@
 #
 :	${SV_LIBDIR:=/lib/sv}
 :	${SV_SVCDIR:=/etc/sv}
-:	${SV_RUNDIR:=/run/service}
+:	${SV_RUNDIR:=/run/sv}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
-:	${SV_SERVICE:=/etc/service}
 :	${name:=${SVC_NAME}}
 :	${__cmd__:=${0##*/}}
 :	${__cmd_args__:="${@}"}
@@ -27,14 +26,12 @@ umask 022
 
 case "${RS_TYPE:-sv}" in
 	(rs)
-:	${SV_TYPE=RS}
-:	${SVC_DIR:=${RS_SVCDIR}}
+:	${SVC_DIR:=${SV_SVCDIR}}
 [ -n "${RS_RUNDIR}" ] &&
 SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
-SOURCE ${SRC_OPTS} "${SVC_DIR}"/${SVC_NAME}
+SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
 	;;
 	(sv)
-:	${SV_TYPE=SV}
 :	${SVC_DIR:=${PWD%/log}}
 :	${SVC_NAME:=${SVC_DIR##*/}}
 SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV

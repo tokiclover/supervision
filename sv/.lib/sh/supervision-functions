@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.4 2016/07/14 21:09:26                      Exp $
+# $Version: 3.5 2016/07/20 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -40,34 +40,30 @@ softlimit()
 # @FUNCTION: Create (supervision) service
 # @ARG: [SVC_NAME]
 #
-svc_add()
+svc_new()
 {
-	local cmd log svc name dir
+	local cmd log svc dir
 
-	while [ $# -ge 1 ]; do
+	while [ ${#} -ge 1 ]; do
 		case "${1}" in
 			(-l|--log)   log=0;;
-			(-s|--serv*) svc=0;;
 			(*)   shift; break;;
 		esac
 		shift
 	done
-:	${name:=${1:-${SVC_NAME}}}
-:	${dir:=${SV_SVCDIR}/${name}}
+:	${svc:=${1:-${SVC_NAME}}}
+:	${dir:=${SV_SVCDIR}/${svc}}
 
-	[ -e "${SV_RUNDIR}/${name}"  ] && return 0
-	[ -n "${log}" ] && mkdir -p "${dir}"/log || mkdir -p "${dir}"
+	[ -e "${SV_SVCDIR}/${svc}"  ] && return 0
+	mkdir -p "${dir}${log:+/log}"
 
 	for cmd in finish run ${log:+log/run log/finish}; do
 		[ -x "${dir}/${cmd}" ] && continue
 		[ "${cmd#log/}" != "${cmd}" ] && log=0 || log=
 		ln -s ${log:+../}../.opt/cmd "${dir}/${cmd}"
 	done
-	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${name}|" \
+	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${svc}|" \
 		${SV_SVCDIR}/.opt/OPTIONS.in >${dir}/OPTIONS
-
-	[ -n "${svc}" ] || return 0
-	[ -e ${SV_SERVICE}/${name} ] || ln -ns ${dir} ${SV_SERVICE}
 }
 
 svc_down()
@@ -148,8 +144,7 @@ svc_reload()
 svc_mark()
 {
 	local arg ret
-
-	for arg in ${@:--s}; do
+	for arg; do
 		case "${arg}" in
 			(-d|--down*)  touch "${SV_TMPDIR}/down/${SVC_NAME}";;
 			(-u|--up*)    rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
@@ -160,26 +155,25 @@ svc_mark()
 		esac
 		ret=$((${ret}+${?}))
 	done
-	return "${ret}"
+	return ${ret}
 }
 
 svc_state()
 {
 	local arg ret
-
-	for arg in ${@:--r}; do
+	for arg; do
 		case "${arg}" in
-			(-e|--exist) eval [ -e "\${${SV_TYPE}_SVCDIR}/${SVC_NAME}" ];;
-			(-r|--runn*) eval [ -e "\${${SV_TYPE}_RUNDIR}/${SVC_NAME}" ];;
+			(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
+			(-a|--acti*) [ -e "${RS_RUNDIR}/${SVC_NAME}" ];;
 			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
 			(-p|--pid*)  [ -e "${SVC_PIDFILE}" ];;
 			(*) return ${ret};;
 		esac
-		ret=$((${ret} + ${?}))
+		ret=$((${ret}+${?}))
 	done
-	return "${ret}"
+	return ${ret}
 }
 
 #
@@ -230,7 +224,7 @@ svc_pre()
 }
 svc_remove()
 {
-	eval rm -fr "\${${SV_TYPE}_RUNDIR}/${SVC_NAME}"
+	rm -fr "${SV_RUNDIR}/${SVC_NAME}"
 	svc_zap
 }
 
@@ -419,11 +413,11 @@ svc_cmd()
 	case "${RS_TYPE}" in
 		(rs)
 		case "${cmd}" in
-			(add|start|stop|status) pfx='rs_cmd ';;
+			(start|stop|status) pfx='rs_cmd ';;
 		esac;;
 	esac
 	case "${cmd}" in
-		(desc|start)
+		(add|desc|start)
 			svc_state -e || { error "Inexistent service"; return 2; };;
 	esac
 	begin "service ${cmd}: "
