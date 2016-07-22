@@ -261,6 +261,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 	int deps = 0, i, size = 4;
 	const char **ARGV = NULL;
 	const char *cmd = argv[3];
+	char *path;
 
 	if (setup) {
 		svc_sigsetup();
@@ -271,6 +272,10 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		command = 's', deps = 1;
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
 		command = 'S';
+	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_ADD]) == 0)
+		command = 'a';
+	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_DEL]) == 0)
+		command = 'd';
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_ZAP]) == 0) {
 		svc_zap(run->name);
 		return 0;
@@ -319,7 +324,32 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 			LOG_WARN("%s: Service is not started\n", run->name);
 			return -EINVAL;
 		}
+		break;
+	case 'a':
+	case 'd':
+		if (getenv("RS_STAGE") == NULL) {
+			fprintf(stderr, "%s: stage level argument is required\n", prgname);
+			fprintf(stderr, "Usage: %s -(0|1|2|3) %s COMMAND\n", prgname,
+					run->name);
+			return 1;
+		}
 
+		path = err_malloc(PATH_MAX*sizeof(char));
+		snprintf(path, PATH_MAX, "%s/.stage-%d/%s", SV_SVCDIR, rs_stage,
+				run->name);
+		if (file_test(path, 0))
+			unlink(path);
+
+		if (command == 'd')
+			return 0;
+		else {
+			if (symlink(run->path, path)) {
+				ERR("%s: Failed to add service: %s\n", run->name, strerror(errno));
+				return 1;
+			}
+			else
+				return 0;
+		}
 		break;
 	}
 
