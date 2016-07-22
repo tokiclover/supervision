@@ -59,6 +59,7 @@ dist_SV_SVCS  = \
 	cgred \
 	cron \
 	cupsd \
+	cups-browsed \
 	dhcp \
 	dbus \
 	dns \

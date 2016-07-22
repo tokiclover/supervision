@@ -1,0 +1,11 @@
+#
+# $Header:  /etc/sv/cups-browsed/OPTIONS                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Bonjour broadcasts of shared, remote CUPS printers'
+SVC_NEED='cupsd'
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
