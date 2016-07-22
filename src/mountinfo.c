@@ -28,7 +28,7 @@ enum {
 	MOUNT_OPTS  = 0x02,
 #define MOUNT_OPTS MOUNT_OPTS
 	MOUNT_FSYS  = 0x04,
-#define MOUNT_ARGS MOUNT_ARGS
+#define MOUNT_FSYS MOUNT_FSYS
 };
 
 static const char *shortopts = "o:t:nhqv";
