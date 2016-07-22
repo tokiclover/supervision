@@ -23,6 +23,15 @@ PATH=${SV_LIBDIR}/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bi
 source ${SV_SVCDIR}/.opt/sv.conf
 umask 022
 
+#
+# Use RC config file if requested
+#
+if yesno "${RC_OPTS}"; then
+:	${RC_CONFDIR:=/etc/conf.d}
+:	${RC_INITDIR:=/etc/init.d}
+	SOURCE ${RC_CONFDIR}/${SVC_NAME}
+fi
+
 case "${RS_TYPE:-sv}" in
 	(rs)
 :	${SVC_DIR:=${SV_SVCDIR}}
@@ -59,7 +68,6 @@ fi
 SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
-[ "${RS_TYPE}" = "sv" ] && source ${SV_SVCDIR}/.opt/SVC_BACKEND
 
 #
 # OS Specific
@@ -74,18 +82,14 @@ case "${OS_NAME}" in
 esac
 
 #
-# Use RC config file if requested
+# Set up supervision environment
 #
-if yesno "${RC_OPTS}"; then
-:	${RC_CONFDIR:=/etc/conf.d}
-:	${RC_INITDIR:=/etc/init.d}
-	SOURCE ${RC_CONFDIR}/${SVC_NAME}
-fi
+if [ "${RS_TYPE}" = "sv" ]; then
+source ${SV_SVCDIR}/.opt/SVC_BACKEND
 #
 # Use ENV dir(s) if requested
 #
 yesno "${ENV_DIR}" && svc_env
-
 #
 # Set default getty options
 #
@@ -123,7 +127,7 @@ case "${__cmd_dir__}" in
 :	${LOG_PROC:=gzip -nq}
 :	${LOG_SIZE:=2048000}
 :	${LOG_STAT:=STAT}
-:	${LOG_PREFIX:="'$(uname -n 2>${NULL}):${SVC_NAME}:'"}
+:	${LOG_PREFIX:=${SVC_NAME}}
 #
 # Set default log options
 #
@@ -140,6 +144,7 @@ esac
 unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOGOPT
 	;;
 esac
+fi # RS_TYPE=sv
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
