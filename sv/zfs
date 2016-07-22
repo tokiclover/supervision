@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/zfs                                   Exp $
+# $Header: /etc/sv/zfs                                     Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
@@ -27,7 +27,7 @@ start()
 stop()
 {
 	[ "${RS_STAGE}" = 3 ] || return
-	local zpool_opts
+	local zfs_opts
 	${zfs} umount -a ${zfs_opts} ${ZPOOL_EXPORT_ARGS}
 }
 
