@@ -966,12 +966,12 @@ static void svc_stage(const char *cmd)
 					ctime(&t));
 		}
 		if (svc_start)
-			p = RS_DEPTREE_PRIO-1;
+			p = rs_deptree_prio-1;
 		else
 			p = 0;
 
 		deptree = rs_deptree_load();
-		while (p >= 0 && p < RS_DEPTREE_PRIO) { /* PRIORITY_LEVEL_LOOP */
+		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
 			if (!SLIST_EMPTY(deptree[p])) {
 				if (rs_debug) {
 					t = time(NULL);

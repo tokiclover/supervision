@@ -72,7 +72,7 @@ typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
 /* number of priority level per dependency type */
 #define RS_DEPS_PRIO 4
 
-#define RS_DEPTREE_PRIO 32
+extern size_t rs_deptree_prio;
 RS_StringList_T **rs_deptree_load(void);
 
 typedef struct RS_DepType {
