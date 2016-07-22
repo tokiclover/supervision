@@ -79,7 +79,8 @@ dist_SV_SVCS  = \
 	sshd \
 	wpa_supplicant \
 	xdm \
-	udev
+	udev \
+	zed
 dist_VIRTUALS  = \
 	$(EXTRA_VIRTUAL_SERVICES) \
 	tmpfiles.setup:tmpfiles.dev \
