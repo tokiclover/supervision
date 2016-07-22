@@ -57,6 +57,7 @@ rs_status()
 
 svc_add()
 {
+	[ -n "${RS_STAGE}" ] || return
 	svc_state -e && ln -fns ${SV_SVCDIR}/${SVC_NAME} ${RS_RUNDIR}
 }
 
