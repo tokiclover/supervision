@@ -63,6 +63,7 @@ svc_add()
 
 svc_del()
 {
+	[ -n "${RS_STAGE}" ] || return
 	rm -fr "${RS_RUNDIR}/${SVC_NAME}"
 }
 svc_zap()
