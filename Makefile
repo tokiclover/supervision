@@ -180,7 +180,7 @@ dist_DIRS  += \
 	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh $(DOCDIR) \
 	$(SYSCONFDIR)/sv/.lib $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
 	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
-	$(MANDIR)/man1 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
+	$(MANDIR)/man5 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
 DISTDIRS    = $(dist_DIRS)
 
 define svc_dir =
@@ -233,7 +233,7 @@ install: install-dir install-dist
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR@|$(RUNDIR)|g' \
-		supervision.1 >$(DESTDIR)$(MANDIR)/man1/supervision.1
+		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	$(install_DATA) rs.8 $(DESTDIR)$(MANDIR)/man8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
@@ -304,7 +304,7 @@ ifdef SYSVINIT
 	rm -f $(DESTDIR)$(LIBDIR)/sv/bin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	rm -f $(DESTDIR)$(MANDIR)/man1/supervision.1* $(DESTDIR)/$(MANDIR)/man8/rs.8*
+	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	$(call rem_sym,sv,$(dist_VIRTUALS))

@@ -59,7 +59,7 @@ And then... a bit more, new supervision services can be easily added by
 running `/lib/sv/bin/sv-config [--log] SERVICE new` (`--log` argument
 would add a *log* directory for the service.)
 
-See supervision(1) and or rs(8) man page for more information.
+See supervision(5) and or rs(8) man page for more information.
 
 REQUIREMENTS
 ------------
