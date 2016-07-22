@@ -13,6 +13,8 @@ SVC_COMMANDS="restore save"
 
 :	${compressor:=lz4 -1}
 :	${extension:=.tar.${compressor%% *}}
+mount="$(command -v mount 2>${NULL})"
+umount="$(command -v umount 2>${NULL})"
 
 if yesno ${use_zram}; then
 	SVC_NEED=zramfs
@@ -25,10 +27,10 @@ start()
 
 	for dir in ${tmpdir_saved} ${tmpdir_unsaved}; do
 		DIR="${tmpdir_root}${dir}"
-		grep -q "${DIR}" /proc/mounts && continue
+		mountinfo --quiet "${DIR}" && continue
 		mkdir -p "${DIR}"
 		begin  "Mounting ${DIR}"
-		mount --bind "${DIR}" "${dir}" >${NULL} 2>&1
+		${mount} --bind "${DIR}" "${dir}" >${NULL} 2>&1
 		end "${?}"
 	done
 	restore
@@ -45,7 +47,7 @@ stop()
 		esac
 		mountinfo --quiet "${dir}" || continue
 		begin  "Unmounting ${dir}"
-		umount -l "${dir}" >${NULL} 2>&1
+		${umount} -l "${dir}" >${NULL} 2>&1
 		end "${?}"
 	done
 	return 0
@@ -64,7 +66,7 @@ start_pre()
 	mkdir -p "${tmpdir_root}"
 
 	begin "Mounting ${tmpdir_root}"
-	mount -o rw,nodev,relatime,mode=0755,size=${tmpdir_size:-20%} \
+	${mount} -o rw,nodev,relatime,mode=0755,size=${tmpdir_size:-20%} \
 		-t tmpfs tmp "${tmpdir_root}" || { end 1; return 2; }
 	end "${?}"
 }
