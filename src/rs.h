@@ -72,9 +72,6 @@ typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
 /* number of priority level per dependency type */
 #define RS_DEPS_PRIO 4
 
-extern size_t rs_deptree_prio;
-RS_StringList_T **rs_deptree_load(void);
-
 typedef struct RS_DepType {
 	/* dependency type {after,before,use,need} */
 	char *type;
@@ -123,6 +120,7 @@ void          rs_svcdeps_free(RS_SvcDepsList_T *list);
 
 RS_StringList_T **rs_deptree_load(void);
 void              rs_deptree_free(RS_StringList_T **array);
+extern size_t     rs_deptree_prio;
 
 /*
  * retrieve a configuration value like getenv(3)
