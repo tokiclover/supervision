@@ -181,7 +181,7 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh $(DOCDIR) \
-	$(SYSCONFDIR)/sv/.lib $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
+	$(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
 	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
 	$(MANDIR)/man5 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
 DISTDIRS    = $(dist_DIRS)
@@ -258,6 +258,7 @@ install: install-dir install-dist
 	$(call stage_sym,1,$(dist_STAGE_1))
 	$(call stage_sym,2,$(dist_STAGE_2))
 	$(call stage_sym,3,$(dist_STAGE_3))
+	ln -fs $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib 
 	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/sv/.single
 install-dist: $(DISTFILES)
 install-dir :
