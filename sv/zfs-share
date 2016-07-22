@@ -1,0 +1,27 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/zfs-share                               Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Set up network share zfs volumes"
+SVC_AFTER="localfs networkfs zed"
+SVC_NEED="net zfs"
+
+zfs="$(command -v zfs 2>${NULL})"
+
+start()
+{
+	local zfs_opts
+	${zfs} share -a ${ZFS_SHARE_ARGS}
+}
+
+stop()
+{
+	local zfs_opts
+	${zfs} unshare -a ${zfs_opts} ${ZPOOL_UNSHARE_ARGS}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -1,0 +1,16 @@
+#
+# $Id: /etc/sv/OPTIONS.zfs-share, 2016/06/06           Exp $
+# 
+# See zfs(8) and zpool(8) for more information.
+#
+# WARN: when using zfs service, add also zpool service to stage-1!
+#
+# Extra options to pass to `zfs share' besides `-a' like <FILESYSTEM>
+#ZFS_SHARE_ARGS=
+#
+# Extra options to pass to `zfs unshare' besides `-a' like <FILESYSTEM|MOUNTPOINT>
+#ZFS_UMSHARE_ARGS=
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

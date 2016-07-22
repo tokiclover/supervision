@@ -123,6 +123,7 @@ dist_RS_SVCS  = \
 	tmpdirs \
 	tmpfiles.dev \
 	zfs \
+	zfs-share \
 	zpool
 dist_RS_OPTS  = \
 	ip6tables \
