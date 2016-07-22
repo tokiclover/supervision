@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc-optind) < 1) {
-		ERR("Insufficient number of arguments\n", NULL);
+		fprintf(stderr, "%s: Insufficient number of arguments\n", prgname);
 		help_message(EXIT_FAILURE);
 	}
 
