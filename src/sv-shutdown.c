@@ -154,7 +154,7 @@ __NORETURN__ int sv_shutdown(int action)
 	}
 
 	if (ptr == NULL) {
-		ERR("Failed to get supervision backend\n", NULL);
+		fprintf(stderr, "%s: Failed to get supervision backend\n", prgname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -179,7 +179,7 @@ __NORETURN__ int sv_shutdown(int action)
 		ERROR("Failed to execl()", NULL);
 	}
 	else {
-		ERR("Invalid supervision backend\n", NULL);
+		fprintf(stderr, "%s: Invalid supervision backend\n", prgname);
 		exit(EXIT_FAILURE);
 	}
 	free(ptr);
