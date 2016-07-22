@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
- * This file is part of Supervision (Scripts Framework).
+ * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
