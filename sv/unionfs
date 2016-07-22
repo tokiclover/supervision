@@ -1,13 +1,15 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/unionfs                             Exp $
+# $Header: /etc/sv/unionfs                               Exp $
 # $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.22.0 2016/06/06 12:33:03                   Exp $
+# $Version: 0.22.0 2016/07/20 12:33:03                   Exp $
 #
 
 description="Set up (AUFS|OverlayFS+SquashFS) union filesystems"
 
+mount="$(command -v mount 2>${NULL})"
+umount="$(command -v umount 2>${NULL})"
 :	${sdr:=$(command -v sdr 2>${NULL})}
 :	${unionfs_rootdir:=/unionfs}
 case "${unionfs_filesystem}" in
@@ -16,9 +18,7 @@ case "${unionfs_filesystem}" in
 esac
 
 SVC_AFTER=localfs
-if [ "${RS_STAGE}" = 1 ]; then
-	SVC_BEFORE='console'
-fi
+SVC_BEFORE='console miscfs'
 
 start_pre()
 {
@@ -81,60 +81,66 @@ stop_pre()
 
 unionfs_mount()
 {
-	local DIR msg
+	local DIR message mnt_opts
 	DIR="${1}/${2#/}" dir="/${2#/}"
-	grep -q ${unionfs_filesystem}:${dir} /proc/mounts && return
+	mountinfo -q -t ${unionfs_filesystem} ${dir} && return
 	[ -f ${DIR}.squashfs ] || return
 
 	case "${unionfs_filesystem}" in
 		(aufs)
 			mkdir -p -m 0755 "${DIR}"/rr "${DIR}"/rw
-			opt="nodev,udba=reval,br:${DIR}/rw:${DIR}/rr"
-			msg=AUFS;;
+			mnt_opts="nodev,udba=reval,br:${DIR}/rw:${DIR}/rr"
+			message=AUFS;;
 		(overlay)
 			mkdir -p -m 0755 "${DIR}"/rr "${DIR}"/up "${DIR}"/wk
-			opt="nodev,upperdir=${DIR}/up,lowerdir=${DIR}/rr,workdir=${DIR}/wk"
-			msg=OverlayFS;;
+			mnt_opts="nodev,upperdir=${DIR}/up,lowerdir=${DIR}/rr,workdir=${DIR}/wk"
+			message=OverlayFS;;
 	esac
 
 	begin "Mounting ${unionfs_filesystem}:${dir}"
 	if ! mountinfo -q ${DIR}/rr; then
-		mount -t squashfs -o nodev,ro ${DIR}.squashfs ${DIR}/rr \
-			>${NULL} 2>&1 || { end 1; return 1; }
+		${mount} -t squashfs -o nodev,ro ${DIR}.squashfs ${DIR}/rr \
+			>${NULL} 2>&1 || { end 1 SquashFS; return 1; }
 	fi
-	mount -t ${unionfs_filesystem} -o ${opt} \
+	${mount} -t ${unionfs_filesystem} -o ${mnt_opts} \
 		${unionfs_filesystem}:${dir} ${dir} >${NULL} 2>&1
-	end "${?}" "${msg}"
+	end "${?}" "${message}"
 }
 
 unionfs_umount()
 {
-	local DIR opt msg
+	local DIR mnt_opts message
 	DIR="${1}/${2#/}" dir="/${2#/}"
-	grep -q ${unionfs_filesystem}:${dir} /proc/mounts || return
+	mountinfo -q -t ${unionfs_filesystem} ${dir} || return
 
-	case "${OS_NAME}" in
-		(Linux) opt="-O no_netdev";;
-	esac
+	if [ "${OS_NAME}" = "Linux" ]; then
+		mnt_opts="-O no_netdev"
+	fi
 	case "${unionfs_filesystem}" in
 		(aufs) auplink ${dir} flush >${NULL} 2>&1
-			msg=AUFS;;
-		(*) msg=OverlayFS;;
+			message=AUFS;;
+		(*) message=OverlayFS;;
 	esac
 	begin "Umounting ${unionfs_filesystem}:${dir}"
-	umount -l ${opt} ${unionfs_filesystem}:${dir} >${NULL} 2>&1 ||
-		{ end 1 ${msg}; return 1; }
-	umount -l ${opt} ${DIR}/rr   >${NULL} 2>&1
-	end ${?} SquashFS
+	${umount} -l ${mnt_opts} ${unionfs_filesystem}:${dir} >${NULL} 2>&1 ||
+		{ end 1 ${message}; return 1; }
+	${umount} -l ${mnt_opts} ${DIR}/rr   >${NULL} 2>&1
+	end "${?}" SquashFS
 }
 
 unionfs_remount()
 {
+	local message mnt_opts="${2:-ro}"
 	dir="/${1#/}"
-	grep -q ${unionfs_filesystem}:${dir} /proc/mounts || return
-	begin "Re-Mounting ${unionfs_filesystem}:${dir}"
-	mount -o remount,${2:-ro} ${unionfs_filesystem}:${dir} >${NULL} 2>&1
-	end ${?}
+	if [ "${mnt_opts}" = "ro" ]; then
+		message=read-only
+	else
+		message=read-write
+	fi
+	mountinfo -q -t ${unionfs_filesystem} ${dir} || return
+	begin "Remounting ${unionfs_filesystem}:${dir} (${message})"
+	${mount} -o remount,${mnt_opts} ${unionfs_filesystem}:${dir} >${NULL} 2>&1
+	end "${?}"
 }
 
 #
