@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc-optind) < 1 || !(type & ~TYPE_CHECK)) {
-		ERR("Insufficient number of arguments\n", NULL);
+		fprintf(stderr, "%s: Insufficient number of arguments\n", prgname);
 		help_message(EXIT_FAILURE);
 	}
 
@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 		if (pwd)
 			uid = pwd->pw_uid;
 		else {
-			ERR("Failed to get owner.\n", NULL);
+			fprintf(stderr, "%s: Failed to get owner\n", prgname);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 		if (grp)
 			gid = grp->gr_gid;
 		else {
-			ERR("Failed to get group.\n", NULL);
+			fprintf(stderr, "%s: Failed to get group\n", prgname);
 			exit(EXIT_FAILURE);
 		}
 	}
