@@ -1,5 +1,15 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_beta4:
+
+Install main manual page to section 5 to respect standard FHS;
+Setup supervision environment only for supervision services;
+Minors performance Improvements;
+
+SERVICE ADDITION:
+RUNSCRIPT/SERVICES: zfs-share;
+SUPERVISION/SERVICES: cups-borwsed, zed;
+
 0.12.0_beta3:
 
 Merged {RS,SV}_SVCDIR (service directory) together for efficiency and clarity;
