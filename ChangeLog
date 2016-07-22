@@ -4,7 +4,8 @@ Header: supervision/ChangeLog, 2015/04/24
 
 Install main manual page to section 5 to respect standard FHS;
 Setup supervision environment only for supervision services;
-Minors performance Improvements;
+Minors performance Improvements; minor fixes ({add,del} service
+commands mainly); minor service fixes.
 
 SERVICE ADDITION:
 RUNSCRIPT/SERVICES: zfs-share;
