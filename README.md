@@ -1,22 +1,31 @@
-Supervision Framework, initialy inspired by [supervision-scripts][1] collection,
+Supervision Framework - init-system and service-manager
+
+Full fledged service-manager and init-system capable of replacing a
+rc init-system like OpenRC. Yet, it's still simple and efficient as ever!
+
+---
+
+INTRODUCTION
+------------
+
+This project was initialy inspired by [supervision-scripts][1] collection,
 supporting [Daemontools][3], [Daemontools-Encore][4], [Runit][5] or [S6][6]
 supervision backends providing an easy and efficient way to supervision
-by using a shell,--to be able to switch between backend & share a few helpers,--and
-optional [OpenRC][7] support for service configuration files and init-system support.
+by using a shell,--to be able to switch between backend and share a few shell
+functions,--and an optional [OpenRC][7] support for service configuration files
+and init-system support.
 (A Gentoo [ebuild][2] is available.)
 
 Note: [busybox](http://www.busybox.net/) has an integrated runit suite which has
 the same command line options as `runsvdir/sv`; so support for this variant is
 almost guaranted to function as expected.
 
----
-
-INTRODUCTION
+DESCRIPTION
 -----------
 
-Full-featured and yet simple and efficient Supervision Service Management
-Framework with service dependencies, LSB and extra service commands, virtual
-service & service instances and read-only rootfs support to name a few.
+Full-featured and yet simple and efficient init-system and service-manager
+with service dependencies, LSB and extra service commands, virtual
+service and service instances and read-only rootfs support to name a few.
 
 Runscript services are also supported with `{after,before,need,use}` service
 dependencies. A special system initialization level (stage-0), with system
@@ -25,7 +34,8 @@ supported.
 
 A new init-system is available since 0.12.0_alpha. (It's almost only stage-[01]
 services plus tweakings... *almost* is not all there is to it; there are much
-more bits tweaking and (re-)writing.)
+more bits tweaking and (re-)writing taking a whole third, +4900 lines addtion
+(mainly for init-system services +3550 lines), of this package.)
 
 INSTALLATION
 ------------
