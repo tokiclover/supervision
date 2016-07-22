@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/miscfs                                Exp $
+# $Header: /etc/sv/miscfs                                  Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 # $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
 #
@@ -58,8 +58,9 @@ var_rundir_cleanup()
 		-name random-seed ! -name dev.db ! -name 'ld*.so.hints'); do
 		if [ -S "${e}" -a -n "${fusr_cmd}" ]; then
 			${fusr_cmd} "${e}" >${NULL} 2>&1 || rm -- "${e}"
+		else
+			rm -- "${e}"
 		fi
-		rm -- "${e}"
 	done
 	end "${?}"
 }
