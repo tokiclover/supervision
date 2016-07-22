@@ -1101,7 +1101,9 @@ int main(int argc, char *argv[])
 					prgname);
 			exit(EXIT_FAILURE);
 		}
-		unsetenv("RS_STAGE");
+		if (strcmp(rs_svc_cmd[RS_SVC_CMD_START], argv[optind+1]) == 0 ||
+			strcmp(rs_svc_cmd[RS_SVC_CMD_STOP] , argv[optind+1]) == 0)
+			unsetenv("RS_STAGE");
 		svc_exec(argc-optind, argv+optind);
 	}
 
