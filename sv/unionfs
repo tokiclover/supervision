@@ -71,6 +71,12 @@ restart()
 
 stop_pre()
 {
+	local mod
+	for mod in ${squash_filesystem:-aufs overlay}; do
+		grep -q ${mod} /proc/filesystems &&
+			{ squash_filesystem="${mod}"; break; }
+	done
+	[ -n "${unionfs_filesystem}" ] || return
 	[ -n "${unionfs_rebuilddir}" ] || return 0
 	[ -n "${sdr}" -a -x "${sdr}" ] || { warn "No suitable sdr found."; return; }
 
