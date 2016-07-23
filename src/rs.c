@@ -1000,12 +1000,12 @@ static void svc_stage(const char *cmd)
 			fprintf(logfp, "\n\tstage-%d (%s) at %s\n", rs_stage, command,
 					ctime(&t));
 		}
+
+		deptree = rs_deptree_load();
 		if (svc_start)
 			p = rs_deptree_prio-1;
 		else
 			p = 0;
-
-		deptree = rs_deptree_load();
 		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
 			if (!SLIST_EMPTY(deptree[p])) {
 				if (rs_debug) {
