@@ -180,7 +180,7 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh $(DOCDIR) \
-	$(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
+	$(SYSCONFDIR)/sv.conf.d $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
 	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
 	$(MANDIR)/man5 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
 DISTDIRS    = $(dist_DIRS)
@@ -270,9 +270,9 @@ $(dist_SV_OPTS): $(dist_SV_SVCS)
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
 $(dist_RS_SVCS):
 	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
-	-$(install_DATA)  sv/OPTIONS.$@ $(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.$@
+	-$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(SYSCONFDIR)/sv.conf.d/$@
 $(dist_RS_OPTS):
-	$(install_DATA)  sv/OPTIONS.$@ $(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.$@
+	$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(SYSCONFDIR)/sv.conf.d/$@
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -296,8 +296,8 @@ endif
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
 	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%) \
-	       $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.%) \
-	       $(dist_RS_OPTS:%=$(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.%)
+	       $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv.conf.d/%) \
+	       $(dist_RS_OPTS:%=$(DESTDIR)$(SYSCONFDIR)/sv.conf.d/%)
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%)
 	for file in $(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_BINS)) \
 		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \

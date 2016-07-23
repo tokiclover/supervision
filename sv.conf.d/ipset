@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv/OPTIONS.ipset, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.d/ipset, 2016/06/06           Exp $
 # 
 # See ipset(8) for more information.
 #
@@ -11,5 +11,5 @@
 SAVE_ON_STOP="Yes"
 
 #
-# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
 #

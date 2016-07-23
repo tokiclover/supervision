@@ -35,6 +35,11 @@ fi
 
 if   [ "${RS_TYPE}" = "rs" ]; then
 :	${SVC_DIR:=${SV_SVCDIR}}
+
+SOURCE "${SV_CFGDIR}"/${SVC_NAME}
+	if [ "${name}" != "${SVC_NAME}" ]; then
+SOURCE "${SV_CFGDIR}"/${name}
+	fi
 	if [ -n "${RS_RUNDIR}" ]; then
 SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME}
 	else
@@ -46,15 +51,6 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 fi
-#
-# Handle specific (virtual) service backend/instance
-#
-if [ "${name}" = "${SVC_NAME}" ]; then
-SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
-else
-SOURCE "${SVC_DIR}"/OPTIONS.${name}
-fi
-:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
 
 #
 # Set debug options
@@ -80,6 +76,17 @@ fi
 #
 if [ "${RS_TYPE}" = "sv" ]; then
 source ${SV_SVCDIR}/.opt/SVC_BACKEND
+
+#
+# Handle specific (virtual) service backend/instance
+#
+	if [ "${name}" = "${SVC_NAME}" ]; then
+SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
+	else
+SOURCE "${SVC_DIR}"/OPTIONS.${name}
+	fi
+:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
+
 #
 # Use ENV dir(s) if requested
 #

@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv/OPTIONS.lvm, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.d/lvm, 2016/06/06           Exp $
 # 
 # See lvm(8), lvchange(8), vgchange(8) etc for more information.
 #
@@ -8,5 +8,5 @@
 #SVC_NEED="dmcrypt"
 
 #
-# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
 #

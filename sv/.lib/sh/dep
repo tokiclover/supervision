@@ -113,9 +113,6 @@ dep_scan()
 	for dir in ${@:-${SV_SVCDIR}}; do
 		cd ${dir}
 		for svc in *; do
-			case "${svc}" in
-				(OPTIONS.*) continue;;
-			esac
 			dep_gen "${svc}"
 		done
 	done

@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv/OPTIONS.zramfs, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.d/zramfs, 2016/06/06           Exp $
 #
 
 # Set the number of zram devices to use
@@ -18,5 +18,5 @@ ZRAM_DEVICE_1='4G ext4 /var/tmp user_xattr 1777'
 ZRAM_DEVICE_2='512M ext4 /tmp user_xattr 1777'
 
 #
-# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
 #

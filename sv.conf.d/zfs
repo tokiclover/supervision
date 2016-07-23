@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv/OPTIONS.zfs, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.d/zfs, 2016/06/06           Exp $
 # 
 # See zfs(8) and zpool(8) for more information.
 #

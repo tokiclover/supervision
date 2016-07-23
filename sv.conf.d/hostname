@@ -1,0 +1,10 @@
+#
+# $Id: /etc/sv.conf.d/hostname, 2016/06/06           Exp $
+# 
+# Set the machine hostname
+#
+HOSTNAME=""
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

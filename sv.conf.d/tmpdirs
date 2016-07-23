@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv/OPTIONS.tmpdirs, 2016/06/06          Exp $
+# $Id: /etc/sv.conf.d/tmpdirs, 2016/06/06          Exp $
 #
 # tmpdir maintain a temporary directory hierarchy on a tmpfs or zram
 # backed device. Keeping the state of a diretory across machine reboot
@@ -21,5 +21,5 @@ tmpdir_unsaved=
 compressor="lz4 -1"
 
 #
-# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
 #

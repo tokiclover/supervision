@@ -15,8 +15,7 @@ thus benefit the easy to use the service-management framework for supervision.
 .SS SUPERVISION
 Supervision aims to provide an easy and efficient way to supervision;
 Deamontools[-encore], Runit and S6 backends are actually supported.
-(Supervision-)services use, by default, a single
-.I sv/SERVICE/OPTIONS
+(Supervision-)services use, by default, a single \fIsv/\fBSERVICE\fI/OPTIONS\R
 file and \fI./{finish,run}\fR symlinked to \fIsv/.opt/cmd\fR.
 The same goes for the log directory.
 .I Envdir
@@ -27,8 +26,7 @@ to finely set up and boot a full system.
 The same environment variables are used, minus that, almost only dependencies
 and extra commands are usable in this context.
 (Runscript-)services use a single executable file with an optional configuration
-file
-.I sv/{OPTIONS.,}SERVICE
+file \fIsv.conf.d/\fBSERVICE\fR
 which uses the same formating and syntax as improved common
 .B rc
 script file (e.g. OpenRC.) Meaning that, only functions and dependency are
@@ -99,8 +97,7 @@ file.
 .TP
 .B RUNSCRIPT
 Similarly, runscript service instances use a symlink to the service with an extra
-.B OPTIONS.INSTANCE
-configuration file if any.
+\fIsv.conf.d/\fBINSTANCE\fR configuration file if any.
 See
 .I networkfs
 (instance of
@@ -137,8 +134,7 @@ file is required to get the expected behavior.
 Similarly, runscript services use a symlink
 .B VIRTUAL->SERVICE
 to define a virtual
-service; and an extra
-.B OPTIONS.VIRTUAL
+service; and an extra \fIsv.conf.d/\fBVIRTUAL\fR
 configuration file to define the real
 .B name=SVC_NAME
 of the provider (e.g. dev virtual service use mdev as a provider.)
@@ -179,7 +175,7 @@ shell functions for service setup and clean up if necessary.
 .TP
 .B RUNSCRIPT
 Runscript services use \fIsv/\fBSERVICE\fR script to define shell functions and
-a default environment; and  \fIsv/OPTIONS.\fBSERVICE\fR configuration file to
+a default environment; and  \fIsv.conf.d/\fBSERVICE\fR configuration file to
 define extra services dependencies and other environment variables and service
 options.
 .RE
@@ -594,6 +590,9 @@ daemons and default services (default run level.)
 .TP
 .I sv.conf
 Supervision global configuration file
+.TP
+.I sv.conf.d/\ (SV_CFGDIR)
+Runscript local configuration files directory
 .TP
 .I sv/\ (SV_SVCDIR)
 See RS_SVCDIR/.stage-{0,1,2,3} for active services.
