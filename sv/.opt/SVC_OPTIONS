@@ -134,14 +134,14 @@ case "${__cmd_dir__}" in
 :	${LOG_CMD:=${__LOGCMD__}}
 case "${__SV_NAM__}" in
 	(daemontools*|s6)
-:	${LOGOPT:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
+:	${LOG_ARGS:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
 	;;
 	(runit)
-:	${LOGOPT:=-tt p${LOG_PREFIX}}
+:	${LOG_ARGS:=-tt p${LOG_PREFIX}}
 	;;
 esac
-:	${LOG_OPTS:="${LOGOPT} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
-unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOGOPT
+:	${LOG_OPTS:="${LOG_ARGS} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
+unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOG_ARGS
 	;;
 esac
 fi # RS_TYPE=sv

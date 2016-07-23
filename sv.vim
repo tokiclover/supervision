@@ -27,7 +27,7 @@ syn keyword svVars ENV_DIR ENV_CMD ENV_OPTS PRE_CMD PRE_OPTS FIN_CMD FIN_OPTS
 syn keyword svVars LOG_CMD LOG_OPTS LOG_FIN_CMD LOG_FIN_OPTS SVC_NEED RC_OPTS
 syn keyword svVars CGROUP_CLEANUP CGROUP_INHERIT SV_CGROUP SVC_DEPS SVC_PIDFILE
 syn keyword svVars NULL SV_SVCDIR SV_TMPDIR SV_RUNDIR SV_SERVICE SV_OPTS SV_CMD
-syn keyword svVars LOGDIR LOGOPT LOG_STAT LOG_COMP LOG_PREFIX LOG_SIZE SVC_COMMANDS
+syn keyword svVars LOGDIR LOG_ARGS LOG_STAT LOG_COMP LOG_PREFIX LOG_SIZE SVC_COMMANDS
 syn keyword svVars description __cmd__ __cmd_dir__ __cmd_args__ name
 
 syn keyword svFunc pre post svc_reload svc_restart svc_start svc_stop svc_status
