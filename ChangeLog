@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_beta6:
+
+Splited runscript service configuration files from sv/ to sv.conf.d/;
+minor clean up and optimizations;
+
 0.12.0_beta5:
 
 Moved main configuration file to SYSCONFDIR; added a safety for init-stage in
