@@ -78,7 +78,10 @@ rs_cmd()
 
 	case "${cmd}" in
 		(start|stop)
-			svc_depend "${cmd}" || return 3
+			if [ "${cmd}" = "start" ]; then
+				svc_config || return 4
+				svc_depend "${cmd}" || return 3
+			fi
 			CMD="${cmd}_pre ${cmd} ${cmd}_post";;
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
 			CMD="stop_pre stop stop_post
