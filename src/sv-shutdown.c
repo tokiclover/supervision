@@ -136,8 +136,8 @@ __NORETURN__ int sv_shutdown(int action)
 	size_t len = 0;
 	char *line = NULL, *ptr = NULL;
 	char *argv[4], opt[32];
-	const char *ent = "__SV_NAM__";
-	size_t siz = strlen(ent);
+	const char ent[] = "__SV_NAM__";
+	size_t siz = sizeof(ent)-1;
 	argv[1] = opt, argv[2] = NULL;
 
 	if ((fp = fopen(SV_SVC_BACKEND, "r")) == NULL)
@@ -176,7 +176,7 @@ __NORETURN__ int sv_shutdown(int action)
 		snprintf(opt, ARRAY_SIZE(opt), "-%d", 3);
 		argv[0] = SV_INIT_STAGE;
 		execv(argv[0], argv);
-		ERROR("Failed to execl()", NULL);
+		ERROR("%s: Failed to execl()", __func__);
 	}
 	else {
 		fprintf(stderr, "%s: Invalid supervision backend\n", prgname);
