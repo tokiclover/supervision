@@ -563,6 +563,10 @@ Multi-purpose binary to run either stage-[0123] or service command, e.g.
 .B zramfs
 service to stage-1 (boot run level); `rs acpid start' or `rs -2 stage' to start
 daemons and default services (default run level.)
+.SS @SYSCONFDIR@
+.TP
+.RB sv.conf
+Supervision global configuration file
 .SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
 See RS_SVCDIR/.stage-{0,1,2,3} for active services.
 Use `rs -(0|1|2|3) SERVICE add` to add a particular service to a particular
@@ -654,9 +658,6 @@ Specific supervision (backend) environment
 .TP
 .RB SVC_OPTIONS
 Default service (OPTIONS) environment
-.TP
-.RB sv.conf
-Supervision configuration file
 .SS @RUNDIR@/sv/ (SV_RUNDIR)
 Default run time '/service/' directory
 .SS @SYSCONFDIR@/runit/

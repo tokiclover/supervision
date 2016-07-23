@@ -20,7 +20,7 @@ PATH=${SV_LIBDIR}/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bi
 [ -n "${__RUNSCRIPT_FUNCTIONS__}" ] ||
 	source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
-source ${SV_SVCDIR}/.opt/sv.conf
+source ${SV_SVCDIR%/*}/sv.conf
 umask 022
 
 #

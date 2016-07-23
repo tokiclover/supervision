@@ -31,8 +31,7 @@ dist_EXTRA  = \
 dist_COMMON = \
 	sv/.opt/OPTIONS.in \
 	sv/.opt/SVC_OPTIONS \
-	sv/.opt/SVC_BACKEND \
-	sv/.opt/sv.conf
+	sv/.opt/SVC_BACKEND
 dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
 	sv/.lib/bin/fstabinfo \
@@ -231,6 +230,7 @@ $(SUBDIRS): FORCE
 
 install-all: install install-supervision-svc
 install: install-dir install-dist
+	$(install_SCRIPT) sv.conf $(DESTDIR)$(SYSCONFDIR)/sv.conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
@@ -303,6 +303,7 @@ install-%-svc:
 
 uninstall-all: uninstall unintsall-supervision-svc
 uninstall: uninstall-doc
+	rm -f $(DESTDIR)$(SYSCONFDIR)/sv.conf
 	rm -f $(DESTDIR)$(SBINDIR)/rs
 ifdef SYSVINIT
 	rm -f $(DESTDIR)$(LIBDIR)/sv/bin/initctl

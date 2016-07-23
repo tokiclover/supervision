@@ -10,7 +10,7 @@
 #include "helper.h"
 #include "rs.h"
 
-#define SV_CONF_FILE SV_SVCDIR "/.opt/sv.conf"
+#define SV_CONFIG_FILE SYSCONFDIR "/sv.conf"
 
 /* global configuration list */
 static const char **sv_conf;
@@ -55,8 +55,8 @@ void rs_conf_load(void)
 	char *line = NULL, *env, *p, *ptr;
 	size_t count = 0, len, l, num = 32, pos, size = 1024;
 
-	if ((fp = fopen(SV_CONF_FILE, "r")) == NULL) {
-		fprintf(stderr, "%s: Failed to open %s\n", prgname, SV_CONF_FILE);
+	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
+		fprintf(stderr, "%s: Failed to open %s\n", prgname, SV_CONFIG_FILE);
 		exit(EXIT_FAILURE);
 	}
 
