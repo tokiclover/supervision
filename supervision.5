@@ -44,7 +44,9 @@ files. See
 .B OPTIONS
 sub-section for more info.
 .SS LSB COMMANDS
-Standard LSB along with
+Standard LSB
+.I {start,stop,status}
+along with
 .I {restart,zap}
 and
 .I {add,desc}
@@ -76,8 +78,7 @@ can be used instead for runscript services.
 .TP
 .B SUPERVISION
 Service supporting many instances can be written in a short manner
-like a virtual service backend with specific
-.B OPTIONS.INSTANCE
+like a virtual service backend with specific \fIOPTIONS.\fBINSTANCE\fR
 file, e.g.
 .I syslog
 with
@@ -93,8 +94,7 @@ See also
 .I getty
 for an example of multi-providers/instances with
 .I only
-a single symlink and a single
-.B sv/SERVICE/OPTIONS
+a single symlink and a single \fIsv/\fBSERVICE\fI/OPTIONS\fR
 file.
 .TP
 .B RUNSCRIPT
@@ -103,9 +103,13 @@ Similarly, runscript service instances use a symlink to the service with an extr
 configuration file if any.
 See
 .I networkfs
-or
+(instance of
+.I localfs
+service) or
 .I tmpfiles.setup
-for actual examples for this.
+(instance of
+.I tmpfiles.dev
+service) for actual examples for this.
 .SS VIRTUAL SERVICE
 .TP
 .B SUPERVISION
@@ -123,11 +127,10 @@ file for service that should be in a single instance mode, like
 .I syslog
 service.)
 WARNING: Explicite usage of
-.B name=CMD_NAME
+.B name=COMMAND_NAME
 and
-.B SVC_CMD=CMD_NAME
-in
-.B sv/SERVICE/OPTIONS
+.B SVC_CMD=COMMAND_NAME
+in \fIsv/\fBSERVICE\fI/OPTIONS
 file is required to get the expected behavior.
 .TP
 .B RUNSCRIPT
@@ -165,16 +168,20 @@ for supervision services. Launching daemons should be manually handled.
 The following environment variables are supported.
 The default environment variables are defined in
 .I sv/.opt/SVC_OPTIONS
-and can be defined in service OPTIONS file(s).
+and can be defined in service \fIOPTIONS\fR file(s).
 .TP
 .B SUPERVISION
 Supervision services use \fIsv/\fBSERVICE\fI/OPTIONS\fR
 file or provider file(s) to define environment variables if necessary.
+This where the command and command line options are defined alond with
+.I {pre,post}
+shell functions for service setup and clean up if necessary.
 .TP
 .B RUNSCRIPT
-Runscript services use \fIsv/OPTIONS.\fBSERVICE\fR
-script to define extra services dependencies and other environment variables
-or the service configuration file for extra variables.
+Runscript services use \fIsv/\fBSERVICE\fR script to define shell functions and
+a default environment; and  \fIsv/OPTIONS.\fBSERVICE\fR configuration file to
+define extra services dependencies and other environment variables and service
+options.
 .RE
 .TS
 tab (@);
@@ -185,12 +192,6 @@ T}
 \fBSVC_COMMANDS\fR@T{
 Extra service commands
 T}
-\fBSVC_PIDFILE\fR@T{
-PID file of (supervised) service
-T}
-\fBSVC_REQ_FILES\fR@T{
-Service required file-s
-T}
 \fBSVC_DEBUG=Yes\fR@T{
 To enable debug mode
 T}
@@ -199,12 +200,6 @@ To disable (or to force for stop phase) dependencies
 T}
 \fBSVC_NAME\fR@T{
 Service name (default to SERVICE directory)
-T}
-\fBSVC_CMD\fR@T{
-Command name (default to SERVICE directory)
-T}
-\fBSVC_OPTS\fR@T{
-Command arguments
 T}
 \fBSVC_AFTER\fR@T{
 Start service after dependency services
@@ -218,20 +213,43 @@ T}
 \fBSVC_NEED\fR@T{
 Require need dependency services to be started
 T}
-\fBSVC_USER\fR@T{
-\fIUSER\fR to use to run commands
-T}
-\fBSVC_GROUP\fR@T{
-\fIGROUP\fR to use to run commands
+\fBSVC_REQ_FILES\fR@T{
+Service required file-s
 T}
 \fBRC_OPTS=Yes\fR@T{
 To enable OpenRC support mode
+T}
+.TE
+
+The following environment variables are only relevant for
+.B SUPERVISION
+services; many of which have default sane values (see
+.I SVC_OPTIONS
+for the default values before overriding any.)
+.RE
+.TS
+tab (@);
+l lx.
+\fBSVC_CMD\fR@T{
+Command name (default to SERVICE directory)
+T}
+\fBSVC_OPTS\fR@T{
+Command arguments
+T}
+\fBSVC_USER\fR@T{
+\fBUSER\fR to use to run commands
+T}
+\fBSVC_GROUP\fR@T{
+\fBGROUP\fR to use to run commands
+T}
+\fBSVC_PIDFILE\fR@T{
+PID file of (supervised) service (internaly overrided)
 T}
 \fBENV_DIR=Yes\fR@T{
 To enable \fIenvdir\fR support mode
 T}
 \fBENV_CMD\fR@T{
-Envdir command (default to [envdir sv/.env][envdir sv/SERVICE/env)
+Envdir command (default to [\fIenvdir sv/.env\fR][\fIenvdir sv/\fBSERVICE\fI/env\fR])
 T}
 \fBENV_OPTS\fR@T{
 Envdir arguments
@@ -263,8 +281,17 @@ T}
 \fBLOG_SIZE\fR@T{
 File size limit for log rotation
 T}
+\fBLOG_STATE\fR@T{
+Status options to use (default is \fISTAT\fR)
+T}
+\fBLOG_PREFIX\fR@T{
+Prefix to use for logging
+T}
 \fBLOG_PROC\fR@T{
 Processor command to use for log rotation
+T}
+\fBLOG_ARGS\fR@T{
+Base options to use besides those defined in \fILOG_{SIZE,PROC}\fR
 T}
 .TE
 .SS FUNCTIONS
@@ -283,16 +310,16 @@ information.
 tab (@);
 l lx.
 \fBpre\fR@T{
-Set up ./run
+Setup function ./run
 T}
 \fBpost\fR@T{
-Set up ./finish
+Clean up function for ./finish
 T}
 \fBlog_pre\fR@T{
-Setup (log) ./run
+Setup function for (log) ./run
 T}
 \fBlog_post\fR@T{
-Set up (log) ./finish
+Clean up function for (log) ./finish
 T}
 .TE
 
@@ -312,7 +339,7 @@ for practical examples.
 Standard
 .I {restart,start,stop}
 along with
-.I st{art,op}_p{re,ost}
+.I {start,stop}_{pre,post}
 (set/clean up) functions are supported.
 .TS
 tab (@);
@@ -324,7 +351,7 @@ T}
 Same as above for stop command.
 T}
 \fBrestart\fR@T{
-Custom stop/start command if any.
+Custom stop/start command if any (default is \fI{stop,start}\R)
 T}
 .TE
 .SS BUILTINS
@@ -374,7 +401,7 @@ T}
 Get defined service status
 T}
 \fBsvc_del\fR@T{
-Remove service from running directory
+Remove service from runlevel directory
 T}
 \fBsvc_remove\fR@T{
 Clean up service from running directory
@@ -477,12 +504,12 @@ replaces
 runlevel to be able to repair a system.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
-Supervision Scripts Framework support CGroup. CGroup support is autodected on
+Supervision Framework support CGroup. CGroup support is autodected on
 start up on Linux. Just enable kernel CGroup support to benefit CGroup resource
 management. Or else, forcibly disable in
-.B SVC_OPTIONS
+.B sv.conf
 by setting
-.RB SV_CGROUP=No.
+.B SV_CGROUP=No.
 Set
 .B CGROUP_INHERIT=Yes
 to inherit other CGroups, and/or
@@ -557,7 +584,7 @@ support: child process (supervisor) will naturally inherit supervision CGroup.
 .SH FILES
 .SS @SBINDIR@
 .TP
-.RB rs
+.I rs
 Multi-purpose binary to run either stage-[0123] or service command, e.g.
 `rs -1 zramfs add' to add
 .B zramfs
@@ -565,9 +592,10 @@ service to stage-1 (boot run level); `rs acpid start' or `rs -2 stage' to start
 daemons and default services (default run level.)
 .SS @SYSCONFDIR@
 .TP
-.RB sv.conf
+.I sv.conf
 Supervision global configuration file
-.SS @SYSCONFDIR@/sv/\ (SV_SVCDIR)
+.TP
+.I sv/\ (SV_SVCDIR)
 See RS_SVCDIR/.stage-{0,1,2,3} for active services.
 Use `rs -(0|1|2|3) SERVICE add` to add a particular service to a particular
 stage or runlevel.
@@ -644,35 +672,34 @@ and so on; likewise for
 .RB [\| xdm \|]\ \c
 .RB [\| zed \|]
 .TP
-.B .lib/
+.I .lib/
 Symbolic link to
 .B SV_LIBDIR
 .SS SV_SVCDIR/.opt/
 .TP
-.RB cmd
+.I cmd
 Default sv/SERVICE/{,log/}{finish,run} commands
 .TP
-.TP
-.RB SVC_BACKEND
+.I SVC_BACKEND
 Specific supervision (backend) environment
 .TP
-.RB SVC_OPTIONS
+.I SVC_OPTIONS
 Default service (OPTIONS) environment
 .SS @RUNDIR@/sv/ (SV_RUNDIR)
 Default run time '/service/' directory
 .SS @SYSCONFDIR@/runit/
 .TP
-.RB {1,2,3}
+.I {1,2,3}
 Init-Stage-{1,2,3} files to handle system boot/shutdown and supervisor.
 .TP
-.RB ctrlaltdel
+.I ctrlaltdel
 C-ALT-DEL signal handler (shutdown/reboot)
 .SS @SYSCONFDIR@/s6/
 .TP
-.RB init-stage-1
+.I init-stage-1
 Init-Stage-{1,2} file to handle system boot
 .TP
-.RB {crash,finish}
+.I {crash,finish}
 Init-Stage-3 scripts to handle system shutdown and supervisor crashes.
 .SS @SYSCONFDIR@/{conf,init}.d/supervision
 .TP
@@ -681,20 +708,20 @@ Supervision init script service for OpenRC
 SUPERVISION library directory
 .SS SV_LIBDIR/bin/
 .TP
-.RB checkpath
+.I checkpath
 Simple and cheap checkpath/mktemp binary
 .TP
-.RB fstabinfo
+.I fstabinfo
 Simple and cheap fstab(5) utility
 .TP
-.RB mountinfo
+.I mountinfo
 Simple and cheap mountpoints utility
 .TP
-.RB sv-config
+.I sv-config
 `sv/.lib/bin/sv-config [--log] SERVICE new' to create a new supervision service;
 and `sv-config -S runit' to set up specific supervision backend (supervision suite).
 .TP
-.RB sv-shutdown
+.I sv-shutdown
 Simple utility to handle system halt
 .TP
 .B SYMLINKS\ (backend binary symlinks)
@@ -707,52 +734,51 @@ Simple utility to handle system halt
 .RB \| softlimit \|
 .SS SV_LIBDIR/sh/
 .TP
-.RB dep
+.I dep
 Simple script to list dependencies
 .TP
-.RB cgroup-release-agent
+.I cgroup-release-agent
 CGroup Release Agent script
 .TP
-.RB init-stage
+.I init-stage
 Init-Stage-[123] handler with optional OpenRC support (by
 setting
 .B RC_INIT_SYS=YES
 in the global configuration file).
 .TP
-.RB cgroup-functions
+.I cgroup-functions
 CGroup Functions/helper library
 .TP
-.RB functions
+.I functions
 Generic Functions/Helpers library
 .TP
-.RB runscript
+.I runscript
 Run-script helper utility
 .TP
-.RB runscript-functions
+.I runscript-functions
 Run-script Functions/helpers library
 .TP
-.RB supervision-functions
+.I supervision-functions
 Supervision Functions/Helpers library
 .TP
-.RB tmpfiles
+.I tmpfiles
 Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .SH "SEE ALSO"
-.B Shell:
+.BR rs (8),
+.BR (shell:)
 .BR sh (1p)
-.B Deamontools[-encore]:
+.BR (deamontools[-encore]:)
 .BR \%svc (8),
 .BR \%multilog (8),
-.BR \%svscan (8).
-.br
-.B Runit:
+.BR \%svscan (8),
+.BR (runit:)
 .BR \%sv (8),
 .BR \%svlogd (8),
-.BR \%runsvdir (8).
-.br
-.B S6:
+.BR \%runsvdir (8),
+.BR (s6:)
 .BR \%s6-svc (8),
 .BR \%s6-log (8),
-.BR \%s6-svscan (8).
+.BR \%s6-svscan (8),
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
