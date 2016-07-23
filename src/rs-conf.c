@@ -16,7 +16,7 @@
 static const char **sv_conf;
 
 /* load configuration file as an environment list */
-static void rs_conf_load(void);
+static int  rs_conf_load(void);
 /* free an allocated configuration list */
 static void rs_conf_free(void);
 
@@ -27,7 +27,8 @@ int rs_conf_yesno(const char *env) {
 const char *rs_getconf(const char *env)
 {
 	if (!sv_conf)
-		rs_conf_load();
+		if (rs_conf_load())
+			return NULL;
 	if (!env)
 		return NULL;
 
@@ -49,15 +50,15 @@ const char *rs_getconf(const char *env)
 	return NULL;
 }
 
-void rs_conf_load(void)
+static int rs_conf_load(void)
 {
 	FILE *fp;
 	char *line = NULL, *env, *p, *ptr;
 	size_t count = 0, len, l, num = 32, pos, size = 1024;
 
 	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
-		fprintf(stderr, "%s: Failed to open %s\n", prgname, SV_CONFIG_FILE);
-		exit(EXIT_FAILURE);
+		WARN("Failed to open %s\n", SV_CONFIG_FILE);
+		return -1;
 	}
 
 	sv_conf = err_calloc(num, sizeof(void *));
@@ -108,9 +109,10 @@ void rs_conf_load(void)
 	sv_conf = err_realloc(sv_conf, sizeof(void *)*count);
 
 	atexit(rs_conf_free);
+	return 0;
 }
 
-void rs_conf_free(void)
+static void rs_conf_free(void)
 {
 	int i = 0;
 	while (sv_conf[i])
