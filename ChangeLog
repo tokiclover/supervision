@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_beta5:
+
+Moved main configuration file to SYSCONFDIR; added a safety for init-stage in
+case daemontools(-encore) is used; important fix for broken 0.12.0_beta4.
+
 0.12.0_beta4:
 
 Install main manual page to section 5 to respect standard FHS;
