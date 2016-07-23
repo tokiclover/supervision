@@ -18,7 +18,7 @@ description="Set up display manager"
 # * gdm-3 need dbus;
 # * quota for a readable home;
 #
-SVC_AFTER="console getty-tty{1,2,3,4,5,6} gpm openvpn"
+SVC_AFTER="console getty-tty1 getty-tty2 getty-tty3 getty-tty4 getty-tty5 getty-tty6 gpm openvpn"
 SVC_BEFORE="alsasound"
 SVC_USE="autofs consolekit dbus lircmd quota ybind xfs"
 SVC_OPTS="-nodaemon"
