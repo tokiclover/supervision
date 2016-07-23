@@ -184,10 +184,8 @@ __NORETURN__ int sv_shutdown(int action)
 	}
 	free(ptr);
 
-	for (int i=0; argv[i]; i++)
-		puts(argv[i]);
 	execvp(argv[0], argv);
-	ERROR("Failed to execlp()", NULL);
+	ERROR("%s: Failed to execlp()", __func__);
 }
 
 int main(int argc, char *argv[])
