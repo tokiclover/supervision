@@ -185,41 +185,19 @@ dist_DIRS  += \
 	$(MANDIR)/man5 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
 DISTDIRS    = $(dist_DIRS)
 
-define svc_dir =
-	$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$(1)
-endef
 define svc_cmd =
 	for cmd in finish run; do \
 		ln -s $(subst log,..,$(2))../.opt/cmd \
 		$(DESTDIR)$(SYSCONFDIR)/sv/$(1)/$(2)/$${cmd}; \
 	done
 endef
-define svc_sym =
-	for svc in $(2); do \
-		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/$(1)/$${svc%:*}; \
-	done
-endef
-define rem_sym =
-	for svc in $(2); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/$(1)/$${svc%:*}; \
-	done
-endef
-define svc_opt  =
-	$(install_DATA)  $(1) $(DESTDIR)$(SYSCONFDIR)/$(1)
-endef
-define rem_svc =
-	for svc in $(2); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/$(1)/$${svc}; \
-	done
-endef
-
 define stage_sym =
 	for svc in $(2); do \
 		ln -fs $(SYSCONFDIR)/sv/$${svc} $(DESTDIR)$(SYSCONFDIR)/sv/.stage-$(1)/$${svc}; \
 	done
 endef
 
-.PHONY: FORCE all install install-doc install-dist install-all
+.PHONY: FORCE all install install-doc install-dist install-all install-svc-dir
 
 all: $(SUBDIRS)
 
@@ -228,6 +206,8 @@ FORCE:
 $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
+install-svc-dir:
+	$(MKDIR_P) $(dist_SV_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%)
 install-all: install install-supervision-svc
 install: install-dir install-dist
 	$(install_SCRIPT) sv.conf $(DESTDIR)$(SYSCONFDIR)/sv.conf
@@ -243,7 +223,9 @@ install: install-dir install-dist
 		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
 		-i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
 		$(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
-	$(call svc_sym,sv,$(dist_VIRTUALS))
+	for svc in $(dist_VIRTUALS); do \
+		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+	done
 	for i in 1 2 3 4 5 6; do \
 		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
@@ -277,22 +259,20 @@ $(dist_SH_BINS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
 $(dist_SH_LIBS): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
-$(dist_SV_SVCS): FORCE
+$(dist_SV_SVCS): FORCE install-svc-dir
 	if test -d sv/$@/log; then \
-		$(call svc_dir,$@/log); \
+		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$@/log; \
 		$(call svc_cmd,$@,log/); \
-	else \
-		$(call svc_dir,$@); \
 	fi
-	-$(call svc_opt,sv/$@/OPTIONS)
+	-$(install_DATA)  sv/$@/OPTIONS $(DESTDIR)$(SYSCONFDIR)/sv/$@/OPTIONS
 	-$(call svc_cmd,$@)
 $(dist_SV_OPTS): $(dist_SV_SVCS)
-	$(call svc_opt,sv/$@)
+	$(install_DATA)  sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
 $(dist_RS_SVCS):
 	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
-	-$(call svc_opt,sv/OPTIONS.$@)
+	-$(install_DATA)  sv/OPTIONS.$@ $(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.$@
 $(dist_RS_OPTS):
-	-$(call svc_opt,sv/OPTIONS.$@)
+	$(install_DATA)  sv/OPTIONS.$@ $(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.$@
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -312,11 +292,13 @@ endif
 	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-	$(call rem_sym,sv,$(dist_VIRTUALS))
-	$(call rem_svc,sv,$(dist_SV_SVCS))
-	$(call rem_svc,sv,$(dist_RS_SVCS))
-	$(call rem_svc,sv,$(dist_RS_OPTS:%=OPTIONS.%))
-	$(call rem_svc,sv,$(dist_RS_SVCS:%=OPTIONS.%))
+	for svc in $(dist_VIRTUALS); do \
+		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+	done
+	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%) \
+	       $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.%) \
+	       $(dist_RS_OPTS:%=$(DESTDIR)$(SYSCONFDIR)/sv/OPTIONS.%)
+	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%)
 	for file in $(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_BINS)) \
 		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
 		rm -f $(DESTDIR)$${file}; \
