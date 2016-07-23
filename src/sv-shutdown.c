@@ -10,6 +10,7 @@
  * new BSD License included in the distriution of this package.
  */
 
+#include "config.h"
 #include "error.h"
 #include "helper.h"
 #include <grp.h>
@@ -21,15 +22,14 @@
 
 #define VERSION "0.11.0"
 
+#ifndef LIBDIR
+# define LIBDIR "/lib"
+#endif
 #ifndef SYSCONFDIR
 # define SYSCONFDIR "/etc"
 #endif
-#ifndef SV_SVCDIR
-# define SV_SVCDIR SYSCONFDIR "/sv"
-#endif
-#ifndef SV_LIBDIR
-# define SV_LIBDIR "/lib/sv"
-#endif
+#define SV_LIBDIR LIBDIR "/sv"
+#define SV_SVCDIR SYSCONFDIR "/sv"
 #define SV_INIT_STAGE SV_LIBDIR "sh/init-stage"
 #define SV_SVC_BACKEND SV_SVCDIR "/.opt/SVC_BACKEND"
 
