@@ -12,6 +12,7 @@
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
+#define SV_INIT_STAGE SV_LIBDIR "sh/init-stage"
 #define RS_DEPTREE_PRIO 16
 
 static RS_SvcDepsList_T *service_deplist;
@@ -291,6 +292,13 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 
 	if (service_deplist)
 		return service_deplist;
+
+	/* initialize SV_RUNDIR if necessary */
+	if (!file_test(SV_TMPDIR_DEPS, 'd')) {
+		snprintf(deppath, ARRAY_SIZE(deppath), "%s -0", SV_INIT_STAGE);
+		if (system(deppath))
+			WARN("Failed to execute %s\n", SV_INIT_STAGE);
+	}
 
 	/* get dependency list file */
 	snprintf(deppath, ARRAY_SIZE(deppath), "%s/svcdeps", SV_TMPDIR_DEPS);
