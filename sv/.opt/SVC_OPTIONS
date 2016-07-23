@@ -10,6 +10,7 @@
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/sv}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
+:	${SV_CFGDIR:=${SV_SVCDIR}.conf.d}
 :	${name:=${SVC_NAME}}
 :	${__cmd__:=${0##*/}}
 :	${__cmd_args__:="${@}"}
@@ -32,31 +33,27 @@ if yesno "${RC_OPTS}"; then
 	SOURCE ${RC_CONFDIR}/${SVC_NAME}
 fi
 
-case "${RS_TYPE:-sv}" in
-	(rs)
+if   [ "${RS_TYPE}" = "rs" ]; then
 :	${SVC_DIR:=${SV_SVCDIR}}
-[ -n "${RS_RUNDIR}" ] &&
-SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
+	if [ -n "${RS_RUNDIR}" ]; then
+SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME}
+	else
 SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
-	;;
-	(sv)
+	fi
+elif [ "${RS_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${PWD%/log}}
 :	${SVC_NAME:=${SVC_DIR##*/}}
 SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
 SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
-	;;
-esac
+fi
 #
 # Handle specific (virtual) service backend/instance
 #
-case "${name}" in
-	("${SVC_NAME}")
+if [ "${name}" = "${SVC_NAME}" ]; then
 SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
-	;;
-	(*)
+else
 SOURCE "${SVC_DIR}"/OPTIONS.${name}
-	;;
-esac
+fi
 :	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
 
 #
@@ -72,14 +69,11 @@ SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 #
 # OS Specific
 #
-case "${OS_NAME}" in
-	(Linux)
-	:	${SV_TERM:=linux}
-	;;
-	(*)
-	:	${SV_TERM:=vt100}
-	;;
-esac
+if [ "${OS_NAME}" = "Linux" ]; then
+:	${SV_TERM:=linux}
+else
+:	${SV_TERM:=vt100}
+fi
 
 #
 # Set up supervision environment
@@ -106,21 +100,18 @@ case "${SVC_NAME}" in
 	:	${SVC_OPTS:=-L 115200 ${TTY_OPTS} ${TTY} vt100}
 		;;
 	esac
-	case "${__SV_NAM__}" in
-		(runit)
+	if [ "${__SV_NAM__}" = "runit" ]; then
 	:	${PRE_OPTS:=-P}
 	:	${FIN_CMD:=utmpset}
 	:	${FIN_OPTS:=-w ${SVC_NAME#*-}}
-		;;
-	esac
+	fi
 	;;
 esac
 
 #
 # Set a few specific log env variables
 #
-case "${__cmd_dir__}" in
-	(log)
+	if [ "${__cmd_dir__}" = "log" ]; then
 :	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
 :	${SVC_USER:=root:adm}
 :	${LOG_MODE:=0755}
@@ -142,8 +133,7 @@ case "${__SV_NAM__}" in
 esac
 :	${LOG_OPTS:="${LOG_ARGS} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
 unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOG_ARGS
-	;;
-esac
+	fi # __cmd_dir__=log
 fi # RS_TYPE=sv
 
 #
