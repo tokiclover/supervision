@@ -12,7 +12,7 @@
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
-#define SV_INIT_STAGE SV_LIBDIR "sh/init-stage"
+#define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
 #define RS_DEPTREE_PRIO 16
 
 static RS_SvcDepsList_T *service_deplist;
