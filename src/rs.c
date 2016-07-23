@@ -615,11 +615,18 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 
 static int svc_log(const char *fmt, ...)
 {
+	static char logfile[] = "/var/log/rs.log", *logpath;
 	int retval = 0;
 	va_list ap;
 
+
+	/* save logfile if necessary */
+	if (rs_conf_yesno("RS_DEBUG"))
+		logpath = logfile;
+	else
+		logpath = RS_LOGFILE;
 	if (!logfd && rs_debug) {
-		logfd = open(RS_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
+		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd > 0) {
 			rs_debug = 1;
 			logfp = fdopen(logfd, "a+");
@@ -946,8 +953,6 @@ static void svc_stage(const char *cmd)
 	int p, r;
 	int svc_start = 1;
 	int level = 0;
-	char *buf;
-	int fd;
 	time_t t;
 
 	if (rs_stage == 0) /* force service command */
@@ -1036,20 +1041,6 @@ static void svc_stage(const char *cmd)
 	t = time(NULL);
 	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
 	rs_svcdeps_free(svcdeps);
-
-	/* save logfile if necessary */
-	if (logfd > 0 && rs_conf_yesno("RS_DEBUG")) {
-		buf = err_malloc(BUFSIZ*sizeof(char));
-		fd = open("/var/log/rs.log", O_NONBLOCK|O_CREAT|O_RDWR, 0644);
-		if (fd > 0) {
-			rewind(logfp);
-			while ((r = read(logfd, buf, BUFSIZ)))
-				if ((p = write(fd, buf, r)) < r)
-					fseek(logfp, (long)(p-r), SEEK_CUR);
-			close(fd);
-		}
-		free(buf);
-	}
 }
 
 int main(int argc, char *argv[])
