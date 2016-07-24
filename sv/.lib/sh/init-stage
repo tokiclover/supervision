@@ -22,9 +22,9 @@ svc_init()
 	[ -w /etc/mtab ] || opt=-n
 
 	procfs=proc
-	case "${OS_NAME}" in
-		(GNU/kFreeBSD) procfs=linprocfs;;
-	esac
+	if [ "${OS_NAME}" = "GNU/kFreeBSD" ]; then
+		procfs=linprocfs
+	fi
 
 	if ! mountinfo --quiet /proc 2>${NULL}; then
 		begin "Mounting /proc"
@@ -32,8 +32,7 @@ svc_init()
 		end ${?}
 	fi
 
-	case "${OS_NAME}" in
-		(Linux)
+	if [ "${OS_NAME}" = "Linux" ]; then
 	if [ ! -d /run ]; then
 		begin "Creating /run"
 		mkdir -m 0755 -p /run
@@ -44,15 +43,14 @@ svc_init()
 		mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
 		end ${?}
 	fi
-		;;
-	esac
+	fi # OS_NAME=Linux
 
 	#
 	# XXX: Add some insurance to get a few services started early (e.g. lvm
 	#   needs /run/lock/lvm which is started before miscfs.) Who need lvm
 	#   for `/var'? Nothing will ever... well, it will with some hassle.
 	#
-	for dir in /var/*; do
+	for dir in /var/run /var/lock; do
 		[ -L "${dir}" ] || continue
 		dir="$(readlink ${dir})"
 		case "${dir}" in
