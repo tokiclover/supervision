@@ -22,7 +22,7 @@ start()
 	if yesno "${DEV_ROOT_SYMLINK:-1}"; then
 		local rulesdir=/run/udev/rules.d
 		mkdir -p ${RULESDIR}
-		eval $(udevadm info --export --export-prefix=ROOT_ --device-id-of-file=/)
+		eval $(${udevadm} info --export --export-prefix=ROOT_ --device-id-of-file=/)
 		if [ -n "${ROOT_MAJOR}" -a -n "${ROOT_MINOR}" -a "${ROOT_MAJOR}" != 0 ]; then
 			echo 'ACTION=="add|change", SUBSYSTEM=="block", ENV{MAJOR}=="'${ROOT_MAJOR}'", ENV{MINOR}=="'${ROOT_MINOR}'", SYMLINK+="root"' >${RULESDIR}/61-dev-root-link.rules
 		fi
