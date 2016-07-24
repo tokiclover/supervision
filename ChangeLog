@@ -1,5 +1,13 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_beta7:
+
+Added another udev (udevadm runscript) service to populate dev in case udev is
+used as a device manager; Added a safety OOM net in case of broken and cyclic
+dependency definitions (stability fix); Fixed runtime environment setup (broken
+with SVC_OPTIONS refactorization, so, unless SV_TERM was defined in the
+configuration file, getty was getting only vt100 TERM environment variable.)
+
 0.12.0_beta6:
 
 Splited runscript service configuration files from sv/ to sv.conf.d/;
