@@ -27,6 +27,7 @@ dist_EXTRA  = \
 	COPYING \
 	README.md \
 	TODO \
+	BUGS.md \
 	ChangeLog
 dist_COMMON = \
 	sv/.opt/OPTIONS.in \
