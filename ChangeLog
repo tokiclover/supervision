@@ -3,7 +3,8 @@ Header: supervision/ChangeLog, 2015/04/24
 0.12.0_beta6:
 
 Splited runscript service configuration files from sv/ to sv.conf.d/;
-minor clean up and optimizations;
+minor clean up and optimizations; important for broken 0.12.0_beta5
+(init-stage was still using the old configuration file in sv/.opt/sv.conf).
 
 0.12.0_beta5:
 
