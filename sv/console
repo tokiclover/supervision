@@ -58,7 +58,7 @@ console_keymap()
 	[ -n "${CONSOLE_KEYMAP}" ] || return
 
 	# Force linux keycodes for PPC
-	[ -f /proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes ] ||
+	[ -f /proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes ] &&
 		echo 1 >/proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes
 
 	local encoding='-a' message=ASCII
