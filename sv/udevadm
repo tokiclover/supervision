@@ -1,0 +1,54 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/udevadm                                 Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+SVC_BEFORE="checkfs device-mapper dmcrypt"
+SVC_NEED="udev"
+SVC_COMMANDS="reload"
+udevadm="$(command -v udevadm 2>${NULL})"
+
+start_pre()
+{
+	if ! [ -n "${udevadm}" ]; then
+		error "No udevadm command found"
+		return 1
+	fi
+}
+
+start()
+{
+	if yesno "${DEV_ROOT_SYMLINK:-1}"; then
+		local rulesdir=/run/udev/rules.d
+		mkdir -p ${RULESDIR}
+		eval $(udevadm info --export --export-prefix=ROOT_ --device-id-of-file=/)
+		if [ -n "${ROOT_MAJOR}" -a -n "${ROOT_MINOR}" -a "${ROOT_MAJOR}" != 0 ]; then
+			echo 'ACTION=="add|change", SUBSYSTEM=="block", ENV{MAJOR}=="'${ROOT_MAJOR}'", ENV{MINOR}=="'${ROOT_MINOR}'", SYMLINK+="root"' >${RULESDIR}/61-dev-root-link.rules
+		fi
+	fi
+
+	begin "Populating /dev with uevents"
+	${udevadm} trigger --type=subsystems --action=add
+	${udevadm} trigger --type=devices --action=add
+	end "${?}"
+
+	begin "Waiting uevents to be processed"
+	${udevadm} settle --timeout=${UDEV_SETTLE_TIMEOUT:-60}
+	end "${?}"
+	return 0
+}
+
+stop()
+{
+	${udevadm} control --exit
+}
+
+reload()
+{
+	${udevadm} control --reload
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
