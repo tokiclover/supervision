@@ -1,0 +1,12 @@
+#
+# $Header:  /etc/sv/udev-monitor/OPTIONS                 Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_CMD=/sbin/udevadm
+SVC_OPTS='monitor /run/udevmonitor.log'
+SVC_NEED='udev'
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
