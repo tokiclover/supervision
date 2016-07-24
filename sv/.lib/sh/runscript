@@ -56,7 +56,6 @@ if [ ${#} -lt 1 ]; then
 	error "Insufficient number of arguments"
 	exit 2
 fi
-:	${RS_RUNDIR:=${RS_SVCDIR}/stage-${RS_STAGE}}
 source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
 #
