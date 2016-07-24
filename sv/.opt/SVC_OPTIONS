@@ -42,7 +42,7 @@ if   [ "${RS_TYPE}" = "rs" ]; then
 	if [ "${name}" != "${SVC_NAME}" ]; then
 	SOURCE "${SV_CFGDIR}"/${name}
 	fi
-	[ -n "${RS_RUNDIR}" ] ||
+	[ -n "${RS_RUNDIR}" ] &&
 	SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
 	SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
 
