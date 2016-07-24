@@ -4,7 +4,8 @@
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
-SVC_BEFORE="checkfs device-mapper dmcrypt"
+SVC_AFTER="device-mapper dmcrypt lvm raid"
+SVC_BEFORE="checkfs"
 SVC_NEED="udev"
 SVC_COMMANDS="reload"
 udevadm="$(command -v udevadm 2>${NULL})"
@@ -20,9 +21,9 @@ start_pre()
 start()
 {
 	if yesno "${DEV_ROOT_SYMLINK:-1}"; then
-		local rulesdir=/run/udev/rules.d
+		local RULESDIR=/run/udev/rules.d
 		mkdir -p ${RULESDIR}
-		eval $(${udevadm} info --export --export-prefix=ROOT_ --device-id-of-file=/)
+		eval $(udevadm info --export --export-prefix=ROOT_ --device-id-of-file=/)
 		if [ -n "${ROOT_MAJOR}" -a -n "${ROOT_MINOR}" -a "${ROOT_MAJOR}" != 0 ]; then
 			echo 'ACTION=="add|change", SUBSYSTEM=="block", ENV{MAJOR}=="'${ROOT_MAJOR}'", ENV{MINOR}=="'${ROOT_MINOR}'", SYMLINK+="root"' >${RULESDIR}/61-dev-root-link.rules
 		fi
