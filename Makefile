@@ -78,7 +78,6 @@ dist_SV_SVCS  = \
 	sshd \
 	wpa_supplicant \
 	xdm \
-	udev \
 	zed
 dist_VIRTUALS  = \
 	$(EXTRA_VIRTUAL_SERVICES) \

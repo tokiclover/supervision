@@ -557,6 +557,7 @@ LINUX_VIRTUAL_SERVICES="
 	ip6tables:iptables
 "
 LINUX_SUPERVISION_SERVICES="
+	udev
 "
 LINUX_STAGE_0="
 "
