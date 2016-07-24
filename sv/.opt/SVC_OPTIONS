@@ -45,6 +45,7 @@ if   [ "${RS_TYPE}" = "rs" ]; then
 	[ -n "${RS_RUNDIR}" ] &&
 	SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
 	SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
+	env_run
 
 #
 # Set up supervision environment
@@ -62,6 +63,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	else
 	SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	fi
+	env_run
 :	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
 	SOURCE -d ${SV_SVCDIR}/.opt/SVC_BACKEND
 
@@ -141,9 +143,6 @@ fi # RS_TYPE=sv
 if yesno "${SVC_DEBUG}"; then
 	set -x
 fi
-SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
-SOURCE "${SV_TMPDIR}"/RS_OPTIONS
-SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

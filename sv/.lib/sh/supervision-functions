@@ -354,6 +354,13 @@ del_env()
 	done
 }
 
+env_run()
+{
+	SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
+	SOURCE "${SV_TMPDIR}"/RS_OPTIONS
+	SOURCE "${SV_TMPDIR}"/SV_OPTIONS
+}
+
 svc_desc()
 {
 	local desc
