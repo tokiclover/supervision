@@ -14,6 +14,8 @@
 #define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
 #define RS_DEPTREE_PRIO 16
+/* safety net for broken cyclic dependency */
+#define RS_DEPTREE_MAX  1024
 
 static RS_SvcDepsList_T *service_deplist;
 static RS_DepTypeList_T *stage_deplist;
@@ -47,10 +49,10 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	if (svc == NULL)
 		return 0;
 	/* expand the list when needed */
-	if (pri >= rs_deptree_prio)
+	if (pri > rs_deptree_prio && rs_deptree_prio < RS_DEPTREE_MAX)
 		rs_deptree_alloc();
 
-	if (svc_deps) {
+	if (svc_deps && pri < RS_DEPTREE_MAX) {
 		/* handle {after,use,need} type  which insert dependencies above */
 		if (type) {
 			for (t = RS_DEPS_AFTER; t < RS_DEPS_TYPE; t++)
@@ -88,15 +90,18 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	/* move up anything found before anything else */
 	for (p = 0; p < prio; p++)
 		if ((elm = rs_stringlist_find(deptree_list[p], svc))) {
-			rs_stringlist_mov(deptree_list[p], deptree_list[prio], elm);
-			if (type)
-				rs_deptree_add(type, prio, svc);
+			if (prio < RS_DEPTREE_MAX) {
+				rs_stringlist_mov(deptree_list[p], deptree_list[prio], elm);
+				if (type)
+					rs_deptree_add(type, prio, svc);
+			}
 			return prio;
 		}
 	/* add only if necessary */
 	for (p = prio; p < rs_deptree_prio; p++)
 		if (rs_stringlist_find(deptree_list[p], svc))
 			return p;
+	prio = prio > RS_DEPTREE_MAX ? RS_DEPTREE_MAX-1 : prio;
 	rs_stringlist_add(deptree_list[prio], svc);
 	return prio;
 }
