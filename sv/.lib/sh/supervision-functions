@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.5 2016/07/20 21:09:26                      Exp $
+# $Version: 3.5 2016/07/24 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -90,17 +90,17 @@ svc_start()
 
 	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
-	case "${val}" in
-		(0) val=0; svc_mark -s;;
-		(*)
+	if [ "${val}" = 0 ]; then
+		val=0; svc_mark -s
+	else
 		#
 		# wait two seconds before efec
 		if svc_wait 200; then
 			val=0; svc_mark -s
 		else
 			val=5; svc_mark -f
-		fi;;
-	esac
+		fi
+	fi
 	return ${val}
 }
 
@@ -118,10 +118,11 @@ svc_stop()
 
 	eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"
 	val="${?}"
-	case "${val}" in
-		(0) val=0; svc_mark -S;;
-		(*) val=5; svc_mark -f;;
-	esac
+	if [ "${val}" = 0 ]; then
+		val=0; svc_mark -S
+	else
+		val=5; svc_mark -f
+	fi
 	return ${val}
 }
 
@@ -214,13 +215,11 @@ svc_pre()
 	#
 	# Set up CGroup
 	#
-	case "${OS_NAME}" in
-		(Linux)
+	if [ "${OS_NAME}" = "Linux" ]; then
 		if yesno "${SV_CGROUP}"; then
 			cgroup_add_service
 		fi
-		;;
-	esac
+	fi
 }
 svc_remove()
 {
@@ -236,13 +235,11 @@ svc_post()
 	#
 	# Set up CGroup
 	#
-	case "${OS_NAME}" in
-		(Linux)
+	if [ "${OS_NAME}" = "Linux" ]; then
 		if yesno "${SV_CGROUP}"; then
 			cgroup_remove_service
 		fi
-		;;
-	esac
+	fi
 
 	if command -v post >${NULL} 2>&1; then
 		post || error "Failed to exec post()"
@@ -272,14 +269,11 @@ svc_post()
 svc_depend()
 {
 	local dep
-	case "${1}" in
-		(stop)
-	return 0;
-		;;
-		(*)
-	dep=1
-		;;
-	esac
+	if [ "${1}" = "stop" ]; then
+		return 0
+	else
+		dep=1
+	fi
 
 	if yesno "${SVC_DEPS:-${dep}}"; then
 	for dep in ${__SV_DEPS_ORDER__/before:BEFORE/}; do
@@ -410,12 +404,11 @@ svc_cmd()
 		break
 	done
 
-	case "${RS_TYPE}" in
-		(rs)
+	if [ "${RS_TYPE}" = "rs" ]; then
 		case "${cmd}" in
 			(start|stop|status) pfx='rs_cmd ';;
-		esac;;
-	esac
+		esac
+	fi
 	case "${cmd}" in
 		(add|desc|start)
 			svc_state -e || { error "Inexistent service"; return 2; };;
