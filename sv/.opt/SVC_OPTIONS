@@ -33,24 +33,107 @@ if yesno "${RC_OPTS}"; then
 	SOURCE ${RC_CONFDIR}/${SVC_NAME}
 fi
 
+#
+# Set up runscript environment
+#
 if   [ "${RS_TYPE}" = "rs" ]; then
-:	${SVC_DIR:=${SV_SVCDIR}}
 
-SOURCE "${SV_CFGDIR}"/${SVC_NAME}
+	SOURCE "${SV_CFGDIR}"/${SVC_NAME}
 	if [ "${name}" != "${SVC_NAME}" ]; then
-SOURCE "${SV_CFGDIR}"/${name}
+	SOURCE "${SV_CFGDIR}"/${name}
 	fi
-	if [ -n "${RS_RUNDIR}" ]; then
-SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME}
-	else
-SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
-	fi
+	[ -n "${RS_RUNDIR}" ] ||
+	SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
+	SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
+
+#
+# Set up supervision environment
+#
 elif [ "${RS_TYPE}" = "sv" ]; then
-:	${SVC_DIR:=${PWD%/log}}
-:	${SVC_NAME:=${SVC_DIR##*/}}
-SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
-SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
-fi
+
+	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
+	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
+
+	#
+	# Handle specific (virtual) service backend/instance
+	#
+	if [ "${name}" = "${SVC_NAME}" ]; then
+	SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
+	else
+	SOURCE "${SVC_DIR}"/OPTIONS.${name}
+	fi
+:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
+	SOURCE -d ${SV_SVCDIR}/.opt/SVC_BACKEND
+
+	if [ "${__cmd__}" = "run" ]; then
+	#
+	# Use ENV dir(s) if requested
+	#
+	yesno "${ENV_DIR}" && svc_env
+
+	#
+	# Set default getty options
+	#
+	case "${SVC_NAME}" in # SVC_NAME=$GETTY_TTY
+	(*getty-tty*)
+
+	#
+	# OS Specific
+	#
+	if [ "${OS_NAME}" = "Linux" ]; then
+	:	${SV_TERM:=linux}
+	else
+	:	${SV_TERM:=vt100}
+	fi
+
+:	${PRE_CMD:=${__PRECMD__}}
+:	${SVC_CMD:=agetty}
+:	${TTY:=${SVC_NAME#*-}}
+
+	case "${TTY}" in
+		(tty[1-6])
+	:	${SVC_OPTS:=38400 ${TTY_OPTS} ${TTY} ${SV_TERM:-linux}}
+		;;
+		(ttyS[01])
+	:	${SVC_OPTS:=-L 115200 ${TTY_OPTS} ${TTY} vt100}
+		;;
+	esac
+
+	if [ "${__SV_NAM__}" = "runit" ]; then
+	:	${PRE_OPTS:=-P}
+	:	${FIN_CMD:=utmpset}
+	:	${FIN_OPTS:=-w ${SVC_NAME#*-}}
+	fi
+	;;
+	esac # SVC_NAME=$GETTY_TTY
+	fi # __cmd__=run
+
+	#
+	# Set a few specific log env variables
+	#
+	if [ "${__cmd_dir__}" = "log" ]; then
+
+:	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
+:	${SVC_USER:=root:root}
+:	${LOG_MODE:=0755}
+:	${LOG_PROC:=gzip -nq}
+:	${LOG_SIZE:=2048000}
+:	${LOG_STAT:=STAT}
+:	${LOG_PREFIX:=${SVC_NAME}}
+:	${LOG_CMD:=${__LOGCMD__}}
+	#
+	# Set default log options
+	#
+		if [ "${__SV_NAM__}" = "runit" ]; then
+	:	${LOG_ARGS:=-tt p${LOG_PREFIX}}
+		else
+	:	${LOG_ARGS:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
+		fi # __SV_NAM__
+:	${LOG_OPTS:="${LOG_ARGS} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
+	unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOG_ARGS
+
+	fi # __cmd_dir__=log
+fi # RS_TYPE=sv
 
 #
 # Set debug options
@@ -61,87 +144,6 @@ fi
 SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
 SOURCE "${SV_TMPDIR}"/RS_OPTIONS
 SOURCE "${SV_TMPDIR}"/SV_OPTIONS
-
-#
-# OS Specific
-#
-if [ "${OS_NAME}" = "Linux" ]; then
-:	${SV_TERM:=linux}
-else
-:	${SV_TERM:=vt100}
-fi
-
-#
-# Set up supervision environment
-#
-if [ "${RS_TYPE}" = "sv" ]; then
-source ${SV_SVCDIR}/.opt/SVC_BACKEND
-
-#
-# Handle specific (virtual) service backend/instance
-#
-	if [ "${name}" = "${SVC_NAME}" ]; then
-SOURCE "${SVC_DIR}"/OPTIONS.${SVC_NAME}
-	else
-SOURCE "${SVC_DIR}"/OPTIONS.${name}
-	fi
-:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
-
-#
-# Use ENV dir(s) if requested
-#
-yesno "${ENV_DIR}" && svc_env
-#
-# Set default getty options
-#
-case "${SVC_NAME}" in
-	(*getty-tty*)
-:	${PRE_CMD:=${__PRECMD__}}
-:	${SVC_CMD:=agetty}
-:	${TTY:=${SVC_NAME#*-}}
-	case "${TTY}" in
-		(tty[1-6])
-	:	${SVC_OPTS:=38400 ${TTY_OPTS} ${TTY} ${SV_TERM:-linux}}
-		;;
-		(ttyS[01])
-	:	${SVC_OPTS:=-L 115200 ${TTY_OPTS} ${TTY} vt100}
-		;;
-	esac
-	if [ "${__SV_NAM__}" = "runit" ]; then
-	:	${PRE_OPTS:=-P}
-	:	${FIN_CMD:=utmpset}
-	:	${FIN_OPTS:=-w ${SVC_NAME#*-}}
-	fi
-	;;
-esac
-
-#
-# Set a few specific log env variables
-#
-	if [ "${__cmd_dir__}" = "log" ]; then
-:	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
-:	${SVC_USER:=root:adm}
-:	${LOG_MODE:=0755}
-:	${LOG_PROC:=gzip -nq}
-:	${LOG_SIZE:=2048000}
-:	${LOG_STAT:=STAT}
-:	${LOG_PREFIX:=${SVC_NAME}}
-#
-# Set default log options
-#
-:	${LOG_CMD:=${__LOGCMD__}}
-case "${__SV_NAM__}" in
-	(daemontools*|s6)
-:	${LOG_ARGS:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
-	;;
-	(runit)
-:	${LOG_ARGS:=-tt p${LOG_PREFIX}}
-	;;
-esac
-:	${LOG_OPTS:="${LOG_ARGS} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
-unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOG_ARGS
-	fi # __cmd_dir__=log
-fi # RS_TYPE=sv
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
