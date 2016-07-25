@@ -78,8 +78,11 @@ static int rs_deptree_add(int type, int prio, char *svc)
 					}
 				/* issue here is to add everything nicely */
 				if (add) {
-					r = rs_deptree_add(type, prio > 2 ? prio : 2, ent->str);
-					rs_deptree_add(RS_DEPS_AFTER, r, ent->str);
+					/* prio lelevel should precisely handled here; so, the
+					 * follow up is required to get before along with the others
+					 */
+					r = rs_deptree_add(type, prio, ent->str);
+					r = rs_deptree_add(RS_DEPS_AFTER, r, ent->str);
 					r = ++r > prio ? r : prio;
 					rs_deptree_add(type, pri > r ? pri : r, svc);
 				}
