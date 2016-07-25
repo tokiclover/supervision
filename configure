@@ -738,8 +738,9 @@ rundir                     : $rundir
 CFLAGS                     : $CFLAGS
 LDFLAGS                    : $LDFLAGS
 SysVinit (compatibility)   : ${sysvinit-no}
-Extra runscript services   : $EXTRA_RS_SERVICES
-Extra supervision services : $EXTRA_SV_SERVICES
+EXTRA_VIRTUAL_SERVICES     : $EXTRA_VIRTUAL_SERVICES
+Extra runscript services   : $EXTRA_RUNSCRIPT_SERVICES
+Extra supervision services : $EXTRA_SUPERVISION_SERVICES
 Runit init-stage           : ${runit-no}
 S6    init-stage           : ${s6-no}
 SUMMARY_EOF
