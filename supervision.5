@@ -695,6 +695,17 @@ and so on; likewise for
 .I .lib/
 Symbolic link to
 .B SV_LIBDIR
+.TP
+.I runit/{1,2,3,ctraltdel}
+Init-Stage-{1,2,3} files to handle system boot/shutdown and supervisor; and
+C-ALT-DEL signal handler for shutdown and reboot.
+.TP
+.I s6/{init-stage-1,crash,finish}
+Init-stage-{1,2,3} files to handle system boot, reboot and shutdown and
+supervisor crashes.
+.TP
+.I {conf,init}.d/supervision
+Supervision init script service for OpenRC
 .SS SV_SVCDIR/.opt/
 .TP
 .I cmd
@@ -707,23 +718,6 @@ Specific supervision (backend) environment
 Default service (OPTIONS) environment
 .SS @RUNDIR@/sv/ (SV_RUNDIR)
 Default run time '/service/' directory
-.SS @SYSCONFDIR@/runit/
-.TP
-.I {1,2,3}
-Init-Stage-{1,2,3} files to handle system boot/shutdown and supervisor.
-.TP
-.I ctrlaltdel
-C-ALT-DEL signal handler (shutdown/reboot)
-.SS @SYSCONFDIR@/s6/
-.TP
-.I init-stage-1
-Init-Stage-{1,2} file to handle system boot
-.TP
-.I {crash,finish}
-Init-Stage-3 scripts to handle system shutdown and supervisor crashes.
-.SS @SYSCONFDIR@/{conf,init}.d/supervision
-.TP
-Supervision init script service for OpenRC
 .SS @LIBDIR@/sv/\ (SV_LIBDIR)
 SUPERVISION library directory
 .SS SV_LIBDIR/bin/
