@@ -4,7 +4,8 @@
 #
 
 SVC_CMD=/sbin/udevadm
-SVC_OPTS='monitor /run/udevmonitor.log'
+SVC_OPTS='monitor >/run/udevmonitor.log 2>&1'
+SVC_BEFORE='udevadm'
 SVC_NEED='udev'
 
 #
