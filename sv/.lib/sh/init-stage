@@ -96,10 +96,15 @@ svc_level()
 svc_rsh()
 {
 :	${RS_SHELL:=${SHELL:-sh}}
-	case "${RS_SHELL}" in
-		(*sulogin) exec ${RS_SHELL} -p /dev/tty8;;
-		(*sh) exec 2>&1; exec ${RS_SHELL} -aim  ;;
-	esac
+	if [ "${RS_SHELL##*/}" = "sulogin" ]; then
+		exec ${RS_SHELL} -p /dev/tty8
+	fi
+	[ "${OS_NAME}" = "Linux" ] && exec sulogin -p /dev/tty8
+	exec 2>&1
+	exec ${RS_SHELL} -aim
+	exec sh -aim
+	exec busybox sh -aim
+	error "No functional shell found!!!"
 }
 
 svc_shutdown()
