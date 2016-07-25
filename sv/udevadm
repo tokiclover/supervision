@@ -4,7 +4,6 @@
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
-SVC_AFTER="device-mapper dmcrypt lvm raid"
 SVC_BEFORE="checkfs"
 SVC_NEED="udev"
 SVC_COMMANDS="reload"
