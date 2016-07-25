@@ -78,7 +78,7 @@ static int rs_deptree_add(int type, int prio, char *svc)
 					}
 				/* issue here is to add everything nicely */
 				if (add) {
-					/* prio lelevel should precisely handled here; so, the
+					/* prio level should be precisely handled here; so, the
 					 * follow up is required to get before along with the others
 					 */
 					r = rs_deptree_add(type, prio, ent->str);
@@ -206,8 +206,11 @@ RS_StringList_T **rs_deptree_load(void)
 	for (t = 0; t < RS_DEPS_TYPE; t++)
 		deptype[t] = rs_deplist_find(stage_deplist, rs_deps_type[t]);
 
-	/* handle high priority first to be sure to satisfy lower prio services */
-	for (t = 0; t < RS_DEPS_TYPE; t++)
+	/* handle high priority first to be sure to satisfy lower prio services.
+	 * before type is more difficult to handle with the other types; so,
+	 * handle it last; otherwise, a slip off by _one_ will be there.
+	 */
+	for (t = RS_DEPS_TYPE-1; t >= 0; t--)
 		for (p = RS_DEPS_PRIO-1; p > 0; p--)
 			SLIST_FOREACH(ent, deptype[t]->priority[p], entries) {
 				if ((elm = rs_stringlist_find(deptype[t]->priority[p-1], ent->str)))
