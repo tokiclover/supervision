@@ -51,7 +51,7 @@ if   [ "${RS_TYPE}" = "rs" ]; then
 # Set up supervision environment
 #
 elif [ "${RS_TYPE}" = "sv" ]; then
-
+:	${SVC_DIR:=${SV_SVCDIR}/${SVC_NAME}}
 	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 
