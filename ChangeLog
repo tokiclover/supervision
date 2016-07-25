@@ -1,6 +1,6 @@
 Header: supervision/ChangeLog, 2015/04/24
 
-0.12.0_beta7:
+0.12.0_rc:
 
 Added another udev (udevadm runscript) service to populate dev in case udev is
 used as a device manager; Added a safety OOM net in case of broken and cyclic
