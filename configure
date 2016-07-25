@@ -549,12 +549,14 @@ LINUX_RUNSCRIPT_SERVICES="
 	ipset
 	iptables
 	lvm
+	mdev
 	raid
 	udevadm
 	unionfs
 	zramfs
 "
 LINUX_VIRTUAL_SERVICES="
+	dev:mdev
 	ip6tables:iptables
 "
 LINUX_SUPERVISION_SERVICES="

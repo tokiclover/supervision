@@ -83,7 +83,6 @@ dist_VIRTUALS  = \
 	tmpfiles.setup:tmpfiles.dev \
 	swapfiles:swaps \
 	networkfs:localfs \
-	dev:mdev \
 	net:dhcp \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
@@ -108,7 +107,6 @@ dist_RS_SVCS  = \
 	kmod-static-nodes \
 	localfs \
 	loopback \
-	mdev \
 	miscfs \
 	mtab \
 	procfs \
