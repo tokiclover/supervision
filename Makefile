@@ -55,7 +55,6 @@ dist_SCRIPTS  = \
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
 	atd \
-	cgred \
 	cron \
 	cupsd \
 	cups-browsed \
