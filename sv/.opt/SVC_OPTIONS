@@ -78,29 +78,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	#
 	case "${SVC_NAME}" in # SVC_NAME=$GETTY_TTY
 	(*getty-tty*)
-
-	#
-	# OS Specific
-	#
-	if [ "${OS_NAME}" = "Linux" ]; then
-	:	${SV_TERM:=linux}
-	else
-	:	${SV_TERM:=vt100}
-	fi
-
 :	${PRE_CMD:=${__PRECMD__}}
-:	${SVC_CMD:=agetty}
-:	${TTY:=${SVC_NAME#*-}}
-
-	case "${TTY}" in
-		(tty[1-6])
-	:	${SVC_OPTS:=38400 ${TTY_OPTS} ${TTY} ${SV_TERM:-linux}}
-		;;
-		(ttyS[01])
-	:	${SVC_OPTS:=-L 115200 ${TTY_OPTS} ${TTY} vt100}
-		;;
-	esac
-
 	if [ "${__SV_NAM__}" = "runit" ]; then
 	:	${PRE_OPTS:=-P}
 	:	${FIN_CMD:=utmpset}

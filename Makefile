@@ -61,7 +61,7 @@ dist_SV_SVCS  = \
 	dhcp \
 	dbus \
 	dns \
-	getty \
+	getty-tty1 \
 	git-daemon \
 	gpm \
 	hostapd \
@@ -222,8 +222,8 @@ install: install-dir install-dist
 	for svc in $(dist_VIRTUALS); do \
 		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
-	for i in 1 2 3 4 5 6; do \
-		ln -s getty $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
+	for i in 2 3 4 5 6; do \
+		ln -s getty-tty1 $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
 	for i in 0 1 2 3; do \
 		echo >$(DESTDIR)$(SYSCONFDIR)/sv/.stage-$${i}/.keep_dir-stage-$${i}; \
@@ -299,6 +299,7 @@ endif
 		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
 		rm -f $(DESTDIR)$${file}; \
 	done
+	rm -f $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty*
 	for dir in lib opt stage-; do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.$${dir}*; \
 	done

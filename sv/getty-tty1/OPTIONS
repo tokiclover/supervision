@@ -1,0 +1,86 @@
+#
+# $Header:  /etc/sv/getty-tty1/OPTIONS                   Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+TTY="${SVC_NAME#*-}"
+#
+# XXX: chose a command or first found will be used
+#
+SVC_CMD=
+#
+# XXX: safety net
+#
+if [ -z "${SVC_CMD}" ]; then
+	for cmd in agetty mgetty mingetty fbgetty; do
+		if command -v "${cmd}" >${NULL} 2>&1; then
+			SVC_CMD="${cmd}"
+			break;
+		fi
+	done
+	cmd=
+fi
+name="${SVC_CMD##*/}"
+
+find_issue()
+{
+	[ -f /etc/issue.${TTY} ] && TTY_OPTS="${TTY_OPTS} ${1} /etc/issue.${TTY}"
+}
+getty_options()
+{
+	find_issue -f
+	case "${TTY}" in
+		(tty[1-6])
+		SVC_OPTS="38400 ${TTY_OPTS} ${TTY} linux"
+		;;
+		(ttyS[01])
+		SVC_OPTS="-L 115200 ${TTY_OPTS} ${TTY} vt100"
+		;;
+	esac
+}
+rescue_shell()
+{
+	exec ${RS_SHELL:-sh} -aim
+	exec sh -aim
+	exec busybox sh -aim
+	error "No functional shell found!!!"
+}
+
+case "${SVC_CMD}" in
+	(*mgetty)
+	find_issue -i
+	SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
+	SVC_OPTS="${TTY} ${TTY_OPTS}"
+	;;
+	(*fbgetty)
+	find_issue -i
+	SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
+	;;
+	(*mingetty)
+	SVC_OPTS="${TTY}"
+	;;
+	(*agetty)
+	getty_options
+	;;
+	(*)
+	if command -v busybox >${NULL} 2>&1; then
+		getty_options
+		SVC_OPTS="getty ${SVC_OPTS}"
+		name=getty SVC_CMD=busybox
+	else
+		error "No suitable getty command found"
+		error "Launching sulogin instead; and"
+		error "do fix this by setting up getty"
+		if [ "${OS_NAME}" = "Linux" ]; then
+			rs sulogin start || exec sulogin -p /dev/tty8 || rescue_shell
+		else
+			[ "${RS_SHELL##*/}" != "sulogin" ] || RS_SHELL="${SHELL:-sh}"
+			rescue_shell
+		fi
+	fi
+	;;
+esac
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
