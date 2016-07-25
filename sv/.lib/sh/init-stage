@@ -237,12 +237,10 @@ elif [ "${1}" = "-3" ]; then
 	#
 	# Use this safety net in case daemontools(-encore) is used
 	#
-	case "${__SV_NAM__}" in
-		(daemontools*)
+	if [ "${__SV_NAM__%-*}" = "daemontools" ]; then
 		ACTION="${ACTION:+--${ACTION}}"
 		sv-shutdown --force ${ACTION:---shutdown}
-		;;
-	esac
+	fi
 fi
 end "${?}"
 
