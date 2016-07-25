@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.5 2016/07/24 21:09:26                      Exp $
+# $Version: 3.6 2016/07/24 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -260,6 +260,7 @@ svc_post()
 		fi
 		;;
 	esac
+	svc_mark -S
 	rm -f ${SVC_PIDFILE}
 }
 
@@ -445,9 +446,7 @@ svc_run()
 		svc_cmd "${@}"
 		return
 	fi
-	if command -v svc_pre >${NULL} 2>&1; then
-		svc_pre || return
-	fi
+	svc_pre || return
 	[ "${__SVC_DEPEND__}" = 0 ] || svc_depend || return
 
 	echo $$ >${SVC_PIDFILE}
@@ -460,26 +459,23 @@ svc_run()
 svc_finish()
 {
 	svc_mark -S
-	if command -v svc_post >${NULL} 2>&1; then
-		svc_post
-	fi
+	svc_post
 	rm -f ${SVC_PIDFILE}
 	[ -n "${FIN_CMD}" ] || return 0
 	eval exec ${FIN_CMD} ${FIN_OPTS}
 }
 
-log_run()
+svc_log_run()
 {
 	checkpath -q -d ${LOG_MODE:+-m} ${LOG_MODE} \
 		${SVC_USER:+-o} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} ${SVC_LOGDIR}
-
 	if command -v log_pre >${NULL} 2>&1; then
 		log_pre
 	fi
 	exec ${PRE_CMD} ${PRE_OPTS} ${LOG_CMD} ${LOG_OPTS}
 }
 
-log_finish()
+svc_log_finish()
 {
 	if command -v log_post >${NULL} 2>&1; then
 		log_post

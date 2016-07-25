@@ -29,13 +29,14 @@ case "${head}" in
 	(*)     __cmd_dir__="" ;;
 esac
 unset head
+__cmd__="${0##*/}"
 
 source "${SVC_DIR}"/../.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
 #
 # Handle [log/]{finish,run} & exec to the command
 #
-eval ${__cmd_dir__:-svc}_${__cmd__} "${@}"
+eval svc${__cmd_dir__:+_${__cmd_dir__}}_${__cmd__} "${@}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
