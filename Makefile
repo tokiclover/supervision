@@ -54,7 +54,6 @@ dist_SCRIPTS  = \
 	sv/.opt/cmd
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
-	acpid \
 	atd \
 	cgred \
 	cron \

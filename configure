@@ -558,6 +558,7 @@ LINUX_VIRTUAL_SERVICES="
 	ip6tables:iptables
 "
 LINUX_SUPERVISION_SERVICES="
+	acpid
 	udev
 	udev-monitor
 "
