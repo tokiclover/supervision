@@ -629,25 +629,17 @@ and so on; likewise for
 .RB [\| clock \|]\ \c
 .RB [\| console \|]\ \c
 .RB [\| devfs \|]\ \c
-.RB [\| device-mapper \|]\ \c
-.RB [\| dmcrypt \|]\ \c
 .RB [\| dmesg \|]\ \c
 .RB [\| hostname \|]\ \c
-.RB [\| ipset \|]\ \c
-.RB [\| ip[6]tables \|]\ \c
 .RB [\| kmod \|]\ \c
 .RB [\| kmod-static-nodes \|]\ \c
 .RB [\| localfs \|]\ \c
 .RB [\| loopback \|]\ \c
-.RB [\| lvm \|]\ \c
-.RB [\| mdev \|]\ \c
 .RB [\| miscfs \|]\ \c
 .RB [\| mtab \|]\ \c
 .RB [\| networkfs \|]\ \c
 .RB [\| procfs \|]\ \c
-.RB [\| raid \|]\ \c
 .RB [\| rootfs \|]\ \c
-.RB [\| squashdir \|]\ \c
 .RB [\| swaps \|]\ \c
 .RB [\| swapfiles \|]\ \c
 .RB [\| sysctl \|]\ \c
@@ -655,16 +647,22 @@ and so on; likewise for
 .RB [\| tmpdirs \|]\ \c
 .RB [\| tmpfiles.dev \|]\ \c
 .RB [\| tmpfiles.setup \|]\ \c
-.RB [\| udevadm \|]\ \c
 .RB [\| zfs \|]\ \c
 .RB [\| zfs-share \|]\ \c
 .RB [\| zpool \|]\ \c
-.RB [\| zramfs \|]
+.RB (LINUX:[\| device-mapper \|]\ \c
+.RB [\| dmcrypt \|]\ \c
+.RB [\| ipset \|]\ \c
+.RB [\| ip[6]tables \|]\ \c
+.RB [\| lvm \|]\ \c
+.RB [\| mdev \|]\ \c
+.RB [\| raid \|]\ \c
+.RB [\| udevadm \|]\ \c
+.RB [\| unionfs \|]\ \c
+.RB [\| zramfs \|])
 .TP
 .B SUPERVISION SERVICES (included service)
-.RB [\| acpid \|]\ \c
 .RB [\| atd \|]\ \c
-.RB [\| cgred \|]\ \c
 .RB [\| cron \|]\ \c
 .RB [\| cupsd \|]\ \c
 .RB [\| cups-browsed \|]\ \c
@@ -686,11 +684,13 @@ and so on; likewise for
 .RB [\| snmpd \|]\ \c
 .RB [\| sulogin \|]\ \c
 .RB [\| syslog \|]\ \c
-.RB [\| udev \|]\ \c
-.RB [\| udev-monitor \|]\ \c
 .RB [\| wpa_supplicant \|]\ \c
 .RB [\| xdm \|]\ \c
-.RB [\| zed \|]
+.RB [\| zed \|]\ \c
+.RB (LINUX:\ [\| acpid \|]\ \c
+.RB [\| cgred \|]\ \c
+.RB [\| udev \|]\ \c
+.RB [\| udev-monitor \|])
 .TP
 .I .lib/
 Symbolic link to
