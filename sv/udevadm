@@ -4,7 +4,7 @@
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
-SVC_BEFORE="checkfs"
+SVC_AFTER="kmod"
 SVC_NEED="udev"
 SVC_COMMANDS="reload"
 udevadm="$(command -v udevadm 2>${NULL})"
