@@ -478,6 +478,22 @@ compiled with udev support. And then,
 is very short before a supervised device manager is started. So, having, say,
 .B udev
 in stage-1 would still work as expected.
+
+.B WARNING:
+.I udev
+cannot be added to stage-0, nor can the
+.I dev
+virtual service used for this case, because the service won't start untill
+stage-1. And
+.I udev
+needs
+.I udevadm
+(runscript) service to be functionnal at all. The last will take care of
+populating
+.I /dev
+with device nodes and symlinks. There is no need to add
+.I udevadm
+to stage-1,--\fIudev\fR dependencies would suffice,--but it can be as safe guard.
 .SS RUNLEVELS
 .I {boot,default,nonetwork,single}
 run levels are supported.
