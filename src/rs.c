@@ -44,8 +44,8 @@ static RS_SvcDepsList_T *svcdeps;
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
-	{ NULL },
-	{ NULL },
+	{ "sysctl", "dmcrypt", NULL },
+	{                      NULL },
 	{ "devfs",  "sysfs",   NULL },
 };
 
@@ -971,6 +971,9 @@ static void svc_stage(const char *cmd)
 	svc_log("logging: %s command\n", command);
 	fprintf(logfp, "rs init stage-%d started at %s\n", rs_stage, ctime(&t));
 
+	/* initialize boot */
+	if (rs_stage == 1 )
+		rs_stage_start(1, argv, envp);
 	/* fix a race condition for sysinit */
 	if (rs_stage == 0 )
 		rs_stage_start(3, argv, envp);
