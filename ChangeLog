@@ -1,5 +1,16 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_rc2:
+
+Schedule service start/stop for init-stage for {use,need} dependencies only
+(performance improvements--{after,before} would be scheduled if present in
+the init-stage). So, now, udevadm has to be manually added to stage-1 to get
+a functionnal udev. --The time of lasy {after,before} scheduling is over.
+
+Finshed SVC_OPTIONS refactorization by moving getty related bits to sv/getty
+... and then renamed getty to getty-tty1 to avoid having no service entry in
+SV_SVCDIR.
+
 0.12.0_rc:
 
 Added another udev (udevadm runscript) service to populate dev in case udev is
