@@ -6,7 +6,7 @@
 #
 
 description='Check filesystems'
-SVC_USE='dev kmod clock dmcrypt lvm raid'
+SVC_USE='dev kmod clock device-mapper dmcrypt lvm raid'
 
 REBOOT_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --reboot'
 SHUTDOWN_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --shutdown'
