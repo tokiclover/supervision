@@ -317,12 +317,14 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		if (status) {
 			if (command == 's') {
 				LOG_WARN("%s: Service is already started\n", run->name);
-				return -EBUSY;
+				retval = -EBUSY;
+				goto reterr;
 			}
 		}
 		else if (command == 'S') {
 			LOG_WARN("%s: Service is not started\n", run->name);
-			return -EINVAL;
+			retval = -EINVAL;
+			goto reterr;
 		}
 		break;
 	case 'a':
@@ -331,7 +333,8 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 			fprintf(stderr, "%s: stage level argument is required\n", prgname);
 			fprintf(stderr, "Usage: %s -(0|1|2|3) %s COMMAND\n", prgname,
 					run->name);
-			return 1;
+			retval = 1;
+			goto reterr;
 		}
 
 		path = err_malloc(PATH_MAX*sizeof(char));
@@ -340,15 +343,20 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		if (file_test(path, 0))
 			unlink(path);
 
-		if (command == 'd')
-			return 0;
+		if (command == 'd') {
+			retval = 0;
+			goto reterr;
+		}
 		else {
 			if (symlink(run->path, path)) {
 				ERR("%s: Failed to add service: %s\n", run->name, strerror(errno));
-				return 1;
+				retval = 1;
+				goto reterr;
 			}
-			else
-				return 0;
+			else {
+				retval = 0;
+				goto reterr;
+			}
 		}
 		break;
 	}
