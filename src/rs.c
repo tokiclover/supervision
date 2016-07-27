@@ -39,7 +39,6 @@ struct svcrun {
 int rs_stage = -1;
 static int svc_deps  = 1;
 static int svc_quiet = 1;
-static RS_SvcDepsList_T *svcdeps_list;
 
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
@@ -437,8 +436,8 @@ static int svc_depend(const char *svc, const char *argv[], const char *envp[])
 	}
 	if (svc_deps == 0)
 		return 0;
-	if (svcdeps_list)
-		depend = rs_svcdeps_find(svcdeps_list, svc);
+	if (service_deplist)
+		depend = rs_svcdeps_find(service_deplist, svc);
 	else
 		return -ENOENT;
 	if (!depend)
@@ -806,8 +805,8 @@ __NORETURN__ static int svc_exec(int argc, char *args[]) {
 	int cmd_flags = SVC_CMD_WAIT;
 	struct svcrun run;
 
-	if (!svcdeps_list)
-		svcdeps_list = rs_svcdeps_load();
+	if (!service_deplist)
+		rs_svcdeps_load();
 	if (args[0][0] == '/') {
 		argv[2] = args[0];
 		run.name = strrchr(args[0], '/')+1;
@@ -972,7 +971,7 @@ static void svc_stage(const char *cmd)
 
 	envp = svc_env();
 	argv[4] = (char *)0, argv[3] = command;
-	svcdeps_list = rs_svcdeps_load();
+	rs_svcdeps_load();
 
 	t = time(NULL);
 	rs_debug = 1;
@@ -1048,7 +1047,6 @@ static void svc_stage(const char *cmd)
 
 	t = time(NULL);
 	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
-	rs_svcdeps_free(svcdeps_list);
 }
 
 int main(int argc, char *argv[])

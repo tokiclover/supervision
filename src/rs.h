@@ -110,13 +110,13 @@ int           rs_deplist_del (RS_DepTypeList_T *list, const char *str);
 void          rs_deplist_free(RS_DepTypeList_T *list);
 
 /* the same used for service dependencies */
-RS_SvcDepsList_T *rs_svcdeps_load(void);
+extern RS_SvcDepsList_T *service_deplist;
+void rs_svcdeps_load(void);
 RS_SvcDepsList_T *rs_svcdeps_new(void);
 RS_SvcDeps_T *rs_svcdeps_add (RS_SvcDepsList_T *list, const char *svc);
 RS_SvcDeps_T *rs_svcdeps_adu (RS_SvcDepsList_T *list, const char *svc);
 RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc);
 int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
-void          rs_svcdeps_free(RS_SvcDepsList_T *list);
 
 RS_StringList_T **rs_deptree_load(void);
 void              rs_deptree_free(RS_StringList_T **array);
