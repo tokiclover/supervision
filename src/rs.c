@@ -339,24 +339,20 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		path = err_malloc(PATH_MAX*sizeof(char));
 		snprintf(path, PATH_MAX, "%s/.stage-%d/%s", SV_SVCDIR, rs_stage,
 				run->name);
-		if (file_test(path, 0))
-			unlink(path);
-
-		if (command == 'd') {
+		if (!access(path, F_OK)) {
+			if (command == 'd')
+				unlink(path);
 			retval = 0;
 			goto reterr;
 		}
-		else {
-			if (symlink(run->path, path)) {
-				ERR("%s: Failed to add service: %s\n", run->name, strerror(errno));
-				retval = 1;
-				goto reterr;
-			}
-			else {
-				retval = 0;
-				goto reterr;
-			}
+
+		if (symlink(run->path, path)) {
+			ERR("%s: Failed to add service: %s\n", run->name, strerror(errno));
+			retval = 1;
 		}
+		else
+			retval = 0;
+		goto reterr;
 		break;
 	}
 
