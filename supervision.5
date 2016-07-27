@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2016-07-20" "0.12.0" "Supervision Framework"
+.TH SUPERVISION 5 "2016-07-26" "0.12.0" "Supervision Framework"
 .SH NAME
 Supervision \- Supervision Framework init-system and service-manager
 .SH DESCRIPTION
@@ -491,9 +491,9 @@ needs
 (runscript) service to be functionnal at all. The last will take care of
 populating
 .I /dev
-with device nodes and symlinks. There is no need to add
+with device nodes and symlinks. So add
 .I udevadm
-to stage-1,--\fIudev\fR dependencies would suffice,--but it can be as safe guard.
+to stage-1 to get a functionnal \fIudev\fR.
 .SS RUNLEVELS
 .I {boot,default,nonetwork,single}
 run levels are supported.
