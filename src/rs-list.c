@@ -296,10 +296,10 @@ RS_DepTypeList_T *rs_deplist_load(void)
 RS_SvcDepsList_T *rs_svcdeps_load(void)
 {
 	char deppath[256], dep[128], type[16];
-	char *line = NULL, *ptr, *tmp, svc[128], old[128];
+	char *line = NULL, *ptr, *tmp, svc[128];
 	FILE *depfile;
 	size_t len, pos;
-	int t = 0, o = 1;
+	int t = 0;
 
 	if (service_deplist)
 		return service_deplist;
@@ -325,8 +325,8 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 		return NULL;
 	}
 
-	RS_SvcDepsList_T *deps_list = rs_svcdeps_new();
-	RS_SvcDeps_T *svc_deps;
+	service_deplist = rs_svcdeps_new();
+	RS_SvcDeps_T *old_deps = NULL, *svc_deps;
 
 	while (rs_getline(depfile, &line, &len) > 0) {
 		/* get service name */
@@ -338,18 +338,12 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 		ptr = strchr(ptr, '=');
 		*ptr++ = '\0';
 		memcpy(type, line+pos, ptr-line-pos);
+
 		while (strcmp(type, rs_deps_type[t]))
 			t++;
-
-		/* add and initialize a service dependency */
-		if (o) {
-			memcpy(old, svc, pos+1);
-			svc_deps = rs_svcdeps_add(deps_list, svc);
-			o = 0;
-		}
-		else if (strcmp(svc, old)) {
-			svc_deps = rs_svcdeps_add(deps_list, svc);
-			memcpy(old, svc, pos+1);
+		if (!old_deps || strcmp(svc, old_deps->svc)) {
+			svc_deps = rs_svcdeps_add(service_deplist, svc);
+			old_deps = svc_deps;
 		}
 
 		/* append service list */
@@ -368,7 +362,7 @@ RS_SvcDepsList_T *rs_svcdeps_load(void)
 	}
 	fclose(depfile);
 
-	return deps_list;
+	return service_deplist;
 }
 
 RS_StringList_T *rs_stringlist_new(void)
