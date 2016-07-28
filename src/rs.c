@@ -30,6 +30,7 @@
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
 struct svcrun {
+	RS_SvcDeps_T *depends;
 	const char *name;
 	const char *path;
 	pid_t pid;
@@ -130,7 +131,7 @@ static int svc_end(const char *svc, int status);
  *        > 0 for non fatals errors
  *        < 0 for fatals errors;
  */
-static int svc_depend(const char *svc, const char *argv[], const char *envp[]);
+static int svc_depend(struct svcrun *run, const char *argv[], const char *envp[]);
 
 /* simple function to help debug info in a file (vfprintf(3) clone) */
 static FILE *logfp;
@@ -292,6 +293,21 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 	else
 		command = 0;
 
+	/* this is done before because of a possible virtual provider */
+	if (command == 's' || command == 'S' ) {
+		status = svc_state(run->name, 's');
+		if (status) {
+			if (command == 's') {
+				LOG_WARN("%s: Service is already started\n", run->name);
+				return -EBUSY;
+			}
+		}
+		else if (command == 'S') {
+			LOG_WARN("%s: Service is not started\n", run->name);
+			return -EINVAL;
+		}
+	}
+
 	while (argv[size])
 		size++;
 	ARGV = err_calloc(size+2, sizeof(void*));
@@ -299,6 +315,11 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		ARGV[i] = argv[i];
 	/* get service path */
 	if (find) {
+		/* find a real service instead of a virtual */
+		if (rs_stage < 0) {
+			if (run->depends && run->depends->virt)
+				run->name = run->depends->svc;
+		}
 		run->path = ARGV[2] = svc_find(run->name);
 		if (ARGV[2] == NULL)
 			return -ENOENT;
@@ -310,22 +331,6 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 
 	/* get service status */
 	switch(command) {
-	case 's':
-	case 'S':
-		status = svc_state(run->name, 's');
-		if (status) {
-			if (command == 's') {
-				LOG_WARN("%s: Service is already started\n", run->name);
-				retval = -EBUSY;
-				goto reterr;
-			}
-		}
-		else if (command == 'S') {
-			LOG_WARN("%s: Service is not started\n", run->name);
-			retval = -EINVAL;
-			goto reterr;
-		}
-		break;
 	case 'a':
 	case 'd':
 		if (getenv("RS_STAGE") == NULL) {
@@ -357,8 +362,8 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 	}
 
 	/* setup dependencies */
-	if (deps && svc_deps) {
-		retval = svc_depend(run->name, argv, envp);
+	if (deps) {
+		retval = svc_depend(run, argv, envp);
 		if (retval == -ENOENT)
 			;
 		else if (retval < 0) {
@@ -394,8 +399,11 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 			retval = WEXITSTATUS(status);
 			if (!svc_quiet)
 				svc_end(run->name, retval);
-			if (!retval && command)
+			if (!retval && command) {
 				svc_mark(run->name, command);
+				if (run->depends && run->depends->virt)
+					svc_mark(run->depends->virt, command);
+			}
 			goto reterr;
 		}
 		else
@@ -420,38 +428,22 @@ reterr:
 	return retval;
 }
 
-static int svc_depend(const char *svc, const char *argv[], const char *envp[])
+static int svc_depend(struct svcrun *run, const char *argv[], const char *envp[])
 {
-	RS_SvcDeps_T *depend;
 	int type, val, retval = 0;
-	static int strict_dep, setup = 1;
 
-	if (setup) {
-		strict_dep = rs_yesno(getenv("RS_STRICT_DEP"));
-		setup = 0;
-	}
 	if (svc_deps == 0)
 		return 0;
-	if (service_deplist)
-		depend = rs_svcdeps_find(service_deplist, svc);
-	else
+	if (!run->depends)
+		run->depends = rs_svcdeps_find(service_deplist, run->name);
+	if (!run->depends)
 		return -ENOENT;
-	if (!depend)
-		return 0;
 
 	/* skip before deps type */
-	for (type = RS_DEPS_AFTER; type < RS_DEPS_TYPE; type++) {
-		val = svc_exec_list(depend->deps[type], argv, envp);
-		if (val > 0) {
-			switch(type) {
-			case RS_DEPS_AFTER:
-				if (!strict_dep)
-					break;
-			case RS_DEPS_NEED:
-				retval -= val;
-				break;
-			}
-		}
+	for (type = RS_DEPS_USE; type < RS_DEPS_TYPE; type++) {
+		val = svc_exec_list(run->depends->deps[type], argv, envp);
+		if (val > 0 && type == RS_DEPS_NEED)
+			retval = -val;
 	}
 	return retval;
 }
@@ -819,6 +811,7 @@ __NORETURN__ static int svc_exec(int argc, char *args[]) {
 		argv[i++] = args[j];
 	argv[i] = (char *)0;
 	envp = svc_env();
+	run.depends = NULL;
 
 	retval = svc_cmd(argv, envp, &run, cmd_flags);
 	switch(retval) {
@@ -864,6 +857,7 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 	run = err_calloc(size, sizeof(struct svcrun));
 	SLIST_FOREACH(svc, list, entries) {
 		run[n].name = svc->str;
+		run[n].depends = rs_virtual_find(svc->str);
 
 		r = svc_cmd(argv, envp, &run[n], cmd_flags);
 		switch(r) {
@@ -898,8 +892,11 @@ static int svc_exec_list(RS_StringList_T *list, const char *argv[], const char *
 			if (state == 's')
 				svc_mark(run[i].name, 'f');
 		}
-		else
+		else {
 			svc_mark(run[i].name, state);
+			if (run[i].depends && run[i].depends->virt)
+				svc_mark(run[i].depends->virt, state);
+		}
 		if (!svc_quiet)
 			svc_end(run[i].name, status);
 	}
