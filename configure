@@ -555,9 +555,11 @@ LINUX_RUNSCRIPT_SERVICES="
 	unionfs
 	zramfs
 "
-LINUX_VIRTUAL_SERVICES="
-	dev:mdev
+LINUX_SERVICE_INSTANCES="
 	ip6tables:iptables
+"
+LINUX_OPTIONS_INSTANCES="
+	ip6tables
 "
 LINUX_SUPERVISION_SERVICES="
 	acpid
@@ -660,7 +662,8 @@ case "${build:-${host:-$(uname -s)}}" in
 	for i in 0 1 2 3; do
 		eval append EXTRA_STAGE_${i} \$LINUX_STAGE_${i}
 	done
-	append EXTRA_VIRTUAL_SERVICES $LINUX_VIRTUAL_SERVICES
+	append EXTRA_SERVICE_INSTANCES $LINUX_SERVICE_INSTANCES
+	append EXTRA_OPTIONS_INSTANCES $LINUX_OPTIONS_INSTANCES
 	;;
 esac
 
@@ -738,7 +741,7 @@ rundir                     : $rundir
 CFLAGS                     : $CFLAGS
 LDFLAGS                    : $LDFLAGS
 SysVinit (compatibility)   : ${sysvinit-no}
-EXTRA_VIRTUAL_SERVICES     : $EXTRA_VIRTUAL_SERVICES
+EXTRA_SERVICE_INSTANCES    : $EXTRA_SERVICE_INSTANCES
 Extra runscript services   : $EXTRA_RUNSCRIPT_SERVICES
 Extra supervision services : $EXTRA_SUPERVISION_SERVICES
 Runit init-stage           : ${runit-no}
@@ -792,7 +795,8 @@ RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
 S6_INIT_STAGE=$(yesno "$s6" && echo 1)
 SYSVINIT=$(yesno "$sysvinit" && echo 1)
 DIST_EXTRA=$DIST_EXTRA
-EXTRA_VIRTUAL_SERVICES=$EXTRA_VIRTUAL_SERVICES
+EXTRA_SERVICE_INSTANCES=$EXTRA_SERVICE_INSTANCES
+EXTRA_OPTIONS_INSTANCES=$EXTRA_OPTIONS_INSTANCES
 $(print_extra_services)
 endif
 CONFIG_MAK_EOF

@@ -78,12 +78,13 @@ dist_SV_SVCS  = \
 	wpa_supplicant \
 	xdm \
 	zed
-dist_VIRTUALS  = \
-	$(EXTRA_VIRTUAL_SERVICES) \
+dist_SVC_INSTANCES  = \
+	$(EXTRA_SERVICE_INSTANCES) \
+	getty-tty6:getty-tty1 getty-tty5:getty-tty1 getty-tty4:getty-tty1 \
+	getty-tty3:getty-tty1 getty-ttyS0:getty-tty1 getty-ttyS1:getty-tty1 \
 	tmpfiles.setup:tmpfiles.dev \
 	swapfiles:swaps \
 	networkfs:localfs \
-	net:dhcp \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
 	dns/OPTIONS.dnsmasq \
@@ -120,9 +121,8 @@ dist_RS_SVCS  = \
 	zfs \
 	zfs-share \
 	zpool
-dist_RS_OPTS  = \
-	ip6tables \
-	dev
+dist_OPTS_INSTANCES = \
+	$(EXTRA_OPTIONS_INSTANCES)
 
 dist_STAGE_0 = \
 	$(EXTRA_STAGE_0) \
@@ -148,7 +148,8 @@ dist_STAGE_1 = \
 	swaps swapfiles \
 	tmpfiles.setup
 dist_STAGE_2 = \
-	$(EXTRA_STAGE_2)
+	$(EXTRA_STAGE_2) \
+	getty-tty6 getty-tty5 getty-tty4 getty-tty3 getty-tty2 getty-tty1
 dist_STAGE_3 = \
 	$(EXTRA_STAGE_3) \
 	rdonlyfs
@@ -171,7 +172,7 @@ endif
 
 DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) \
-	$(dist_RS_OPTS) $(dist_RS_SVCS) \
+	$(dist_OPTS_INSTANCES) $(dist_RS_SVCS) \
 	$(dist_SH_BINS) $(dist_SH_LIBS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
@@ -219,18 +220,11 @@ install: install-dir install-dist
 		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
 		-i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
 		$(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
-	for svc in $(dist_VIRTUALS); do \
+	for svc in $(dist_SVC_INSTANCES); do \
 		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
-	done
-	for i in 2 3 4 5 6; do \
-		ln -s getty-tty1 $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty$${i}; \
 	done
 	for i in 0 1 2 3; do \
 		echo >$(DESTDIR)$(SYSCONFDIR)/sv/.stage-$${i}/.keep_dir-stage-$${i}; \
-	done
-	for i in 1 2 3 4 5 6; do \
-		ln -s ../getty-tty$${i} \
-			$(DESTDIR)$(SYSCONFDIR)/sv/.stage-2/getty-tty$${i}; \
 	done
 	$(call stage_sym,0,$(dist_STAGE_0))
 	$(call stage_sym,1,$(dist_STAGE_1))
@@ -267,7 +261,7 @@ $(dist_SV_OPTS): $(dist_SV_SVCS)
 $(dist_RS_SVCS):
 	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
 	-$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(SYSCONFDIR)/sv.conf.d/$@
-$(dist_RS_OPTS):
+$(dist_OPTS_INSTANCES):
 	$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(SYSCONFDIR)/sv.conf.d/$@
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
@@ -288,7 +282,7 @@ endif
 	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-	for svc in $(dist_VIRTUALS); do \
+	for svc in $(dist_SVC_INSTANCES); do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done
 	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%) \
