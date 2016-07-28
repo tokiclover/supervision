@@ -108,36 +108,79 @@ service) or
 .I tmpfiles.dev
 service) for actual examples for this.
 .SS VIRTUAL SERVICE
+Making virtual services is easy as to use
+.B SVC_PROVIDE
+environment variable, for example,
+.I SVC_PROVIDE=dev
+for
+.I mdev
+or
+.I udev
+service. This will ensure that a specific provider included in an init-stage
+will be started instead of
+.I any
+provider. This solution is more robust in specifying a particular provider for
+an init-stage. Choosing a particular provider for a particular service (in the
+network sense) is made by adding a particular provider in the init-stage, like
+for example, adding
+.I dhcp
+in init-stage-1 for
+.I net
+(just issue a `rs -1 dhcp add' and be done with it.)
 .TP
 .B SUPERVISION
-Virtual service is done by making a symbolic link to a particular provider,
+Another scheme is to use a single directory for multiple providers like,
 for example,
-.I net
-service is symlinked to
+.I dns
+,
+.I ntp
+or
+.I syslog
+or even
 .I dhcp
-service.
-Second variant is made by using a single directory and a specific
+service. This is the old legacy way to make a virtual service. And this manner
+is welcomed to enforce a
+.I single
+instance mode for a particular
+.I service
+(in the network sense.) So, a
+.I single
+.B NTP
+and
+.B DNS
+daemon will be started no matter what happen.
+This variant is made by using a single directory and a specific
 .B OPTIONS.PROVIDER
 file for service that should be in a single instance mode, like
 .B syslog
 (see
 .I syslog
 service.)
-WARNING: Explicite usage of
+.B WARNING:
+Explicite usage of
 .B name=COMMAND_NAME
 and
 .B SVC_CMD=COMMAND_NAME
-in \fIsv/\fBSERVICE\fI/OPTIONS
+in \fIsv/\fBSERVICE\fI/OPTIONS\fR configuration
 file is required to get the expected behavior.
+
+Now, this simple scheme may not suffice with complicated service like
+.I udev
+, which would start any number of daemons as included instaces. This might not
+be what is expected. So, use the previous manner by defining
+.B SVC_PROVIDE
+environment variable. And then add
+.I udev{,adm}
+to init-stage-1 to get a functionnal
+.B udev
+service.
 .TP
 .B RUNSCRIPT
-Similarly, runscript services use a symlink
-.B VIRTUAL->SERVICE
-to define a virtual
-service; and an extra \fIsv.conf.d/\fBVIRTUAL\fR
-configuration file to define the real
-.B name=SVC_NAME
-of the provider (e.g. dev virtual service use mdev as a provider.)
+Similarly, runscript services use the first way of making a virtual service
+described above, namely, by setting
+.I SVC_PROVIDE
+environment variable. The first variant cannot be used here because runscript
+services are execuable files instead of directories.
 .SS SERVICE USAGE
 Full
 .I {after,before,need,use}
@@ -209,11 +252,14 @@ T}
 \fBSVC_NEED\fR@T{
 Require need dependency services to be started
 T}
+\fBSVC_PROVIDE\fR@T{
+Provide this virtual service for dependency use
+T}
 \fBSVC_REQ_FILES\fR@T{
 Service required file-s
 T}
 \fBRC_OPTS=Yes\fR@T{
-To enable OpenRC support mode
+To enable support for OpenRC configuration files
 T}
 .TE
 
