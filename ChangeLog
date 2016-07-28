@@ -11,6 +11,9 @@ Finshed SVC_OPTIONS refactorization by moving getty related bits to sv/getty
 ... and then renamed getty to getty-tty1 to avoid having no service entry in
 SV_SVCDIR.
 
+Miscellaneous fixes:
+multiple `rs SERVICE add' was bogus;
+
 0.12.0_rc:
 
 Added another udev (udevadm runscript) service to populate dev in case udev is
