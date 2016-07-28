@@ -7,6 +7,11 @@ name=socklog
 
 ENV_DIR=Yes
 SVC_CMD=socklog
+if [ "${SVC_NAME}" = "syslog" -o "${SVC_NAME}" = "socklog" -o "${SVC_NAME}" = "socklog-unix" ]; then
+	SVC_PROVIDE=syslog
+else
+	SVC_PROVIDE=
+fi
 
 pre()
 {

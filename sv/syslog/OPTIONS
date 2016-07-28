@@ -6,16 +6,15 @@
 SVC_AFTER='miscfs'
 SVC_USE='clock'
 SVC_NEED='hostname localfs'
-
+SVC_PROVIDE='syslog'
 #
-# Set a default system logger {syslog-ng,socklog,rsyslog} by setting the name
-# variable; or else, this will be done automatically when using a socklog alias
-# socklog-{inet,ucspi,unix}.
+# Set a default system logger {syslog-ng,socklog,rsyslog}
+# or... default to socklog
 #
-case "${SVC_NAME}" in
-	(syslog) name=socklog  ;;
-	(*) name=${SVC_NAME%-*};;
-esac
+#name=syslog-ng
+if [ "${SVC_NAME%-*}" = "socklog" ]; then
+	name=socklog
+fi
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
