@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.6 2016/07/24 21:09:26                      Exp $
+# $Version: 3.6 2016/07/26 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -277,7 +277,7 @@ svc_depend()
 	fi
 
 	if yesno "${SVC_DEPS:-${dep}}"; then
-	for dep in ${__SV_DEPS_ORDER__/before:BEFORE/}; do
+	for dep in ${__SV_DEPS_ORDER__%before:BEFORE*}; do
 		command -v svc_${dep%:*} >${NULL} 2>&1 || continue
 		eval svc_${dep%:*} ${1}
 		eval RET_${dep#*:}=${?}
@@ -293,16 +293,6 @@ svc_depend()
 		error "Failed to set up service dependencies"
 	fi
 	return ${RET_NEED}
-}
-
-svc_after()
-{
-	local ret svc
-	for svc in ${2-${SVC_AFTER}}; do
-		rs -q "${svc}" "${1:-start}"
-		ret=$((${ret}+${?}))
-	done
-	return ${ret}
 }
 
 svc_need()
