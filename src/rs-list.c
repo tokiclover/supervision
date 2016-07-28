@@ -26,7 +26,6 @@ size_t rs_deptree_prio = 0;
 
 static void rs_svcdeps_free(void);
 static void rs_virtual_insert(RS_SvcDeps_T *elm);
-static RS_SvcDeps_T *rs_virtual_find(const char *svc);
 static size_t rs_virtual_count;
 
 static void rs_deptree_alloc(void)
@@ -62,18 +61,8 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	if (type < RS_DEPS_USE && !rs_stringlist_find(stage_svclist, s))
 		return -prio;
 	/* insert the real service instead of a virtual one */
-	if (!svc_deps && (svc_deps = rs_virtual_find(s))) {
-		for (p = 0; p < rs_virtual_count; p++) {
-			if (strcmp(virtual_deplist[p]->virt, s))
-				continue;
-			/* insert any provider included in the init-stage */
-			if (rs_stringlist_find(stage_svclist, virtual_deplist[p]->svc)) {
-				svc_deps = virtual_deplist[p];
-				break;
-			}
-		}
+	if (!svc_deps && (svc_deps = rs_virtual_find(s)))
 		s = svc_deps->svc;
-	}
 
 	/* expand the list when needed */
 	if (pri > rs_deptree_prio && rs_deptree_prio < RS_DEPTREE_MAX)
@@ -614,16 +603,22 @@ RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc)
 	return NULL;
 }
 
-static RS_SvcDeps_T *rs_virtual_find(const char *svc)
+RS_SvcDeps_T *rs_virtual_find(const char *svc)
 {
 	int i;
 
-	if (!svc)
+	if (!svc || !virtual_deplist)
 		return NULL;
 
-	for (i= 0; i < rs_virtual_count; i++)
-		if (strcmp(svc, virtual_deplist[i]->virt) == 0)
+	for (i = 0; i < rs_virtual_count; i++) {
+		if (strcmp(svc, virtual_deplist[i]->virt))
+			continue;
+		if (!stage_svclist)
 			return virtual_deplist[i];
+		/* insert any provider included in the init-stage */
+		if (rs_stringlist_find(stage_svclist, virtual_deplist[i]->svc))
+			return virtual_deplist[i];
+	}
 
 	return NULL;
 }

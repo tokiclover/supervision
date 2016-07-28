@@ -123,6 +123,9 @@ RS_StringList_T **rs_deptree_load(void);
 void              rs_deptree_free(RS_StringList_T **array);
 extern size_t     rs_deptree_prio;
 
+/* find a virtual service e.g. {net,dev,logger} */
+RS_SvcDeps_T *rs_virtual_find(const char *svc);
+
 /*
  * retrieve a configuration value like getenv(3)
  * @envp: configuration list;
