@@ -22,7 +22,7 @@ syn keyword svKwd begin die end error eval_colors info yesno checkpath warn SOUR
 syn keyword svKwd env_svc env_sv  svc_cmd svc_down svc_env svc_mark svc_state
 syn keyword svKwd env_rs rs_cmd svc_wait svc_zap mount_info mountinfo fstabinfo
 syn keyword svVars SVC_DEBUG SVC_CONFIGFILE SVC_CMD SVC_OPTS SVC_GROUP SVC_USER
-syn keyword svVars SVC_USE SVC_NEED SVC_BEFORE SVC_AFTER SVC_TRY SV_TRY SV_TERM
+syn keyword svVars SVC_USE SVC_NEED SVC_BEFORE SVC_AFTER SV_TRY SVC_PROVIDE
 syn keyword svVars ENV_DIR ENV_CMD ENV_OPTS PRE_CMD PRE_OPTS FIN_CMD FIN_OPTS
 syn keyword svVars LOG_CMD LOG_OPTS LOG_FIN_CMD LOG_FIN_OPTS SVC_NEED RC_OPTS
 syn keyword svVars CGROUP_CLEANUP CGROUP_INHERIT SV_CGROUP SVC_DEPS SVC_PIDFILE
