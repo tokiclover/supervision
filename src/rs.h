@@ -84,6 +84,7 @@ typedef SLIST_HEAD(RS_DepTypeList, RS_DepType) RS_DepTypeList_T;
 typedef struct RS_SvcDeps {
 	/* dependency type {after,before,use,need} */
 	char *svc;
+	char *virt;
 	/* priority level list [0-RS_DEPS_TYPE] */
 	RS_StringList_T *deps[RS_DEPS_TYPE];
 	SLIST_ENTRY(RS_SvcDeps) entries;

@@ -91,18 +91,19 @@ add_dep()
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	local dep
+	local dep SVC_PROVIDE S
 
-	if [ -d "${1}" ]; then
+	if [ -d "${SV_SVCDIR}/${1}" ]; then
 		SVC_DIR="${SV_SVCDIR}/${1}" RS_TYPE=sv
 	else
 		SVC_DIR="${SV_SVCDIR}"      RS_TYPE=rs
 	fi
 	SERVICE_LIST="${SERVICE_LIST} ${1}"
 	SVC_NAME="${1}"
+	shift
 	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
-	for dep in ${__SV_DEPS_ORDER__}; do
+	for dep in ${__SV_DEPS_ORDER__} ${DEPS}; do
 		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}}
 	done
 }
@@ -110,6 +111,8 @@ dep_gen()
 dep_scan()
 {
 	local dir svc
+
+	[ -z "${RS_STAGE}" ] && DEPS=provide:PROVIDE || DEPS=
 	for dir in ${@:-${SV_SVCDIR}}; do
 		cd ${dir}
 		for svc in *; do
