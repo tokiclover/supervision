@@ -8,33 +8,29 @@ name=wpa_supplicant
 SVC_CONFIGFILE=/etc/${name}/${name}.conf
 SVC_CMD=${name}
 SVC_OPTS='${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IF}'
+case "${SVC_OPTS}" in
+	(*-s*) SVC_USE=syslog;;
+esac
 
 pre()
 {
-	case "${SVC_OPTS}" in
-		(*-s*) SVC_USE=syslog;;
-		(*-i*)               ;;
-		(*) [ -n "${WPA_IF}" ] || find_iface;;
-	esac
+		[ -n "${WPA_IF}" ] || find_iface
 }
 
 find_iface()
 {
 	local IF
-	case "${OS_NAME}" in
-		(Linux)
+	if [ "${OS_NAME}" = "Linux" ]; then
 		for IF in /sys/class/net/*; do
 			[ -e "${IF}"/wireless -o -e "${IF}"/phy80211 ] &&
 				WPA_IF="${WPA_IF} -i ${IF##*/}"
 		done
-		;;
-		(*)
+	else
 		for IF in /dev/net/* $(ifconfig -s | tail -n+2 | awk '{print $1}' 2>${NULL}); do
 			ifconfig ${IF} 2>${NULL} | grep -iq '*ssid' &&
 				WPA_IF="${WPA_IF} -i ${IF##*/}"
 		done
-		;;
-	esac
+	fi
 	[ -n "${WPA_IF}" ]
 }
 
