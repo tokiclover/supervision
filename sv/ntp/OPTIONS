@@ -7,6 +7,10 @@ description='Network Time Protocol Daemon'
 name=busybox-ntpd
 SVC_NEED=net
 SVC_USE=dns
+#
+# XXX: not using 'ntp' virtual service? uncomment this!
+#
+#SVC_PROVIDE=ntp
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:

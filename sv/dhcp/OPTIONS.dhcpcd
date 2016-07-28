@@ -10,7 +10,7 @@ SVC_COMMANDS=check_config
 SVC_LOGFILE=${LOGDIR}/${name}.log
 SVC_CMD=${name}
 SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_IFS}'
-SVC_USE=syslog
+SVC_USE=logger
 
 pre()
 {

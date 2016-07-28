@@ -5,7 +5,7 @@
 
 SVC_OPTS=-f
 SVC_NEED='dbus'
-SVC_AFTER='syslog'
+SVC_AFTER='logger'
 
 pre()
 {

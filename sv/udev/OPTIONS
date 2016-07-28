@@ -7,6 +7,7 @@ SVC_CMD=/sbin/udevd
 SVC_OPTS=
 SVC_BEFORE='checkfs device-mapper dmcrypt udevadm'
 SVC_NEED='devfs sysfs'
+SVC_PROVIDE='dev'
 UDEV_DEBUG=No
 
 pre()

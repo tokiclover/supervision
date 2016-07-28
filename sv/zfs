@@ -6,7 +6,7 @@
 
 description="Set up zpools and zfs volumes"
 SVC_AFTER="checkfs"
-SVC_BEFORE="syslog"
+SVC_BEFORE="logger"
 SVC_NEED="zpool"
 
 if mountinfo -q -t zfs /; then

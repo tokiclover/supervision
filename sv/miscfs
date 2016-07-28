@@ -8,7 +8,7 @@
 description='Set up /tmp /var/MISC'
 SVC_NEED='localfs'
 SVC_USE='zramfs'
-SVC_BEFORE='syslog'
+SVC_BEFORE='logger'
 SVC_AFTER='clock rootfs sysctl'
 
 login_setup()

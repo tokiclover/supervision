@@ -6,7 +6,7 @@
 # Possible choice: {b,d,f}cron,cronie,vixie-cron
 #
 name=fcron
-SVC_USE=syslog
+SVC_USE=logger
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:

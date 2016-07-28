@@ -9,7 +9,7 @@ description='PC/SC Smart Card Daemon'
 SVC_CONFIGFILE=/etc/reader.conf.d/reader.conf
 SVC_OPTS='--config ${SVC_CONFIGFILE} --foreground'
 SVC_AFTER='udev dbus'
-SVC_USE=syslog
+SVC_USE=logger
 
 pre()
 {

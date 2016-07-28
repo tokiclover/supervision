@@ -19,7 +19,7 @@ umount="$(command -v umount 2>${NULL})"
 if yesno ${use_zram}; then
 	SVC_NEED=zramfs
 fi
-SVC_BEFORE=syslog
+SVC_BEFORE=logger
 
 start()
 {

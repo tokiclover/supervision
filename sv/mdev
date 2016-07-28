@@ -8,6 +8,7 @@ description='Set up (mdev) device manager'
 :	${MDEV_CMD:=/sbin/mdev}
 :	${MDEV_LOGFILE:=/run/mdev.log}
 SVC_NEED='devfs sysfs'
+SVC_PROVIDE='dev'
 
 start()
 {

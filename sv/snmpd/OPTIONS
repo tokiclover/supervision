@@ -8,7 +8,7 @@ description='Simple Network Management Protocol Daemon'
 
 SVC_CONFIGFILE=/etc/snmp/snmpd.conf
 SVC_OPTS='-A -c ${SVC_CONFIGFILE} -f -q'
-SVC_USE=syslog
+SVC_USE=logger
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:

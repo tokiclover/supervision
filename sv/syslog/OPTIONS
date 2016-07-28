@@ -6,7 +6,7 @@
 SVC_AFTER='miscfs'
 SVC_USE='clock'
 SVC_NEED='hostname localfs'
-SVC_PROVIDE='syslog'
+SVC_PROVIDE='logger'
 #
 # Set a default system logger {syslog-ng,socklog,rsyslog}
 # or... default to socklog

@@ -7,7 +7,7 @@ SVC_OPTS='-f -d'
 SVC_USER=at
 SVC_GROUP=at
 SVC_SPOOLDIR=/var/spool/at
-SVC_USE=syslog
+SVC_USE=logger
 
 pre()
 {

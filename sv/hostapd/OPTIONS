@@ -5,7 +5,7 @@
 
 SVC_CONFIGFILE=/etc/hostapd/hostapd.conf
 SVC_OPTS='${SVC_CONFIGFILE}'
-SVC_USE=syslog
+SVC_USE=logger
 SVC_NEED=net
 
 #

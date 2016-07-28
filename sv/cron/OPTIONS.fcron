@@ -8,9 +8,13 @@ SVC_CRONTABS_DIR=/var/spool/${name}
 SVC_CMD=/usr/libexec/${name}
 SVC_OPTS="--configfile ${SVC_CONFIGFILE} --foreground"
 
+case "${SVC_OPTS}" in
+	(*--nosyslog*) ;;
+	(*) SVC_USE=logger;;
+esac
+
 pre()
 {
-	[ "${SVC_USE/syslog}" = "${SVC_USE}" ] && SVC_OPTS="${SVC_OPTS} --nosyslog"
 	[ -z "${SVC_LOGFILE}" ] || SVC_OPTS="${SVC_OPTS} --logfilepath ${SVC_LOGFILE}"
 }
 check_config()

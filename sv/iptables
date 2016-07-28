@@ -11,7 +11,7 @@ description_save="Save IPTables rules to file"
 
 SVC_AFTER="kmod ipset"
 SVC_BEFORE="net"
-SVC_USE="syslog"
+SVC_USE="logger"
 SVC_NEED="localfs"
 SVC_COMMANDS="check reload save"
 

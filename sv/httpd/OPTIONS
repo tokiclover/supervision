@@ -8,7 +8,7 @@ description='Web Server Daemon'
 name=lighttpd
 SVC_GROUP=${name}
 SVC_USER=${name}
-SVC_USE=syslog
+SVC_USE=logger
 SVC_NEED=net
 
 #

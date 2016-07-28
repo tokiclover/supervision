@@ -5,11 +5,9 @@
 
 description='Vixie Cron Daemon'
 SVC_OPTS=-n
-
-pre()
-{
-	[ "${SVC_USE/syslog}" != "${SVC_USE}"  ] || SVC_OPTS="${SVC_OPTS} -s"
-}
+case "${SVC_OPTS}" in
+	(*-s*) SVC_USE=logger;;
+esac
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:

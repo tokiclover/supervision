@@ -9,7 +9,7 @@ SVC_CONFIGFILE=/etc/${name}/${name}.conf
 SVC_CMD=${name}
 SVC_OPTS='${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IF}'
 case "${SVC_OPTS}" in
-	(*-s*) SVC_USE=syslog;;
+	(*-s*) SVC_USE=logger;;
 esac
 
 pre()

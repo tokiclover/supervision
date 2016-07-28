@@ -5,6 +5,7 @@
 
 name=dhcpcd
 SVC_AFTER='iptables ipt6tables'
+SVC_PROVIDE='net'
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:

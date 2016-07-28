@@ -4,7 +4,7 @@
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
-SVC_BEFORE="miscfs syslog"
+SVC_BEFORE="miscfs logger"
 sysctl="$(command -v sysctl 2>${NULL})"
 
 start_pre()

@@ -9,7 +9,7 @@ SVC_CMD=${name}
 SVC_OPTS='-k -u ${name} -g ${name}'
 SVC_USER=${name}
 SVC_GROUP=${name}
-SVC_USE=syslog
+SVC_USE=logger
 
 pre()
 {

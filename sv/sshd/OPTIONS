@@ -7,7 +7,7 @@ SSH_CONFDIR=/etc/ssh
 SVC_CONFIGFILE=${SSH_CONFDIR}/sshd_config
 SVC_CMD=sshd
 SVC_OPTS='${SSHD_OPTS} -D -f "${SVC_CONFIGFILE}"'
-SVC_USE='syslog dns'
+SVC_USE='logger dns'
 SVC_COMMANDS=check_config
 
 pre()
