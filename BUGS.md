@@ -10,3 +10,5 @@ should be the opposite!) udev is bogus here. Even tried to add conditionaly
 
     [ -d ${SV_RUNDIR}/udev ] || dmsetup_opts="${dmsetup_opts} --noudevsync"
 	[ -d ${SV_RUNDIR}/udev ] || lvm_opts="--noudevsync"
+
+There is a workaround ofr this... just wait *udev* to be ready.
