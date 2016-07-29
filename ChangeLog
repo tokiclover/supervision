@@ -6,6 +6,10 @@ Second major change (since 0.12.0_rc) is the removale of defining virtual
 service by making symlinks. --This is oly used for service instances now.
 Now, virtual service is done by defining SVC_PROVIDE for robustness.
 
+Simplified greatly deptree generation by eliminating shell handling which
+remove unnecessary complexity (300 lines removed) and improve performance
+(4 shell executions). It's late for this... but it's greatly welcomed.
+
 0.12.0_rc2:
 
 Schedule service start/stop for init-stage for {use,need} dependencies only
