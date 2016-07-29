@@ -617,6 +617,8 @@ static int svc_log(const char *fmt, ...)
 		logpath = RS_LOGFILE;
 	if (!logfd && rs_debug) {
 		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
+		if (logfd < 0)
+			logfd = open(RS_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd > 0) {
 			rs_debug = 1;
 			logfp = fdopen(logfd, "a+");
