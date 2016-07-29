@@ -45,9 +45,6 @@ static int svc_quiet = 1;
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
 	{ "clock", "hostname", NULL },
-	{ "sysctl", "dmcrypt", NULL },
-	{                      NULL },
-	{ "devfs",  "sysfs",   NULL },
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
@@ -974,13 +971,6 @@ static void svc_stage(const char *cmd)
 	rs_debug = 1;
 	svc_log("logging: %s command\n", command);
 	fprintf(logfp, "rs init stage-%d started at %s\n", rs_stage, ctime(&t));
-
-	/* initialize boot */
-	if (rs_stage == 1 )
-		rs_stage_start(1, argc, argv, envp);
-	/* fix a race condition for sysinit */
-	if (rs_stage == 0 )
-		rs_stage_start(3, argc, argv, envp);
 
 	/* do this extra loop to be able to stop stage-1 with RS_STAGE=3; so that,
 	 * {local,network}fs services etc. can be safely stopped
