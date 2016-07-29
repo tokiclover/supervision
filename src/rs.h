@@ -69,18 +69,6 @@ typedef struct RS_String {
 } RS_String_T;
 typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
 
-/* number of priority level per dependency type */
-#define RS_DEPS_PRIO 4
-
-typedef struct RS_DepType {
-	/* dependency type {after,before,use,need} */
-	char *type;
-	/* priority level list [0-RS_DEPS_PRIO] */
-	RS_StringList_T *priority[RS_DEPS_PRIO];
-	SLIST_ENTRY(RS_DepType) entries;
-} RS_DepType_T;
-typedef SLIST_HEAD(RS_DepTypeList, RS_DepType) RS_DepTypeList_T;
-
 typedef struct RS_SvcDeps {
 	/* dependency type {after,before,use,need} */
 	char *svc;
@@ -100,15 +88,6 @@ int          rs_stringlist_del (RS_StringList_T *list, const char *str);
 int          rs_stringlist_rem (RS_StringList_T *list, RS_String_T *elm);
 int          rs_stringlist_mov (RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
 void         rs_stringlist_free(RS_StringList_T *list);
-
-/* the same used for dependencies list */
-RS_DepTypeList_T *rs_deplist_load(void);
-RS_DepTypeList_T *rs_deplist_new(void);
-RS_DepType_T *rs_deplist_add (RS_DepTypeList_T *list, const char *str);
-RS_DepType_T *rs_deplist_adu (RS_DepTypeList_T *list, const char *str);
-RS_DepType_T *rs_deplist_find(RS_DepTypeList_T *list, const char *str);
-int           rs_deplist_del (RS_DepTypeList_T *list, const char *str);
-void          rs_deplist_free(RS_DepTypeList_T *list);
 
 /* the same used for service dependencies */
 extern RS_SvcDepsList_T *service_deplist;
