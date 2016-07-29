@@ -474,6 +474,7 @@ RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc)
 RS_SvcDeps_T *rs_virtual_find(const char *svc)
 {
 	int i;
+	RS_SvcDeps_T *d = NULL;
 
 	if (!svc || !virtual_deplist)
 		return NULL;
@@ -481,13 +482,16 @@ RS_SvcDeps_T *rs_virtual_find(const char *svc)
 	for (i = 0; i < rs_virtual_count; i++) {
 		if (strcmp(svc, virtual_deplist[i]->virt))
 			continue;
+		d = virtual_deplist[i];
 		if (!stage_svclist)
-			return virtual_deplist[i];
+			return d;
 		/* insert any provider included in the init-stage */
-		if (rs_stringlist_find(stage_svclist, virtual_deplist[i]->svc))
-			return virtual_deplist[i];
+		if (rs_stringlist_find(stage_svclist, d->svc))
+			return d;
 	}
 
+	if (d)
+		return d;
 	return NULL;
 }
 
