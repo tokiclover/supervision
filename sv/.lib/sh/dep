@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.6 2016/07/20 21:09:26                      Exp $
+# $Version: 1.0 2016/07/28 21:09:26                      Exp $
 #
 
 SV_CGROUP=0
@@ -13,85 +13,20 @@ export LC_ALL=C LANG=C
 source "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 SV_DEPDIR="${SV_TMPDIR}/deps"
-RS_STAGE=
-
-while [ ${#} -gt 0 ]; do
-case "${1}" in
-	(-[0123]) RS_STAGE="${1#*-}";;
-	(-d|--dir) DIR="${2}"; shift ;;
-	(*) error "illegal option -- ${@}"; exit 1;;
-esac
-shift
-done
-
-if (eval "var=1; var+=2 2>${NULL}; test x\${var} = x12 2>${NULL}"); then
-append()
-{
-	local var="${1}"
-	shift
-	eval "${var}+=\" ${*}\""
-}
-else
-append()
-{
-	local var="${1}"
-	shift
-	eval "${var}=\"\${$var} ${*}\""
-}
-fi
-append_unique()
-{
-	local val var="${1}"
-	shift
-	for val; do
-		eval is_in "${val} \${$var}" || append "${var}" "${val}"
-	done
-}
-
-remove()
-{
-	local list val="${2}" var="${1}"
-	shift 2
-	eval list="\" \$${var} \""
-	list="${list// ${val} / }"
-	list="${list# }"
-	eval "${var}='${list% }'"
-}
-remove_all()
-{
-	local val var="${1}"
-	shift
-	for val; do
-		remove "${var}" "${val}"
-	done
-}
-is_in()
-{
-	local val="${1}"
-	shift
-	case " ${*} " in
-		(*" ${val} "*) return 0;;
-		(*)            return 1;;
-	esac
-}
 
 add_dep()
 {
 	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
+
 	shift 2
 	if [ "${#}" -gt 0 ]; then
-		if ${DEP_PRIO}; then
-			append "${dep}_1" "${svc}"
-			append_unique "${dep}_2" "${@}"
-		else
-			echo "${svc}:${dep}=\"${@}\"" >&4
-		fi
+		echo "${svc}:${dep}=\"${@}\"" >&4
 	fi
 }
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	local dep SVC_PROVIDE S
+	local dep SVC_PROVIDE
 
 	if [ -d "${SV_SVCDIR}/${1}" ]; then
 		SVC_DIR="${SV_SVCDIR}/${1}" RS_TYPE=sv
@@ -112,7 +47,7 @@ dep_scan()
 {
 	local dir svc
 
-	[ -z "${RS_STAGE}" ] && DEPS=provide:PROVIDE || DEPS=
+	DEPS=provide:PROVIDE
 	for dir in ${@:-${SV_SVCDIR}}; do
 		cd ${dir}
 		for svc in *; do
@@ -120,52 +55,10 @@ dep_scan()
 		done
 	done
 }
-dep_prio()
-{
-	exec 3>${SV_DEPDIR}/${RS_STAGE}_prio
-	local DEP dep i
-	for dep in ${__SV_DEPS_ORDER__}; do
-		DEP="${dep#*:}"
-		dep="${dep%:*}"
 
-		#
-		# Swap dependency order to get a natural order like 'after'
-		#
-		case ${dep} in
-			(before)
-			eval dep_1="\"\$${dep}_2\""
-			eval "${dep}_2=\"\$${dep}_1\""
-			eval "${dep}_1=\"${dep_1}\""
-			;;
-		esac
-
-		eval "${dep}_0='${SERVICE_LIST}'"
-		eval remove_all "${dep}_0" "\$${dep}_1" "\$${dep}_2"
-		#
-		# Print dependency list
-		#
-		for i in 0 1 2 3; do
-			eval printf "'${dep}_${i}=\"%s\"\n' \"\${${dep}_${i}## }\""
-		done >&3
-	done
-}
-
-#
-# Support legacy code/dpendency priority
-#
-if [ -n "${RS_STAGE}" ]; then
-	RS_RUNDIR="${SV_SVCDIR}/.stage-${RS_STAGE}"
-	[ -n "${DIR}" -a -d "${DIR}" ] || DIR="${RS_RUNDIR}"
-	DEP_PRIO=true
-	dep_scan "${DIR}"
-	dep_prio
-	echo ${SERVICE_LIST} >${SV_DEPDIR}/${RS_STAGE}_list
-else
-	DEP_PRIO=false
-	exec 4>${SV_DEPDIR}/svcdeps
-	dep_scan
-	echo ${SERVICE_LIST} >${SV_DEPDIR}/svclist
-fi
+exec 4>${SV_DEPDIR}/svcdeps
+dep_scan
+echo ${SERVICE_LIST} >${SV_DEPDIR}/svclist
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
