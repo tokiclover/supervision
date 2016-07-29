@@ -989,15 +989,16 @@ static void svc_stage(const char *cmd)
 		if (rs_stage == 3) {
 			level = 3;
 			rs_stage = 2;
-			argv[3] = command = rs_svc_cmd[RS_SVC_CMD_STOP];
+			command = rs_svc_cmd[RS_SVC_CMD_STOP];
 			svc_start = 0;
 		}
 		else if (level) {
 			rs_stage = level;
 			level = 0;
-			argv[3] = command = rs_svc_cmd[RS_SVC_CMD_START];
+			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
 		}
+		argv[4] = command;
 
 		if (rs_debug) {
 			t = time(NULL);
