@@ -851,7 +851,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		if (!parallel)
 			cmd_flags |= SVC_CMD_WAIT;
 	}
-	if (strcmp(argv[3], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
+	if (strcmp(argv[4], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state = 's';
 	else
 		state = 'S';
