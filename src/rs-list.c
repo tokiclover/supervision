@@ -64,13 +64,16 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	/* insert the real service instead of a virtual one */
 	if (!svc_deps && (svc_deps = rs_virtual_find(s)))
 		s = svc_deps->svc;
-
-	if (prio == 0 && svc_deps) {
-		if (svc_deps->deps[RS_DEPS_BEFORE])
-			prio = 2;
-		if (svc_deps->deps[RS_DEPS_AFTER] || svc_deps->deps[RS_DEPS_USE] ||
-				svc_deps->deps[RS_DEPS_NEED])
-			prio = 1;
+	if (prio < 0) {
+		if (svc_deps) {
+			if (svc_deps->deps[RS_DEPS_AFTER] || svc_deps->deps[RS_DEPS_USE] ||
+					svc_deps->deps[RS_DEPS_NEED])
+				prio = 0;
+			else if (svc_deps->deps[RS_DEPS_BEFORE])
+				prio = 1;
+		}
+		else
+			return -1;
 	}
 	pri = prio+1;
 
@@ -123,8 +126,7 @@ static int rs_deptree_add(int type, int prio, char *svc)
 		if ((elm = rs_stringlist_find(deptree_list[p], s))) {
 			if (prio < RS_DEPTREE_MAX) {
 				rs_stringlist_mov(deptree_list[p], deptree_list[prio], elm);
-				if (type)
-					rs_deptree_add(type, prio, s);
+				rs_deptree_add(RS_DEPS_AFTER, prio, s);
 			}
 			return prio;
 		}
@@ -232,7 +234,7 @@ RS_StringList_T **rs_deptree_load(void)
 
 	/* XXX: handle {after,use,need} first */
 	SLIST_FOREACH(ent, stage_svclist, entries)
-		rs_deptree_add(RS_DEPS_AFTER , 0, ent->str);
+		rs_deptree_add(RS_DEPS_AFTER, -1, ent->str);
 	SLIST_FOREACH(ent, stage_svclist, entries)
 		rs_deptree_add(RS_DEPS_BEFORE, 0, ent->str);
 
