@@ -815,11 +815,12 @@ __NORETURN__ static int svc_exec(int argc, char *args[]) {
 	switch(retval) {
 	case -EBUSY:
 	case -EINVAL:
-	case -ENOENT:
 		exit(EXIT_SUCCESS);
+	case -ENOENT:
+		exit(2);
 	case -ENOLCK:
 	case -ECANCELED:
-		exit(EXIT_FAILURE);
+		exit(4);
 	default:
 		exit(retval);
 	}
