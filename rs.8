@@ -61,10 +61,23 @@ Print the help message
 .SH "RETURN CODES"
 .TP
 .B 0
-success (and no-existant service, service already started/stopped)
+success (service already started/stopped)
 .TP
 .B 1
-failure
+miscellaneous operational failures (to read the dependency file, generate the
+dependency file...)
+.TP
+.B 2
+failure to find the requested service
+.TP
+.B 3
+for
+.I status
+service command when a service is stopped
+.TP
+.B 4
+failure to lock a service lockfile for start/stop; or timed out when trying to
+lock the lockfile.
 .TP
 .B errno
 system call failure (fork...)
