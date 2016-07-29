@@ -40,6 +40,7 @@ extern "C" {
 #define SV_RUNDIR "/var/run/sv"
 #endif
 #define SV_TMPDIR SV_RUNDIR "/.tmp"
+#define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
 
 extern int rs_stage;
 
@@ -101,6 +102,7 @@ int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
 RS_StringList_T **rs_deptree_load(void);
 void              rs_deptree_free(RS_StringList_T **array);
 extern size_t     rs_deptree_prio;
+extern void rs_svclist_load(char *dir_path);
 
 /* find a virtual service e.g. {net,dev,logger} */
 RS_SvcDeps_T *rs_virtual_find(const char *svc);

@@ -12,7 +12,6 @@
 #include <dirent.h>
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
-#define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
 #define RS_DEPTREE_PRIO 16
 /* safety net for broken cyclic dependency */
@@ -25,7 +24,6 @@ static RS_StringList_T **deptree_list;
 size_t rs_deptree_prio = 0;
 
 static int  rs_deptree_file_save(void);
-static void rs_svclist_load(void);
 static void rs_svcdeps_free(void);
 static void rs_virtual_insert(RS_SvcDeps_T *elm);
 static size_t rs_virtual_count;
@@ -223,7 +221,7 @@ RS_StringList_T **rs_deptree_load(void)
 	/* load previous deptree file if any, or initialize a new list */
 	if (!rs_deptree_file_load())
 		rs_deptree_alloc();
-	rs_svclist_load();
+	rs_svclist_load(NULL);
 	rs_svcdeps_load();
 
 	/* XXX: handle {after,use,need} first */
@@ -241,18 +239,25 @@ RS_StringList_T **rs_deptree_load(void)
 	return deptree_list;
 }
 
-static void rs_svclist_load(void)
+void rs_svclist_load(char *dir_path)
 {
-	char path[256];
+	char path[256], *ptr;
 	DIR *dir;
 	struct dirent *ent;
 
+	if (stage_svclist)
+		return;
 	/*
 	 * get the service list for this stage
 	 */
-	snprintf(path, ARRAY_SIZE(path), "%s/.stage-%d", SV_SVCDIR, rs_stage);
-	if ((dir = opendir(path)) == NULL) {
-		ERR("Failed to open `%s' directory: %s\n", path, strerror(errno));
+	if (dir_path)
+		ptr = dir_path;
+	else {
+		ptr = path;
+		snprintf(path, ARRAY_SIZE(path), "%s/.stage-%d", SV_SVCDIR, rs_stage);
+	}
+	if ((dir = opendir(ptr)) == NULL) {
+		ERR("Failed to open `%s' directory: %s\n", ptr, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
