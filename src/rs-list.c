@@ -24,6 +24,7 @@ static RS_StringList_T  *stage_svclist;
 static RS_StringList_T **deptree_list;
 size_t rs_deptree_prio = 0;
 
+static int  rs_deptree_file_save(void);
 static void rs_svclist_load(void);
 static void rs_svcdeps_free(void);
 static void rs_virtual_insert(RS_SvcDeps_T *elm);
@@ -185,23 +186,21 @@ static RS_StringList_T **rs_deptree_file_load(void)
 	return deptree_list;
 }
 
-static int rs_deptree_file_save(RS_StringList_T *deptree[])
+static int rs_deptree_file_save(void)
 {
 	RS_String_T *ent;
 	int p;
 	char deppath[256];
 	FILE *depfile;
 
-	if (deptree == NULL)
-		deptree = deptree_list;
-	if (deptree == NULL) {
+	if (!deptree_list) {
 		errno = ENOENT;
 		return -1;
 	}
 
 	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", SV_TMPDIR_DEPS,	rs_stage);
-	if ((depfile = fopen(deppath, "wa+")) == NULL) {
-		ERR("Failed to open %s\n", deppath);
+	if ((depfile = fopen(deppath, "w+")) == NULL) {
+		ERR("Failed to open `%s': %s\n", deppath, strerror(errno));
 		return -1;
 	}
 
@@ -212,25 +211,20 @@ static int rs_deptree_file_save(RS_StringList_T *deptree[])
 				fprintf(depfile, "%s ", ent->str);
 		fprintf(depfile, "'\n");
 	}
-
 	fclose(depfile);
+
 	return 0;
 }
 
 RS_StringList_T **rs_deptree_load(void)
 {
 	RS_String_T *ent;
-	RS_StringList_T **ptr;
 
-	/* try to load the file if any */
-	if ((ptr = rs_deptree_file_load())) {
-		return ptr;
-	}
+	/* load previous deptree file if any, or initialize a new list */
+	if (!rs_deptree_file_load())
+		rs_deptree_alloc();
 	rs_svclist_load();
 	rs_svcdeps_load();
-
-	/* initialize the list */
-	rs_deptree_alloc();
 
 	/* XXX: handle {after,use,need} first */
 	SLIST_FOREACH(ent, stage_svclist, entries)
@@ -239,7 +233,7 @@ RS_StringList_T **rs_deptree_load(void)
 		rs_deptree_add(RS_DEPS_BEFORE, 0, ent->str);
 
 	/* save everything to a file */
-	rs_deptree_file_save(deptree_list);
+	rs_deptree_file_save();
 
 	/* clean unnecessary list */
 	rs_stringlist_free(stage_svclist);
