@@ -10,6 +10,11 @@ Simplified greatly deptree generation by eliminating shell handling which
 remove unnecessary complexity (300 lines removed) and improve performance
 (4 shell executions). It's late for this... but it's greatly welcomed.
 
+Miscellaneous fixes:
+
+Dynamicaly allocate a deptree list, so that, init-sage stop will work as
+usual (with new services scheduled in the right place);
+
 0.12.0_rc2:
 
 Schedule service start/stop for init-stage for {use,need} dependencies only
