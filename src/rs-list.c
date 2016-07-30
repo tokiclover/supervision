@@ -165,7 +165,8 @@ static RS_StringList_T **rs_deptree_file_load(void)
 		if (ptr == NULL)
 			continue;
 		if (p >= rs_deptree_prio)
-			rs_deptree_alloc();
+			while (p >= rs_deptree_prio)
+				rs_deptree_alloc();
 
 		/* append service list */
 		while (*ptr) {
