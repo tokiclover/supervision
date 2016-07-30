@@ -213,8 +213,11 @@ install: install-dir install-dist
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR@|$(RUNDIR)|g' \
+		rs.8 >$(DESTDIR)$(MANDIR)/man8/rs.8
+	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' \
+		-e 's|@RUNDIR@|$(RUNDIR)|g' \
 		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
-	$(install_DATA) rs.8 $(DESTDIR)$(MANDIR)/man8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
