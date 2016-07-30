@@ -357,7 +357,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		retval = svc_depend(run, argv, envp);
 		if (retval == -ENOENT)
 			;
-		else if (retval < 0) {
+		else if (retval) {
 			LOG_ERR("%s: Failed to set up service dependencies\n", run->name);
 			retval = -ECANCELED;
 			goto reterr;
@@ -431,7 +431,7 @@ static int svc_depend(struct svcrun *run, const char *argv[], const char *envp[]
 	for (type = RS_DEPS_USE; type < RS_DEPS_TYPE; type++) {
 		val = svc_exec_list(run->depends->deps[type], run->argc, argv, envp);
 		if (val > 0 && type == RS_DEPS_NEED)
-			retval = -val;
+			retval = val;
 	}
 	return retval;
 }
@@ -862,11 +862,14 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		switch(r) {
 		case SVC_RET_WAIT:
 			break;
-		case -EBUSY:
-		case -EINVAL:
 		case -ENOENT:
 		case -ENOLCK:
 		case -ECANCELED:
+			retval++;
+			continue;
+			break;
+		case -EBUSY:
+		case -EINVAL:
 			continue;
 			break;
 		}
