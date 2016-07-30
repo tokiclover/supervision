@@ -22,7 +22,7 @@ to get a fully supervised init-system and service-manager. Otherwise, only
 runscript would work out of the box if not. A supported supervision suite
 can be configured to work with this utility by running
 `\fI@LIBDIR@/sv/bin/sv-config -s \fBSUPERVISION_SUITE\fR'.
-And then, the recommended way to use this package is by using the included
+And then, the recommended way to use this package is to use the included
 `\fI@LIBDIR@/sv/sh/init-stage\fR' handler from `\fI@SYSCONFDIR@/runit/{1,2,3}\fR' for
 example. Although, using
 .B rs
@@ -57,7 +57,7 @@ a new one.
 .RB [\| \-0|\-\-sysinit \]
 .RB [\| \-1|\-\-boot \|]
 .RB [\| \-2|\-\-default \|]
-.RB [\| \-3|\-\-shutdown \|]\|]
+.RB [\| \-3|\-\-shutdown \|]
 .RB [\| \-q|\-\-quiet \|]
 .RB  \| SERVICE \|
 .RB \| COMMAND \|
@@ -70,7 +70,7 @@ command to manage services rather than using the service executable. And this
 is more true for supervision services when dealing with dependencies and
 virtual services. Starting a supervision service shall be done with
 .B rs
-binary isntead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND ARGUMENTS\fR'.
+binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND ARGUMENTS\fR'.
 
 .br
 .B rs
@@ -92,7 +92,64 @@ Select a particular stage or runlevel
 Print the help message
 .TP
 .B \-q|\-\-quiet
-Print the help message
+Suppress verbose message
+.SH "SERVICE COMMANDS"
+Standard LSB along with extra service commands are supported.
+.TP
+.B start
+start a service if down or stopped (supervision service wait up to 10 seconds
+by default to start a service.)
+.TP
+.B stop
+stop a service if up or started (supervision service wait up to 10 seconds by
+default to stop a service.)
+.TP
+.B restart
+restart a service after stopping it if started (runscript service can define
+a particular shell function for this purpose.)
+.TP
+.B remove
+remove a supervised service from the running directory.
+This command has no effect for runscript services.
+.TP
+.B status
+report the status of service (if started or stopped.)
+.TP
+.B zap
+remove the temporary files of a service to be able to start a fresh environment,
+or restart a service if already started.
+.TP
+.B add
+add a service to an init-stage or runlevel (stage level argument is required.)
+.TP
+.B del
+remove a service from an init-stage or runlevel (stage level argument is required.)
+.TP
+.B cgroup_remove_service
+remove the
+.B Control Group PIDs
+hierarchy after stopping a service. This command has no effect for runscript
+services.
+.B CGROUP_CLEANUP
+environmenet variable can be enabled for automatic clean up.
+.TP
+.B new
+add a new supervised service from a template. This command should be run with
+`\fI@LIBDIR@/sv/bin/sv-config [--log] \fBSERVICE \fInew\fR'.
+.TP
+.B SVC_COMMANDS
+extra comands defined as shell functions and added to
+.B SVC_COMMANDS
+environment variable. Any defined command can be used as a standard LSB command.
+.TP
+.B desc
+print service description to standard output.
+.SH CONFIGURATION
+See
+.I @SYSCONFDIR@/sv.conf
+and \fBsupervsion\fR(5) for settings related to
+.B rs
+service management.
 .SH "RETURN CODES"
 .TP
 .B 0
@@ -119,6 +176,18 @@ system call failure (fork...)
 .TP
 .B 255
 execve system call failure
+.SH "APPLICATION USAGE"
+Some services are added to the service directory? Try starting them then.
+It seems to work? Good, try to add them in a init-stage or runlevel with
+`\fIrs -\fBLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
+by running `\fIrs -\fBLEVEL \fIstage\fR' and then checkout
+\fISV_TMPDIR/deps/\fBLEVEL\fI_deptree\fR to see if the service is inserted
+in the right place depending on the dependency definitions. Or better,
+check out the file beforehand. It looks weird or the order changed dramatically?
+Try removing the file altogether and try again. Else, it can be a case of cyclic
+dependency definition. Major dependency redefinition is necessary.
+.SH "FUTURE DIRECTIONS"
+None.
 .SH "SEE ALSO"
 .BR supervision (5)
 .SH AUTHORS
