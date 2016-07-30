@@ -1121,8 +1121,6 @@ int main(int argc, char *argv[])
 					prgname);
 			exit(EXIT_FAILURE);
 		}
-		if (strcmp(rs_svc_cmd[RS_SVC_CMD_START], argv[optind+1]) == 0 ||
-			strcmp(rs_svc_cmd[RS_SVC_CMD_STOP] , argv[optind+1]) == 0)
 		svc_exec(argc-optind, argv+optind);
 	}
 
