@@ -5,7 +5,7 @@
 #
 
 SVC_AFTER="kmod"
-SVC_BEFORE="checkfs device-mapper dmcrypt lvm"
+SVC_BEFORE="checkfs"
 SVC_NEED="udev"
 SVC_COMMANDS="reload"
 udevadm="$(command -v udevadm 2>${NULL})"
