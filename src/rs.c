@@ -12,7 +12,6 @@
 #include "rs.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <dirent.h>
 #include <getopt.h>
 #include <signal.h>
 #include <sys/file.h>
@@ -41,6 +40,7 @@ struct svcrun {
 int rs_stage = -1;
 static int svc_deps  = 1;
 static int svc_quiet = 1;
+static size_t env_size;
 
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
@@ -99,8 +99,7 @@ static const char *const env_list[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES",	"RS_STAGE", "RS_STRICT_DEP",
-	"SVC_DEBUG", "SVC_DEPS", "SVC_WAIT", NULL
+	"COLUMNS", "LINES", "SVC_DEBUG", "SVC_DEPS", "SVC_WAIT", NULL, NULL
 };
 
 __NORETURN__ static void help_message(int exit_val);
@@ -161,13 +160,7 @@ static int svc_state(const char *svc, int status);
  * to finish/start particular stages
  * @return 0 on success or number of failed services
  */
-static int rs_stage_start(int stage, int argc, const char *argv[], const char *envp[]);
-
-/*
- * stop remaining list;
- * @return: 0 on success;
- */
-static int rs_stage_stop(int argc, const char *argv[], const char *envp[]);
+static int svc_stage_command(int stage, int argc, const char *argv[], const char *envp[]);
 
 /*
  * set service status
@@ -339,8 +332,8 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 			goto reterr;
 		}
 
-		path = err_malloc(PATH_MAX*sizeof(char));
-		snprintf(path, PATH_MAX, "%s/.stage-%d/%s", SV_SVCDIR, rs_stage,
+		path = err_malloc(256*sizeof(char));
+		snprintf(path, 256, "%s/.stage-%d/%s", SV_SVCDIR, rs_stage,
 				run->name);
 		if (!access(path, F_OK)) {
 			if (command == 'd')
@@ -474,7 +467,9 @@ static const char **svc_env(void)
 			envp[i++] = err_realloc(env, strlen(env)+1);
 		}
 
-	envp[i] = (char *)0;
+	envp[i++] = (char *)0;
+	envp[i++] = (char *)0;
+	env_size = i;
 	return envp;
 }
 
@@ -908,7 +903,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	return retval;
 }
 
-static int rs_stage_start(int stage, int argc, const char *argv[], const char *envp[])
+static int svc_stage_command(int stage, int argc, const char *argv[], const char *envp[])
 {
 	int i, retval;
 	RS_StringList_T *init_stage_list;
@@ -923,28 +918,17 @@ static int rs_stage_start(int stage, int argc, const char *argv[], const char *e
 	return retval;
 }
 
-static int rs_stage_stop(int argc, const char *argv[], const char *envp[])
+/* this is done because an env list cannot dynamically changed without... */
+static void svc_stage_env(int level, const char *envp[])
 {
-	int retval;
-	RS_StringList_T *svclist;
-	DIR *d_ptr;
-	struct dirent *d_ent;
+	static char stage_env[16];
+	static int setup = 1;
 
-	d_ptr = opendir(SV_TMPDIR_STAR);
-	if (d_ptr == NULL) {
-		DBG("Failed to open %s directory: `%s'\n", SV_TMPDIR_STAR, strerror(errno));
-		return -1;
+	if (setup) {
+		setup = 0;
+		envp[env_size-2] = stage_env;
 	}
-	svclist = rs_stringlist_new();
-
-	while ((d_ent = readdir(d_ptr)))
-		if (d_ent->d_name[0] != '.')
-			rs_stringlist_add(svclist, d_ent->d_name);
-	closedir(d_ptr);
-
-	retval = svc_exec_list(svclist, argc, argv, envp);
-	rs_stringlist_free(&svclist);
-	return retval;
+	snprintf(stage_env, sizeof(stage_env), "RS_STAGE=%d", level);
 }
 
 static void svc_stage(const char *cmd)
@@ -980,17 +964,28 @@ static void svc_stage(const char *cmd)
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
 		if (rs_stage == 3) {
-			level = 3;
+			/* shutdown stage-2 */
 			rs_stage = 2;
+			level = 3;
+			svc_stage_env(rs_stage, envp);
 			command = rs_svc_cmd[RS_SVC_CMD_STOP];
 			svc_start = 0;
 		}
+		else if (level == 3) {
+			/* shutdown stage-1 with RS_STAGE=3 */
+			rs_stage = 1;
+			svc_stage_env(level, envp);
+			level = -level;
+		}
 		else if (level) {
-			rs_stage = level;
+			/* and finaly start stage-3 */
+			rs_stage = -level;
 			level = 0;
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
 		}
+		else
+			svc_stage_env(rs_stage, envp);
 		argv[4] = command;
 
 		if (rs_debug) {
@@ -1025,16 +1020,13 @@ static void svc_stage(const char *cmd)
 		} /* PRIORITY_LEVEL_LOOP */
 		rs_deptree_free(deptree);
 
-		/* terminate remaining services before stage-3 */
-		if (level)
-			rs_stage_stop(argc, argv, envp);
-		else
+		if (!level)
 			break;
 	} /* SHUTDOWN_LOOP */
 
 	/* finish sysinit */
 	if (rs_stage == 0 )
-		rs_stage_start(0, argc, argv, envp);
+		svc_stage_command(0, argc, argv, envp);
 
 	t = time(NULL);
 	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
@@ -1071,7 +1063,6 @@ int main(int argc, char *argv[])
 			case '1':
 			case '2':
 			case '3':
-				setenv("RS_STAGE", argv[optind-1]+1, 1);
 				rs_stage = atoi(argv[optind-1]+1);
 				break;
 			case 'q':
@@ -1103,7 +1094,6 @@ int main(int argc, char *argv[])
 		svc_quiet = 0;
 		unsetenv("SVC_DEPS");
 		setenv("SVC_DEBUG", off, 1);
-		setenv("RS_STRICT_DEP", off, 1);
 
 		if (rs_stage >= 0)
 			svc_stage(argv[optind+1]);
@@ -1121,7 +1111,6 @@ int main(int argc, char *argv[])
 		}
 		if (strcmp(rs_svc_cmd[RS_SVC_CMD_START], argv[optind+1]) == 0 ||
 			strcmp(rs_svc_cmd[RS_SVC_CMD_STOP] , argv[optind+1]) == 0)
-			unsetenv("RS_STAGE");
 		svc_exec(argc-optind, argv+optind);
 	}
 
