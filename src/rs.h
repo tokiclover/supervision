@@ -88,7 +88,7 @@ RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str);
 int          rs_stringlist_del (RS_StringList_T *list, const char *str);
 int          rs_stringlist_rem (RS_StringList_T *list, RS_String_T *elm);
 int          rs_stringlist_mov (RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
-void         rs_stringlist_free(RS_StringList_T *list);
+void         rs_stringlist_free(RS_StringList_T **list);
 
 /* the same used for service dependencies */
 extern RS_SvcDepsList_T *service_deplist;

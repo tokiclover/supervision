@@ -41,7 +41,7 @@ void rs_deptree_free(RS_StringList_T **array)
 {
 	int i;
 	for (i = 0; i < rs_deptree_prio; i++)
-		rs_stringlist_free(array[i]);
+		rs_stringlist_free(&array[i]);
 	rs_deptree_prio = 0;
 }
 
@@ -234,7 +234,7 @@ RS_StringList_T **rs_deptree_load(void)
 	rs_deptree_file_save();
 
 	/* clean unnecessary list */
-	rs_stringlist_free(stage_svclist);
+	rs_stringlist_free(&stage_svclist);
 
 	return deptree_list;
 }
@@ -418,18 +418,19 @@ int rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *e
 	return 0;
 }
 
-void rs_stringlist_free(RS_StringList_T *list)
+void rs_stringlist_free(RS_StringList_T **list)
 {
 	RS_String_T *elm;
 
-	if (list)
-		while (!SLIST_EMPTY(list)) {
-			elm = SLIST_FIRST(list);
+	if (list) {
+		while (!SLIST_EMPTY(*list)) {
+			elm = SLIST_FIRST(*list);
 			free(elm->str);
-			SLIST_REMOVE_HEAD(list, entries);
+			SLIST_REMOVE_HEAD(*list, entries);
 			free(elm);
 		}
-	list = NULL;
+		*list = NULL;
+	}
 }
 
 
@@ -519,7 +520,7 @@ static void rs_svcdeps_free(void)
 	while (!SLIST_EMPTY(service_deplist)) {
 		elm = SLIST_FIRST(service_deplist);
 		for (i = 0; i < RS_DEPS_TYPE; i++)
-			rs_stringlist_free(elm->deps[i]);
+			rs_stringlist_free(&(elm->deps[i]));
 
 		free(elm->svc);
 		if (elm->virt)

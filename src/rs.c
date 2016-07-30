@@ -918,7 +918,7 @@ static int rs_stage_start(int stage, int argc, const char *argv[], const char *e
 		rs_stringlist_add(init_stage_list, rs_init_stage[stage][i]);
 
 	retval = svc_exec_list(init_stage_list, argc, argv, envp);
-	rs_stringlist_free(init_stage_list);
+	rs_stringlist_free(&init_stage_list);
 
 	return retval;
 }
@@ -943,7 +943,7 @@ static int rs_stage_stop(int argc, const char *argv[], const char *envp[])
 	closedir(d_ptr);
 
 	retval = svc_exec_list(svclist, argc, argv, envp);
-	rs_stringlist_free(svclist);
+	rs_stringlist_free(&svclist);
 	return retval;
 }
 
