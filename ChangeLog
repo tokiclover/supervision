@@ -10,6 +10,13 @@ Simplified greatly deptree generation by eliminating shell handling which
 remove unnecessary complexity (300 lines removed) and improve performance
 (4 shell executions). It's late for this... but it's greatly welcomed.
 
+Sanitized shutdown phase (which had too many redundancy... some old code
+was dormant in {rs,init-stage} which were entirely removed).
+
+With the previous simplification, speed improved by 30% because parallel
+start/stop became more optimal. And shutdown phase time is on par with
+boot up with shutdown sanity clean up.
+
 Miscellaneous fixes:
 
 Dynamicaly allocate a deptree list, so that, init-sage stop will work as
