@@ -324,7 +324,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 	switch(command) {
 	case 'a':
 	case 'd':
-		if (getenv("RS_STAGE") == NULL) {
+		if (rs_stage < 0) {
 			fprintf(stderr, "%s: stage level argument is required\n", prgname);
 			fprintf(stderr, "Usage: %s -(0|1|2|3) %s COMMAND\n", prgname,
 					run->name);
