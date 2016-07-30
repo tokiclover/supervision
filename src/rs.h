@@ -102,7 +102,7 @@ int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
 RS_StringList_T **rs_deptree_load(void);
 void              rs_deptree_free(RS_StringList_T **array);
 extern size_t     rs_deptree_prio;
-extern void rs_svclist_load(char *dir_path);
+extern RS_StringList_T **rs_svclist_load(char *dir_path);
 
 /* find a virtual service e.g. {net,dev,logger} */
 RS_SvcDeps_T *rs_virtual_find(const char *svc);

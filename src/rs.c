@@ -1024,7 +1024,15 @@ static void svc_stage(const char *cmd)
 		} /* PRIORITY_LEVEL_LOOP */
 		rs_deptree_free(deptree);
 
-		if (!level)
+		/* terminate remaining services before stage-3 */
+		if (level == 3) {
+			deptree = rs_svclist_load(SV_TMPDIR_STAR);
+			svc_exec_list(*deptree, argc, argv, envp);
+			rs_stringlist_free(deptree);
+		}
+		else if (level)
+			;
+		else
 			break;
 	} /* SHUTDOWN_LOOP */
 

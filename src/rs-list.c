@@ -239,14 +239,14 @@ RS_StringList_T **rs_deptree_load(void)
 	return deptree_list;
 }
 
-void rs_svclist_load(char *dir_path)
+RS_StringList_T **rs_svclist_load(char *dir_path)
 {
 	char path[256], *ptr;
 	DIR *dir;
 	struct dirent *ent;
 
 	if (stage_svclist)
-		return;
+		return &stage_svclist;
 	/*
 	 * get the service list for this stage
 	 */
@@ -267,6 +267,8 @@ void rs_svclist_load(char *dir_path)
 			rs_stringlist_add(stage_svclist, ent->d_name);
 	}
 	closedir(dir);
+
+	return &stage_svclist;
 }
 
 void rs_svcdeps_load(void)
