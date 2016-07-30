@@ -827,11 +827,11 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		const char *envp[])
 {
 	RS_String_T *svc;
-	size_t n = 0, size = 32;
+	size_t n = 0, size = 8;
 	int retval = 0;
 	int i, r, state, status;
 	static int parallel, setup, cmd_flags = SVC_CMD_FIND;
-	struct svcrun *run = NULL;
+	struct svcrun **run;
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -851,13 +851,14 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	else
 		state = 'S';
 
-	run = err_calloc(size, sizeof(struct svcrun));
+	run = err_malloc(size*sizeof(void*));
 	SLIST_FOREACH(svc, list, entries) {
-		run[n].name = svc->str;
-		run[n].depends = rs_virtual_find(svc->str);
-		run[n].argc = argc;
+		run[n]  = err_malloc(sizeof(struct svcrun));
+		run[n]->name = svc->str;
+		run[n]->depends = rs_virtual_find(svc->str);
+		run[n]->argc = argc;
 
-		r = svc_cmd(argv, envp, run+n, cmd_flags);
+		r = svc_cmd(argv, envp, run[n], cmd_flags);
 		switch(r) {
 		case SVC_RET_WAIT:
 			break;
@@ -871,32 +872,32 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		}
 
 		if (parallel) {
-			close(run[n].lock);
-			if (n == size) {
-				size += 32;
-				run = err_realloc(run, sizeof(struct svcrun)*size);
+			close(run[n]->lock);
+			if (n++ == size) {
+				size += 8;
+				run = err_realloc(run, sizeof(void*)*size);
 			}
-			n++;
 		}
 		else if (r)
 			retval++;
 	}
 
 	for (i = 0; i < n; i++) {
-		waitpid(run[i].pid, &status, 0);
-		svc_mark(run[i].name, 'W');
+		waitpid(run[i]->pid, &status, 0);
+		svc_mark(run[i]->name, 'W');
 		if (WEXITSTATUS(status)) {
 			retval++;
 			if (state == 's')
-				svc_mark(run[i].name, 'f');
+				svc_mark(run[i]->name, 'f');
 		}
 		else {
-			svc_mark(run[i].name, state);
-			if (run[i].depends && run[i].depends->virt)
-				svc_mark(run[i].depends->virt, state);
+			svc_mark(run[i]->name, state);
+			if (run[i]->depends && run[i]->depends->virt)
+				svc_mark(run[i]->depends->virt, state);
 		}
 		if (!svc_quiet)
-			svc_end(run[i].name, status);
+			svc_end(run[i]->name, status);
+		free(run[i]);
 	}
 	free(run);
 
