@@ -82,6 +82,7 @@ dist_SVC_INSTANCES  = \
 	$(EXTRA_SERVICE_INSTANCES) \
 	getty-tty6:getty-tty1 getty-tty5:getty-tty1 getty-tty4:getty-tty1 \
 	getty-tty3:getty-tty1 getty-ttyS0:getty-tty1 getty-ttyS1:getty-tty1 \
+	getty-tty2:getty-tty1 \
 	tmpfiles.setup:tmpfiles.dev \
 	swapfiles:swaps \
 	networkfs:localfs \
