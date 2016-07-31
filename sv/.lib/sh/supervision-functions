@@ -147,10 +147,10 @@ svc_mark()
 	local arg ret
 	for arg; do
 		case "${arg}" in
-			(-d|--down*)  touch "${SV_TMPDIR}/down/${SVC_NAME}";;
+			(-d|--down*)  echo >"${SV_TMPDIR}/down/${SVC_NAME}";;
 			(-u|--up*)    rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
-			(-f|--failed) touch "${SV_TMPDIR}/fail/${SVC_NAME}";;
-			(-s|--start*) touch "${SV_TMPDIR}/star/${SVC_NAME}";;
+			(-f|--failed) echo >"${SV_TMPDIR}/fail/${SVC_NAME}";;
+			(-s|--start*) echo >"${SV_TMPDIR}/star/${SVC_NAME}";;
 			(-S|--stoped) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
 			(*) return ${ret};;
 		esac
@@ -438,18 +438,39 @@ svc_run()
 	svc_pre || return
 	[ "${__SVC_DEPEND__}" = 0 ] || svc_depend || return
 
+	#
+	# XXX: workaround for false start failure
+	#
+	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
+
+	if [ -n "${SVC_PROVIDE}" ]; then
+		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
+		echo >${virtual}
+	fi
+
+	echo >${real}
 	echo $$ >${SVC_PIDFILE}
-	svc_mark -s
+
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
-	svc_mark -S
-	rm -f ${SVC_PIDFILE}
+
+	rm -f ${SVC_PIDFILE} ${virtual} ${real}
 }
 
 svc_finish()
 {
-	svc_mark -S
+	#
+	# XXX: workaround for false start failure
+	#
+	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
+
+	if [ -n "${SVC_PROVIDE}" ]; then
+		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
+		echo >${virtual}
+	fi
+
+	rm -f ${SVC_PIDFILE} ${virtual} ${real}
+
 	svc_post
-	rm -f ${SVC_PIDFILE}
 	[ -n "${FIN_CMD}" ] || return 0
 	eval exec ${FIN_CMD} ${FIN_OPTS}
 }
