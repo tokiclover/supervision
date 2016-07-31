@@ -52,10 +52,16 @@ die()
 #
 info()
 {
-	local msg="${*}"
-	PRINT_LEN=$((${#name}+3+${#msg}))
+	local head tail
+	if [ ${#} -gt 2 ]; then
+		head="${1}"
+		tail="${2}"
+	else
+		tail="${*}"
+	fi
+	PRINT_LEN=$((${#name}+3+${#tail}+${#head}))
 	local pfx="${name:+${COLOR_YLW}${name}:${COLOR_RST}}"
-	echo -e "${PRINT_EOL}${COLOR_BLU}INFO:${COLOR_RST} ${pfx} ${@}"
+	echo -e "${PRINT_EOL}${COLOR_BLU}${head:-*}${COLOR_RST} ${pfx} ${@}"
 }
 
 #
