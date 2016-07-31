@@ -924,25 +924,13 @@ static int svc_stage_command(int stage, int argc, const char *argv[], const char
 	return retval;
 }
 
-/* this is done because an env list cannot dynamically changed without... */
-static void svc_stage_env(int level, const char *envp[])
-{
-	static char stage_env[16];
-	static int setup = 1;
-
-	if (setup) {
-		setup = 0;
-		envp[env_size-2] = stage_env;
-	}
-	snprintf(stage_env, sizeof(stage_env), "RS_STAGE=%d", level);
-}
-
 static void svc_stage(const char *cmd)
 {
-	RS_StringList_T **deptree;
+	RS_StringList_T **deptree, *ptr;
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
+	char stage_env[16], *buf;
 	int p, r;
 	int svc_start = 1;
 	int level = 0;
@@ -957,7 +945,9 @@ static void svc_stage(const char *cmd)
 		svc_start = 0;
 
 	envp = svc_env();
-	argv[5] = (char *)0, argv[4] = command;
+	envp[env_size-2] = stage_env;
+	snprintf(stage_env, sizeof(stage_env), "RS_STAGE=%d", rs_stage);
+	argv[5] = (char *)0;
 	rs_svcdeps_load();
 
 	t = time(NULL);
@@ -969,29 +959,28 @@ static void svc_stage(const char *cmd)
 	 * {local,network}fs services etc. can be safely stopped
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
-		if (rs_stage == 3) {
-			/* shutdown stage-2 */
-			rs_stage = 2;
+		if (rs_stage == 3 && level == 0) {
 			level = 3;
-			svc_stage_env(rs_stage, envp);
+			/* load the started services instead of only stage-[12]
+			 * to be abe to shutdown everything with RS_STAGE=3
+			 */
+			ptr = *rs_svclist_load(SV_TMPDIR_STAR);
 			command = rs_svc_cmd[RS_SVC_CMD_STOP];
 			svc_start = 0;
 		}
-		else if (level == 3) {
-			/* shutdown stage-1 with RS_STAGE=3 */
-			rs_stage = 1;
-			svc_stage_env(level, envp);
-			level = -level;
-		}
 		else if (level) {
-			/* and finaly start stage-3 */
-			rs_stage = -level;
 			level = 0;
+			/* avoid starting everything */
+			buf = err_malloc(256);
+			snprintf(buf, 256, "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
+			unlink(buf);
+			free(buf);
+
+			/* and finaly start stage-3 */
+			rs_stringlist_free(&ptr);
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
 		}
-		else
-			svc_stage_env(rs_stage, envp);
 		argv[4] = command;
 
 		if (rs_debug) {
@@ -1026,15 +1015,8 @@ static void svc_stage(const char *cmd)
 		} /* PRIORITY_LEVEL_LOOP */
 		rs_deptree_free(deptree);
 
-		/* terminate remaining services before stage-3 */
-		if (level == 3) {
-			deptree = rs_svclist_load(SV_TMPDIR_STAR);
-			svc_exec_list(*deptree, argc, argv, envp);
-			rs_stringlist_free(deptree);
-		}
-		else if (level)
-			;
-		else
+		/* break shutdown loop */
+		if (!level)
 			break;
 	} /* SHUTDOWN_LOOP */
 
