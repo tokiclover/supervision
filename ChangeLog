@@ -1,5 +1,17 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0_rc4:
+
+Optimized shutdown (stage-3) by removing yet other redundancies; now,
+shutdown phase is as fast as boot up.
+
+Added some usefull content to rs(8) manual page.
+
+Miscellaneous fixes:
+
+Optimize memory usage and alignment to avoid memory corruption with
+{m,c,re}alloc(3) family syscalls in some use cases.
+
 0.12.0_rc3:
 
 Second major change (since 0.12.0_rc) is the removale of defining virtual
