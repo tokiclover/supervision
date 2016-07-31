@@ -35,6 +35,8 @@ struct svcrun {
 	pid_t pid;
 	int lock;
 	int argc;
+	const char **argv;
+	const char **envp;
 };
 
 int rs_stage = -1;
@@ -108,27 +110,24 @@ __NORETURN__ static void help_message(int exit_val);
 #define SVC_CMD_WAIT 2
 #define SVC_RET_WAIT 256
 /* execute a service command;
- * @argv: argument vector to pass to execve(2);
- * @envp: environment vector to pass to execve(2);
- * @run: an info structure to update;
+ * @run: an svcrun structure;
  * @return: -errno on errors,
  *   child return value if SVC_CMD_WAIT is or-ed to the flags,
  *   SVC_RET_WAIT otherwise;
  */
-static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, int flags);
+static int svc_cmd(struct svcrun *run, int flags);
 
 /* tiny function to print end string like the shell end() counterpart */
 static int svc_end(const char *svc, int status);
 
 /*
  * setup service dependencies
- * @svc: service name;
- * @argv and @envp are passed verbatim to svc_exec_list();
+ * @run: svcrun structure;
  * @return: 0 on succsess,
  *        > 0 for non fatals errors
  *        < 0 for fatals errors;
  */
-static int svc_depend(struct svcrun *run, const char *argv[], const char *envp[]);
+static int svc_depend(struct svcrun *run);
 
 /* simple function to help debug info in a file (vfprintf(3) clone) */
 static FILE *logfp;
@@ -242,7 +241,7 @@ __NORETURN__ static void help_message(int exit_val)
 	exit(exit_val);
 }
 
-static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, int flags)
+static int svc_cmd(struct svcrun *run, int flags)
 {
 	static char nodeps_arg[16] = "--nodeps", deps_arg[8] = "--deps";
 	static char type_rs[8] = "--rs", type_sv[8] = "--sv";
@@ -251,8 +250,8 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 	int find = flags & SVC_CMD_FIND;
 	pid_t pid;
 	int deps = 0, i;
-	const char **ARGV = NULL;
-	const char *cmd = argv[4];
+	const char **argv = NULL;
+	const char *cmd = run->argv[4];
 	char *path;
 
 	if (setup) {
@@ -300,9 +299,9 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		}
 	}
 
-	ARGV = err_calloc(run->argc, sizeof(void*));
+	argv = err_calloc(run->argc, sizeof(void*));
 	for (i = 0; i <= run->argc; i++)
-		ARGV[i] = argv[i];
+		argv[i] = run->argv[i];
 	/* get service path */
 	if (find) {
 		/* find a real service instead of a virtual */
@@ -310,15 +309,15 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 			if (run->depends && run->depends->virt)
 				run->name = run->depends->svc;
 		}
-		run->path = ARGV[3] = svc_find(run->name);
-		if (ARGV[3] == NULL)
+		run->path = argv[3] = svc_find(run->name);
+		if (argv[3] == NULL)
 			return -ENOENT;
 	}
-	if (file_test(ARGV[3], 'd'))
-		ARGV[1] = type_sv;
+	if (file_test(argv[3], 'd'))
+		argv[1] = type_sv;
 	else
-		ARGV[1] = type_rs;
-	ARGV[2] = deps_arg;
+		argv[1] = type_rs;
+	argv[2] = deps_arg;
 
 	/* get service status */
 	switch(command) {
@@ -354,7 +353,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 
 	/* setup dependencies */
 	if (deps) {
-		retval = svc_depend(run, argv, envp);
+		retval = svc_depend(run);
 		if (retval == -ENOENT)
 			;
 		else if (retval) {
@@ -363,7 +362,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 			goto reterr;
 		}
 		else
-			ARGV[2] = nodeps_arg;
+			argv[2] = nodeps_arg;
 	}
 
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
@@ -403,7 +402,7 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 		sigaction(SIGQUIT, &sa_sigquit, NULL);
 		sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
 
-		execve(RS_RUNSCRIPT, (char *const*)ARGV, (char *const*)envp);
+		execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)run->envp);
 		_exit(255);
 	}
 	else
@@ -412,11 +411,11 @@ static int svc_cmd(const char *argv[], const char *envp[], struct svcrun *run, i
 reterr:
 	if (find)
 		free((void *)run->path);
-	free(ARGV);
+	free(argv);
 	return retval;
 }
 
-static int svc_depend(struct svcrun *run, const char *argv[], const char *envp[])
+static int svc_depend(struct svcrun *run)
 {
 	int type, val, retval = 0;
 
@@ -429,7 +428,8 @@ static int svc_depend(struct svcrun *run, const char *argv[], const char *envp[]
 
 	/* skip before deps type */
 	for (type = RS_DEPS_USE; type < RS_DEPS_TYPE; type++) {
-		val = svc_exec_list(run->depends->deps[type], run->argc, argv, envp);
+		val = svc_exec_list(run->depends->deps[type], run->argc, run->argv,
+				run->envp);
 		if (val > 0 && type == RS_DEPS_NEED)
 			retval = val;
 	}
@@ -778,37 +778,37 @@ static void svc_sigsetup(void)
 		ERROR("%s: sigprocmask(SIG_BLOCK)", __func__);
 }
 
-__NORETURN__ static int svc_exec(int argc, char *args[]) {
-	const char **envp;
-	const char *argv[argc+4];
+__NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	int i = 0, j, retval;
 	int cmd_flags = SVC_CMD_WAIT;
 	struct svcrun run;
 
+	run.argc = 8*(argc/8)+8+ (argc%8) > 4 ? 8 : 0;
+	run.argv = err_malloc(run.argc*sizeof(void*));
+
 	if (!service_deplist)
 		rs_svcdeps_load();
-	if (args[0][0] == '/') {
-		argv[3] = args[0];
-		run.name = strrchr(args[0], '/')+1;
+	if (argv[0][0] == '/') {
+		run.argv[3] = argv[0];
+		run.name = strrchr(argv[0], '/')+1;
 	}
 	else {
 		cmd_flags |= SVC_CMD_FIND;
-		run.name = args[0];
+		run.name = argv[0];
 	}
-	argv[0] = "runscript";
-	argv[4] = args[1];
+	run.argv[0] = "runscript";
+	run.argv[4] = argv[1];
 
 	/* setup argv and envp */
-	argc -= 2, args += 2;
+	argc -= 2, argv += 2;
 	i = 5;
 	for ( j = 0; j < argc; j++)
-		argv[i++] = args[j];
-	argv[i] = (char *)0;
-	run.argc = i+1;
-	envp = svc_env();
+		run.argv[i++] = argv[j];
+	run.argv[i] = (char *)0;
+	run.envp = svc_env();
 	run.depends = NULL;
 
-	retval = svc_cmd(argv, envp, &run, cmd_flags);
+	retval = svc_cmd(&run, cmd_flags);
 	switch(retval) {
 	case -EBUSY:
 	case -EINVAL:
@@ -857,8 +857,10 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		run[n]->name = svc->str;
 		run[n]->depends = rs_virtual_find(svc->str);
 		run[n]->argc = argc;
+		run[n]->argv = argv;
+		run[n]->envp = envp;
 
-		r = svc_cmd(argv, envp, run[n], cmd_flags);
+		r = svc_cmd(run[n], cmd_flags);
 		switch(r) {
 		case SVC_RET_WAIT:
 			break;
@@ -944,7 +946,7 @@ static void svc_stage(const char *cmd)
 	int p, r;
 	int svc_start = 1;
 	int level = 0;
-	int argc = 6;
+	int argc = 8;
 	time_t t;
 
 	if (rs_stage == 0) /* force service command */
