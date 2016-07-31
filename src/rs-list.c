@@ -113,8 +113,7 @@ static int rs_deptree_add(int type, int prio, char *svc)
 					if (r < 0)
 						continue;
 					r = rs_deptree_add(RS_DEPS_AFTER, r, ent->str);
-					r = ++r > prio ? r : prio;
-					rs_deptree_add(type, pri > r ? pri : r, s);
+					prio = ++r > prio ? r : prio;
 				}
 			}
 		}
