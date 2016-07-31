@@ -23,9 +23,14 @@ start_pre()
 start()
 {
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
+	local lvm_opts
+	#
+	# XXX: check whether udev is available or not
+	#
+	[ -d ${SV_RUNDIR}/udev ] || lvm_opts="--noudevsync"
 	${lvm} pvscan
 	${lvm} vgscan --mknodes
-	${lvm} vgchange --noudevsync --sysinit --activate ly
+	${lvm} vgchange ${lvm_opts} --sysinit --activate ly
 }
 
 stop()
