@@ -450,7 +450,7 @@ static const char **svc_env(void)
 {
 	const char **envp;
 	size_t size = 1024;
-	char *env = err_malloc(8);
+	char *env = err_malloc(size);
 	int i = 0, j;
 	envp = err_calloc(ARRAY_SIZE(env_list), sizeof(void *));
 
