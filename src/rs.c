@@ -1093,6 +1093,7 @@ static void svc_stage(const char *cmd)
 	argv[5] = (char *)0;
 	rs_svcdeps_load();
 	svc_level();
+	chdir("/");
 
 	t = time(NULL);
 	rs_debug = 1;
