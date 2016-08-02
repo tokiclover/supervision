@@ -135,57 +135,50 @@ __NORETURN__ int sv_shutdown(int action)
 	FILE *fp;
 	size_t len = 0;
 	char *line = NULL, *ptr = NULL;
-	char *argv[4], opt[32];
+	char *argv[8], opt[8];
 	const char ent[] = "__SV_NAM__";
 	size_t siz = sizeof(ent)-1;
-	argv[1] = opt, argv[2] = NULL;
 
-	if ((fp = fopen(SV_SVC_BACKEND, "r")) == NULL)
-		ERROR("Failed to open `%s'", SV_SVC_BACKEND);
+	argv[0] = "rs", argv[2] = NULL;
+	if (action)
+		argv[1] = "reboot";
+	else
+		argv[1] = "shutdown";
 
-	while (rs_getline(fp, &line, &len) > 0) {
-		if (strncmp(line, ent, siz) == 0) {
-			ptr = shell_string_value(line+siz+1);
-			ptr = err_strdup(ptr);
-			free(line);
-			fclose(fp);
-			break;
+	if ((fp = fopen(SV_SVC_BACKEND, "r")))
+		while (rs_getline(fp, &line, &len) > 0)
+			if (strncmp(line, ent, siz) == 0) {
+				ptr = shell_string_value(line+siz+1);
+				ptr = err_strdup(ptr);
+				free(line);
+				fclose(fp);
+				break;
+			}
+	else
+		ERR("Failed to open `%s': %s\n", SV_SVC_BACKEND, strerror(errno));
+
+	if (ptr) {
+		if (strcmp(ptr, "runit") == 0) {
+			snprintf(opt, sizeof(opt), "%d", action);
+			argv[0] = "runit-init";
+			argv[1] = opt;
 		}
-	}
-
-	if (ptr == NULL) {
-		fprintf(stderr, "%s: Failed to get supervision backend\n", prgname);
-		exit(EXIT_FAILURE);
-	}
-
-	if (strcmp(ptr, "runit") == 0) {
-		snprintf(opt, ARRAY_SIZE(opt), "%d", action);
-		argv[0] = "runit-init";
-	}
-	else if (strcmp(ptr, "s6") == 0) {
-		snprintf(opt, ARRAY_SIZE(opt), "-%d", action);
-		argv[0] = "s6-svscanctl";
-	}
-	else if (strncmp(ptr, "daemontools", 11) == 0) {
-		if (action)
-			setenv("ACTION", "reboot", 1);
+		else if (strcmp(ptr, "s6") == 0) {
+			snprintf(opt, sizeof(opt), "-%d", action);
+			argv[0] = "s6-svscanctl";
+			argv[1] = opt;
+		}
+		else if (strncmp(ptr, "daemontools", 11) == 0)
+			;
 		else
-			setenv("ACTION", "shutdown", 1);
-		snprintf(opt, ARRAY_SIZE(opt), "%d", action);
-		setenv("LEVEL", opt, 1);
-		snprintf(opt, ARRAY_SIZE(opt), "-%d", 3);
-		argv[0] = SV_INIT_STAGE;
-		execv(argv[0], argv);
-		ERROR("%s: Failed to execl()", __func__);
+			ERR("Invalid supervision backend: %s\n", ptr);
+		free(ptr);
 	}
-	else {
-		fprintf(stderr, "%s: Invalid supervision backend\n", prgname);
-		exit(EXIT_FAILURE);
-	}
-	free(ptr);
+	else
+		ERR("%s: Failed to get supervision backend\n", __func__);
 
 	execvp(argv[0], argv);
-	ERROR("%s: Failed to execlp()", __func__);
+	ERROR("Failed to execlp(%s, %s)", *argv, argv[1]);
 }
 
 int main(int argc, char *argv[])
