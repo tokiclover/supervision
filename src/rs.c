@@ -1126,7 +1126,7 @@ static void svc_stage(const char *cmd)
 		}
 		argv[4] = command;
 
-		if (rs_debug) {
+		if (logfp && rs_debug) {
 			t = time(NULL);
 			fprintf(logfp, "\n\tstage-%d (%s) at %s\n", rs_stage, command,
 					ctime(&t));
@@ -1139,7 +1139,7 @@ static void svc_stage(const char *cmd)
 			p = 0;
 		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
 			if (!SLIST_EMPTY(deptree[p])) {
-				if (rs_debug) {
+				if (logfp && rs_debug) {
 					t = time(NULL);
 					fprintf(logfp, "\n\tpriority-level-%d started at %s\n", p,
 							ctime(&t));
@@ -1171,8 +1171,10 @@ static void svc_stage(const char *cmd)
 	else
 		svc_runlevel(rs_stage_name[rs_stage]);
 
-	t = time(NULL);
-	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
+	if (logfp) {
+		t = time(NULL);
+		fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
+	}
 }
 
 int main(int argc, char *argv[])
