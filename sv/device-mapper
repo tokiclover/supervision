@@ -7,6 +7,7 @@
 description="Set up device-mapper"
 SVC_AFTER="kmod"
 SVC_BEFORE="checkfs"
+SVC_USE="dmcrypt"
 
 dmtab="/etc/dmtab"
 dmsetup="$(command -v dmsetup 2>${NULL})"
