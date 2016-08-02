@@ -410,6 +410,9 @@ static int svc_cmd(struct svcrun *run, int flags)
 			return SVC_RET_WAIT;
 	}
 	else if (pid == 0) { /* child */
+		/* close the lockfile to be able to mount rootfs read-only */
+		if (rs_stage == 3 && command == 's')
+			close(run->lock);
 		/* restore previous signal actions and mask */
 		sigaction(SIGINT, &sa_sigint, NULL);
 		sigaction(SIGQUIT, &sa_sigquit, NULL);
