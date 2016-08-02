@@ -1,5 +1,12 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0:
+
+Added support to sysvinit compatible runlevels which is almost a stage
+translation to {sysvinit,boot,default,shutdown,reboot} and then...
+{nonetwork,single} which required a few new stuff. See rs(8) for more
+information.
+
 0.12.0_rc4:
 
 Optimized shutdown (stage-3) by removing yet other redundancies; now,
