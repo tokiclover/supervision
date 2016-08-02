@@ -1101,7 +1101,7 @@ static void svc_stage(const char *cmd)
 	t = time(NULL);
 	rs_debug = 1;
 	svc_log("logging: %s command\n", command);
-	fprintf(logfp, "rs init stage-%d started at %s\n", rs_stage, ctime(&t));
+	svc_log("rs init stage-%d started at %s\n", rs_stage, ctime(&t));
 
 	/* do this extra loop to be able to stop stage-1 with RS_STAGE=3; so that,
 	 * {local,network}fs services etc. can be safely stopped
@@ -1130,11 +1130,8 @@ static void svc_stage(const char *cmd)
 		}
 		argv[4] = command;
 
-		if (logfp && rs_debug) {
-			t = time(NULL);
-			fprintf(logfp, "\n\tstage-%d (%s) at %s\n", rs_stage, command,
-					ctime(&t));
-		}
+		t = time(NULL);
+		svc_log( "\n\tstage-%d (%s) at %s\n", rs_stage, command, ctime(&t));
 
 		deptree = rs_deptree_load();
 		if (svc_start)
@@ -1143,11 +1140,8 @@ static void svc_stage(const char *cmd)
 			p = 0;
 		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
 			if (!SLIST_EMPTY(deptree[p])) {
-				if (logfp && rs_debug) {
-					t = time(NULL);
-					fprintf(logfp, "\n\tpriority-level-%d started at %s\n", p,
-							ctime(&t));
-				}
+				t = time(NULL);
+				svc_log("\n\tpriority-level-%d started at %s\n", p,	ctime(&t));
 				r = svc_exec_list(deptree[p], argc, argv, envp);
 				/* enable dependency tracking only if needed */
 				if (r)
@@ -1175,10 +1169,8 @@ static void svc_stage(const char *cmd)
 	else
 		svc_runlevel(rs_stage_name[rs_stage]);
 
-	if (logfp) {
-		t = time(NULL);
-		fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
-	}
+	t = time(NULL);
+	svc_log("\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
 }
 
 int main(int argc, char *argv[])
