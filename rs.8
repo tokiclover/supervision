@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH RS 8 "2016-07-30" "0.12.0" "SERVICE MANAGEMENT UTILITY"
+.TH RS 8 "2016-08-02" "0.12.0" "SERVICE MANAGEMENT UTILITY"
 .SH NAME
 rs \- utility to manage services and init-stage
 .SH DESCRIPTION
@@ -21,7 +21,7 @@ or
 to get a fully supervised init-system and service-manager. Otherwise, only
 runscript would work out of the box if not. A supported supervision suite
 can be configured to work with this utility by running
-`\fI@LIBDIR@/sv/bin/sv-config -s \fBSUPERVISION_SUITE\fR'.
+`\fI@LIBDIR@/sv/bin/sv-config -s \fBSUPERVISION_BACKEND\fR'.
 And then, the recommended way to use this package is to use the included
 `\fI@LIBDIR@/sv/sh/init-stage\fR' handler from `\fI@SYSCONFDIR@/runit/{1,2,3}\fR' for
 example. Although, using
@@ -34,7 +34,6 @@ directly will still work when not using the init-system part of the package.
 .RB \| COMMAND \|
 .RB \| [ARGUMENTS] \|
 
-.br
 .B SERVICE
 name can be replaced by the special use case
 .B stage
@@ -50,7 +49,59 @@ directly rather than the \fBinit-stage\fR. Although, the
 would try to handle this by killing the previous supervisor before launching
 a new one.
 
-.br
+.B rs
+.RB \| {sysinit|boot|default|shutdown|reboot,single,nonetwork} \|
+
+This sysvinit compatible form using runlevel alias for stage-{0,1,2,3}.
+.B single
+runlevel is used for system repair; while
+.B nonetwork
+is used to mark
+.I net
+service providers as started to avoid starting network services.
+Those runlevels can be required at bootup by appending a runlevel name to
+.B softlevel
+kernel command line argument like
+.I softlevel=single
+to request a runlevel.
+And extra
+.B noinit
+kernel cmdline argument is also available to mark that comma separated list as
+started to avoid starting them in
+.I any
+runlevels but \fIsysinit\fR, like
+.I noinit=atd,cron
+to avoid starting
+.I cron
+and
+.I atd
+services.
+
+.B WARNING:
+Services marked as started can be safely started after issuing
+.B zap
+service command. And some services will inevitably fail like networkfs.
+Second,
+.B {reboot|shutdown}
+runlevels shall not be used when using
+.I runit
+or \fIs6\fR;
+use \fI@LIBDIR@/bin/sv-shutdown --{reboot|shutdown}\fR instead to properly
+.B reboot
+or
+.B shutdown
+a system by sending the proper signal to
+.B PID
+1 (\fBinit\fR) instead. Any other
+.B init
+that does not trigger a stage-3/{reboot|shutdown} (by using @LIBDIR@/sh/init-stage)
+can be used and then issue a \fIrs {reboot|shutdown}\fR to get almost the same
+effect. However, using
+.I sv-shutdown
+has the same effect... so using it instead of
+.B rs
+binary is more safe when using a supported supervision backend.
+
 .B rs
 .RB [\| \-D|\-\-nodeps \|]
 .RB [\| \-g|\-\-debug \]
@@ -72,20 +123,22 @@ virtual services. Starting a supervision service shall be done with
 .B rs
 binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND ARGUMENTS\fR'.
 
-.br
 .B rs
 .RB [\| \-h|\-\-help \|]
-.RB [\| \-V|\-\-version \|]
+.RB [\| \-v|\-\-version \|]
 
 .SH OPTIONS
+.TP
+.B {sysinit|boot|default|shutdown|reboot|single|nonetwork}
+sysvinit compatible runlevels used to start an init-stage-{0,1,2,3}
 .TP
 .B \-D|\-\-nodeps
 Disable dependency tracking when starting/stopping services
 .TP
 .B \-g|\-\-debug
-Enable debugging mode
+Enable debugging mode for services (shell tracing)
 .TP
-.B \-(0|1|2|3)
+.B \-{0|1|2|3}
 Select a particular stage or runlevel
 .TP
 .B \-h|\-\-help
