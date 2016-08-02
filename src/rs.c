@@ -1066,7 +1066,7 @@ static void svc_stage(const char *cmd)
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
-	char buf[128], *runlevel;
+	char buf[128];
 	int p, r;
 	int svc_start = 1;
 	int level = 0;
@@ -1093,7 +1093,6 @@ static void svc_stage(const char *cmd)
 	argv[5] = (char *)0;
 	rs_svcdeps_load();
 	svc_level();
-	runlevel = svc_runlevel(NULL);
 
 	t = time(NULL);
 	rs_debug = 1;
@@ -1122,28 +1121,6 @@ static void svc_stage(const char *cmd)
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
 			/* avoid starting everything after stopping */
-			rs_stringlist_free(&ptr);
-			unlink(buf);
-		}
-		else if (rs_stage == 2 && !level &&
-				rs_runlevel == RS_STAGE_DEFAULT &&
-				runlevel && strcmp(runlevel, rs_stage_name[RS_STAGE_SINGLE]) == 0) {
-			/* stop single runlevel before default */
-			level = rs_stage;
-			command = rs_svc_cmd[RS_SVC_CMD_STOP];
-			svc_start = 0;
-			/* stop only single services */
-			rs_runlevel = RS_STAGE_SINGLE;
-			svc_level();
-			rs_runlevel = RS_STAGE_DEFAULT;
-			ptr = *rs_svclist_load(NULL);
-			unlink(buf);
-		}
-		else if (level == 2) {
-			level = 0;
-			command = rs_svc_cmd[RS_SVC_CMD_START];
-			svc_start = 1;
-			/* remove single services */
 			rs_stringlist_free(&ptr);
 			unlink(buf);
 		}
