@@ -51,8 +51,14 @@ enum {
 #define RS_STAGE_BOOT RS_STAGE_BOOT
 	RS_STAGE_DEFAULT,
 #define RS_STAGE_DEFAULT RS_STAGE_DEFAULT
-	RS_STAGE_SHUTDOWN
+	RS_STAGE_SHUTDOWN,
 #define RS_STAGE_SHUTDOWN RS_STAGE_SHUTDOWN
+	RS_STAGE_REBOOT,
+#define RS_STAGE_REBOOT RS_STAGE_REBOOT
+	RS_STAGE_SINGLE,
+# define RS_STAGE_SINGLE RS_STAGE_SINGLE
+	RS_STAGE_NONETWORK,
+# define RS_STAGE_NONETWORK RS_STAGE_NONETWORK
 };
 extern const char *const rs_stage_name[];
 
@@ -105,7 +111,9 @@ extern size_t     rs_deptree_prio;
 extern RS_StringList_T **rs_svclist_load(char *dir_path);
 
 /* find a virtual service e.g. {net,dev,logger} */
-RS_SvcDeps_T *rs_virtual_find(const char *svc);
+extern RS_SvcDeps_T *rs_virtual_find(const char *svc);
+extern RS_SvcDeps_T **virtual_deplist;
+extern size_t rs_virtual_count;
 
 /*
  * retrieve a configuration value like getenv(3)

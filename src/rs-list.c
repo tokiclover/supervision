@@ -18,7 +18,7 @@
 #define RS_DEPTREE_MAX  1024
 
 RS_SvcDepsList_T *service_deplist;
-static RS_SvcDeps_T **virtual_deplist;
+RS_SvcDeps_T **virtual_deplist;
 static RS_StringList_T  *stage_svclist;
 static RS_StringList_T **deptree_list;
 size_t rs_deptree_prio = 0;
@@ -26,7 +26,7 @@ size_t rs_deptree_prio = 0;
 static int  rs_deptree_file_save(void);
 static void rs_svcdeps_free(void);
 static void rs_virtual_insert(RS_SvcDeps_T *elm);
-static size_t rs_virtual_count;
+size_t rs_virtual_count;
 
 static void rs_deptree_alloc(void)
 {

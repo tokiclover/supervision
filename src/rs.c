@@ -40,9 +40,9 @@ struct svcrun {
 };
 
 int rs_stage = -1;
+static int rs_runlevel = -1;
 static int svc_deps  = 1;
 static int svc_quiet = 1;
-static size_t env_size;
 
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
@@ -50,7 +50,9 @@ static const char *const rs_init_stage[][4] = {
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
-const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown" };
+const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown",
+	"reboot", "single", "nonetwork", NULL
+};
 const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 const char *prgname;
 
@@ -101,7 +103,8 @@ static const char *const env_list[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES", "SVC_DEBUG", "SVC_DEPS", "SVC_WAIT", NULL, NULL
+	"COLUMNS", "LINES", "SVC_DEBUG", "SVC_DEPS", "SVC_WAIT",
+	"RS_RUNLEVEL", "RS_STAGE", NULL
 };
 
 __NORETURN__ static void help_message(int exit_val);
@@ -168,6 +171,16 @@ static int svc_stage_command(int stage, int argc, const char *argv[], const char
  * @return: 0 on success;
  */
 static int svc_mark(const char *svc, int status);
+
+/* simple rc compatible runlevel handler*/
+static void svc_level(void);
+static char *get_cmdline_entry(const char *entry);
+
+/* simple helper to set/get runlevel
+ * @level: runlevel to set, or NULL to get the current runlevel;
+ * @return: current runlevel;
+ */
+static char *svc_runlevel(const char *level);
 
 /*
  * lock file for service to start/stop
@@ -469,7 +482,6 @@ static const char **svc_env(void)
 
 	envp[i++] = (char *)0;
 	envp[i++] = (char *)0;
-	env_size = i;
 	return envp;
 }
 
@@ -596,6 +608,130 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 		WARN("waiting for %s (%d seconds)\n", svc, i+nsec);
 	}
 	return svc_state(svc, 'w') ? -1 : 0;
+}
+
+static char *get_cmdline_entry(const char *ent)
+{
+#ifdef __linux__
+	FILE *fp;
+	char *line, *ptr, path[] = "/proc/cmdline", *val = NULL;
+	size_t size, len;
+
+	if (!access(path, F_OK))
+		return NULL;
+	if (!(fp = fopen(path, "r")))
+		return NULL;
+	if (!rs_getline(fp, &line, &size))
+		return NULL;
+
+	len = strlen(ent);
+	ptr = line;
+	while ((ptr = strsep(&ptr, " "))) {
+		if (strncmp(ent, ptr, len) == 0) {
+			ptr += len;
+			switch(ptr[len]) {
+			case '=':
+				ptr++;
+			case ' ':
+			case '\0':
+				val = err_strdup(ptr);
+				break;
+			default:
+				continue;
+			}
+		}
+	}
+	fclose(fp);
+	free(line);
+	return val;
+#else
+	return NULL;
+#endif /* __linux__ */
+}
+
+static char *svc_runlevel(const char *level)
+{
+	static char b[16], p[] = SV_TMPDIR "/softlevel";
+	char *r;
+	int fd, f = O_NONBLOCK|O_CREAT;
+
+	if (level)
+		f |= O_TRUNC|O_WRONLY;
+	else if (access(p, F_OK))
+		return NULL;
+	else
+		f |= O_RDONLY;
+	if ((fd = open(p, f, 0644)) < 0) {
+		WARN("Failed to open `%s': %s\n", p, strerror(errno));
+		return NULL;
+	}
+
+	if (level) {
+		f = strlen(level);
+		if (write(fd, level, f) < f) {
+			WARN("Failed to write to `%s': %s\n", p, strerror(errno));
+			r = NULL;
+		}
+		else
+			r = (char*)level;
+	}
+	else {
+		if (( f = read(fd, b, sizeof(b))) < 0) {
+			WARN("Failed to read from `%s': %s\n", p, strerror(errno));
+			r = NULL;
+		}
+		else
+			b[f] = '\0', r = b;
+	}
+
+	close(fd);
+	return r;
+}
+
+static void svc_level(void)
+{
+	char *entry = NULL, path[128], *ptr;
+	int i;
+
+	entry = get_cmdline_entry("softlevel");
+	if (rs_stage == 1) {
+		/* mark network services as started, so nothing will be started */
+		if ((entry && strcmp(entry, rs_stage_name[RS_STAGE_NONETWORK]) == 0) ||
+		    (rs_runlevel == RS_STAGE_NONETWORK)) {
+			for (i = 0; i < rs_virtual_count; i++)
+				if (strcmp(virtual_deplist[i]->virt, "net") == 0)
+					svc_mark(virtual_deplist[i]->svc, 's');
+			svc_mark("net", 's');
+		}
+		goto noinit;
+	}
+	else if (rs_stage == 2) {
+		if ((entry && strcmp(entry, rs_stage_name[RS_STAGE_SINGLE]) == 0) ||
+		    (rs_runlevel == RS_STAGE_SINGLE)) {
+			snprintf(path, sizeof(path), "%s/.%s", SV_SVCDIR,
+					rs_stage_name[RS_STAGE_SINGLE]);
+			rs_svclist_load(path);
+		}
+	}
+	else if (rs_stage == 3) {
+		rs_svclist_load(SV_TMPDIR_STAR);
+		goto noinit;
+	}
+
+	free(entry);
+
+noinit:
+	entry = get_cmdline_entry("noinit");
+	if (!entry)
+		return;
+	if (rs_stage == 1)
+		i = 's';
+	else if (rs_stage == 3)
+		i = 'S';
+	/* mark no started services as stopped */
+	while ((ptr = strsep(&entry, ",")))
+		svc_mark(ptr, i);
+	free(entry);
 }
 
 static int svc_log(const char *fmt, ...)
@@ -930,12 +1066,21 @@ static void svc_stage(const char *cmd)
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
-	char stage_env[16], *buf;
+	char buf[128], *runlevel;
 	int p, r;
 	int svc_start = 1;
 	int level = 0;
 	int argc = 8;
 	time_t t;
+
+	/* set a few sane environment variables */
+	svc_deps  = 1;
+	svc_quiet = 0;
+	unsetenv("SVC_DEPS");
+	unsetenv("SVC_DEBUG");
+	snprintf(buf, sizeof(buf), "%d", rs_stage);
+	setenv("RS_STAGE", buf, 1);
+	snprintf(buf, sizeof(buf), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
 
 	if (rs_stage == 0) /* force service command */
 		command = rs_svc_cmd[RS_SVC_CMD_START];
@@ -945,10 +1090,10 @@ static void svc_stage(const char *cmd)
 		svc_start = 0;
 
 	envp = svc_env();
-	envp[env_size-2] = stage_env;
-	snprintf(stage_env, sizeof(stage_env), "RS_STAGE=%d", rs_stage);
 	argv[5] = (char *)0;
 	rs_svcdeps_load();
+	svc_level();
+	runlevel = svc_runlevel(NULL);
 
 	t = time(NULL);
 	rs_debug = 1;
@@ -959,8 +1104,8 @@ static void svc_stage(const char *cmd)
 	 * {local,network}fs services etc. can be safely stopped
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
-		if (rs_stage == 3 && level == 0) {
-			level = 3;
+		if (rs_stage == 3 && !level) {
+			level = rs_stage;
 			/* load the started services instead of only stage-[12]
 			 * to be abe to shutdown everything with RS_STAGE=3
 			 */
@@ -968,18 +1113,39 @@ static void svc_stage(const char *cmd)
 			command = rs_svc_cmd[RS_SVC_CMD_STOP];
 			svc_start = 0;
 		}
-		else if (level) {
+		else if (level == 3) {
 			level = 0;
-			/* avoid starting everything */
-			buf = err_malloc(256);
-			snprintf(buf, 256, "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
-			unlink(buf);
-			free(buf);
-
+			/* close the logfile because rootfs will be mounted read-only */
+			if (!fclose(logfp) || !close(logfd))
+				logfd = 0, logfp = NULL;
 			/* and finaly start stage-3 */
-			rs_stringlist_free(&ptr);
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
+			/* avoid starting everything after stopping */
+			rs_stringlist_free(&ptr);
+			unlink(buf);
+		}
+		else if (rs_stage == 2 && !level &&
+				rs_runlevel == RS_STAGE_DEFAULT &&
+				runlevel && strcmp(runlevel, rs_stage_name[RS_STAGE_SINGLE]) == 0) {
+			/* stop single runlevel before default */
+			level = rs_stage;
+			command = rs_svc_cmd[RS_SVC_CMD_STOP];
+			svc_start = 0;
+			/* stop only single services */
+			rs_runlevel = RS_STAGE_SINGLE;
+			svc_level();
+			rs_runlevel = RS_STAGE_DEFAULT;
+			ptr = *rs_svclist_load(NULL);
+			unlink(buf);
+		}
+		else if (level == 2) {
+			level = 0;
+			command = rs_svc_cmd[RS_SVC_CMD_START];
+			svc_start = 1;
+			/* remove single services */
+			rs_stringlist_free(&ptr);
+			unlink(buf);
 		}
 		argv[4] = command;
 
@@ -1023,6 +1189,10 @@ static void svc_stage(const char *cmd)
 	/* finish sysinit */
 	if (rs_stage == 0 )
 		svc_stage_command(0, argc, argv, envp);
+	if (rs_runlevel > 0)
+		svc_runlevel(rs_stage_name[rs_runlevel]);
+	else
+		svc_runlevel(rs_stage_name[rs_stage]);
 
 	t = time(NULL);
 	fprintf(logfp, "\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
@@ -1077,20 +1247,15 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-	if ((argc-optind) < 1) {
+	if ((argc-optind) < 1)
 		help_message(1);
-	}
 
+	unsetenv("RS_STAGE");
+	unsetenv("RS_RUNLEVEL");
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
 
 	if (strcmp(argv[optind], "stage") == 0) {
-		/* set a few sane environment variables */
-		svc_deps  = 1;
-		svc_quiet = 0;
-		unsetenv("SVC_DEPS");
-		setenv("SVC_DEBUG", off, 1);
-
 		if (rs_stage >= 0)
 			svc_stage(argv[optind+1]);
 		else {
@@ -1099,7 +1264,44 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+	else if (argc-optind == 1) {
+		/* enable sysvinit compatiblity command line */
+		for (opt = 0; rs_stage_name[opt]; opt++) {
+			if (strcmp(argv[optind], rs_stage_name[opt]) == 0) {
+				switch(opt) {
+				case RS_STAGE_REBOOT:
+				case RS_STAGE_SHUTDOWN:
+					rs_stage = 3;
+					break;
+				case RS_STAGE_DEFAULT:
+				case RS_STAGE_SINGLE:
+					rs_stage = 2;
+					break;
+				case RS_STAGE_NONETWORK:
+				case RS_STAGE_BOOT:
+					rs_stage = 1;
+					break;
+				case RS_STAGE_SYSINIT:
+					rs_stage = 0;
+					break;
+				}
+				rs_runlevel = opt;
+				setenv("RS_RUNLEVEL", rs_stage_name[opt], 1);
+				svc_stage(NULL);
+			}
+		}
+		if (rs_runlevel == -1) {
+			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
+					"(service command)\n", prgname);
+			fprintf(stderr, "       %s -{0|1|2|3} stage "
+					"(init-stage)\n", prgname);
+			fprintf(stderr, "       %s {sysinit|boot|default|shutdown|reboot} "
+					"(run levels)\n", prgname);
+			exit(EXIT_FAILURE);
+		}
+	}
 	else {
+		/* handle service command */
 		if ((argc-optind) < 2) {
 			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGS]\n",
 					prgname);
