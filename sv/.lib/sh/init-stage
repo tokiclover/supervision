@@ -61,36 +61,7 @@ svc_init()
 			;;
 		esac
 	done
-}
-
-svc_level()
-{
-	case "${1}" in
-		(-0) ACTION=sysinit LEVEL=S;;
-		(-1) ACTION=boot    LEVEL=S;;
-		(-2)
-		case "$(cat /proc/cmdline)" in
-			(*nonetwork*) ACTION=nonetwork LEVEL=2;;
-			(*single*)    ACTION=single  LEVEL=1;;
-			(*default*|*) ACTION=default LEVEL=3;;
-		esac;;
-		(-3) ACTION=${ACTION:=shutdown} LEVEL=${LEVEL:=0};;
-		(*) return;;
-	esac
-	export ACTION LEVEL
-
-	if yesno ${RC_INIT_SYS:-YES}; then
-		begin "${MSG:-System ${ACTION}}\n"
-		RUNLEVEL=${LEVEL} rc ${ACTION}
-		end ${?}
-	fi
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
-
-	case "${ACTION}" in
-		(single)
-			${SV_LIBDIR}/sh/dep ${1} -d "${SV_SVCDIR}/.${ACTION}"
-			;;
-	esac
 }
 
 svc_rsh()
@@ -158,25 +129,23 @@ esac
 pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 begin "Starting Init-Stage${1}\n"
 if   [ "${1}" = "-0" ]; then
+	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 	if [ -e "${pidfile}" ]; then
 		kill_svscan
 	fi
-	svc_tmpdir
 	echo $$ >${pidfile}
 	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
 elif [ "${1}" = "-1" ]; then
 	svc_init
-	svc_level -0
 	rs -0 stage
 elif [ "${1}" = "-2" ]; then
+	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 	#
 	# Set up CGroup
 	#
 	if [ "${OS_NAME}" = "Linux" ]; then
 		SVC_NAME="${SV_CMD}" cgroup_add_service
 	fi
-	svc_level -1
-	svc_level -2
 	#
 	# Bring up what left and stage-2 assuming `svcscan'
 	# is ready when the following pidfile is present
@@ -215,7 +184,6 @@ elif [ "${1}" = "-2" ]; then
 	svc_rsh
 elif [ "${1}" = "-3" ]; then
 	rs -3 stage
-	svc_level -3
 
 	#
 	# CGroup clean up
