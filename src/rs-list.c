@@ -146,7 +146,7 @@ static RS_StringList_T **rs_deptree_file_load(void)
 	size_t len, pos;
 
 	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
-	if (file_test(deppath, 0) == 0)
+	if (!access(deppath, F_OK) == 0)
 		return (RS_StringList_T **)0;
 	if ((depfile = fopen(deppath, "r+")) == NULL) {
 		ERR("Failed to open %s\n", deppath);
@@ -291,7 +291,7 @@ void rs_svcdeps_load(void)
 
 	/* get dependency list file */
 	snprintf(deppath, ARRAY_SIZE(deppath), "%s/svcdeps", SV_TMPDIR_DEPS);
-	if (file_test(deppath, 0) <= 0) {
+	if (!access(deppath, F_OK) <= 0) {
 		if (system(SV_DEPGEN)) {
 			ERR("Failed to execute `%s': %s\n", SV_DEPGEN, strerror(errno));
 			return;

@@ -484,14 +484,14 @@ static char *svc_find(const char *svc)
 
 	for (i = 0; i <= 3; i++) {
 		snprintf(buf, BUFSIZ, "%s/.stage-%d/%s", SV_SVCDIR, i, svc);
-		if (file_test(buf, 0)) {
+		if (!access(buf, F_OK)) {
 			ptr = buf;
 			break;
 		}
 	}
 	if (!ptr) {
 		snprintf(buf, BUFSIZ, "%s/%s", SV_SVCDIR, svc);
-		if (file_test(buf, 0))
+		if (!access(buf, F_OK))
 			ptr = buf;
 	}
 	if (ptr)
@@ -519,7 +519,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, svc);
 
 	if (lock_fd == SVC_LOCK) {
-		w = file_test(f_path, 0);
+		w = !access(f_path, F_OK);
 		m = umask(0);
 		fd = open(f_path, f_flags, f_mode);
 		/* got different behaviours of open(3p)/O_CREAT when the file is locked
@@ -535,7 +535,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 				default:
 					return -1;
 			}
-			if (file_test(f_path, 0))
+			if (!access(f_path, F_OK))
 				unlink(f_path);
 			fd = open(f_path, f_flags, f_mode);
 		}
@@ -560,7 +560,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	}
 	else if (lock_fd > 0)
 		close(lock_fd);
-	if (file_test(f_path, 0))
+	if (!access(f_path, F_OK))
 		unlink(f_path);
 	return 0;
 }
@@ -639,12 +639,12 @@ static void svc_zap(const char *svc)
 
 	for (i = 0; dirs[i]; i++) {
 		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
-		if (file_test(path, 0))
+		if (!access(path, F_OK))
 			unlink(path);
 	}
 
 	snprintf(path, sizeof(path), "%s/%s_OPTIONS", SV_TMPDIR, svc);
-	if (file_test(path, 0))
+	if (!access(path, F_OK))
 		unlink(path);
 }
 
@@ -696,7 +696,7 @@ static int svc_mark(const char *svc, int status)
 			}
 			return -1;
 		default:
-			if (file_test(path, 0))
+			if (!access(path, F_OK))
 				return unlink(path);
 			else
 				return 0;
@@ -748,7 +748,7 @@ static int svc_state(const char *svc, int status)
 			return 0;
 	}
 	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
-	return file_test(path, 0);
+	return !access(path, F_OK);
 }
 
 static void svc_sigsetup(void)
