@@ -25,6 +25,10 @@ start()
 		end "${?}"
 		;;
 	esac
+
+	if [ "${RS_RUNLEVEL}" = "shutdown" -o "${RS_RUNLEVEL}" = "reboot" ]; then
+		sv-shutdown --force --${RS_RUNLEVEL}
+	fi
 }
 
 #
