@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2016-07-26" "0.12.0" "Supervision Framework"
+.TH SUPERVISION 5 "2016-08-02" "0.12.0" "Supervision Framework"
 .SH NAME
 Supervision \- Supervision Framework init-system and service-manager
 .SH DESCRIPTION
@@ -541,7 +541,7 @@ with device nodes and symlinks. So add
 .I udevadm
 to stage-1 to get a functionnal \fIudev\fR.
 .SS RUNLEVELS
-.I {boot,default,nonetwork,single}
+.I {sysinit,boot,default,nonetwork,shutdown,reboot,single,nonetwork}
 run levels are supported.
 Extra services that should be started in
 .I single
@@ -549,20 +549,27 @@ run levels should be added into
 .I SV_SVCDIR/.single
 like
 .I sulogin
-service in single level.
+service in
+.I single
+level. And there is no command to do this... so, manual addition is required
+hre. It's just a matter of adding symbolic links like
+`ln -s @SYSCONFDIR@/sv/sulogin @SYSCONFDIR@/etc/sv/.single'.
 In fact,
-.B boot
+.B sysinit
 runlevel is stage-0;
+.B boot
+runlevel is tage-1;
 .B default
 runlevel is stage-2;
 .B nonetwork
 is only a modified
-.B default
+.B boot
 runlevel without network services. So, in practice,
 .B single
 replaces
-.B default
+.B boot
 runlevel to be able to repair a system.
+See \fBrs\gR(8) for more inforation about sysvinit compatible runlevels.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Framework support CGroup. CGroup support is autodected on
@@ -661,7 +668,7 @@ Runscript local configuration files directory
 .TP
 .I sv/\ (SV_SVCDIR)
 See RS_SVCDIR/.stage-{0,1,2,3} for active services.
-Use `rs -(0|1|2|3) SERVICE add` to add a particular service to a particular
+Use `rs -{0|1|2|3} SERVICE add` to add a particular service to a particular
 stage or runlevel.
 .B Init-stage-0
 is ready to use;
@@ -801,10 +808,7 @@ Simple script to list dependencies
 CGroup Release Agent script
 .TP
 .I init-stage
-Init-Stage-[123] handler with optional OpenRC support (by
-setting
-.B RC_INIT_SYS=YES
-in the global configuration file).
+Init-stage-[123] handler for supervision
 .TP
 .I cgroup-functions
 CGroup Functions/helper library
