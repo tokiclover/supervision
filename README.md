@@ -37,6 +37,15 @@ services plus tweakings... *almost* is not all there is to it; there are much
 more bits tweaking and (re-)writing taking a whole third, +4900 lines addtion
 (mainly for init-system services +3550 lines), of this package.)
 
+*STATS*:
+
+A comlete system, Linux in this test bed,--with rootfs on LVM(2) on top of
+dm-crypt LUKS, ZFS on top of dm-crypt LUKS, /(var/)tmp on ZRAM backed devices,
+a few union filesystem (OverlayFS+SquashFS),--with 52 system services for short,
+can boot or shut down in 11 seconds thanks to supervision parallel service
+management! Now if _udev_ is used, add 5 seconds to boot up... or it could be
+even worse depending on the number of devices.
+
 INSTALLATION
 ------------
 
@@ -53,10 +62,10 @@ INSTALLATION
 script for OpenRC) would suffice.
 
 And do not forget to run `sv/.lib/bin/sv-config -S BACKEND` afterwards!
-or `${EXEC_PREFIX}${DESTDIR}/lib/sv/bin/sv-config -S BACKEND` after installation.
+or `${LIBDIR}/sv/bin/sv-config -S BACKEND` after installation.
 
 DOCUMENTATION/USAGE
--------------
+-------------------
 
 The recommanded way to use this package for service management is to use
 `sv/.lib/sh/init-stage -(1|2|3)` to start particular stage. And then use
