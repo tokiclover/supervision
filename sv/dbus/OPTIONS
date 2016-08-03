@@ -17,7 +17,7 @@ pre()
 post()
 {
 	[ -S ${SVC_SOCKET}    ] && rm -f ${SVC_SOCKET}
-	[ -f /run/dbus.pid    ] && rm -f /run/dbus.pid
+	[ -f /var/run/dbus.pid ] && rm -f /var/run/dbus.pid
 }
 
 #
