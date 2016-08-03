@@ -184,6 +184,7 @@ if [ -t 1 ] && yesno "${COLOR:-Yes}"; then
 	eval_colors
 fi
 
+if [ "${OS_NAME}" = "Linux" ]; then
 #
 # @FUNCTION: mount info helper
 # @ARG: [OPTIONS] DEVICES
@@ -213,6 +214,7 @@ device_info()
 	done
 	return "${ret}"
 }
+fi # OS_NAME=Linux
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
