@@ -5,13 +5,13 @@
 #
 # Console font to use (see /usr/share/consolefont) without the extension
 # (e.g. '.psf.gz')
-#CONSOLE_FONT="ter-g14n"
+#CONSOLEFONT="ter-g14n"
 #
 # Character set map to use (see /usr/share/consoletrans)
 #CONSOLE_TRANSALTAION="8859-16_to_uni"
 #
 # Unicode map to use (see /usr/share/unimaps)
-#CONSOLE_UNICODE_MAP="iso01"
+#CONSOLE_UNICODEMAP="iso01"
 
 #
 # Console keymap to use (see /usr/share/keymaps)

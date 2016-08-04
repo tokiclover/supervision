@@ -10,7 +10,12 @@ SVC_AFTER='miscfs'
 
 :	${RS_TTY_NUMBER:=12}
 :	${RS_TTY_UNICODE:=YES}
-
+:	${consolefont:=${CONSOLEFONT}}
+:	${translation:=${TRANSLATION:-${CONSOLE_TRANSLATION}}}
+:	${unicodemap:=${UNICODEMAP:-${CONSOLE_UNICODEMAP}}}
+:	${keymap:=${KEYMAP:-${CONSOLE_KEYMAP}}}
+:	${keymap_extended:=${KEYMAP_EXTENDED:-${CONSOLE_KEYMAP_EXTENDED}}}
+:	${keymap_euro:=${KEYMAP_EURO:-${CONSOLE_KEYMAP_EURO}}}
 #
 # Set up console encoding (ASCII/unicode)
 #
@@ -36,14 +41,14 @@ console_encoding()
 #
 console_font()
 {
-	[ -n "${CONSOLE_FONT}" ] || return
+	[ -n "${consolefont}" ] || return
 
 	local i=0 ret=0
-	begin "Setting up console font (${CONSOLE_FONT})"
+	begin "Setting up console font (${consolefont})"
 	while [ "${i}" -lt "${RS_TTY_NUMBER}" ]; do
-		setfont ${CONSOLE_FONT} -C ${TTY}${i} \
-			${CONSOLE_TRANSLATION:+-m} ${CONSOLE_TRANSLATION} \
-			${CONSOLE_UNICODE_MAP:+-u} ${CONSOLE_UNICODE_MAP} \
+		setfont ${consolefont} -C ${TTY}${i} \
+			${translation:+-m} ${translation} \
+			${unicodemap:+-u} ${unicodemap} \
 			>${NULL} 2>&1 || { ret=1; break; }
 		i=$((${i}+1))
 	done
@@ -55,7 +60,7 @@ console_font()
 #
 console_keymap()
 {
-	[ -n "${CONSOLE_KEYMAP}" ] || return
+	[ -n "${keymap}" ] || return
 
 	# Force linux keycodes for PPC
 	[ -f /proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes ] &&
@@ -74,11 +79,11 @@ console_keymap()
 	done
 	end "${?}"
 
-	begin "Setting up keymap (${CONSOLE_KEYMAP})"
-	loadkeys -q ${CONSOLE_KEYMAP} ${CONSOLE_KEYMAP_EXTENDED}
+	begin "Setting up keymap (${keymap})"
+	loadkeys -q ${keymap} ${keymap_extended}
 	end "${?}" || return
 
-	if yesno "${CONSOLE_KEYMAP_EURO}"; then
+	if yesno "${keymap_euro}"; then
 		echo "altgr keycode 18 = U+20AC" | loadkeys -q -
 	fi
 }
