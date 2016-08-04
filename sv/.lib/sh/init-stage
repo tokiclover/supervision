@@ -21,9 +21,10 @@ svc_init()
 	local dir opt procfs OS_NAME="$(uname -s)"
 	[ -w /etc/mtab ] || opt=-n
 
-	procfs=proc
-	if [ "${OS_NAME}" = "GNU/kFreeBSD" ]; then
+	if   [ "${OS_NAME}" = "GNU/kFreeBSD" ]; then
 		procfs=linprocfs
+	else
+		procfs=proc
 	fi
 
 	if ! mountinfo --quiet /proc 2>${NULL}; then
@@ -109,7 +110,15 @@ svc_tmpdir()
 
 kill_svscan()
 {
-	local pid
+	local pid umount_proc=false
+
+	if [ "${OS_NAME}" =      "FreeBSD" ]; then
+		if ! mountinfo --quiet /proc; then
+			mount -t procfs proc /proc || return
+			umount_proc=true
+		fi
+	fi
+
 	for pid in $(pgrep "${SV_CMD}"); do
 		read cmdline </proc/${pid}/cmdline
 		case "${cmdline}" in
@@ -118,6 +127,8 @@ kill_svscan()
 		esac
 	done
 	[ -n "${pid}" ] && kill -TERM ${pid} 2>${NULL}
+
+	${umount_proc} && umount /proc
 }
 
 case ${SV_CMD} in
