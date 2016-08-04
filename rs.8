@@ -94,7 +94,8 @@ a system by sending the proper signal to
 .B PID
 1 (\fBinit\fR) instead. Any other
 .B init
-that does not trigger a stage-3/{reboot|shutdown} (by using @LIBDIR@/sh/init-stage)
+that does not trigger a stage-3/(reboot|shutdown) (by using
+\fI@LIBDIR@/sv/sh/init-stage\fR)
 can be used and then issue a \fIrs {reboot|shutdown}\fR to get almost the same
 effect. However, using
 .I sv-shutdown
