@@ -51,7 +51,7 @@ start_pre()
 		{ error "No IPTables binary found"; return 1; }
 
 	if [ -e /proc/modules ]; then
-		modprobe ipt_LOG ${iptables_mods} >${NULL} 2>&1
+		modprobe -a ipt_LOG ${iptables_mods} >${NULL} 2>&1
 	fi
 
 	if [ ! -d /proc/net/netfilter ]; then

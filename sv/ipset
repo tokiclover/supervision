@@ -39,7 +39,7 @@ start_pre()
 			(create) modules="${modules} ip_set_${type/:/_}";;
 		esac
 	done <${IPSET_RULES_FILE}
-	[ -n "${modules}" ] && modprobe ${modules} >${NULL} 2>&1
+	[ -n "${modules}" ] && modprobe -a ${modules} >${NULL} 2>&1
 
 	checkpath -qd "${IPSET_RULES_FILE%/*}"
 }

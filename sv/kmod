@@ -27,7 +27,7 @@ start()
 	for mod in ${modules} ${kv_modules}; do
 		k_modules="${k_modules} ${mod}"
 	done
-	modprobe ${k_modules} >${NULL} 2>&1
+	modprobe -a ${k_modules} >${NULL} 2>&1
 }
 
 #
