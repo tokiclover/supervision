@@ -95,12 +95,17 @@ stop()
 {
 	[ "${RS_STAGE}" = 3 ] || return 1
 
-	local mnt_dev mnt_dir mnt_fs mnt_opts mnt_extra mountpoints netfs
-	local exclude_fs AND_OR
+	local mnt_dev mnt_dir mnt_fstype mnt_opts mnt_extra mountpoints netfs
+	local exclude_fstype=rootfs exclude_dir AND_OR
+	exclude_dir="/|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/usr|/*bin|/lib*|/tmp"
 
-	for mnt_fs in ${NETWORKFS} ${EXTRA_NETWORKFS}; do
-		netfs="${netfs},${mnt_fs}"
-		exclude_fs="${exclude_fs}|${mnt_fs}"
+	for mnt_fstype in ${NETWORKFS} ${EXTRA_NETWORKFS}; do
+		netfs="${netfs},${mnt_fstype}"
+		exclude_fstype="${exclude_fs}|${mnt_fstype}"
+	done
+
+	for mnt_dir in ${RS_NO_UMOUNT}; do
+		exclude_dir="${exclude_dir}|${mnt_dir}"
 	done
 
 	if [ "${SVC_NAME}" = networkfs ]; then
@@ -114,25 +119,15 @@ stop()
 		fi
 	fi
 
-	while read mnt_dev mnt_dir mnt_fs mnt_opts mnt_extra; do
-		case ${mnt_dir} in
-			(/|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/usr|/*bin|/lib*|/tmp)
-				continue
-				;;
-			(*)
-				if [ ${SVC_NAME} = networkfs ]; then
-					AND_OR="||"
-				else
-					AND_OR="&&"
-					eval "
-					case ${mnt_fs} in
-						(${exclude_fs#|}) continue ;;
-					esac
-					"
-				fi
-				eval mountinfo -qn ${mnt_dir} ${AND_OR} continue
-				;;
-		esac
+	while read mnt_dev mnt_dir mnt_fstype mnt_opts mnt_extra; do
+		eval "case ${mnt_dir} in (${exclude_dir}) continue ;; esac"
+		if [ "${SVC_NAME}" = "networkfs" ]; then
+			AND_OR="||"
+		else
+			AND_OR="&&"
+			eval "case ${mnt_fstype} in (${exclude_fstype}) continue ;; esac"
+		fi
+		eval mountinfo -qn ${mnt_dir} ${AND_OR} continue
 		mountpoints="${mountpoints} ${mnt_dir}"
 	done </proc/mounts
 
