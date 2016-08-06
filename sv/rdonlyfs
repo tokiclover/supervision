@@ -16,7 +16,7 @@ start()
 	mnt_point="/dev|/dev/.*|/proc|/proc/.*|/sys|/sys/.*|/run|/lib.*|/tmp"
 	umount=$(command -v umount 2>${NULL})
 
-	for dir in $(mountinfo -P "^(${mnt_point})$" -o rw); do
+	for dir in $(mountinfo -P "^(${mnt_point})$" -o rw -N); do
 		begin "Unmounting ${dir} (read-only)"
 		${umount} -n -r ${dir}
 		end "${?}"
