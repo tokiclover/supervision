@@ -159,23 +159,23 @@ static void find_mount_point(struct mntargs *args)
 	uint64_t flags;
 	size_t len, siz;
 
-	if (!(mnt_num = getmntinfo(&mnt_num, MNT_NOWAIT)))
+	if (!(mnt_num = getmntinfo(&mnt_pnts, MNT_NOWAIT)))
 		ERROR("Failed to exec getmntinfo()", NULL);
 
 	for (i = 0; i < mnt_num; i++) {
 		netdev = -1, siz = 1;
-		flags = mnti_pnts[i].F_FLAGS & MNT_VISFLAGMASK;
+		flags = mnt_pnts[i].F_FLAGS & MNT_VISFLAGMASK;
 
 		for (opt = mntoptions; flags && opt->flag; opt++) {
 			if (opt->flag & flags) {
-				len = strlen(opt->name);
+				len = strlen(opt->name)+1;
 				if (opt->flag == MNT_LOCAL)
 					netdev = 0;
 				else
 					netdev = 1;
-				mnt_opts = err_realloc(mnt_opts, len+siz+1);
-				snprintf(mnt_opts+siz-1, ",%s", opt->name, len);
-				siz += len+1;
+				mnt_opts = err_realloc(mnt_opts, len+siz);
+				snprintf(mnt_opts+siz-1, len, ",%s", opt->name);
+				siz += len;
 			}
 			flags &= ~opt->flag;
 		}
@@ -183,6 +183,7 @@ static void find_mount_point(struct mntargs *args)
 		filter_mount_point(args, mnt_pnts[i].f_mntfromname,
 				mnt_pnts[i].f_mntonname, mnt_pnts[i].f_fstypename,
 				mnt_opts, netdev);
+
 		free(mnt_opts);
 		mnt_opts = NULL;
 	}
