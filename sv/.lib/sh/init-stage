@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/07/28                               Exp $
+# $Version: 1.4 2016/08/06                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -15,6 +15,26 @@ source ${SV_SVCDIR}.conf
 umask 022
 
 SV_CMD="${__SV_CMD__##*/}"
+
+early_console()
+{
+	[ -d ${SV_LIBDIR}/cache ] || return
+
+	local encoding='%@' args kbd_args=-a keymap consolefont
+	if [ -e ${SV_LIBDIR}/cache/unicode ]; then
+		encoding='%G' kbd_args=-u
+	fi
+:	${CONSOLE:=/dev/console}
+	printf "\033${encoding}" >${CONSOLE}
+
+	[ -c ${CONSOLE} ] && args="-C ${CONSOLE}"
+	consolefont=${SV_LIBDIR}/cache/consolefont
+	[ -s ${consolefont} ] && setfont ${args} ${consolefont} 2>${NULL}
+
+	[ -n "${args}" ] && kbd_mode ${kbd_args} ${args}
+	keymap=${SV_LIBDIR}/cache/keymap
+	[ -s ${keymap} ] && loadkeys -q ${keymap} 2>${NULL}
+}
 
 svc_init()
 {
@@ -62,6 +82,8 @@ svc_init()
 			;;
 		esac
 	done
+
+	early_console
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 }
 

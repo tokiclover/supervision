@@ -25,12 +25,15 @@ console_encoding()
 
 	if yesno "${RS_TTY_UNICODE}"; then
 		encoding='%G' message=unicode
+		if [ -w ${SV_LIBDIR}/cache ]; then
+			echo '' >${SV_LIBDIR}/cache/unicode
+		fi
 	fi
 
 	local i=0
 	begin "Setting up console encoding (${message})"
 	while [ "${i}" -lt "${RS_TTY_NUMBER}" ]; do
-		echo -en "\e${encoding}" >${TTY}${i}
+		printf "\033${encoding}" >${TTY}${i}
 		i=$((${i}+1))
 	done
 	end "${?}"
@@ -52,6 +55,12 @@ console_font()
 			>${NULL} 2>&1 || { ret=1; break; }
 		i=$((${i}+1))
 	done
+	#
+	# save font for early loading
+	#
+	if [ "${ret}" = 0 -a -w ${SV_LIBDIR}/cache ]; then
+		setfont -O ${SV_LIBDIR}/cache/consolefont
+	fi
 	end "${ret}"
 }
 
@@ -86,8 +95,15 @@ console_keymap()
 	if yesno "${keymap_euro}"; then
 		echo "altgr keycode 18 = U+20AC" | loadkeys -q -
 	fi
+	if [ "${?}" = 0 -a -w ${SV_LIBDIR}/cache ]; then
+		dumpkeys >${SV_LIBDIR}/cache/keymap
+	fi
 }
 
+start_pre()
+{
+	[ -w ${SV_LIBDIR} ] && mkdir -p ${SV_LIBDIR}/cache 2>${NULL}
+}
 start()
 {
 	if [ "${RS_TTY_NUMBER}" = 0 ]; then
