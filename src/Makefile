@@ -9,7 +9,7 @@ dist_HDRS := error.h helper.h
 checkpath_SRCS := checkpath.c $(dist_SRCS)
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 fstabinfo_SRCS := fstabinfo.c error.c
-mountinfo_SRCS := mountinfo.c error.c
+mountinfo_SRCS := mountinfo.c error.c rs-list.c
 
 rs_SRCS   := rs-conf.c rs-deps.c rs-list.c rs.c
 rs_HDRS   := rs.h
