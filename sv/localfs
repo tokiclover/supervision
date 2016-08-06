@@ -95,22 +95,21 @@ stop()
 {
 	[ "${RS_STAGE}" = 3 ] || return 1
 
-	local mnt_dev mnt_dir mnt_fstype mnt_opts mnt_extra mountpoints netfs
-	local exclude_fstype=rootfs exclude_dir AND_OR
-	exclude_dir="/|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/usr|/*bin|/lib*|/tmp"
+	local i mnt_args mnt_point mnt_fstype=rootfs mountpoints net_fstype
+	mnt_point="/|/dev|/dev/.*|/proc|/proc/.*|/sys|/sys/.*|/run|/usr|/.?bin|/lib.*|/tmp"
 
-	for mnt_fstype in ${NETWORKFS} ${EXTRA_NETWORKFS}; do
-		netfs="${netfs},${mnt_fstype}"
-		exclude_fstype="${exclude_fs}|${mnt_fstype}"
+	for i in ${NETWORKFS} ${EXTRA_NETWORKFS}; do
+		net_fstype="${net_fstype},${i}"
+		mnt_fstype="${mnt_fstype}|${i}"
 	done
 
-	for mnt_dir in ${RS_NO_UMOUNT}; do
-		exclude_dir="${exclude_dir}|${mnt_dir}"
+	for i in ${RS_NO_UMOUNT}; do
+		mnt_point="${mnt_point}|${i}"
 	done
 
 	if [ "${SVC_NAME}" = networkfs ]; then
 		begin "Unmounting network filesystem"
-		umount -at "${netfs#,}"
+		umount -at "${net_fstype#,}"
 		end "${?}"
 
 		if [ "${OS_NAME}" = Linux ]; then
@@ -119,20 +118,14 @@ stop()
 		fi
 	fi
 
-	while read mnt_dev mnt_dir mnt_fstype mnt_opts mnt_extra; do
-		eval "case ${mnt_dir} in (${exclude_dir}) continue ;; esac"
-		if [ "${SVC_NAME}" = "networkfs" ]; then
-			AND_OR="||"
-		else
-			AND_OR="&&"
-			eval "case ${mnt_fstype} in (${exclude_fstype}) continue ;; esac"
-		fi
-		eval mountinfo -qn ${mnt_dir} ${AND_OR} continue
-		mountpoints="${mountpoints} ${mnt_dir}"
-	done </proc/mounts
+	if [ "${SVC_NAME}" = "networkfs" ]; then
+		mnt_args=-t
+	else
+		mnt_args=-T
+	fi
 
-	for mnt_dir in ${mountpoints}; do
-		mount_command ${mnt_dir}
+	for i in $(mountinfo -P "^(${mnt_point})$" ${mnt_args} "^(${mnt_fstype})$"); do
+		mount_command ${i}
 	done
 }
 
