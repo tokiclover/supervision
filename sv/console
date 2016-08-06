@@ -100,10 +100,6 @@ console_keymap()
 	fi
 }
 
-start_pre()
-{
-	[ -w ${SV_LIBDIR} ] && mkdir -p ${SV_LIBDIR}/cache 2>${NULL}
-}
 start()
 {
 	if [ "${RS_TTY_NUMBER}" = 0 ]; then
