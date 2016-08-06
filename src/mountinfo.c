@@ -431,6 +431,8 @@ int main(int argc, char *argv[])
 	REGFREE(args.reg_NODE);
 	REGFREE(args.reg_opts);
 	REGFREE(args.reg_OPTS);
+	REGFREE(args.reg_point);
+	REGFREE(args.reg_POINT);
 
 	exit(retval);
 }
