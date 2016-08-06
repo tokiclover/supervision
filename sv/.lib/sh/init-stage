@@ -11,7 +11,7 @@
 source "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 source ${SV_SVCDIR}/.opt/SVC_BACKEND
-source ${SV_SVCDIR%/*}/sv.conf
+source ${SV_SVCDIR}.conf
 umask 022
 
 SV_CMD="${__SV_CMD__##*/}"
