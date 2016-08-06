@@ -107,7 +107,7 @@ start()
 	rm -fr /tmp/.ICE-unix /tmp/.X11-unix
 	mkdir -m 1777 /tmp/.ICE-unix /tmp/.X11-unix
 	mountinfo -q -t tmpfs /tmp ||
-		grep -Eqs "/dev/zram.*[[:space:]]/tmp[[:space:]]" /proc/mounts ||
+		mountinfo -q -d '^(/dev/zram[0-9])$' /tmp ||
 		tmpdir_cleanup
 
 	if yesno "${DMESG_LOG}"; then
