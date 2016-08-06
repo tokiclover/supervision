@@ -83,7 +83,6 @@ svc_init()
 		esac
 	done
 
-	early_console
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 }
 
@@ -169,6 +168,7 @@ if   [ "${1}" = "-0" ]; then
 	echo $$ >${pidfile}
 	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
 elif [ "${1}" = "-1" ]; then
+	early_console
 	svc_init
 	rs -0 stage
 elif [ "${1}" = "-2" ]; then
