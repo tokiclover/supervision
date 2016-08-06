@@ -8,6 +8,8 @@
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
+ *
+ * @(#)initctl.c
  */
 
 #include "error.h"
