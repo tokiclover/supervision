@@ -5,11 +5,12 @@
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
+ *
+ * @(#)rs.c
  */
 
-#include "error.h"
-#include "helper.h"
 #include "rs.h"
+#include "rs-deps.h"
 #include <stdio.h>
 #include <getopt.h>
 #include <signal.h>
@@ -52,7 +53,6 @@ static const char *const rs_init_stage[][4] = {
 const char *const rs_stage_name[] = { "sysinit", "boot", "default", "shutdown",
 	"reboot", "single", "nonetwork", NULL
 };
-const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 const char *prgname;
 
 enum {

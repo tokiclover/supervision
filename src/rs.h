@@ -5,6 +5,8 @@
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
+ *
+ * @(#)rs.h
  */
 
 #ifndef _RS_H
@@ -16,7 +18,6 @@
 	"There is NO WARANTY, to the extend permitted by law.\n"
 
 
-#include "queue.h"
 #include "config.h"
 
 #ifdef __cplusplus
@@ -61,59 +62,6 @@ enum {
 # define RS_STAGE_NONETWORK RS_STAGE_NONETWORK
 };
 extern const char *const rs_stage_name[];
-
-extern const char *const rs_deps_type[];
-#define RS_DEPS_TYPE 4
-#define RS_DEPS_AFTER  1
-#define RS_DEPS_BEFORE 0
-#define RS_DEPS_USE    2
-#define RS_DEPS_NEED   3
-
-/* singly-linked list using queue(3) */
-typedef struct RS_String {
-	char *str;
-	SLIST_ENTRY(RS_String) entries;
-} RS_String_T;
-typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
-
-typedef struct RS_SvcDeps {
-	/* dependency type {after,before,use,need} */
-	char *svc;
-	char *virt;
-	/* priority level list [0-RS_DEPS_TYPE] */
-	RS_StringList_T *deps[RS_DEPS_TYPE];
-	SLIST_ENTRY(RS_SvcDeps) entries;
-} RS_SvcDeps_T;
-typedef SLIST_HEAD(RS_SvcDepsList, RS_SvcDeps) RS_SvcDepsList_T;
-
-/* string list helpers to manage string list using queue(3) */
-RS_StringList_T *rs_stringlist_new(void);
-RS_String_T *rs_stringlist_add (RS_StringList_T *list, const char *str);
-RS_String_T *rs_stringlist_adu (RS_StringList_T *list, const char *str);
-RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str);
-int          rs_stringlist_del (RS_StringList_T *list, const char *str);
-int          rs_stringlist_rem (RS_StringList_T *list, RS_String_T *elm);
-int          rs_stringlist_mov (RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
-void         rs_stringlist_free(RS_StringList_T **list);
-
-/* the same used for service dependencies */
-extern RS_SvcDepsList_T *service_deplist;
-void rs_svcdeps_load(void);
-RS_SvcDepsList_T *rs_svcdeps_new(void);
-RS_SvcDeps_T *rs_svcdeps_add (RS_SvcDepsList_T *list, const char *svc);
-RS_SvcDeps_T *rs_svcdeps_adu (RS_SvcDepsList_T *list, const char *svc);
-RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc);
-int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
-
-RS_StringList_T **rs_deptree_load(void);
-void              rs_deptree_free(RS_StringList_T **array);
-extern size_t     rs_deptree_prio;
-extern RS_StringList_T **rs_svclist_load(char *dir_path);
-
-/* find a virtual service e.g. {net,dev,logger} */
-extern RS_SvcDeps_T *rs_virtual_find(const char *svc);
-extern RS_SvcDeps_T **virtual_deplist;
-extern size_t rs_virtual_count;
 
 /*
  * retrieve a configuration value like getenv(3)

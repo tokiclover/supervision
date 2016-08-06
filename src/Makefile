@@ -11,7 +11,7 @@ sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c
 
-rs_SRCS   := rs-conf.c rs-list.c rs.c
+rs_SRCS   := rs-conf.c rs-deps.c rs-list.c rs.c
 rs_HDRS   := rs.h
 
 HDRRS      = $(dist_HDRS) $(rs_HDRS)
