@@ -12,6 +12,8 @@
 #include "rs-deps.h"
 #include <dirent.h>
 
+#define SV_CACHEDIR SV_LIBDIR "/cache"
+
 static const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 
 RS_SvcDepsList_T *service_deplist;
@@ -20,7 +22,8 @@ static RS_StringList_T  *stage_svclist;
 static RS_StringList_T **deptree_list;
 size_t rs_deptree_prio = 0;
 
-static int  rs_deptree_file_save(void);
+static int  rs_deptree_file_load(const char *head);
+static int  rs_deptree_file_save(const char *head);
 static void rs_svcdeps_free(void);
 static void rs_virtual_insert(RS_SvcDeps_T *elm);
 size_t rs_virtual_count;
@@ -134,7 +137,7 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	return prio;
 }
 
-static RS_StringList_T **rs_deptree_file_load(void)
+static int rs_deptree_file_load(const char *head)
 {
 	int p;
 	char deppath[256];
@@ -142,12 +145,12 @@ static RS_StringList_T **rs_deptree_file_load(void)
 	FILE *depfile;
 	size_t len, pos;
 
-	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
+	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", head, rs_stage);
 	if (!access(deppath, F_OK) == 0)
-		return (RS_StringList_T **)0;
+		return -1;
 	if ((depfile = fopen(deppath, "r+")) == NULL) {
 		ERR("Failed to open %s\n", deppath);
-		return (RS_StringList_T **)0;
+		return -1;
 	}
 
 	while (rs_getline(depfile, &line, &len) > 0) {
@@ -178,10 +181,10 @@ static RS_StringList_T **rs_deptree_file_load(void)
 	}
 	fclose(depfile);
 
-	return deptree_list;
+	return 0;
 }
 
-static int rs_deptree_file_save(void)
+static int rs_deptree_file_save(const char *head)
 {
 	RS_String_T *ent;
 	int p;
@@ -193,7 +196,7 @@ static int rs_deptree_file_save(void)
 		return -1;
 	}
 
-	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", SV_TMPDIR_DEPS,	rs_stage);
+	snprintf(deppath, sizeof(deppath), "%s/%d_deptree", head, rs_stage);
 	if ((depfile = fopen(deppath, "w+")) == NULL) {
 		ERR("Failed to open `%s': %s\n", deppath, strerror(errno));
 		return -1;
@@ -216,7 +219,8 @@ RS_StringList_T **rs_deptree_load(void)
 	RS_String_T *ent;
 
 	/* load previous deptree file if any, or initialize a new list */
-	if (!rs_deptree_file_load())
+	if (rs_deptree_file_load(SV_TMPDIR_DEPS) &&
+			rs_deptree_file_load(SV_CACHEDIR))
 		rs_deptree_alloc();
 	rs_svclist_load(NULL);
 	rs_svcdeps_load();
@@ -228,7 +232,8 @@ RS_StringList_T **rs_deptree_load(void)
 		rs_deptree_add(RS_DEPS_BEFORE, 0, ent->str);
 
 	/* save everything to a file */
-	rs_deptree_file_save();
+	rs_deptree_file_save(SV_TMPDIR_DEPS);
+	rs_deptree_file_save(SV_CACHEDIR);
 
 	/* clean unnecessary list */
 	rs_stringlist_free(&stage_svclist);

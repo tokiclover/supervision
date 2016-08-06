@@ -178,6 +178,7 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh $(DOCDIR) \
+	$(LIBDIR)/sv/cache \
 	$(SYSCONFDIR)/sv.conf.d $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
 	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
 	$(MANDIR)/man5 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
@@ -230,6 +231,7 @@ install: install-dir install-dist
 	for i in 0 1 2 3; do \
 		echo >$(DESTDIR)$(SYSCONFDIR)/sv/.stage-$${i}/.keep_dir-stage-$${i}; \
 	done
+	echo >$(DESTDIR)$(LIBDIR)/sv/cache/.keep_dir-cache
 	$(call stage_sym,0,$(dist_STAGE_0))
 	$(call stage_sym,1,$(dist_STAGE_1))
 	$(call stage_sym,2,$(dist_STAGE_2))
@@ -301,6 +303,7 @@ endif
 	for dir in lib opt stage-; do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.$${dir}*; \
 	done
+	rm -fr $(DESTDIR)$(LIBDIR)/sv/cache
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)
