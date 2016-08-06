@@ -62,7 +62,7 @@ static char *filter_mount_point(struct mntargs *args, char *node, char *point,
 {
 	char *p;
 
-	if (args->mnt_net && netdev < 1)
+	if ((args->mnt_net > 0 && netdev < 1) || (args->mnt_net < 0 && netdev > 0))
 		return NULL;
 	else {
 		if (args->reg_type &&  regexec(args->reg_type, type, 0, NULL, 0))
@@ -272,7 +272,7 @@ static void find_mount_point(struct mntargs *args)
 
 #endif
 
-static const char *shortopts = "bD:d:fO:o:P:p:T:t:mnhqv";
+static const char *shortopts = "bD:d:fO:o:P:p:T:t:mNnhqv";
 static const struct option longopts[] = {
 	{ "device-skip-regex",  1, NULL, 'D' },
 	{ "options-skip-regex", 1, NULL, 'O' },
@@ -286,6 +286,7 @@ static const struct option longopts[] = {
 	{ "device",   0, NULL, 'b' },
 	{ "fstype",   0, NULL, 'f' },
 	{ "netdev",   0, NULL, 'n' },
+	{ "nonetdev", 0, NULL, 'N' },
 	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
@@ -294,16 +295,17 @@ static const struct option longopts[] = {
 static const char *longopts_help[] = {
 	"Device node regex to skip",
 	"Mount options regex to skip",
-	"Filesystem to regex skip",
-	"Mountpoint to regex skip",
+	"Filesystem regex to skip",
+	"Mountpoint regex to skip",
 	"Device node regex to find",
 	"Mount options regex to find",
-	"Filesystem to regex find",
-	"Mountpoint to regex find",
+	"Filesystem regex to find",
+	"Mountpoint regex to find",
 	"Print mount options",
 	"Print device node",
 	"Print filesystem",
-	"Is a network device?",
+	"Network device",
+	"Nonetwork device",
 	"Enable quiet mode",
 	"Print help massage",
 	"Print version string",
@@ -391,6 +393,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'f':
 			args.mnt_type = mount_type;
+			break;
+		case 'N':
+			args.mnt_net = -1;
 			break;
 		case 'n':
 			args.mnt_net = 1;
