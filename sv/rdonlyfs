@@ -11,20 +11,16 @@ start()
 	[ "${RS_STAGE}" = 3 ] || return 1
 	sync
 
-	local mnt_opts
-	case ",$(fstabinfo -o /)," in
-		(*,ro,*) ;;
-		(*)
-		if [ "${OS_NAME}" = Linux ]; then
-			mnt_opts='-n -r -o remount'
-		else
-			mnt_opts='-u -r'
-		fi
-		begin "Mounting rootfs read-only"
-		mount ${mnt_opts} /
+	local dir mnt_opts mnt_point
+
+	mnt_point="/dev|/dev/.*|/proc|/proc/.*|/sys|/sys/.*|/run|/lib.*|/tmp"
+	umount=$(command -v umount 2>${NULL})
+
+	for dir in $(mountinfo -P "^(${mnt_point})$" -o rw); do
+		begin "Unmounting ${dir} (read-only)"
+		${umount} -n -r ${dir}
 		end "${?}"
-		;;
-	esac
+	done
 
 	if [ "${RS_RUNLEVEL}" = "shutdown" -o "${RS_RUNLEVEL}" = "reboot" ]; then
 		sv-shutdown --force --${RS_RUNLEVEL}
