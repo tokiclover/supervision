@@ -32,7 +32,7 @@ start()
 		touch ${MDEV_LOGFILE}
 		ln -s ${MDEV_LOGFILE} /dev/mdev.log
 	fi
-	touch /dev/mdev.seq
+	echo '' >/dev/mdev.seq
 	echo "${MDEV_CMD}" >/proc/sys/kernel/hotplug
 	[ -d /lib/mdev/devices ] && cp -RPp /lib/mdev/devices/* /dev 2>${NULL}
 	#
