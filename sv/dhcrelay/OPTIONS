@@ -1,0 +1,31 @@
+#
+# $Header:  /etc/sv/dhcrelay/OPTIONS                     Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description='Dynamic Host Configuration Protocol (DHCP) relay'
+
+SVC_CMD=dhcrelay
+SVC_USE='logger'
+SVC_NEED='net'
+#
+# XXX: a server IP address shall be appended here to get a functional relay
+#
+SVC_OPTS='-d 192.168.0.255'
+if [ "${SVC_NAME%6}" != "${SVC_NAME}" ]; then
+	SVC_OPTS="-6 ${SVC_OPTS}"
+else
+	SVC_OPTS="-4 ${SVC_OPTS}"
+fi
+
+pre()
+{
+	local iface
+	for iface in ${DHCRELAY_INTERFACES}; do
+		SVC_OPTS="${SVC_OPTS} -i ${iface}"
+	done
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

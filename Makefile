@@ -59,6 +59,7 @@ dist_SV_SVCS  = \
 	cupsd \
 	cups-browsed \
 	dhcp \
+	dhcrelay \
 	dbus \
 	dns \
 	getty-tty1 \
