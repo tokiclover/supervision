@@ -28,7 +28,7 @@ early_console()
 	printf "\033${encoding}" >${CONSOLE}
 
 	[ -c ${CONSOLE} ] && args="-C ${CONSOLE}"
-	consolefont=${SV_LIBDIR}/cache/consolefont
+	consolefont=${SV_LIBDIR}/cache/font+umap
 	[ -s ${consolefont} ] && setfont ${args} ${consolefont} 2>${NULL}
 
 	[ -n "${args}" ] && kbd_mode ${kbd_args} ${args}
