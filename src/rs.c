@@ -660,15 +660,13 @@ static void svc_level(void)
 					svc_mark(virtual_deplist[i]->svc, 's');
 			svc_mark("net", 's');
 		}
-		goto noinit;
-	}
-	else if (rs_stage == 2) {
-		if ((entry && strcmp(entry, rs_stage_name[RS_STAGE_SINGLE]) == 0) ||
+		else if ((entry && strcmp(entry, rs_stage_name[RS_STAGE_SINGLE]) == 0) ||
 		    (rs_runlevel == RS_STAGE_SINGLE)) {
 			snprintf(path, sizeof(path), "%s/.%s", SV_SVCDIR,
 					rs_stage_name[RS_STAGE_SINGLE]);
 			rs_svclist_load(path);
 		}
+		goto noinit;
 	}
 	else if (rs_stage == 3) {
 		rs_svclist_load(SV_TMPDIR_STAR);

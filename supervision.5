@@ -561,12 +561,12 @@ runlevel is stage-0;
 runlevel is tage-1;
 .B default
 runlevel is stage-2;
-.B nonetwork
+.B {nonetwork,single}
 is only a modified
 .B boot
 runlevel without network services. So, in practice,
-.B single
-replaces
+.B {nonetwork,single}
+replace
 .B boot
 runlevel to be able to repair a system.
 See \fBrs\gR(8) for more inforation about sysvinit compatible runlevels.
