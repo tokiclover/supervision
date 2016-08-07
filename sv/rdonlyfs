@@ -18,7 +18,7 @@ start()
 
 	for dir in $(mountinfo -P "^(${mnt_point})$" -o rw -N); do
 		begin "Unmounting ${dir} (read-only)"
-		${umount} -n -r ${dir}
+		${umount} -n -r ${dir} 2>${NULL}
 		end "${?}"
 	done
 
