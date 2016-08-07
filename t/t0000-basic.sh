@@ -17,6 +17,7 @@ rmdir $testdir
 
 device_info -a rtc && info "rtc device found" || warn "no rtc device found"
 
+mountinfo -P '^/(tmp|run)$' -T '^(tmpfs|cgroup|sysfs)$'
 mountinfo /tmp || error "/tmp is not mounted" && end "$?" /tmp
 info "/ mount arguments: $(fstabinfo -a /)"
 

@@ -19,8 +19,8 @@ EOF
 chmod +x $runscript
 printf "starting stage-0\n"
 rs -0 stage
-printf "\nstarting stage-3\n"
-rs -3 stage
+printf "\ndefault runlevel\n"
+rs default
 
 mv -f ${runscript}{-,} || exit
 
