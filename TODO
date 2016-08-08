@@ -5,5 +5,3 @@
       (easy to do), and adapt rs semantics to rc (LEVEL/ACTION... quite easy);
   [+] partyly done with runlevels command support (`rs RUNLEVEL');
 * [ ] optimize parallel start/stop by using threads/pthread.h (quite hard);
-* [ ] effort to port to BSD OSs (mainly splitting /etc/sv[.conf.d],--base,--with
-      /usr/[local|...]/etc/sv[.conf.d),--user-installed applications.)
