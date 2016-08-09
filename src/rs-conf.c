@@ -12,8 +12,8 @@
 
 #define SV_CONFIG_FILE SYSCONFDIR "/sv.conf"
 
-/* global configuration list */
-static const char **sv_conf;
+/* global configuration array */
+static const char **SV_CONFIG_ARRAY;
 
 /* load configuration file as an environment list */
 static int  rs_conf_load(void);
@@ -26,7 +26,7 @@ int rs_conf_yesno(const char *env) {
 
 const char *rs_getconf(const char *env)
 {
-	if (!sv_conf)
+	if (!SV_CONFIG_ARRAY)
 		if (rs_conf_load())
 			return NULL;
 	if (!env)
@@ -36,8 +36,8 @@ const char *rs_getconf(const char *env)
 	size_t len = strlen(env);
 	int i = 0;
 
-	while ((ptr = sv_conf[i]))
-		if (strncmp(sv_conf[i++], env, len) == 0)
+	while ((ptr = SV_CONFIG_ARRAY[i]))
+		if (strncmp(SV_CONFIG_ARRAY[i++], env, len) == 0)
 			break;
 
 	if (!ptr)
@@ -53,7 +53,7 @@ const char *rs_getconf(const char *env)
 static int rs_conf_load(void)
 {
 	FILE *fp;
-	char *line = NULL, *env, *p, *ptr;
+	char *line = NULL, *env, *ptr;
 	size_t count = 0, len, l, num = 32, pos, size = 1024;
 
 	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
@@ -61,11 +61,11 @@ static int rs_conf_load(void)
 		return -1;
 	}
 
-	sv_conf = err_calloc(num, sizeof(void *));
+	SV_CONFIG_ARRAY = err_calloc(num, sizeof(void *));
 	env = err_malloc(size);
 
 	while (rs_getline(fp, &line, &len) > 0) {
-			if (line[0] == '#')
+		if (line[0] == '#')
 			continue;
 
 		/* get conf name */
@@ -77,11 +77,6 @@ static int rs_conf_load(void)
 		ptr = shell_string_value(ptr);
 		if (ptr == NULL)
 			continue;
-		/* remove trailing comments/white spaces */
-		p = strchr(ptr, '#');
-		if (p)
-			while (*p == ' ')
-				*p-- = '\0';
 
 		/* append conf value if any */
 		l = strlen(ptr);
@@ -93,20 +88,20 @@ static int rs_conf_load(void)
 			continue;
 
 		/* append conf string to list */
-		sv_conf[count++] = env;
+		SV_CONFIG_ARRAY[count++] = env;
 		env = err_malloc(size);
 		/* expand list if necessary */
-		if (count == (num-1)) {
+		if (count == num) {
 			num += 32;
-			sv_conf = err_realloc(sv_conf, sizeof(void *)*num);
+			SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*num);
 		}
 	}
 	fclose(fp);
 
-	if (sv_conf[count-1] != env)
+	if (SV_CONFIG_ARRAY[count-1] != env)
 		free(env);
-	sv_conf[count++] = NULL;
-	sv_conf = err_realloc(sv_conf, sizeof(void *)*count);
+	SV_CONFIG_ARRAY[count++] = NULL;
+	SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*count);
 
 	atexit(rs_conf_free);
 	return 0;
@@ -115,8 +110,8 @@ static int rs_conf_load(void)
 static void rs_conf_free(void)
 {
 	int i = 0;
-	while (sv_conf[i])
-		free((void *)sv_conf[i++]);
-	free(sv_conf);
+	while (SV_CONFIG_ARRAY[i])
+		free((void *)SV_CONFIG_ARRAY[i++]);
+	free(SV_CONFIG_ARRAY);
 }
 
