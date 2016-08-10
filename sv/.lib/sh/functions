@@ -184,38 +184,6 @@ if [ -t 1 ] && yesno "${COLOR:-Yes}"; then
 	eval_colors
 fi
 
-if [ "${OS_NAME}" = "Linux" ]; then
-#
-# @FUNCTION: mount info helper
-# @ARG: [OPTIONS] DEVICES
-#
-device_info()
-{
-	local dev ret=0 file files opt=false
-	[ -e /proc/devices ] && files=devices
-	[ -e /proc/misc    ] && files="${files} misc"
-	[ -n "${files}"    ] || return 1
-	case "${1}" in
-		(-a|--all) opt=true; shift;;
-	esac
-
-	for dev; do
-		for file in ${files}; do
-			grep -qsw "${dev}" /proc/${file}
-			case "${?}" in
-				(0)
-				if ! ${opt}; then
-					ret=0
-					break
-				fi;;
-				(*) ret=$((${ret}+1));;
-			esac
-		done
-	done
-	return "${ret}"
-}
-fi # OS_NAME=Linux
-
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
 #
