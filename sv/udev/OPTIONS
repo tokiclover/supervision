@@ -8,9 +8,22 @@ SVC_OPTS=
 SVC_BEFORE='checkfs device-mapper dmcrypt udevadm'
 SVC_NEED='devfs sysfs'
 SVC_PROVIDE='dev'
+SVC_COMMANDS='reload'
 UDEV_DEBUG=No
 
-pre()
+udevadm="$(command -v udevadm 2>${NULL})"
+
+start_exec()
+{
+	${udevadm} control --start-exec-queue --timeout=${UDEV_START_TIMEOUT:-60}
+}
+
+reload()
+{
+	${udevadm} control --reload
+}
+
+start_pre()
 {
 	if ! grep -q devtmpfs /proc/filesystems; then
 		if yesno "${USE_MDEV:-YES}"; then
@@ -41,6 +54,51 @@ pre()
 	else
 		return 0
 	fi
+}
+
+start_post()
+{
+	if ! [ -n "${udevadm}" -a -x "${udevadm}" ]; then
+		error "No udevadm/udev command found"
+		return 1
+	fi
+
+	if yesno "${DEV_ROOT_SYMLINK:-1}"; then
+		local RULESDIR=/run/udev/rules.d
+		mkdir -p ${RULESDIR}
+		eval $(udevadm info --export --export-prefix=ROOT_ --device-id-of-file=/)
+		if [ -n "${ROOT_MAJOR}" -a -n "${ROOT_MINOR}" -a "${ROOT_MAJOR}" != 0 ]; then
+			echo 'ACTION=="add|change", SUBSYSTEM=="block", ENV{MAJOR}=="'${ROOT_MAJOR}'", ENV{MINOR}=="'${ROOT_MINOR}'", SYMLINK+="root"' >${RULESDIR}/61-dev-root-link.rules
+		fi
+	fi
+
+	#
+	# XXX: this necessary to get a function udev early (see BUGS.md)
+	#
+	local count=1
+	begin "Starting to process events"
+	while ! start_exec; do
+		count=$((${count}+1))
+		[ "${count}" = 50 ] && break
+		sleep 0.2
+	done
+	end "${?}"
+
+	begin "Waiting uevents to be processed"
+	${udevadm} settle --timeout=${UDEV_SETTLE_TIMEOUT:-60}
+	end "${?}"
+
+	begin "Populating /dev with uevents"
+	${udevadm} trigger --type=subsystems --action=add
+	${udevadm} trigger --type=devices --action=add
+	end "${?}"
+
+	return 0
+}
+
+stop_pre()
+{
+	${udevadm} control --exit
 }
 
 #
