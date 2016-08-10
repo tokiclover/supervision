@@ -47,29 +47,6 @@ mount_sysfs()
 	done
 }
 
-mount_cgroup()
-{
-	[ -d ${__CGROUP_ROOT__} ] && grep -q cgroup /proc/filesystems || return 1
-	if ! mountinfo --quiet ${__CGROUP_ROOT__}; then
-		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CGROUP_FILESYSTEM_SIZE:-10M} \
-			cgroup ${__CGROUP_ROOT__}
-	fi
-	[ "${?}" = 0 ] || return 2
-
-	local ctrl hirc num enabled exta
-	while read ctrl hirc num enabled extra; do
-		case "${enabled}" in
-			(1)
-			mountinfo --quiet ${__CGROUP_ROOT__}/${ctrl} && continue
-			mkdir -p ${__CGROUP_ROOT__}/${ctrl}
-			mount ${arg} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
-				${ctrl} ${__CGROUP_ROOT__}/${ctrl}
-			;;
-		esac
-	done </proc/cgroups
-	return 0
-}
-
 start()
 {
 	local arg fs
@@ -77,7 +54,6 @@ start()
 
 	mount_sys
 	mount_sysfs
-	mount_cgroup
 }
 
 #

@@ -12,12 +12,40 @@ __CGROUP_FUNCTIONS__=1
 __CGROUP_NAME__=supervision
 __CGROUP_ROOT__=/sys/fs/cgroup
 __CGROUP_PATH__="${__CGROUP_ROOT__}/${__CGROUP_NAME__}"
-__CGROUP_RELEASE_AGENT__="${SV_LIBDIR}/sh/cgroup-release-agent"
 SYSFS_OPTS="nodev,nosuid,noexec"
+
+cgroup_mount_sys()
+{
+	[ -d ${__CGROUP_ROOT__} ] && grep -q cgroup /proc/filesystems || return 1
+
+	if ! mountinfo --quiet ${__CGROUP_ROOT__}; then
+		if [ "${SV_LIBDIR}" = "/etc/sv/.lib" ]; then
+			__CGROUP_RELEASE_AGENT__="$(readlink ${SV_LIBDIR})/sh/cgroup-release-agent"
+		else
+			__CGROUP_RELEASE_AGENT__="${SV_LIBDIR}/sh/cgroup-release-agent"
+		fi
+		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CGROUP_FILESYSTEM_SIZE:-10M} \
+			cgroup ${__CGROUP_ROOT__}
+	fi
+	[ "${?}" = 0 ] || return 2
+
+	local ctrl hirc num enabled exta
+	while read ctrl hirc num enabled extra; do
+		case "${enabled}" in
+			(1)
+			mountinfo --quiet ${__CGROUP_ROOT__}/${ctrl} && continue
+			mkdir -p ${__CGROUP_ROOT__}/${ctrl}
+			mount ${arg} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
+				${ctrl} ${__CGROUP_ROOT__}/${ctrl}
+			;;
+		esac
+	done </proc/cgroups
+	return 0
+}
 
 cgroup_start_sys()
 {
-	${SV_SVCDIR}/sysfs mount_cgroup || return 1
+	cgroup_mount_sys || return 1
 
 	local opt
 	[ -w /etc/mtab ] || opt=-n
