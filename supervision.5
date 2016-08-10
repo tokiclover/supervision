@@ -349,21 +349,34 @@ use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
 bypass shell path look up for efficiency.)
 And then, a few functions name have special meaning; read the following for more
 information.
-.TP
-.B SUPERVISION
 .TS
 tab (@);
 l lx.
-\fBpre\fR@T{
-Setup function ./run
+\fBstart_pre\fR@T{
+Setup function for ./run (supervision) or start() (runscript)
 T}
-\fBpost\fR@T{
-Clean up function for ./finish
+\fBstart_post\fR@T{
+Clean up function for ./run (supervision) or start() (runscript)
 T}
-\fBlog_pre\fR@T{
+\fBstop_pre\fR@T{
+Setup function for ./finish (supervision) or stop() (runscript)
+T}
+\fBstop_post\fR@T{
+Clean up function for ./finish (supervision) or stop() (runscript)
+T}
+.TE
+
+.TP
+.B SUPERVISION
+Those two shell functions can be used for logdir setup and clean up for supervision
+services; there are no meaning for runscript services and thus are not supported.
+.TS
+tab (@);
+l lx.
+\fBlog_start_pre\fR@T{
 Setup function for (log) ./run
 T}
-\fBlog_post\fR@T{
+\fBlog_stop_post\fR@T{
 Clean up function for (log) ./finish
 T}
 .TE
@@ -389,11 +402,11 @@ along with
 .TS
 tab (@);
 l lx.
-\fBstart{,_{pre,post}}\fR@T{
-Start command (preceded and followed by a set/clean up functions if any.)
+\fBstart\fR@T{
+Start shell function (preceded and followed by a set/clean up functions if any.)
 T}
-\fBstop{,_{pre,post}}\fR@T{
-Same as above for stop command.
+\fBstop\fR@T{
+Same as above for stop shell function.
 T}
 \fBrestart\fR@T{
 Custom stop/start command if any (default is \fI{stop,start}\R)

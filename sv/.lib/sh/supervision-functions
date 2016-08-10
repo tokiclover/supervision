@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 3.6 2016/07/26 21:09:26                      Exp $
+# $Version: 4.0 2016/08/08 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -89,18 +89,18 @@ svc_start()
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
 	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
-	val="${?}"
-	if [ "${val}" = 0 ]; then
-		val=0; svc_mark -s
+	#
+	# XXX: wait five seconds
+	#
+	if [ "${?}" != 0 ] && svc_wait 500 ${SVC_NAME} ${SVC_PIDFILE}; then
+		val=0
 	else
-		#
-		# wait two seconds before efec
-		if svc_wait 200; then
-			val=0; svc_mark -s
-		else
-			val=5; svc_mark -f
-		fi
+		val=1
 	fi
+	if [ "${val}" = 0 ]; then
+		svc_command start_post || val=2
+	fi
+	[ "${val}" = 0 ] && svc_mark -s || svc_mark -f
 	return ${val}
 }
 
@@ -116,12 +116,12 @@ svc_stop()
 	svc_wait 500 || eval ${__ERR_BUSY__}
 	fi
 
+	svc_command stop_pre || val=2
 	eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"
-	val="${?}"
-	if [ "${val}" = 0 ]; then
-		val=0; svc_mark -S
+	if [ "${?}" = 0 ]; then
+		svc_mark -S
 	else
-		val=5; svc_mark -f
+		val=1
 	fi
 	return ${val}
 }
@@ -182,34 +182,32 @@ svc_state()
 #
 svc_config()
 {
-	local f
-	for f in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
-		if [ ! -f "${f}" ]; then
-			error "${f} required file not found"
+	local file
+	for file in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
+		if [ ! -f "${file}" ]; then
+			error "${file} required file not found"
 			return 1
 		fi
 	done
 }
-svc_pre()
+svc_start_pre()
 {
-	local REMOVE_SVC val
-	REMOVE_SVC='{ svc_remove; svc_mark -f; return ${val}; }'
+	local SVC_FAILURE val=0
+	SVC_FAILURE='{ svc_mark -f; return ${val}; }'
 
 	if ! [ "${SVC_CMD#/}" != "${SVC_CMD}" ]; then
 		SVC_CMD=$(command -v ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
 	fi
 	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
 		error "Command not found."
-		val=1 eval ${REMOVE_SVC}
+		val=1 eval ${SVC_FAILURE}
 	fi
 	if ! svc_config; then
-		val=2 eval ${REMOVE_SVC}
+		error "Missing configuration files"
+		val=2 eval ${SVC_FAILURE}
 	fi
-	if command -v pre >${NULL} 2>&1; then
-		if ! pre; then
-			error "Failed to set up service"
-			val=3 eval ${REMOVE_SVC}
-		fi
+	if ! svc_command start_pre; then
+		val=3 eval ${SVC_FAILURE}
 	fi
 
 	#
@@ -230,7 +228,7 @@ svc_remove()
 #
 # @FUNCTION: Pre-Finish handler
 #
-svc_post()
+svc_stop_post()
 {
 	#
 	# Set up CGroup
@@ -241,14 +239,12 @@ svc_post()
 		fi
 	fi
 
-	if command -v post >${NULL} 2>&1; then
-		post || error "Failed to exec post()"
-	fi
 	#
 	# Handle run return values
 	#
 	case "${__cmd_args__}" in
 		(0*)
+		svc_command stop_post
 		;;
 		(*)
 		SVC_TRY=$((${SVC_TRY}+1))
@@ -260,8 +256,7 @@ svc_post()
 		fi
 		;;
 	esac
-	svc_mark -S
-	rm -f ${SVC_PIDFILE}
+	rm -f ${SVC_PIDFILE} ${SV_TMPDIR}/star/${SVC_NAME}
 }
 
 #
@@ -362,6 +357,14 @@ svc_desc()
 	fi
 }
 
+svc_command()
+{
+	if command -v ${1} >${NULL} 2>&1; then
+		${1} ||	error "Failed to exec ${1}()"
+	else
+		return 0
+	fi
+}
 #
 # @FUNCTION: Handle extra service commands
 #
@@ -435,24 +438,21 @@ svc_run()
 		svc_cmd "${@}"
 		return
 	fi
-	svc_pre || return
+	svc_start_pre || return
 	[ "${__SVC_DEPEND__}" = 0 ] || svc_depend || return
 
 	#
 	# XXX: workaround for false start failure
 	#
 	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
-
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
 		echo >${virtual}
 	fi
-
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}
 
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
-
 	rm -f ${SVC_PIDFILE} ${virtual} ${real}
 }
 
@@ -462,15 +462,13 @@ svc_finish()
 	# XXX: workaround for false start failure
 	#
 	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
-
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
 		echo >${virtual}
 	fi
-
 	rm -f ${SVC_PIDFILE} ${virtual} ${real}
 
-	svc_post
+	svc_stop_post
 	[ -n "${FIN_CMD}" ] || return 0
 	eval exec ${FIN_CMD} ${FIN_OPTS}
 }
@@ -479,17 +477,13 @@ svc_log_run()
 {
 	checkpath -q -d ${LOG_MODE:+-m} ${LOG_MODE} \
 		${SVC_USER:+-o} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} ${SVC_LOGDIR}
-	if command -v log_pre >${NULL} 2>&1; then
-		log_pre
-	fi
+	svc_command log_start_pre
 	exec ${PRE_CMD} ${PRE_OPTS} ${LOG_CMD} ${LOG_OPTS}
 }
 
 svc_log_finish()
 {
-	if command -v log_post >${NULL} 2>&1; then
-		log_post
-	fi
+	svc_command log_stop_post
 	[ -n "${LOG_FIN_CMD}" ] || return 0
 	exec ${LOG_FIN_CMD} ${LOG_FIN_OPTS}
 }

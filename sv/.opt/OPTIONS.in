@@ -15,14 +15,28 @@
 #
 # Run set up
 #
-#pre()
+#start_pre()
+#{
+#}
+
+#
+# Run clean up
+#
+#start_post()
 #{
 #}
 
 #
 # Finish set up
 #
-#post()
+#stop_pre()
+#{
+#}
+
+#
+# Finish clean up
+#
+#stop_post()
 #{
 #}
 
