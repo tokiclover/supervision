@@ -551,7 +551,6 @@ LINUX_RUNSCRIPT_SERVICES="
 	lvm
 	mdev
 	raid
-	udevadm
 	unionfs
 	zramfs
 "
