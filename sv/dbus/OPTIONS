@@ -8,13 +8,13 @@ SVC_OPTS='--system --nofork'
 
 SVC_SOCKET=/var/run/dbus/system_bus_socket
 
-pre()
+start_pre()
 {
 	[ -d ${SVC_SOCKET%/*} ] || mkdir ${SVC_SOCKET%/*}
 	dbus-uuidgen --ensure=/etc/machine-id
 }
 
-post()
+stop_post()
 {
 	[ -S ${SVC_SOCKET}    ] && rm -f ${SVC_SOCKET}
 	[ -f /var/run/dbus.pid ] && rm -f /var/run/dbus.pid

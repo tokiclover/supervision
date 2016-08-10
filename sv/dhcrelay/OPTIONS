@@ -18,7 +18,7 @@ else
 	SVC_OPTS="-4 ${SVC_OPTS}"
 fi
 
-pre()
+start_pre()
 {
 	local iface
 	for iface in ${DHCRELAY_INTERFACES}; do

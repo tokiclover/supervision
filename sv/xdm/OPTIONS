@@ -46,7 +46,7 @@ checkvt()
 	fi
 }
 
-pre()
+start_pre()
 {
 	case "${name}" in
 		(entrance|kdm|gdm|wdm|gpe-dm|lxdm|lightdm|sddm|slim|xdm)

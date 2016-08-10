@@ -12,7 +12,7 @@ CGCONFIGPARSER=/usr/sbin/cgconfigparser
 CGCLASSIFY=/usr/sbin/cgclassify
 CG_CLASSIFY=No
 
-pre()
+start_pre()
 {
 	begin "Setting up Control Groups"
 	${CGCONFIGPARSER} --load=${SVC_CONFIGFILE} >/dev/null 2>&1
@@ -34,7 +34,7 @@ pre()
 	return 0
 }
 
-post()
+stop_post()
 {
 	local ctrl eq mnt_pnt mnt_pts
 	while read ctrl eq mnt_pnt; do

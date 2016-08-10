@@ -12,7 +12,7 @@ case "${SVC_OPTS}" in
 	(*-s*) SVC_USE=logger;;
 esac
 
-pre()
+start_pre()
 {
 		[ -n "${WPA_IF}" ] || find_iface
 }

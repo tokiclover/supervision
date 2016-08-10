@@ -11,7 +11,7 @@ SVC_OPTS='--config ${SVC_CONFIGFILE} --foreground'
 SVC_AFTER='udev dbus'
 SVC_USE=logger
 
-pre()
+start_pre()
 {
 	checkpath -q -d -m 0755 -o pcscd:pcscd /run/pcscd
 }

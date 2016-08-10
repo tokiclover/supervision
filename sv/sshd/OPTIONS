@@ -10,7 +10,7 @@ SVC_OPTS='${SSHD_OPTS} -D -f "${SVC_CONFIGFILE}"'
 SVC_USE='logger dns'
 SVC_COMMANDS=check_config
 
-pre()
+start_pre()
 {
 	[ -z "${SVC_LOGFILE}" ] || SVC_OPTS="${SVC_OPTS} -E ${SVC_LOGFILE}"
 }

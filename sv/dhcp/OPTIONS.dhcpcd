@@ -12,7 +12,7 @@ SVC_CMD=${name}
 SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_INTERFACES}'
 SVC_USE=logger
 
-pre()
+start_pre()
 {
 	[ -z "${SVC_LOGFILE}" ] || DHCP_OPTS="${DHCP_OPTS} --logfile ${SVC_LOGFILE}"
 }

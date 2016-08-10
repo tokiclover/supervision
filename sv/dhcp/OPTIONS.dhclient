@@ -14,7 +14,7 @@ SVC_CMD=${name}
 SVC_OPTS='${DHCP_OPTS} -cf ${SVC_CONFIGFILE} -d -f -lf ${SVC_LIBDIR}/${name}.leases -pf /var/run/${name}.pid -q -user dhcp -group dhcp ${DHCP_INTERFACES}'
 SVC_USE='logger dns'
 
-pre()
+start_pre()
 {
 	[ -n "${SVC_LOGFILE}" ] && DHCP_OPTS="${DHCP_OPTS} -tf ${SVC_LOGFILE}"
 	checkpath -q -d -o dhcp:dhcp /var/run/dhcp ${SVC_LIBDIR} \

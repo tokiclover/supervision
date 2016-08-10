@@ -13,7 +13,7 @@ case "${SVC_OPTS}" in
 	(*) SVC_USE=logger;;
 esac
 
-pre()
+start_pre()
 {
 	[ -z "${SVC_LOGFILE}" ] || SVC_OPTS="${SVC_OPTS} --logfilepath ${SVC_LOGFILE}"
 }

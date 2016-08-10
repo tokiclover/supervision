@@ -9,7 +9,7 @@ SVC_GROUP=at
 SVC_SPOOLDIR=/var/spool/at
 SVC_USE=logger
 
-pre()
+start_pre()
 {
 	checkpath -q -d -m 1770 -o ${SVC_USER}:${SVC_GROUP} ${SVC_SPOOLDIR}/atjobs \
 		${SVC_SPOOLDIR}/atspool

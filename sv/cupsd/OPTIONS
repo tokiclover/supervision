@@ -7,7 +7,7 @@ SVC_OPTS=-f
 SVC_NEED='dbus'
 SVC_AFTER='logger'
 
-pre()
+start_pre()
 {
 	checkpath -q -d -m 0775 -o root:lp /var/cache/cups /var/cache/cups/rss \
 		/var/run/cups

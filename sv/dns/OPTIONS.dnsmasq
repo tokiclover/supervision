@@ -11,7 +11,7 @@ SVC_USER=${name}
 SVC_GROUP=${name}
 SVC_USE=logger
 
-pre()
+start_pre()
 {
 	checkpath -q -f -m 0644 -o ${name}:${name} /var/lib/misc/${name}.leases
 }

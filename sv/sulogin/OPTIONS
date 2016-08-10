@@ -12,7 +12,7 @@ PRE_CMD=setsid
 # Supervision Stage-2 Services
 # (Comment to avoid this behaviour)
 #
-post()
+stop_post()
 {
 	rs -2 start stage
 }

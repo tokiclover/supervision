@@ -13,7 +13,7 @@ else
 	SVC_PROVIDE=
 fi
 
-pre()
+start_start_start_start_pre()
 {
 	case "${SVC_NAME}" in
 		(*-inet)
