@@ -1,5 +1,17 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.1:
+
+Merged set/clean up shell functions for supervision and runscript services;
+meaning that pre() is now named start_pre(), post() is now named stop_post();
+log_pre() is renamed log_start_pre() and log_post() is now renamed log_stop_post().
+And thus supervision services support a start_post() and stop_pre() shell
+functions! So splitting services like udevadm to complement udev is now
+superfluous and unnecessary. This noticeable change was necessary to ease
+service creation and maintainability. So, the old supervision-functions API
+was bumped to a new major number; the old pre() and post()... shell functions
+are no longer supported.
+
 0.12.0.1:
 
 Miscellaneous fixes:
