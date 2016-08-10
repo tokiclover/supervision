@@ -543,16 +543,7 @@ in stage-1 would still work as expected.
 cannot be added to stage-0, nor can the
 .I dev
 virtual service used for this case, because the service won't start untill
-stage-1. And
-.I udev
-needs
-.I udevadm
-(runscript) service to be functionnal at all. The last will take care of
-populating
-.I /dev
-with device nodes and symlinks. So add
-.I udevadm
-to stage-1 to get a functionnal \fIudev\fR.
+stage-1.
 .SS RUNLEVELS
 .I {sysinit,boot,default,nonetwork,shutdown,reboot,single,nonetwork}
 run levels are supported.
@@ -723,7 +714,6 @@ and so on; likewise for
 .RB [\| lvm \|]\ \c
 .RB [\| mdev \|]\ \c
 .RB [\| raid \|]\ \c
-.RB [\| udevadm \|]\ \c
 .RB [\| unionfs \|]\ \c
 .RB [\| zramfs \|])
 .TP
