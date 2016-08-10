@@ -1,9 +1,22 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.0.1:
+
+Miscellaneous fixes:
+
+Moved CGroup bits to cgroup-functions and thus fix cgroup-release-agent path
+for hardened kernels; and moved and duplicated device_info() shell function
+to sv/{device-mapper,lvm,zfs} (broken with an OS_NAME conditional.)
+
+Added early console font and keymap setup; and use a more sv/rdonlyfs.
+
+SERVICE ADDITION:
+SUPERVISION/SERVICES: dhcrelay;
+
 0.12.0:
 
 Added support to sysvinit compatible runlevels which is almost a stage
-translation to {sysvinit,boot,default,shutdown,reboot} and then...
+translation to {sysinit,boot,default,shutdown,reboot} and then...
 {nonetwork,single} which required a few new stuff. See rs(8) for more
 information.
 
