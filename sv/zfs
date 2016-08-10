@@ -18,32 +18,6 @@ fi
 
 zfs="$(command -v zfs 2>${NULL})"
 
-device_info()
-{
-	local dev ret=0 file files opt=false
-	[ -e /proc/devices ] && files=devices
-	[ -e /proc/misc    ] && files="${files} misc"
-	[ -n "${files}"    ] || return 1
-	case "${1}" in
-		(-a|--all) opt=true; shift;;
-	esac
-
-	for dev; do
-		for file in ${files}; do
-			grep -qsw "${dev}" /proc/${file}
-			case "${?}" in
-				(0)
-				if ! ${opt}; then
-					ret=0
-					break
-				fi;;
-				(*) ret=$((${ret}+1));;
-			esac
-		done
-	done
-	return "${ret}"
-}
-
 start()
 {
 	local zfs_opts
