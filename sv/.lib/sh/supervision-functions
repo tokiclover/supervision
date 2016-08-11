@@ -135,7 +135,7 @@ svc_status()
 svc_reload()
 {
 	if [ -n "${__SIGRELD__}" ]; then
-		eval ${__SVCCMD__} ${__SIGRLD__} "${SV_RUNDIR}/${SVC_NAME}"
+		eval ${__SVCCMD__} ${__SIGRELD__} "${SV_RUNDIR}/${SVC_NAME}"
 	else
 		eval ${__SVCCMD__} ${__SIGHUP__:-${__SIGEXIT__}} "${SV_RUNDIR}/${SVC_NAME}"
 		svc_start
