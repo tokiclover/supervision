@@ -193,7 +193,7 @@ svc_config()
 svc_start_pre()
 {
 	local SVC_FAILURE val=0
-	SVC_FAILURE='{ svc_mark -f; return ${val}; }'
+	SVC_FAILURE='{ svc_remove; svc_mark -f; return ${val}; }'
 
 	if ! [ "${SVC_CMD#/}" != "${SVC_CMD}" ]; then
 		SVC_CMD=$(command -v ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
@@ -359,8 +359,9 @@ svc_desc()
 
 svc_command()
 {
-	if command -v ${1} >${NULL} 2>&1; then
-		${1} ||	error "Failed to exec ${1}()"
+	if command -v ${1} >${NULL} 2>&1 && ! eval ${1}; then
+		error "Failed to exec ${1}()"
+		return 1
 	else
 		return 0
 	fi
