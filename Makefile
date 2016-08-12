@@ -91,7 +91,7 @@ dist_SVC_INSTANCES  = \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
 	dns/OPTIONS.dnsmasq \
-	dhcp/OPTIONS.dhcpcd dhcp/OPTIONS.dhcpd \
+	dhcp/OPTIONS.dhcpcd \
 	cron/OPTIONS.cronie cron/OPTIONS.dcron \
 	cron/OPTIONS.fcron cron/OPTIONS.vixie-cron \
 	httpd/OPTIONS.busybox-httpd httpd/OPTIONS.lighttpd \
