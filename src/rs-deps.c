@@ -233,7 +233,9 @@ RS_StringList_T **rs_deptree_load(void)
 
 	/* save everything to a file */
 	rs_deptree_file_save(SV_TMPDIR_DEPS);
-	rs_deptree_file_save(SV_CACHEDIR);
+	/* XXX: do not save a cache file for stage-3 */
+	if (rs_stage != 3)
+		rs_deptree_file_save(SV_CACHEDIR);
 
 	/* clean unnecessary list */
 	rs_stringlist_free(&stage_svclist);
