@@ -3,9 +3,8 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-description='Dynamic Host Configuration Protocol (DHCP) client/server'
+description='Dynamic Host Configuration Protocol (DHCP) server'
 
-name=dhcpd
 SVC_CONFIGFILE=/etc/dhcp/${name}.conf
 SVC_COMMANDS=check_config
 SVC_LIBDIR=/var/lib/dhcp
