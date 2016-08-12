@@ -1,5 +1,15 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.1.1:
+
+Miscellaneous fixes:
+
+Do not save a cachefile for stage-3 as this would result in restarting
+everything before shutdown!
+
+SERVICE ADDITION:
+SUPERVISION/SERVICES: dhcpd (splited from dhcp);
+
 0.12.1:
 
 Merged set/clean up shell functions for supervision and runscript services;
