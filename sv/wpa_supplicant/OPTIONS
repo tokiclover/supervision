@@ -4,34 +4,45 @@
 #
 
 description='Wi-Fi Protected Access client and IEEE 802.1X supplicant'
+#
+# support instance for interface
+#
+SVC_BEFORE='dhcp'
+case "${SVC_NAME}" in
+	(*.eth[0-9]|wlan[0-9])
+	WPA_IFACE="${SVC_NAME##*.}"
+	SVC_BEFORE="${SVC_BEFORE} dhcp.${WPA_IFACE}"
+	;;
+esac
+
 name=wpa_supplicant
 SVC_CONFIGFILE=/etc/${name}/${name}.conf
 SVC_CMD=${name}
-SVC_OPTS='${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IF}'
+SVC_OPTS='${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IFACE}'
 case "${SVC_OPTS}" in
 	(*-s*) SVC_USE=logger;;
 esac
 
 start_pre()
 {
-		[ -n "${WPA_IF}" ] || find_iface
+		[ -n "${WPA_IFACE}" ] || find_iface
 }
 
 find_iface()
 {
-	local IF
+	local iface
 	if [ "${OS_NAME}" = "Linux" ]; then
-		for IF in /sys/class/net/*; do
-			[ -e "${IF}"/wireless -o -e "${IF}"/phy80211 ] &&
-				WPA_IF="${WPA_IF} -i ${IF##*/}"
+		for iface in /sys/class/net/*; do
+			[ -e "${iface}"/wireless -o -e "${iface}"/phy80211 ] &&
+				WPA_IFACE="${WPA_IFACE} -i ${iface##*/}"
 		done
 	else
-		for IF in /dev/net/* $(ifconfig -s | tail -n+2 | awk '{print $1}' 2>${NULL}); do
-			ifconfig ${IF} 2>${NULL} | grep -iq '*ssid' &&
-				WPA_IF="${WPA_IF} -i ${IF##*/}"
+		for iface in /dev/net/* $(ifconfig -s | tail -n+2 | awk '{print $1}' 2>${NULL}); do
+			ifconfig ${iface} 2>${NULL} | grep -iq '*ssid' &&
+				WPA_IF="${WPA_IFACE} -i ${iface##*/}"
 		done
 	fi
-	[ -n "${WPA_IF}" ]
+	[ -n "${WPA_IFACE}" ]
 }
 
 #
