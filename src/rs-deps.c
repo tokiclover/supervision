@@ -12,8 +12,6 @@
 #include "rs-deps.h"
 #include <dirent.h>
 
-#define SV_CACHEDIR SV_LIBDIR "/cache"
-
 static const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 
 RS_SvcDepsList_T *service_deplist;
@@ -219,8 +217,7 @@ RS_StringList_T **rs_deptree_load(void)
 	RS_String_T *ent;
 
 	/* load previous deptree file if any, or initialize a new list */
-	if (rs_deptree_file_load(SV_TMPDIR_DEPS) &&
-			rs_deptree_file_load(SV_CACHEDIR))
+	if (rs_deptree_file_load(SV_TMPDIR_DEPS))
 		rs_deptree_alloc();
 	rs_svclist_load(NULL);
 	rs_svcdeps_load();
@@ -233,9 +230,6 @@ RS_StringList_T **rs_deptree_load(void)
 
 	/* save everything to a file */
 	rs_deptree_file_save(SV_TMPDIR_DEPS);
-	/* XXX: do not save a cache file for stage-3 */
-	if (rs_stage != 3)
-		rs_deptree_file_save(SV_CACHEDIR);
 
 	/* clean unnecessary list */
 	rs_stringlist_free(&stage_svclist);
