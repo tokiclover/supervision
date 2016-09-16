@@ -205,6 +205,11 @@ description of the service, `rs udev desc reload' for example.
 .SH CONFIGURATION
 See
 .I @SYSCONFDIR@/sv.conf
+for the global configuration file, or
+.I @SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
+for runscript particular services or
+.I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fB[.INSTANCE]\fR
+for supervision services for the local configuration file,
 and \fBsupervsion\fR(5) for settings related to
 .B rs
 service management.
