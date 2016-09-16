@@ -9,7 +9,7 @@ SVC_CONFIGFILE=/etc/${name}.conf
 SVC_COMMANDS=check_config
 SVC_LOGFILE=${LOGDIR}/${name}.log
 SVC_CMD=${name}
-SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_INTERFACES}'
+SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_IFACES}'
 SVC_USE=logger
 
 start_pre()

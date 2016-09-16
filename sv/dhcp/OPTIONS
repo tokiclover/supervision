@@ -6,6 +6,12 @@
 name=dhcpcd
 SVC_AFTER='iptables ipt6tables'
 SVC_PROVIDE='net'
+#
+# support instance for interface
+#
+case "${SVC_NAME}" in
+	(*.[a-zA-Z]) DHCP_IFACES="${SVC_NAME#*.}";;
+esac
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
