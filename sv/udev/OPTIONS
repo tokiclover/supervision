@@ -9,6 +9,8 @@ SVC_BEFORE='checkfs device-mapper dmcrypt udevadm'
 SVC_NEED='devfs sysfs'
 SVC_PROVIDE='dev'
 SVC_COMMANDS='reload'
+description="udev device manager daemon"
+description_reload="Reload the udev rules and databases"
 UDEV_DEBUG=No
 
 udevadm="$(command -v udevadm 2>${NULL})"
