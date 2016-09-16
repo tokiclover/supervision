@@ -351,7 +351,7 @@ svc_desc()
 	local desc
 	eval desc=\"\${description${1:+_$1}}\"
 	if [ -n "${desc}" ]; then
-		name=description info ${1:+${1}:} "${desc}"
+		info ${1:+${1}:} "${desc}"
 	else
 		warn "No description found"
 	fi
