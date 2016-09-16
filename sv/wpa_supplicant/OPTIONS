@@ -7,11 +7,12 @@ description='Wi-Fi Protected Access client and IEEE 802.1X supplicant'
 #
 # support instance for interface
 #
-SVC_BEFORE='dhcp'
+SVC_BEFORE='dhcp net'
+
 case "${SVC_NAME}" in
-	(*.eth[0-9]|wlan[0-9])
-	WPA_IFACE="${SVC_NAME##*.}"
-	SVC_BEFORE="${SVC_BEFORE} dhcp.${WPA_IFACE}"
+	(*.[a-zA-Z])
+	WPA_IFACE="${SVC_NAME#*.}"
+	SVC_BEFORE="${SVC_BEFORE} net.${WPA_IFACE} dhcp.${WPA_IFACE}"
 	;;
 esac
 
