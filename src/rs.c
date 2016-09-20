@@ -371,11 +371,6 @@ static int svc_cmd(struct svcrun *run, int flags)
 			argv[2] = nodeps_arg;
 	}
 
-	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
-		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
-		retval = -ENOLCK;
-		goto reterr;
-	}
 	if (!svc_quiet)
 		svc_log("[%s] service %s...\n", run->name, cmd);
 
@@ -403,13 +398,23 @@ static int svc_cmd(struct svcrun *run, int flags)
 			return SVC_RET_WAIT;
 	}
 	else if (pid == 0) { /* child */
-		/* close the lockfile to be able to mount rootfs read-only */
-		if (rs_stage == 3 && command == 's')
-			close(run->lock);
 		/* restore previous signal actions and mask */
 		sigaction(SIGINT, &sa_sigint, NULL);
 		sigaction(SIGQUIT, &sa_sigquit, NULL);
 		sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
+
+		switch (command) {
+		case 's':
+		case 'S':
+			if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+				LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
+				_exit(ENOLCK);
+			}
+			/* close the lockfile to be able to mount rootfs read-only */
+			if (rs_stage == 3 && command == 's')
+				close(run->lock);
+			break;
+		}
 
 		execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)run->envp);
 		_exit(255);
@@ -906,7 +911,6 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		exit(EXIT_SUCCESS);
 	case -ENOENT:
 		exit(2);
-	case -ENOLCK:
 	case -ECANCELED:
 		exit(4);
 	default:
@@ -956,7 +960,6 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		case SVC_RET_WAIT:
 			break;
 		case -ENOENT:
-		case -ENOLCK:
 		case -ECANCELED:
 			retval++;
 			continue;
@@ -968,7 +971,6 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		}
 
 		if (parallel) {
-			close(run[n]->lock);
 			if (n++ == size) {
 				size += 8;
 				run = err_realloc(run, sizeof(void*)*size);
