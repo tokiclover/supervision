@@ -1,5 +1,9 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.1.2:
+
+Moved file locking to child process for efficiency; and miscellaneous fixes.
+
 0.12.1.1:
 
 Miscellaneous fixes:
