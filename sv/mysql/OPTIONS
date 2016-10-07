@@ -1,0 +1,136 @@
+#
+# $Header: /etc/sv/mysql/OPTIONS                           Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+SVC_COMMANDS="checkconfig"
+SVC_CMD=/usr/sbin/mysqld
+SVC_USER=mysql
+SVC_GROUP=mysql
+SVC_CONFIGFILE="${MY_CNF:=/etc/${SVC_NAME}/my.cnf}"
+SVC_OPTS="--defaults-file=${MY_CNF} ${MY_ARGS} --loose-skip-grant-tables --loose-skip-host-cache --loose-skip-name-resolve --loose-skip-networking --loose-skip-slave-start --loose-skip-federated --loose-skip-ssl --loose-skip-log-bin --loose-skip-relay-log --loose-skip-slow-query-log --loose-skip-external-locking --loose-skip-log-slave-updates --user=${SVC_GROUP} --user=${SVC_USER} --log-warnings=0 --max_allowed_packet=8M --net_buffer_length=16K --default-storage-engine=MyISAM --explicit_defaults_for_timestamp"
+
+SVC_USE=loopback
+# localfs needed for $basedir
+SVC_NEED=localfs
+
+#
+# Depending on your usage of MySQL, you may also wish to start it after some
+# other services are up. Uncomment the lines below as needed. If these aren't
+# enough for you, we encourage you to file a bug, and help us understand how
+# you are using MySQL.
+#
+# Do your MySQL ACLs refer to hostnames not in your /etc/hosts?
+# If so, you need DNS before you can accept connections.
+# Avoid dependency circular loops if you use MySQL to power a local DNS server.
+#SVC_USE="$SVC_USE dns"
+#SVC_AFTER="SVC_AFTER dns"
+
+# Does your MySQL bind to an IP on an interface other than loopback?
+# Alternatively you might wish to specify the exact interface here e.g. net.eth0.
+#SVC_USE="$SVC_USE net"
+#SVC_AFTER="SVC_AFTER net"
+
+# Do you store your MySQL files on a SAN or other network filesystem, that is
+# provided by the networkfs init script?
+#SVC_NEED="$SVC_NEED networkfs"
+
+# Or from NFS? P.S. This is not a good idea in most cases, but does have some
+# valid usage cases, so we provide the option.
+#SVC_NEED="$SVC_NEED nfs"
+
+# Should any one of the instances satisfy the requirement for MySQL coming up?
+# By default, we say no.
+[ "${SVC_NAME}" = mysql ] && SVC_PROVIDE="mysql"
+# But uncomment this next instead if you think it should.
+#SVC_PROVIDE="mysql"
+
+get_config()
+{
+	:	${MYSQLD_CONFIG:=$(my_print_defaults --config-file="${2:-$MY_CNF}" mysqld)}
+	local conf
+	for conf in ${MYSQLD_CONFIG}; do
+		case ${conf} in
+			(--${1}=*) printf "${conf#*=}"; return;;
+		esac
+	done
+}
+
+mysql_svcname()
+{
+	local extra=
+	case "${SVC_NAME}" in
+		(mysql*) ;;
+		(*) extra=" (mysql)" ;;
+	esac
+	echo "${SVC_NAME}${extra}"
+}
+
+start_pre()
+{
+	${SVC_CMD} --defaults-file="${MY_CNF}" --help --verbose > /dev/null 2>&1 ||
+	${SVC_CMD} --defaults-file="${MY_CNF}" --help --verbose > /dev/null ||
+	return
+
+	local basedir=$(get_config basedir)
+	local datadir=$(get_config datadir)
+	local pidfile=$(get_config pid-file)
+	local socket=$(get_config socket)
+	local chroot=$(get_config chroot)
+
+	if [ -n "${chroot}" ] ; then
+		socket="${chroot}/${socket}"
+		pidfile="${chroot}/${pidfile}"
+	fi
+
+	if [ ! -d "${datadir}" ] ; then
+		error "MySQL datadir \`${datadir}' is empty or invalid"
+		error "Please check your config file \`${MY_CNF}'"
+		return 1
+	fi
+
+	if [ ! -d "${datadir}"/mysql ] ; then
+		# find which package is installed to report an error
+		local EROOT=$(portageq envvar EROOT)
+		local DBPKG_P=$(portageq match ${EROOT} $(portageq expand_virtual ${EROOT} virtual/mysql | head -n1))
+		if [ -z ${DBPKG_P} ] ; then
+			error "You don't appear to have a server package installed yet."
+		else
+			error "You don't appear to have the mysql database installed yet."
+			error "Please run \`emerge --config =${DBPKG_P}\` to have this done..."
+		fi
+		return 1
+	fi
+
+	SVC_OPTS="${SVC_OPTS} --basedir=${basedir} --datadir=${datadir} --socket=${socket} --pid-file=${pidfile}"
+	local piddir="${pidfile%/*}"
+	checkpath -d --owner mysql:mysql --mode 0755 "${piddir}"
+	if [ $? -ne 0 ]; then
+		error "Directory ${piddir} for pidfile does not exist and cannot be created"
+		return 1
+	fi
+}
+start_post()
+{
+	local pidfile=$(get_config pid-file)
+	local startup_timeout=${STARTUP_TIMEOUT:-900}
+	local socket=$(get_config socket)
+	local chroot=$(get_config chroot)
+
+	if [ -n "${chroot}" ] ; then
+		socket="${chroot}/${socket}"
+	fi
+	svc_wait -E "${startup_timeout}" "${SVC_NAME}" "${socket}" || return
+
+	env_svc pidfile
+	env_svc basedir
+}
+
+checkconfig()
+{
+	${SVC_CMD} --defaults-file="${MY_CNF}" --help --verbose > /dev/null
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
