@@ -1,0 +1,21 @@
+#
+# $Header:  /etc/sv/virtlogd/OPTIONS                     Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="libvirt virtual machine logging manager"
+SVC_CMD=/usr/sbin/virtlogd
+pidfile="/var/run/virtlogd.pid"
+SVC_COMMANDS="reload"
+description_reload="reload the daemon, while maintaining open connections"
+SVC_AFTER="ntp-client ntp nfs nfsmount corosync"
+
+reload()
+{
+    [ -e ${pidfile} ] && read pid <${pidfile} || return
+    kill -SIGUSR1 "${pid}"
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

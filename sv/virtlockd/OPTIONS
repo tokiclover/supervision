@@ -1,0 +1,22 @@
+#
+# $Header:  /etc/sv/virtlockd/OPTIONS                    Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="libvirt virtual machine lock manager"
+SVC_CMD="/usr/sbin/virtlockd"
+pidfile="/var/run/virtlockd.pid"
+SVC_OPTS="--pid-file ${pidfile}"
+SVC_COMMANDS="reload"
+description_reload="reload the daemon, while maintaining locks and clients"
+SVC_AFTER="ntp-client ntp nfs nfsmount corosync"
+
+reload()
+{
+    [ -e ${pidfile} ] && read pid <${pidfile} || return
+    kill -SIGUSR1 "${pid}"
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

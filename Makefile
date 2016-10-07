@@ -79,6 +79,8 @@ dist_SV_SVCS  = \
 	httpd \
 	ntp \
 	sshd \
+	virtlockd \
+	virtlogd \
 	wpa_supplicant \
 	xdm \
 	zed
