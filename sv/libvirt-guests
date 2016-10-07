@@ -1,0 +1,215 @@
+#!/sbin/rs
+
+description="Virtual Machine Management (libvirt) Guests"
+SVC_USE=libvirtd
+#
+# default to QEMU
+#
+[ -n "${LIBVIRT_URIS}" ] || LIBVIRT_URIS="qemu:///system"
+#
+# default to suspending the VM via managedsave
+#
+case "${LIBVIRT_SHUTDOWN}" in
+	managedsave|shutdown|destroy) ;;
+	*) LIBVIRT_SHUTDOWN="managedsave" ;;
+esac
+#
+# default to 500 seconds
+#
+[ -n ${LIBVIRT_MAXWAIT} ] || LIBVIRT_MAXWAIT=500
+
+gueststatefile="/var/lib/libvirt/libvirt-guests.state"
+netstatefile="/var/lib/libvirt/libvirt-net.state"
+moudules='kvm-intel qemu_fw_cfg cirrus snd-hda-codec-cirrus vhost vhost-net virtio_blk virtio_console virtio_net virtio_scsi virtio_input virtio_pci virtio_ring virtio_mmio e1000 e1000e'
+
+VIRSH()
+{
+	local hvuri="${1}"
+	shift
+
+	#
+	# set default or correct value
+	#
+	[ -n "${hvuri}" ] || hvuri="qemu:///system"
+	[ "${hvuri}" = "qemu" ] && hvuri="qemu:///system"
+
+	LC_ALL=C virsh -c ${hvuri} "${@}" 2>${NULL} | head -n -1
+}
+
+libvirtd_vm_list()
+{
+	local hvuri="${1}"
+	shift
+	VIRSH "${hvuri}" list --uuid "${@}"
+}
+
+libvirtd_vm_count()
+{
+	local hvuri="${1}"
+	shift
+	libvirtd_vm_list "${hvuri}" "${@}" | wc -l
+}
+
+libvirtd_net_list()
+{
+	local hvuri="${1}"
+	shift
+	VIRSH "${hvuri}" net-list --uuid "${@}"
+}
+
+libvirtd_net_count()
+{
+	local hvuri="${1}"
+	shift
+	libvirtd_net_list "${hvuri}" "${@}" | wc -l
+}
+
+libvirtd_vm_stop()
+{
+	local uri="${1}"
+	local persist="${2}"
+	local shutdown_type="${LIBVIRT_SHUTDOWN}"
+	local counter="${LIBVIRT_MAXWAIT}"
+	local vm_name vm_as vm_ids uuid vm_count
+
+	[ "${persist}" = "--transient" ] && shutdown_type="shutdown"
+	[ -n "${counter}" ] || counter=500
+
+	# grab all persistent or transient vms running
+	vm_ids="$(libvirtd_vm_list "${uri}" "${persist}")"
+
+	for uuid in ${vm_ids}; do
+		# Get the name
+		vm_name="$(VIRSH "${uri}" domname "${uuid}")"
+		begin "    Shutting down ${vm_name}"
+		# Get autostart state
+		vm_as=$(VIRSH ${uri} dominfo ${uuid} | \
+			awk '$1 == "Autostart:" { print $2 }')
+
+		if [ "${persist}" = "--persistent" ]; then
+			# Save our running state
+			if  ! (yesno "${LIBVIRT_IGNORE_AUTOSTART}" && \
+				[ ${vm_as} = "enabled" ]); then
+				echo "${uri} ${uuid}" >> ${gueststatefile}
+			fi
+
+		fi
+		# Now let's stop it
+		VIRSH "${uri}" ${shutdown_type} ${uuid} >${NULL} 2>&1
+		end "${?}" "${vm_name}"
+	done
+
+	vm_count="$(libvirtd_vm_count "${uri}" "${persist}")"
+	while [ ${vm_count} -gt 0 ] && [ ${counter} -gt 0 ]; do
+		vm_count="$(libvirtd_vm_count "${uri}" "${persist}")"
+		sleep 1
+		if [ "${shutdown_type}" = "shutdown" ]; then
+			counter=$((${counter} - 1))
+		fi
+		echo -n "."
+	done
+
+	if [ "${shutdown_type}" = "shutdown" ]; then
+		# grab all VMs still running
+		vm_ids="$(libvirtd_vm_list "${uri}" "${persist}")"
+		for uuid in ${vm_ids}; do
+			vm_name=$(do_virsh ${uri} vmname ${uuid})
+			begin "    ERROR: ${vm_name} forcibly stopped"
+			VIRSH "${uri}" destroy ${uuid} >${NULL} 2>&1
+			end "${?}"
+		done
+	fi
+}
+
+libvirtd_net_stop()
+{
+	local uri="${1}" persist="${2}" uuid net_name
+
+	if yesno "${LIBVIRT_NET_SHUTDOWN}"; then
+		for uuid in $(libvirtd_net_list ${uri} ${persist}); do
+			net_name=$(do_virsh ${uri} net-name ${uuid})
+			begin "   Shutting down ${net_name} network"
+
+			if [ "${persist}" = "--persistent" ]; then
+				echo "${uri} ${uuid}" >>${netstatefile}
+			fi
+			VIRSH qemu net-destroy ${uuid} >${NULL} 2>&1
+		done
+	fi
+}
+
+start_pre()
+{
+	/etc/qemu/qemu-vlan --br=vnet4 -n4 --dhcp=dnsmasq --vde --start
+	~/bin/ipr -i vnet4 -e wlan0
+	local i
+	for i in 0 1 2 3; do
+		ifconfig vnet4_$i 0.0.0.0 up
+	done
+}
+
+start()
+{
+	local vm_uri vm_uuid vm_name
+
+	checkpath -qf -g qemu -m 664 "${netstatefile}" "${gueststatefile}"
+	modprobe -a ${moudules}
+
+	for vm_uri in ${LIBVIRT_URIS}; do
+		begin "    Connecting to ${vm_uri}"
+		VIRSH "${vm_uri}" connect
+		end "${?}"
+	done
+	yesno "${LIBVIRT_START}" || return 0
+
+	# start networks
+	while read -r vm_uri vm_uuid; do
+		# ignore trash
+		[ -z "${vm_uri}" ] || [ -z "${vm_uuid}" ] && continue
+
+		vm_name="$(VIRSH "${vm_uri}" net-name "${vm_uuid}")"
+		begin "   Starting ${vm_name} network"
+		VIRSH "${vm_uri}" net-start "${vm_uuid}" >${NULL} 2>&1
+		end "${?}"
+	done <"${netstatefile}"
+
+	# start domains
+	while read -r vm_uri vm_uuid; do
+		# ignore trash
+		[ -z "${vm_uri}" ] || [ -z "${vm_uuid}" ] && continue
+
+		vm_name="$(VIRSH "${vm_uri}" domname "${vm_uuid}")"
+		begin "   Starting ${vm_name} domain"
+		VIRSH "${vm_uri}" start "${vm_uuid}" >${NULL} 2>&1
+		end "${?}"
+	done <"${gueststatefile}"
+	return 0
+}
+
+start_post()
+{
+	/etc/qemu/qemu-vlan --br=vnet4 -n4 --dhcp=dnsmasq --vde --stop
+}
+
+stop()
+{
+	local uri
+
+	rm -f "${gueststatefile}" ||
+		error "Unable to save domain state"
+	rm -f "${netstatefile}" ||
+		error "Unable to save net state"
+
+	for uri in ${LIBVIRT_URIS}; do
+		begin "Stopping libvirt domains and networks for ${uri}"
+		libvirtd_vm_stop  "${uri}" "--persistent"
+		libvirtd_vm_stop  "${uri}" "--transient"
+		libvirtd_net_stop "${uri}" "--persistent"
+		libvirtd_net_stop "${uri}" "--transient"
+		end "${?}" "${uri}"
+	done
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

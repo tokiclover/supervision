@@ -110,6 +110,7 @@ dist_RS_SVCS  = \
 	hostname \
 	kmod \
 	kmod-static-nodes \
+	libvirt-guests \
 	localfs \
 	loopback \
 	miscfs \
