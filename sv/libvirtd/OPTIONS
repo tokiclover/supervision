@@ -1,0 +1,24 @@
+#
+# $Header:  /etc/sv/libvirtd/OPTIONS                     Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Virtual Machine Management daemon (libvirt)"
+
+pidfile="/var/run/libvirtd.pid"
+SVC_CMD="/usr/sbin/libvirtd"
+SVC_OPTS="${LIBVIRTD_OPTS} --pid-file ${pidfile}"
+PRE_CMD="env - KRB5_KTNAME=/etc/libvirt/krb5.tab"
+
+SVC_NEED="net virtlogd"
+SVC_USE="dbus virtlockd"
+SVC_AFTER="ntp-client ntp nfs nfsmount portmap rpc.statd iptables ip6tables ebtables corosync sanlock cgred xenconsoled"
+
+start_pre()
+{
+	checkpath -qd /etc/libvirt/lxc /etc/libvirt/nwfilter /etc/libvirt/qemu \
+		/etc/libvirt/storage /var/run/libvirt
+}
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -67,6 +67,7 @@ dist_SV_SVCS  = \
 	git-daemon \
 	gpm \
 	hostapd \
+	libvirtd \
 	mysql \
 	pcscd \
 	rsync-daemon \
