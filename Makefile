@@ -122,6 +122,7 @@ dist_RS_SVCS  = \
 	swaps \
 	tmpdirs \
 	tmpfiles.dev \
+	vmware \
 	zfs \
 	zfs-share \
 	zpool

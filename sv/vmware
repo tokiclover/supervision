@@ -1,0 +1,39 @@
+#!/sbin/rs
+# $Id$
+
+SVC_NEED=localfs
+SVC_USE=net
+vmware_modules="vmw_vsock_vmci_transport vmmon vsock vmblock vmnet vmxnet3 \
+	vmwgfx vmw_pvscsi vmw_balloon i2c-piix4 virtio_balloon mptspi e1000 e1000e"
+
+start()
+{
+	begin "Starting VMware USB Arbitrator"
+	/opt/vmware/bin/vmware-usbarbitrator 
+	end "$?"
+	begin "Starting VMware services"
+	modprobe -q vmci 2>${NULL} || modprobe -q vmw_vmci
+	end "$?" "vmci"
+	modprobe -a ${vmware_modules} 2>${NULL}
+	end "$?" "kernel modules"
+	/opt/vmware/bin/vmware-networks --start
+	end "$?" "network"
+}
+
+stop()
+{
+	begin "Stopping VMware USB Arbitrator"
+	killall --wait /opt/vmware/bin/vmware-usbarbitrator 
+	end "$?"
+	/opt/vmware/bin/vmware-networks --stop 
+	end "$?" "network"
+	begin "Stopping VMware services"
+	modprobe -ra ${vmware_modules}
+	end "$?"
+	modprobe -rq vmci 2>${NULL} || modprobe -rq vmw_vmci
+	end "$?" "vmci"
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
