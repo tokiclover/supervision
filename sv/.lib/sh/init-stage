@@ -193,7 +193,7 @@ elif [ "${1}" = "-2" ]; then
 	#
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
 		pidfile=${pidfile}; pid=; count=0;
-		svc_wait -E 1000 ${SV_CMD} ${pidfile};
+		svc_wait -E 10 ${SV_CMD} ${pidfile};
 		if [ ${SV_CMD} = runsvdir ]; then
 		while [ -e ${pidfile} ]; do
 			for pid in \$(pgrep ${SV_CMD}); do
