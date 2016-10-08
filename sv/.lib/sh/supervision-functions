@@ -126,6 +126,13 @@ svc_stop()
 	return ${val}
 }
 
+svc_restart()
+{
+	svc_stop
+	svc_remove
+	svc_start
+}
+
 svc_status()
 {
 	svc_state -p && eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}" ||
@@ -134,7 +141,9 @@ svc_status()
 
 svc_reload()
 {
-	if [ -n "${__SIGRELD__}" ]; then
+	if command -v reload >${NULL} 2>&1; then
+		reload
+	elif [ -n "${__SIGRELD__}" ]; then
 		eval ${__SVCCMD__} ${__SIGRELD__} "${SV_RUNDIR}/${SVC_NAME}"
 	else
 		eval ${__SVCCMD__} ${__SIGHUP__:-${__SIGEXIT__}} "${SV_RUNDIR}/${SVC_NAME}"
@@ -396,7 +405,7 @@ svc_cmd()
 	for arg; do
 		case "${1}" in
 			(add|del|desc|remove|zap)    cmd=${1} ;;
-			(reload|start|stop|status) cmd=${1}   ;;
+			(reload|restart|start|stop|status) cmd=${1} ;;
 			(cgroup_remove_service) cmd=${1} pfx= ;;
 			(*) opt='"${@}"' cmd=commands; break  ;;
 		esac
