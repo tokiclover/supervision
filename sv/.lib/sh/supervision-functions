@@ -92,7 +92,7 @@ svc_start()
 	#
 	# XXX: wait five seconds
 	#
-	if [ "${?}" = 0 ] && svc_wait 5 ${SVC_NAME} ${SVC_PIDFILE}; then
+	if [ "${?}" = 0 ] && svc_wait -E 5 ${SVC_NAME} ${SVC_PIDFILE}; then
 		val=0
 	else
 		val=1
