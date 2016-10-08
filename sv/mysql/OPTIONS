@@ -113,14 +113,13 @@ start_pre()
 start_post()
 {
 	local pidfile=$(get_config pid-file)
-	local startup_timeout=${STARTUP_TIMEOUT:-900}
 	local socket=$(get_config socket)
 	local chroot=$(get_config chroot)
 
 	if [ -n "${chroot}" ] ; then
 		socket="${chroot}/${socket}"
 	fi
-	svc_wait -E "${startup_timeout}" "${SVC_NAME}" "${socket}" || return
+	svc_wait -E "${STARTUP_TIMEOUT:-900}" "${SVC_NAME}" "${socket}" || return
 
 	env_svc pidfile
 	env_svc basedir
