@@ -54,6 +54,7 @@ dist_SCRIPTS  = \
 	sv/.opt/cmd
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
+	apache2 \
 	atd \
 	cron \
 	cupsd \
