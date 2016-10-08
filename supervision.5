@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2016-08-02" "0.12.0" "Supervision Framework"
+.TH SUPERVISION 5 "2016-10-08" "0.12.1" "Supervision Framework"
 .SH NAME
 Supervision \- Supervision Framework init-system and service-manager
 .SH DESCRIPTION
@@ -58,6 +58,10 @@ is almost equivalent to
 (runscript)
 service command for supervision suite which do not support reload command;
 every supervision suite but \fBrunit\fR.
+And then,
+.I reload
+command will be executed if defined; otherwise, supervision reload command will
+be used.
 The other command remove the service from
 .B SV_RUNDIR
 (running /service/ directory.)
@@ -738,6 +742,7 @@ and so on; likewise for
 .RB [\| libvirtd \|]\ \c
 .RB [\| httpd \|]\ \c
 .RB [\| mysql \|]\ \c
+.RB [\| nagios \|]\ \c
 .RB [\| ntp \|]\ \c
 .RB [\| pcscd \|]\ \c
 .RB [\| rsync-daemon \|]\ \c

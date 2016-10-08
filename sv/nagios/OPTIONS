@@ -1,0 +1,47 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/nagios                                  Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+SVC_STARTED_COMMANDS="reload"
+SVC_COMMANDS="checkconfig ${SVC_STARTED_COMMANDS}"
+SVC_CONFIGFILE="/etc/nagios/nagios.cfg"
+SVC_CMD="/usr/sbin/nagios"
+SVC_OPTS="${SVC_CONFIGFILE}"
+PRE_CMD="/usr/bin/env"
+PRE_OPTS="- HOME=/var/nagios/home"
+cmdfile="/var/nagios/rw/nagios.cmd"
+pidfile="/var/nagios/nagios.lock"
+
+SVC_NEED=net
+SVC_USE="dns logger firewall"
+SVC_AFTER="mysql postgresql"
+
+reload()
+{
+	checkconfig || return 1
+	[ -f ${pidfile} ] && kill -HUP $(cat ${pidfile})
+}
+
+checkconfig()
+{
+	${SVC_CMD} -v ${SVC_CONFIGFILE} >${NULL} 2>&1 ||
+	${SVC_CMD} -v ${SVC_CONFIGFILE}
+}
+
+start_pre()
+{
+	checkconfig || return 1
+	checkpath -f -o nagios:nagios /var/nagios/nagios.log /var/nagios/status.sav
+	rm -f ${cmdfile}
+}
+
+stop_post()
+{
+	rm -f /var/nagios/status.log /var/nagios/nagios.tmp ${pidfile} ${_cmdfile}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

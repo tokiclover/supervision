@@ -78,6 +78,7 @@ dist_SV_SVCS  = \
 	syslog \
 	inetd \
 	httpd \
+	nagios \
 	ntp \
 	sshd \
 	virtlockd \
