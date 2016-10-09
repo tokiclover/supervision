@@ -45,23 +45,28 @@ sub-section for more info.
 Standard LSB
 .I {start,stop,status}
 along with
-.I {restart,zap}
+.I {reload,restart,zap}
 and
 .I {add,desc}
 extra commands are supported.
 Supervision-services also support
-.I {new,reload,remove,cgroup_remove_service}
+.I {new,remove,cgroup_remove_service}
 command to create a new service with a template.
 .I reload
-is almost equivalent to
-.I restart
-(runscript)
-service command for supervision suite which do not support reload command;
-every supervision suite but \fBrunit\fR.
-And then,
+command has special meaning for supervision services in that, if no
 .I reload
-command will be executed if defined; otherwise, supervision reload command will
-be used.
+command definition is found and the supervision suite support a
+.I reload
+command, so
+.B runit
+so to speak, this
+.I reload
+command will be used instead.
+And then, if not, a
+.B SIGHUP
+would be sent the supervisor and then a
+.I start
+command would be issued.
 The other command remove the service from
 .B SV_RUNDIR
 (running /service/ directory.)
@@ -357,6 +362,9 @@ information.
 .TS
 tab (@);
 l lx.
+\fBreload\fR@T{
+Reload function for ./run (supervision) or runscript service
+T}
 \fBstart_pre\fR@T{
 Setup function for ./run (supervision) or start() (runscript)
 T}
