@@ -119,7 +119,7 @@ start_post()
 	if [ -n "${chroot}" ] ; then
 		socket="${chroot}/${socket}"
 	fi
-	svc_wait -E "${STARTUP_TIMEOUT:-900}" "${SVC_NAME}" "${socket}" || return
+	svc_wait "${STARTUP_TIMEOUT:-900}" "${socket}" || return
 
 	env_svc pidfile
 	env_svc basedir

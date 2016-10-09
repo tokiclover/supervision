@@ -83,7 +83,7 @@ svc_start()
 	# this is done internaly (rs) already
 	#
 	if yesno "${SVC_WAIT:-1}"; then
-	svc_wait 5 || eval ${__ERR_BUSY__}
+	svc_wait -E 5 || eval ${__ERR_BUSY__}
 	fi
 	cp -HRpu ${SV_SVCDIR}/${SVC_NAME} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
@@ -92,7 +92,7 @@ svc_start()
 	#
 	# XXX: wait five seconds
 	#
-	if [ "${?}" = 0 ] && svc_wait -E 5 ${SVC_NAME} ${SVC_PIDFILE}; then
+	if [ "${?}" = 0 ] && svc_wait 5 ${SVC_PIDFILE}; then
 		val=0
 	else
 		val=1
@@ -113,7 +113,7 @@ svc_stop()
 	# this is done internaly (rs) already
 	#
 	if yesno "${SVC_WAIT:-1}"; then
-	svc_wait 5 || eval ${__ERR_BUSY__}
+	svc_wait -E 5 || eval ${__ERR_BUSY__}
 	fi
 
 	svc_command stop_pre || val=2

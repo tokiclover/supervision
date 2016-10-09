@@ -147,7 +147,7 @@ start_pre()
 }
 start_post()
 {
-	svc_wait -E "${TIMEOUT}" "${SVC_NAME}" "${PIDFILE}"
+	svc_wait "${TIMEOUT}" "${PIDFILE}"
 }
 
 stop_pre()
@@ -162,7 +162,7 @@ stop_pre()
 stop_post()
 {
 	[ -f ${PIDFILE} ] && pgrep -P ${PID} apache2 >${NULL} &&
-	svc_wait -E "${TIMEOUT}" "${SVC_NAME}" "${PIDFILE}"
+	svc_wait "${TIMEOUT}" "${PIDFILE}"
 }
 
 reload()

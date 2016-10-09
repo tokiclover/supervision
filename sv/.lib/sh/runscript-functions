@@ -1,8 +1,8 @@
 #
-# $Header:  /lib64/sv/sh/runscript-functions               Exp $
+# $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.2 2016/07/20 21:09:26                      Exp $
+# $Version: 1.2 2016/10/à8 21:09:26                      Exp $
 #
 
 __RUNSCRIPT_FUNCTIONS__=1
@@ -105,18 +105,18 @@ rs_cmd()
 
 svc_wait()
 {
-	local FILE LIMIT NAME OPT VAL
+	local FILE LIMIT OPT='!' VAL
 
 	case "${1}" in
-		(-[eE]) OPT='!'; shift;;
+		(-[E]) OPT=; shift;;
 	esac
-	LIMIT=$((${1:-60}*100)) NAME=${2:-${SVC_NAME}}
-	FILE=${3:-${SV_TMPDIR}/down/${NAME}}
+	LIMIT=$((${1:-60}*100))
+	FILE=${2:-${SV_TMPDIR}/down/${SVC_NAME}}
 
 	while [ ${OPT} -e ${FILE} ]; do
 		VAL=$((${VAL}+1)); sleep 0.01s
 		case ${VAL} in
-			(*00|*000) info "Waiting for ${NAME}...(${VAL%00} seconds)";;
+			(*00|*000) info "Waiting for ${FILE}...(${VAL%00} seconds)";;
 		esac
 		[ ${VAL} -eq ${LIMIT} ] && return 1
 	done
