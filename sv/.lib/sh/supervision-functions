@@ -92,11 +92,7 @@ svc_start()
 	#
 	# XXX: wait five seconds
 	#
-	if [ "${?}" = 0 ] && svc_wait 5 ${SVC_PIDFILE}; then
-		val=0
-	else
-		val=1
-	fi
+	svc_wait 5 ${SVC_PIDFILE} && val=0 || val=1
 	if [ "${val}" = 0 ]; then
 		svc_command start_post || val=2
 	fi
