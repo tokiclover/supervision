@@ -12,8 +12,7 @@ This project was initialy inspired by [supervision-scripts][1] collection,
 supporting [Daemontools][3], [Daemontools-Encore][4], [Runit][5] or [S6][6]
 supervision backends providing an easy and efficient way to supervision
 by using a shell,--to be able to switch between backend and share a few shell
-functions,--and an optional [OpenRC][7] support for service configuration files
-and init-system support.
+functions,--and an optional [OpenRC][7] support for service configuration files.
 (A Gentoo [ebuild][2] is available.)
 
 Note: [busybox](http://www.busybox.net/) has an integrated runit suite which has
