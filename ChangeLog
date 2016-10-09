@@ -1,8 +1,23 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.2:
+
+Miscellaneous bug fixes (mainly false positive service start failure for
+supervision services);
+Support restart LSB command support for supervision services
+(/etc/sv/SERVICE/run restart or rs SERVICE restart would work as expected);
+Support reload LSB command definition for runscript and supervision
+services (previously only a supervision backend reload command was used);
+Support device_info helper again on Linux platform to reduce code duplication;
+
+SERVICE ADDITION:
+SUPERVISION: apache2, mysql, libvirtd, virtlo{ck,g}d
+RUNSCRIPT: libvirt-guests, vmware
+
 0.12.1.2:
 
-Moved file locking to child process for efficiency; and miscellaneous fixes.
+Moved file locking to child process for efficiency; removed caching dependencies
+files; and tiny miscellaneous fixes (nonetwork service instances.)
 
 0.12.1.1:
 
