@@ -732,6 +732,7 @@ static void svc_zap(const char *svc)
 	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL,
 		SV_TMPDIR_PIDS, SV_TMPDIR_STAR,
 		SV_TMPDIR_WAIT, NULL };
+	const char *files[] = { "ENV", "OPTIONS", NULL };
 
 	for (i = 0; dirs[i]; i++) {
 		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
@@ -739,9 +740,11 @@ static void svc_zap(const char *svc)
 			unlink(path);
 	}
 
-	snprintf(path, sizeof(path), "%s/%s_OPTIONS", SV_TMPDIR, svc);
-	if (!access(path, F_OK))
-		unlink(path);
+	for (i = 0; files[i]; i++) {
+		snprintf(path, sizeof(path), "%s/%s_%s", SV_TMPDIR, svc, files[i]);
+		if (!access(path, F_OK))
+			unlink(path);
+	}
 }
 
 static int svc_mark(const char *svc, int status)
