@@ -1,5 +1,9 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.2.2:
+
+Fix cyclical dependency in dhcp service
+
 0.12.2.1
 
 Fix zap service command.
