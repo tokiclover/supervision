@@ -2,7 +2,9 @@ Header: supervision/ChangeLog, 2015/04/24
 
 0.12.2.2:
 
-Fix cyclical dependency in dhcp service
+Build a deptree to avoid segfault due to a cyclical dependency when
+using `rs SERVICE start';
+Fix cyclical dependency in dhcp service;
 
 0.12.2.1
 
