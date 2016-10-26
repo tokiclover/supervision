@@ -432,9 +432,13 @@ reterr:
 static int svc_depend(struct svcrun *run)
 {
 	int type, val, retval = 0;
+	int p = 0;
+	RS_StringList_T **deptree;
 
 	if (svc_deps == 0)
 		return 0;
+	else
+		svc_deps = 0; /* override this for svc_exec dependencies */
 	if (!run->depends)
 		run->depends = rs_svcdeps_find(service_deplist, run->name);
 	if (!run->depends)
@@ -442,8 +446,16 @@ static int svc_depend(struct svcrun *run)
 
 	/* skip before deps type */
 	for (type = RS_DEPS_USE; type < RS_DEPS_TYPE; type++) {
-		val = svc_exec_list(run->depends->deps[type], run->argc, run->argv,
-				run->envp);
+		if (SLIST_EMPTY(run->depends->deps[type]))
+			continue;
+		/* build a deptree to avoid segfault because cyclical dependencies */
+		deptree = svc_deptree_load(run->depends->deps[type]);
+		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
+			if (!SLIST_EMPTY(deptree[p]))
+				val = svc_exec_list(deptree[p], run->argc, run->argv, run->envp);
+				--p;
+		} /* PRIORITY_LEVEL_LOOP */
+		rs_deptree_free(deptree);
 		if (val > 0 && type == RS_DEPS_NEED)
 			retval = val;
 	}

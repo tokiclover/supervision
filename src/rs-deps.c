@@ -212,6 +212,20 @@ static int rs_deptree_file_save(const char *head)
 	return 0;
 }
 
+RS_StringList_T **svc_deptree_load(RS_StringList_T *depends)
+{
+	RS_String_T *ent;
+	stage_svclist = depends;
+
+	rs_deptree_alloc();
+	rs_svcdeps_load();
+
+	SLIST_FOREACH(ent, depends, entries)
+		rs_deptree_add(RS_DEPS_USE, -1, ent->str);
+
+	return deptree_list;
+}
+
 RS_StringList_T **rs_deptree_load(void)
 {
 	RS_String_T *ent;

@@ -63,6 +63,8 @@ extern RS_SvcDeps_T **virtual_deplist;
 extern RS_SvcDeps_T  *rs_virtual_find(const char *svc);
 extern RS_SvcDeps_T **virtual_deplist;
 
+extern RS_StringList_T **svc_deptree_load(RS_StringList_T *depends);
+
 #ifdef __cplusplus
 }
 #endif
