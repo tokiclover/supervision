@@ -1,5 +1,11 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.2.3:
+
+Bug fix of v0.12.2.2: last `rs SERVICE start' fix broke service startup
+handling because of using fork(3) to start new services (which was causing
+shared memory to be changed).
+
 0.12.2.2:
 
 Build a deptree to avoid segfault due to a cyclical dependency when
