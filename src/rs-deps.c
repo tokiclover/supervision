@@ -16,34 +16,31 @@ static const char *const rs_deps_type[] = { "before", "after", "use", "need" };
 
 RS_SvcDepsList_T *service_deplist;
 RS_SvcDeps_T **virtual_deplist;
-static RS_StringList_T  *stage_svclist;
-static RS_StringList_T **deptree_list;
-size_t rs_deptree_prio = 0;
 
-static int  rs_deptree_file_load(const char *head);
-static int  rs_deptree_file_save(const char *head);
+static int  rs_deptree_file_load(const char *head, RS_DepTree_T *deptree);
+static int  rs_deptree_file_save(const char *head, RS_DepTree_T *deptree);
 static void rs_svcdeps_free(void);
 static void rs_virtual_insert(RS_SvcDeps_T *elm);
 size_t rs_virtual_count;
 
-static void rs_deptree_alloc(void)
+static void rs_deptree_alloc(RS_DepTree_T *deptree)
 {
 	int p;
-	rs_deptree_prio += RS_DEPTREE_PRIO;
-	deptree_list = err_realloc(deptree_list, rs_deptree_prio*sizeof(void*));
-	for (p = rs_deptree_prio-RS_DEPTREE_PRIO; p < rs_deptree_prio; p++)
-		deptree_list[p] = rs_stringlist_new();
+	deptree->size += RS_DEPTREE_PRIO;
+	deptree->tree = err_realloc(deptree->tree, deptree->size*sizeof(void*));
+	for (p = deptree->size-RS_DEPTREE_PRIO; p < deptree->size; p++)
+		deptree->tree[p] = rs_stringlist_new();
 }
 
-void rs_deptree_free(RS_StringList_T **array)
+void rs_deptree_free(RS_DepTree_T *deptree)
 {
 	int i;
-	for (i = 0; i < rs_deptree_prio; i++)
-		rs_stringlist_free(&array[i]);
-	rs_deptree_prio = 0;
+	for (i = 0; i < deptree->size; i++)
+		rs_stringlist_free(&deptree->tree[i]);
+	deptree->size = 0;
 }
 
-static int rs_deptree_add(int type, int prio, char *svc)
+static int rs_deptree_add(int type, int prio, char *svc, RS_DepTree_T *deptree)
 {
 	char *s = svc;
 	RS_SvcDeps_T *svc_deps = rs_svcdeps_find(service_deplist, s);
@@ -56,10 +53,10 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	/* add service to list if and only if, either a service is {use,need}ed or
 	 * belongs to this particular init-stage
 	 */
-	if (type < RS_DEPS_USE && !rs_stringlist_find(stage_svclist, s))
+	if (type < RS_DEPS_USE && !rs_stringlist_find(deptree->list, s))
 		return -prio;
 	/* insert the real service instead of a virtual one */
-	if (!svc_deps && (svc_deps = rs_virtual_find(s)))
+	if (!svc_deps && (svc_deps = rs_virtual_find(s, deptree->list)))
 		s = svc_deps->svc;
 	if (prio < 0) {
 		if (svc_deps) {
@@ -75,8 +72,8 @@ static int rs_deptree_add(int type, int prio, char *svc)
 	pri = prio+1;
 
 	/* expand the list when needed */
-	if (pri > rs_deptree_prio && rs_deptree_prio < RS_DEPTREE_MAX)
-		rs_deptree_alloc();
+	if (pri > deptree->size && deptree->size < RS_DEPTREE_MAX)
+		rs_deptree_alloc(deptree);
 
 	if (svc_deps && pri < RS_DEPTREE_MAX) {
 		/* handle {after,use,need} type  which insert dependencies above */
@@ -84,13 +81,13 @@ static int rs_deptree_add(int type, int prio, char *svc)
 			for (t = RS_DEPS_AFTER; t < RS_DEPS_TYPE; t++)
 			SLIST_FOREACH(ent, svc_deps->deps[t], entries) {
 				add = 1;
-				for (p = pri; p < rs_deptree_prio; p++)
-					if ((elm = rs_stringlist_find(deptree_list[p], ent->str))) {
+				for (p = pri; p < deptree->size; p++)
+					if ((elm = rs_stringlist_find(deptree->tree[p], ent->str))) {
 						add = 0;
 						break;
 					}
 				if (add)
-					rs_deptree_add(t, pri, ent->str);
+					rs_deptree_add(t, pri, ent->str, deptree);
 			}
 		}
 		else {
@@ -98,7 +95,7 @@ static int rs_deptree_add(int type, int prio, char *svc)
 			SLIST_FOREACH(ent, svc_deps->deps[type], entries) {
 				add = 1;
 				for (p = 0; p < prio; p++)
-					if ((elm = rs_stringlist_find(deptree_list[p], ent->str))) {
+					if ((elm = rs_stringlist_find(deptree->tree[p], ent->str))) {
 						add = 0;
 						break;
 					}
@@ -107,10 +104,10 @@ static int rs_deptree_add(int type, int prio, char *svc)
 					/* prio level should be precisely handled here; so, the
 					 * follow up is required to get before along with the others
 					 */
-					r = rs_deptree_add(type, prio, ent->str);
+					r = rs_deptree_add(type, prio, ent->str, deptree);
 					if (r < 0)
 						continue;
-					r = rs_deptree_add(RS_DEPS_AFTER, r, ent->str);
+					r = rs_deptree_add(RS_DEPS_AFTER, r, ent->str, deptree);
 					prio = ++r > prio ? r : prio;
 				}
 			}
@@ -119,23 +116,23 @@ static int rs_deptree_add(int type, int prio, char *svc)
 
 	/* move up anything found before anything else */
 	for (p = 0; p < prio; p++)
-		if ((elm = rs_stringlist_find(deptree_list[p], s))) {
+		if ((elm = rs_stringlist_find(deptree->tree[p], s))) {
 			if (prio < RS_DEPTREE_MAX) {
-				rs_stringlist_mov(deptree_list[p], deptree_list[prio], elm);
-				rs_deptree_add(RS_DEPS_AFTER, prio, s);
+				rs_stringlist_mov(deptree->tree[p], deptree->tree[prio], elm);
+				rs_deptree_add(RS_DEPS_AFTER, prio, s, deptree);
 			}
 			return prio;
 		}
 	/* add only if necessary */
-	for (p = prio; p < rs_deptree_prio; p++)
-		if (rs_stringlist_find(deptree_list[p], s))
+	for (p = prio; p < deptree->size; p++)
+		if (rs_stringlist_find(deptree->tree[p], s))
 			return p;
 	prio = prio > RS_DEPTREE_MAX ? RS_DEPTREE_MAX-1 : prio;
-	rs_stringlist_add(deptree_list[prio], s);
+	rs_stringlist_add(deptree->tree[prio], s);
 	return prio;
 }
 
-static int rs_deptree_file_load(const char *head)
+static int rs_deptree_file_load(const char *head, RS_DepTree_T *deptree)
 {
 	int p;
 	char deppath[256];
@@ -161,9 +158,9 @@ static int rs_deptree_file_load(const char *head)
 		ptr = shell_string_value(ptr);
 		if (ptr == NULL)
 			continue;
-		if (p >= rs_deptree_prio)
-			while (p >= rs_deptree_prio)
-				rs_deptree_alloc();
+		if (p >= deptree->size)
+			while (p >= deptree->size)
+				rs_deptree_alloc(deptree);
 
 		/* append service list */
 		while (*ptr) {
@@ -173,7 +170,7 @@ static int rs_deptree_file_load(const char *head)
 				pos = tmp-ptr;
 			memcpy(svc, ptr, pos);
 			svc[pos] = '\0';
-			rs_stringlist_add(deptree_list[p], svc);
+			rs_stringlist_add(deptree->tree[p], svc);
 			ptr += pos+1;
 		}
 	}
@@ -182,14 +179,14 @@ static int rs_deptree_file_load(const char *head)
 	return 0;
 }
 
-static int rs_deptree_file_save(const char *head)
+static int rs_deptree_file_save(const char *head, RS_DepTree_T *deptree)
 {
 	RS_String_T *ent;
 	int p;
 	char deppath[256];
 	FILE *depfile;
 
-	if (!deptree_list) {
+	if (!deptree) {
 		errno = ENOENT;
 		return -1;
 	}
@@ -200,9 +197,9 @@ static int rs_deptree_file_save(const char *head)
 		return -1;
 	}
 
-	for (p = 0; p < rs_deptree_prio; p++) {
+	for (p = 0; p < deptree->size; p++) {
 		fprintf(depfile, "dep_%d='", p);
-		SLIST_FOREACH(ent, deptree_list[p], entries)
+		SLIST_FOREACH(ent, deptree->tree[p], entries)
 			if (ent)
 				fprintf(depfile, "%s ", ent->str);
 		fprintf(depfile, "'\n");
@@ -212,53 +209,48 @@ static int rs_deptree_file_save(const char *head)
 	return 0;
 }
 
-RS_StringList_T **svc_deptree_load(RS_StringList_T *depends)
+void svc_deptree_load(RS_DepTree_T *deptree)
 {
 	RS_String_T *ent;
-	stage_svclist = depends;
 
-	rs_deptree_alloc();
+	deptree->tree = err_realloc(deptree->tree, deptree->size*sizeof(void*));
 	rs_svcdeps_load();
 
-	SLIST_FOREACH(ent, depends, entries)
-		rs_deptree_add(RS_DEPS_USE, -1, ent->str);
-
-	return deptree_list;
+	SLIST_FOREACH(ent, deptree->list, entries)
+		rs_deptree_add(RS_DEPS_USE, -1, ent->str, deptree);
 }
 
-RS_StringList_T **rs_deptree_load(void)
+void rs_deptree_load(RS_DepTree_T *deptree)
 {
 	RS_String_T *ent;
 
 	/* load previous deptree file if any, or initialize a new list */
-	if (rs_deptree_file_load(SV_TMPDIR_DEPS))
-		rs_deptree_alloc();
-	rs_svclist_load(NULL);
+	if (rs_deptree_file_load(SV_TMPDIR_DEPS, deptree))
+		rs_deptree_alloc(deptree);
+	if (!deptree->list)
+		deptree->list = rs_svclist_load(NULL);
 	rs_svcdeps_load();
 
 	/* XXX: handle {after,use,need} first */
-	SLIST_FOREACH(ent, stage_svclist, entries)
-		rs_deptree_add(RS_DEPS_AFTER, -1, ent->str);
-	SLIST_FOREACH(ent, stage_svclist, entries)
-		rs_deptree_add(RS_DEPS_BEFORE, 0, ent->str);
+	SLIST_FOREACH(ent, deptree->list, entries)
+		rs_deptree_add(RS_DEPS_AFTER, -1, ent->str, deptree);
+	SLIST_FOREACH(ent, deptree->list, entries)
+		rs_deptree_add(RS_DEPS_BEFORE, 0, ent->str, deptree);
 
 	/* save everything to a file */
-	rs_deptree_file_save(SV_TMPDIR_DEPS);
+	rs_deptree_file_save(SV_TMPDIR_DEPS, deptree);
 
 	/* clean unnecessary list */
-	rs_stringlist_free(&stage_svclist);
-
-	return deptree_list;
+	rs_stringlist_free(&deptree->list);
 }
 
-RS_StringList_T **rs_svclist_load(char *dir_path)
+RS_StringList_T *rs_svclist_load(char *dir_path)
 {
 	char path[256], *ptr;
 	DIR *dir;
 	struct dirent *ent;
+	RS_StringList_T *svclist;
 
-	if (stage_svclist)
-		return &stage_svclist;
 	/*
 	 * get the service list for this stage
 	 */
@@ -273,14 +265,14 @@ RS_StringList_T **rs_svclist_load(char *dir_path)
 		exit(EXIT_FAILURE);
 	}
 
-	stage_svclist = rs_stringlist_new();
+	svclist = rs_stringlist_new();
 	while ((ent = readdir(dir))) {
 		if (ent->d_name[0] != '.')
-			rs_stringlist_add(stage_svclist, ent->d_name);
+			rs_stringlist_add(svclist, ent->d_name);
 	}
 	closedir(dir);
 
-	return &stage_svclist;
+	return svclist;
 }
 
 void rs_svcdeps_load(void)
@@ -399,7 +391,7 @@ RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc)
 	return NULL;
 }
 
-RS_SvcDeps_T *rs_virtual_find(const char *svc)
+RS_SvcDeps_T *rs_virtual_find(const char *svc, RS_StringList_T *svclist)
 {
 	int i;
 	RS_SvcDeps_T *d = NULL;
@@ -411,10 +403,10 @@ RS_SvcDeps_T *rs_virtual_find(const char *svc)
 		if (strcmp(svc, virtual_deplist[i]->virt))
 			continue;
 		d = virtual_deplist[i];
-		if (!stage_svclist)
+		if (!svclist)
 			return d;
 		/* insert any provider included in the init-stage */
-		if (rs_stringlist_find(stage_svclist, d->svc))
+		if (rs_stringlist_find(svclist, d->svc))
 			return d;
 	}
 

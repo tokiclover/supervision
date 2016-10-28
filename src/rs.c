@@ -43,6 +43,7 @@ int rs_stage = -1;
 static int rs_runlevel = -1;
 static int svc_deps  = 1;
 static int svc_quiet = 1;
+static RS_StringList_T *svclist;
 
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
@@ -433,7 +434,8 @@ static int svc_depend(struct svcrun *run)
 {
 	int type, val, retval = 0;
 	int p = 0;
-	RS_StringList_T **deptree;
+	RS_DepTree_T deptree;
+	memset(&deptree, 0, sizeof(RS_DepTree_T));
 
 	if (svc_deps == 0)
 		return 0;
@@ -449,13 +451,14 @@ static int svc_depend(struct svcrun *run)
 		if (SLIST_EMPTY(run->depends->deps[type]))
 			continue;
 		/* build a deptree to avoid segfault because cyclical dependencies */
-		deptree = svc_deptree_load(run->depends->deps[type]);
-		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
-			if (!SLIST_EMPTY(deptree[p]))
-				val = svc_exec_list(deptree[p], run->argc, run->argv, run->envp);
+		svclist = deptree.list = run->depends->deps[type];
+		svc_deptree_load(&deptree);
+		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
+			if (!SLIST_EMPTY(deptree.tree[p]))
+				val = svc_exec_list(deptree.tree[p], run->argc, run->argv, run->envp);
 				--p;
 		} /* PRIORITY_LEVEL_LOOP */
-		rs_deptree_free(deptree);
+		rs_deptree_free(&deptree);
 		if (val > 0 && type == RS_DEPS_NEED)
 			retval = val;
 	}
@@ -965,7 +968,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	SLIST_FOREACH(svc, list, entries) {
 		run[n]  = err_malloc(sizeof(struct svcrun));
 		run[n]->name = svc->str;
-		run[n]->depends = rs_virtual_find(svc->str);
+		run[n]->depends = rs_virtual_find(svc->str, svclist);
 		run[n]->argc = argc;
 		run[n]->argv = argv;
 		run[n]->envp = envp;
@@ -1034,7 +1037,7 @@ static int svc_stage_command(int stage, int argc, const char *argv[], const char
 
 static void svc_stage(const char *cmd)
 {
-	RS_StringList_T **deptree, *ptr;
+	RS_DepTree_T deptree;
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
@@ -1046,6 +1049,7 @@ static void svc_stage(const char *cmd)
 	time_t t;
 
 	/* set a few sane environment variables */
+	memset(&deptree, 0, sizeof(RS_DepTree_T));
 	svc_deps  = 1;
 	svc_quiet = 0;
 	unsetenv("SVC_DEPS");
@@ -1063,7 +1067,6 @@ static void svc_stage(const char *cmd)
 
 	envp = svc_env();
 	argv[5] = (char *)0;
-	rs_svcdeps_load();
 	svc_level();
 	chdir("/");
 
@@ -1081,7 +1084,7 @@ static void svc_stage(const char *cmd)
 			/* load the started services instead of only stage-[12]
 			 * to be abe to shutdown everything with RS_STAGE=3
 			 */
-			ptr = *rs_svclist_load(SV_TMPDIR_STAR);
+			deptree.list = rs_svclist_load(SV_TMPDIR_STAR);
 			command = rs_svc_cmd[RS_SVC_CMD_STOP];
 			svc_start = 0;
 		}
@@ -1094,7 +1097,8 @@ static void svc_stage(const char *cmd)
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
 			/* avoid starting everything after stopping */
-			rs_stringlist_free(&ptr);
+			rs_stringlist_free(&deptree.list);
+			deptree.list = NULL;
 			unlink(buf);
 		}
 		argv[4] = command;
@@ -1102,16 +1106,17 @@ static void svc_stage(const char *cmd)
 		t = time(NULL);
 		svc_log( "\n\tstage-%d (%s) at %s\n", rs_stage, command, ctime(&t));
 
-		deptree = rs_deptree_load();
+		rs_deptree_load(&deptree);
+		svclist = deptree.list;
 		if (svc_start)
-			p = rs_deptree_prio-1;
+			p = deptree.size-1;
 		else
 			p = 0;
-		while (p >= 0 && p < rs_deptree_prio) { /* PRIORITY_LEVEL_LOOP */
-			if (!SLIST_EMPTY(deptree[p])) {
+		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
+			if (!SLIST_EMPTY(deptree.tree[p])) {
 				t = time(NULL);
 				svc_log("\n\tpriority-level-%d started at %s\n", p,	ctime(&t));
-				r = svc_exec_list(deptree[p], argc, argv, envp);
+				r = svc_exec_list(deptree.tree[p], argc, argv, envp);
 				/* enable dependency tracking only if needed */
 				if (r)
 					svc_deps = 1;
@@ -1123,7 +1128,7 @@ static void svc_stage(const char *cmd)
 			else
 				++p;
 		} /* PRIORITY_LEVEL_LOOP */
-		rs_deptree_free(deptree);
+		rs_deptree_free(&deptree);
 
 		/* break shutdown loop */
 		if (!level)
