@@ -447,6 +447,7 @@ static int svc_depend(struct svcrun *run)
 		if (SLIST_EMPTY(run->depends->deps[type]))
 			continue;
 		/* build a deptree to avoid segfault because cyclical dependencies */
+		deptree.list = run->depends->deps[type];
 		svc_deptree_load(&deptree);
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!SLIST_EMPTY(deptree.tree[p]))
