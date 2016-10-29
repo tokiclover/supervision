@@ -1096,9 +1096,6 @@ static void svc_stage(const char *cmd)
 			/* and finaly start stage-3 */
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
-			/* avoid starting everything after stopping */
-			rs_stringlist_free(&deptree.list);
-			deptree.list = NULL;
 			unlink(buf);
 		}
 		argv[4] = command;
