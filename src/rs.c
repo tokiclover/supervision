@@ -1197,7 +1197,9 @@ int main(int argc, char *argv[])
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
 
-	if (strcmp(argv[optind], "stage") == 0) {
+	if (strcmp(prgname, "service") == 0)
+		goto service;
+	else if (strcmp(argv[optind], "stage") == 0) {
 		if (rs_stage >= 0)
 			svc_stage(argv[optind+1]);
 		else {
@@ -1242,15 +1244,17 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
-	else {
-		/* handle service command */
-		if ((argc-optind) < 2) {
-			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGS]\n",
-					prgname);
-			exit(EXIT_FAILURE);
-		}
-		svc_exec(argc-optind, argv+optind);
-	}
+	else
+		goto service;
 
 	exit(EXIT_SUCCESS);
+
+service:
+	/* handle service command */
+	if ((argc-optind) < 2) {
+		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGS]\n",
+				prgname);
+		exit(EXIT_FAILURE);
+	}
+	svc_exec(argc-optind, argv+optind);
 }
