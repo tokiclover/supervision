@@ -41,6 +41,10 @@ service()
 {
 	${SV_LIBDIR}/sbin/service "${@}"
 }
+waitfile()
+{
+	${SV_LIBDIR}/bin/waitfile "${@}"
+}
 
 env_rs()
 {
@@ -105,20 +109,21 @@ rs_cmd()
 
 svc_wait()
 {
-	local FILE LIMIT OPT='!' VAL
+	local file limit opt val=0
 
 	case "${1}" in
-		(-[E]) OPT=; shift;;
+		(-[E]) opt="${1}"; shift;;
 	esac
-	LIMIT=$((${1:-60}*100))
-	FILE=${2:-${SV_TMPDIR}/down/${SVC_NAME}}
+	limit="${1:-60}"
+	file=${2:-${SV_TMPDIR}/down/${SVC_NAME}}
 
-	while [ ${OPT} -e ${FILE} ]; do
-		VAL=$((${VAL}+1)); sleep 0.01s
-		case ${VAL} in
-			(*00|*000) info "Waiting for ${FILE}...(${VAL%00} seconds)";;
-		esac
-		[ ${VAL} -eq ${LIMIT} ] && return 1
+	while [ ${val} -le ${limit} ]; do
+		val=$((${val}+1))
+		waitfile ${opt} ${val} ${file} && return 0
+		if [ $((${val}%2)) -eq 0 ]; then
+			info "Waiting for ${file} (${val} seconds)"
+		fi
+		[ ${val} -eq ${limit} ] && return 1
 	done
 	return 0
 }

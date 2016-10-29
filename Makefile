@@ -38,6 +38,7 @@ dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
 	sv/.lib/bin/fstabinfo \
 	sv/.lib/bin/mountinfo \
+	sv/.lib/bin/waitfile \
 	sv/.lib/sh/tmpfiles \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/init-stage \
