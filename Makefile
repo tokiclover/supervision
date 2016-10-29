@@ -20,6 +20,7 @@ INSTALL    ?= install
 install_SCRIPT = $(INSTALL) -m 755
 install_DATA   = $(INSTALL) -m 644
 MKDIR_P    ?= mkdir -p
+LN_S       ?= ln -s
 
 dist_EXTRA  = \
 	$(DIST_EXTRA) \
@@ -37,13 +38,14 @@ dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
 	sv/.lib/bin/fstabinfo \
 	sv/.lib/bin/mountinfo \
-	sv/.lib/bin/sv-config \
-	sv/.lib/bin/sv-shutdown \
 	sv/.lib/sh/tmpfiles \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/init-stage \
 	sv/.lib/sh/cgroup-release-agent \
 	sv/.lib/sh/dep
+dist_SH_SBINS = \
+	sv/.lib/bin/sv-config \
+	sv/.lib/bin/sv-shutdown
 dist_SH_LIBS  = \
 	sv/.lib/sh/cgroup-functions \
 	sv/.lib/sh/functions \
@@ -177,17 +179,17 @@ dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
 ifdef SYSVINIT
-dist_SH_BINS += sv/.lib/bin/initctl
-dist_SV_SVCS += initctl
+dist_SH_SBINS += sv/.lib/bin/initctl
+dist_SV_SVCS  += initctl
 endif
 
 DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) \
 	$(dist_OPTS_INSTANCES) $(dist_RS_SVCS) \
-	$(dist_SH_BINS) $(dist_SH_LIBS) \
+	$(dist_SH_BINS) $(dist_SH_SBINS) $(dist_SH_LIBS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
-	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sh $(DOCDIR) \
+	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sbin $(LIBDIR)/sv/sh $(DOCDIR) \
 	$(LIBDIR)/sv/cache \
 	$(SYSCONFDIR)/sv.conf.d $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
 	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
@@ -221,6 +223,7 @@ install-all: install install-supervision-svc
 install: install-dir install-dist
 	$(install_SCRIPT) sv.conf $(DESTDIR)$(SYSCONFDIR)/sv.conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(LIBDIR)/sv/sbin/service
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
@@ -263,8 +266,10 @@ $(dist_EXTRA): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$@
 $(dist_SH_BINS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
+$(dist_SH_SBINS): FORCE
+	$(install_SCRIPT) $@ $(DESTDIR)$(LIBDIR)/sv/sbin
 $(dist_SH_LIBS): FORCE
-	$(install_DATA) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
+	$(install_DATA) $@ $(DESTDIR)$(LIBDIR)/sv/sh
 $(dist_SV_SVCS): FORCE install-svc-dir
 	if test -d sv/$@/log; then \
 		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$@/log; \
@@ -305,18 +310,15 @@ endif
 	       $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv.conf.d/%) \
 	       $(dist_RS_OPTS:%=$(DESTDIR)$(SYSCONFDIR)/sv.conf.d/%)
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%)
-	for file in $(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_BINS)) \
-		$(subst sv/.lib,$(LIBDIR)/sv,$(dist_SH_LIBS)); do \
-		rm -f $(DESTDIR)$${file}; \
-	done
+	rm -fr $(DESTDIR)$(LIBDIR)/sv/bin/* $(DESTDIR)$(LIBDIR)/sv/sbin/* \
+		$(DESTDIR)$(LIBDIR)/sv/sh/* $(DESTDIR)$(LIBDIR)/sv/cache
 	rm -f $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty*
 	for dir in lib opt stage-; do \
 		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.$${dir}*; \
 	done
-	rm -fr $(DESTDIR)$(LIBDIR)/sv/cache
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
-	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)
+	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
 uninstall-%-svc:
 	rm -f $(DESTDIR)$(svcconfdir)/$*
 	rm -f $(DESTDIR)$(svcinitdir)/$*
