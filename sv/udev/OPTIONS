@@ -30,7 +30,7 @@ start_pre()
 	if ! grep -q devtmpfs /proc/filesystems; then
 		if yesno "${USE_MDEV:-YES}"; then
 			begin "Starting mdev\n"
-			rs mdev start
+			service mdev start
 			end "${?}"
 		fi
 		error "DevtmpFS is not supported"
