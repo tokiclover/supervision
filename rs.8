@@ -266,6 +266,11 @@ in the right place depending on the dependency definitions. Or better,
 check out the file beforehand. It looks weird or the order changed dramatically?
 Try removing the file altogether and try again. Else, it can be a case of cyclic
 dependency definition. Major dependency redefinition is necessary.
+
+.B NOTE:
+Cyclical dependency definitions will cause dependency setup to fail when using
+`\fIservice \fBSERVICE \fIstart\fR'
+or service scheduling havoc in dependency tree files mentionned above.
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
