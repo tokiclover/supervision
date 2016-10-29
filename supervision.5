@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2016-10-08" "0.12.2" "Supervision Framework"
+.TH SUPERVISION 5 "2016-10-28" "0.12.2" "Supervision Framework"
 .SH NAME
 Supervision \- Supervision Framework init-system and service-manager
 .SH DESCRIPTION
@@ -355,7 +355,7 @@ prefix are used for internal usage;
 and thus are reserved for futur usage;
 use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
 (\fI{del,set}_env\fR shell functions are also reserved for internal usage.
-\fI{checkpath,{fstab,mount}info,rs}\fR have shell fnctions of the same name to
+\fI{checkpath,{fstab,mount}info,servce}\fR have shell fnctions of the same name to
 bypass shell path look up for efficiency.)
 And then, a few functions name have special meaning; read the following for more
 information.
@@ -811,13 +811,6 @@ Simple and cheap fstab(5) utility
 .I mountinfo
 Simple and cheap mountpoints utility
 .TP
-.I sv-config
-`sv/.lib/bin/sv-config [--log] SERVICE new' to create a new supervision service;
-and `sv-config -S runit' to set up specific supervision backend (supervision suite).
-.TP
-.I sv-shutdown
-Simple utility to handle system halt
-.TP
 .B SYMLINKS\ (backend binary symlinks)
 .RB \| envdir \|\ \c
 .RB \| envuidgid \|\ \c
@@ -826,6 +819,20 @@ Simple utility to handle system halt
 .RB \| setlock \|\ \c
 .RB \| setuidgid \|\ \c
 .RB \| softlimit \|
+.SS SV_LIBDIR/sbin/
+.TP
+.I service
+Compatiblity SystemV symlink so that `servce SERVICE COMMAND' would work as
+expected on SystemV system. This symlink may copied to
+.I /sbin
+system directory or the add $LIBDIR/bin:$LIBDIR/sbin to PATH environment variable.
+.TP
+.I sv-config
+`sv/.lib/bin/sv-config [--log] SERVICE new' to create a new supervision service;
+and `sv-config -S runit' to set up specific supervision backend (supervision suite).
+.TP
+.I sv-shutdown
+Simple utility to handle system halt
 .SS SV_LIBDIR/sh/
 .TP
 .I dep
