@@ -1,5 +1,12 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.2.4:
+
+Fix a segmentation fault due a double free(3) call in svc_stage();
+Added support to SystemV `service SERVICE COMMAND' (see supervision(5));
+Separate binary files to /{,s}bin in $SV_LIBDIR (see supervision(5)) for
+easy administration.
+
 0.12.2.3:
 
 Bug fix of v0.12.2.2: last `rs SERVICE start' fix broke service startup
