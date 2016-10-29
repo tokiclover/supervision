@@ -828,11 +828,13 @@ expected on SystemV system. This symlink may copied to
 system directory or the add $LIBDIR/bin:$LIBDIR/sbin to PATH environment variable.
 .TP
 .I sv-config
-`sv/.lib/bin/sv-config [--log] SERVICE new' to create a new supervision service;
+`sv/.lib/sbin/sv-config [--log] SERVICE new' to create a new supervision service;
 and `sv-config -S runit' to set up specific supervision backend (supervision suite).
 .TP
 .I sv-shutdown
-Simple utility to handle system halt
+Simple utility to handle system halt or reboot. It could be symlinked to
+.B /sbin/{halt,shutdown,reboot}
+to get SystemV interface... minor no compatible command line options.
 .SS SV_LIBDIR/sh/
 .TP
 .I dep
