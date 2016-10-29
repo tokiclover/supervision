@@ -192,8 +192,8 @@ elif [ "${1}" = "-2" ]; then
 	# this is used to send SIGCONT to runsvdir.
 	#
 	sh -c "source ${SV_LIBDIR}/sh/runscript-functions;
-		pidfile=${pidfile}; pid=; count=0;
-		svc_wait -E 10 ${SV_CMD} ${pidfile};
+		pidfile=${pidfile}; pid=; count=0; SVC_NAME=${SV_CMD};
+		svc_wait 10 ${pidfile};
 		if [ ${SV_CMD} = runsvdir ]; then
 		while [ -e ${pidfile} ]; do
 			for pid in \$(pgrep ${SV_CMD}); do
