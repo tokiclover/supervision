@@ -60,21 +60,25 @@ INSTALLATION
 `make DESTDIR=/tmp install-all` or use only `install` (without supervision init
 script for OpenRC) would suffice.
 
-And do not forget to run `sv/.lib/bin/sv-config -S BACKEND` afterwards!
-or `${LIBDIR}/sv/bin/sv-config -S BACKEND` after installation.
+And do not forget to run `sv/.lib/sbin/sv-config -S BACKEND` afterwards!
+or `${LIBDIR}/sv/sbin/sv-config -S BACKEND` after installation.
 
 DOCUMENTATION/USAGE
 -------------------
 
 The recommanded way to use this package for service management is to use
 `sv/.lib/sh/init-stage -(1|2|3)` to start particular stage. And then use
-`rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services.
+`rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services;
+or rather use `$SV_LIBDIR/sbin/service [OPTIONS] SERVICE COMMAND` for
+SystemV compatibility. *NOTE:* That symlink can be copied to `/sbin` if
+necessary to ease administration and if there is no other SystemV binary
+installed in the system.
 Or else, use the magic `-0` command line argument to set up `/service/` and
 `svscan`, and then use `rs -2 stage start|stop` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
 And then... a bit more, new supervision services can be easily added by
-running `/lib/sv/bin/sv-config [--log] SERVICE new` (`--log` argument
+running `/lib/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
 would add a *log* directory for the service.)
 
 See supervision(5) and or rs(8) man page for more information.
