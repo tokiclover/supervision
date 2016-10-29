@@ -10,7 +10,7 @@ SVC_PROVIDE='net'
 # support instance for interface
 #
 case "${SVC_NAME}" in
-	(*.[a-zA-Z]) DHCP_IFACES="${SVC_NAME#*.}";;
+	(*.*) DHCP_IFACES="${SVC_NAME#*.}";;
 esac
 
 #
