@@ -119,7 +119,7 @@ svc_wait()
 
 	while [ ${val} -le ${limit} ]; do
 		val=$((${val}+1))
-		waitfile ${opt} ${val} ${file} && return 0
+		waitfile ${opt} 1 ${file} && return 0
 		if [ $((${val}%2)) -eq 0 ]; then
 			info "Waiting for ${file} (${val} seconds)"
 		fi
