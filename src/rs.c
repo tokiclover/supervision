@@ -1194,6 +1194,8 @@ int main(int argc, char *argv[])
 
 	if (strcmp(prgname, "service") == 0)
 		goto service;
+	else if (strcmp(prgname, "rc") == 0)
+		goto rc;
 	else if (strcmp(argv[optind], "stage") == 0) {
 		setenv("SVC_DEBUG", off, 1);
 		if (rs_stage >= 0)
@@ -1204,51 +1206,62 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
-	else if (argc-optind == 1) {
-		/* enable sysvinit compatiblity command line */
-		for (opt = 0; rs_stage_name[opt]; opt++) {
-			if (strcmp(argv[optind], rs_stage_name[opt]) == 0) {
-				switch(opt) {
-				case RS_STAGE_REBOOT:
-				case RS_STAGE_SHUTDOWN:
-					rs_stage = 3;
-					break;
-				case RS_STAGE_DEFAULT:
-				case RS_STAGE_SINGLE:
-					rs_stage = 2;
-					break;
-				case RS_STAGE_NONETWORK:
-				case RS_STAGE_BOOT:
-					rs_stage = 1;
-					break;
-				case RS_STAGE_SYSINIT:
-					rs_stage = 0;
-					break;
-				}
-				rs_runlevel = opt;
-				setenv("RS_RUNLEVEL", rs_stage_name[opt], 1);
-				svc_stage(NULL);
-			}
-		}
-		if (rs_runlevel == -1) {
-			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
-					"(service command)\n", prgname);
-			fprintf(stderr, "       %s -{0|1|2|3} stage "
-					"(init-stage)\n", prgname);
-			fprintf(stderr, "       %s {sysinit|boot|default|shutdown|reboot} "
-					"(run levels)\n", prgname);
-			exit(EXIT_FAILURE);
-		}
-	}
+	else if (argc-optind == 1)
+		goto rc;
 	else
 		goto service;
 
 	exit(EXIT_SUCCESS);
 
+rc:
+	/* support SystemV compatiblity rc command */
+	for (opt = 0; rs_stage_name[opt]; opt++) {
+		if (strcmp(argv[optind], rs_stage_name[opt]) == 0) {
+			switch(opt) {
+			case RS_STAGE_REBOOT:
+			case RS_STAGE_SHUTDOWN:
+				rs_stage = 3;
+				break;
+			case RS_STAGE_DEFAULT:
+			case RS_STAGE_SINGLE:
+				rs_stage = 2;
+				break;
+			case RS_STAGE_NONETWORK:
+			case RS_STAGE_BOOT:
+				rs_stage = 1;
+				break;
+			case RS_STAGE_SYSINIT:
+				rs_stage = 0;
+				break;
+			}
+			rs_runlevel = opt;
+			setenv("RS_RUNLEVEL", rs_stage_name[opt], 1);
+			svc_stage(NULL);
+		}
+	}
+
+	if (rs_runlevel == -1) {
+		if (strcmp(prgname, "rc") == 0) {
+			ERR("invalid run level -- `%s'\n", argv[optind]);
+			fprintf(stderr, "Usage: %s {sysinit|boot|default|shutdown|reboot} "
+					"(run level)\n", prgname);
+		}
+		else {
+			ERR("invalid arguments -- `%s...'\n", argv[optind]);
+			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
+					"(service command)\n", prgname);
+			fprintf(stderr, "       %s -{0|1|2|3} stage "
+					"(init-stage)\n", prgname);
+		}
+		exit(EXIT_FAILURE);
+	}
+
 service:
-	/* handle service command */
+	/* handle service command or
+	 * support systemV compatiblity rc command
+	 */
 	if ((argc-optind) < 2) {
-		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGS]\n",
+		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS]\n",
 				prgname);
 		exit(EXIT_FAILURE);
 	}

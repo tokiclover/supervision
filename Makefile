@@ -224,6 +224,7 @@ install-all: install install-supervision-svc
 install: install-dir install-dist
 	$(install_SCRIPT) sv.conf $(DESTDIR)$(SYSCONFDIR)/sv.conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(LIBDIR)/sv/sbin/rc
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(LIBDIR)/sv/sbin/service
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
