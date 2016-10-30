@@ -97,6 +97,7 @@ dist_SVC_INSTANCES  = \
 	tmpfiles.setup:tmpfiles.dev \
 	swapfiles:swaps \
 	networkfs:localfs \
+	dhcp.wlan0:dhcp wpa_supplicant.wlan0:wpa_supplicant \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
 	dns/OPTIONS.dnsmasq \
