@@ -193,7 +193,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout);
  */
 static int svc_wait(const char *svc, int timeout, int lock_fd);
 #define SVC_WAIT_SECS 60    /* default delay */
-#define SVC_WAIT_MSEC 10000 /* interval for displaying warning */
+#define SVC_WAIT_MSEC 1000  /* interval for displaying warning */
 #define SVC_WAIT_POLL 100   /* poll interval */
 
 /*
@@ -593,16 +593,16 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 {
 	int i, j;
 	int err;
-	int msec = SVC_WAIT_MSEC, nsec;
-	if (timeout < 10) {
+	int msec = SVC_WAIT_MSEC, nsec, ssec = 10;
+	if (timeout < ssec) {
 		nsec = timeout;
 		msec = 1000*timeout;
 	}
 	else
-		nsec = timeout % 10;
-	nsec = nsec ? nsec : 10;
+		nsec = timeout % ssec;
+	nsec = nsec ? nsec : ssec;
 
-	for (i = 0; i < timeout; i += 10) {
+	for (i = 0; i < timeout; ) {
 		for (j = SVC_WAIT_POLL; j <= msec; j += SVC_WAIT_POLL) {
 			if (svc_state(svc, 'w') <= 0)
 				return 0;
@@ -617,7 +617,8 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 			if (poll(0, 0, SVC_WAIT_POLL) < 0)
 				return -1;
 		}
-		WARN("waiting for %s (%d seconds)\n", svc, i+nsec);
+		if (!(++i % ssec))
+			WARN("waiting for %s (%d seconds)\n", svc, i);
 	}
 	return svc_state(svc, 'w') ? -1 : 0;
 }
