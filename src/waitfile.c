@@ -30,7 +30,7 @@
 #define VERSION "0.1.0"
 
 #define WAIT_SECS 60    /* default delay */
-#define WAIT_MSEC 10000 /* interval for displaying warning */
+#define WAIT_MSEC 1000  /* interval for displaying warning */
 #define WAIT_POLL 100   /* poll interval */
 
 const char *prgname;
@@ -85,7 +85,7 @@ static int waitfile(const char *file, int timeout, int flags)
 		nsec = timeout % ssec;
 	nsec = nsec ? nsec : ssec;
 
-	for (i = 0; i < timeout; i += ssec) {
+	for (i = 0; i < timeout; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
 			r = access(file, F_OK);
 			if ((r && e) || (!r && !e))
@@ -94,8 +94,8 @@ static int waitfile(const char *file, int timeout, int flags)
 			if (poll(0, 0, WAIT_POLL) < 0)
 				return 2;
 		}
-		if (m)
-			WARN("waiting for %s (%d seconds)\n", file, i+nsec);
+		if (!(++i % ssec) && m)
+			WARN("waiting for %s (%d seconds)\n", file, i);
 	}
 
 	r = access(file, F_OK);
