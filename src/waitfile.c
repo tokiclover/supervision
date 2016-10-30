@@ -77,7 +77,7 @@ static int waitfile(const char *file, int timeout, int flags)
 	int e = flags & FILE_EXIST, m = flags & FILE_MESG;
 	int msec = WAIT_MSEC, nsec, ssec = 10;
 
-	if (timeout < 10) {
+	if (timeout < ssec) {
 		nsec = timeout;
 		msec = 1000*timeout;
 	}
