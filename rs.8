@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH RS 8 "2016-10-28" "0.12.2" "SERVICE MANAGEMENT UTILITY"
+.TH RS 8 "2016-10-30" "0.12.2" "SERVICE MANAGEMENT UTILITY"
 .SH NAME
 rs \- utility to manage services and init-stage
 .SH DESCRIPTION
@@ -34,6 +34,10 @@ directly will still work when not using the init-system part of the package.
 .RB \| COMMAND \|
 .RB \| [ARGUMENTS] \|
 
+.B rs
+.RB [\| \-h|\-\-help \|]
+.RB [\| \-v|\-\-version \|]
+
 .B SERVICE
 name can be replaced by the special use case
 .B stage
@@ -49,10 +53,28 @@ directly rather than the \fBinit-stage\fR. Although, the
 would try to handle this by killing the previous supervisor before launching
 a new one.
 
+.B NOTE:
+If
+.B {rc,service}
+is not installed in the default path, either add
+.B $SV_LIBDIR/bin:$SV_LIBDIR/sbin
+to
+.B PATH
+environment variable; or else, copy the symlink to
+.I /sbin
+for example to get the same behaviour; or else use
 .B rs
-.RB \| {sysinit|boot|default|shutdown|reboot,single,nonetwork} \|
+instead because
+.B service
+or
+.B rc
+are a just limited interfaces to manage service or runlevel.
 
-This sysvinit compatible form using runlevel alias for stage-{0,1,2,3}.
+.SS SYSTEM-V COMPATIBILITY RC
+.B rc
+.RB \| sysinit|boot|default|shutdown|reboot|single|nonetwork \|
+
+This SystemV compatible form using runlevel alias for stage-{0,1,2,3}.
 .B single
 runlevel is used for system repair; while
 .B nonetwork
@@ -96,13 +118,14 @@ a system by sending the proper signal to
 .B init
 that does not trigger a stage-3/(reboot|shutdown) (by using
 \fI@LIBDIR@/sv/sh/init-stage\fR)
-can be used and then issue a \fIrs {reboot|shutdown}\fR to get almost the same
+can be used and then issue a \fIrc {reboot|shutdown}\fR to get almost the same
 effect. However, using
 .I sv-shutdown
 has the same effect... so using it instead of
-.B rs
+.B rc
 binary is more safe when using a supported supervision backend.
 
+.SS SYSTEM-V COMPATIBILITY SERVICE
 .B service
 .RB [\| \-D|\-\-nodeps \|]
 .RB [\| \-g|\-\-debug \]
@@ -123,27 +146,6 @@ is more true for supervision services when dealing with dependencies and
 virtual services. Starting a supervision service shall be done with
 .B service
 binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND ARGUMENTS\fR'.
-
-.B NOTE:
-If
-.B service
-is not installed in the default
-.I /sbin
-default path, either add
-.B $SV_LIBDIR/bin:$SV_LIBDIR/sbin
-to
-.B PATH
-environment variable; or else, copy the symlink to
-.I /sbin
-to get the same behaviour; or else use
-.B rs
-instead because
-.B service
-is a just a limited interface to manage service.
-
-.B rs
-.RB [\| \-h|\-\-help \|]
-.RB [\| \-v|\-\-version \|]
 
 .SH OPTIONS
 .TP
