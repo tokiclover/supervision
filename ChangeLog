@@ -1,5 +1,11 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.2.5:
+
+Added a tiny utility for waiting files for efficiency; properly wait
+supervisor setup when booting; minor fixes to {dhcp,wpa_supplicant}
+services.
+
 0.12.2.4:
 
 Fix a segmentation fault due a double free(3) call in svc_stage();
