@@ -1,0 +1,22 @@
+#
+# $Header:  /etc/sv/acpid/OPTIONS                        Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+SVC_USE=logger
+SVC_NEED=net
+SVC_BEFORE=httpd
+SVC_CONFIGFILE=/etc/php/fpm-php5.6/php-fpm.conf
+SVC_REQ_FILES="${SVC_CONFIGFILE} /etc/php/fpm-php5.6/php.ini"
+SVC_CMD=/usr/bin/php-fpm5.6
+SVC_OPTS="--nodaemonize --php-ini /etc/php/fpm-php5.6/php-fpm.conf --fpm-config ${SVC_CONFIGFILE}"
+pidfile=/var/run/php-fpm.pid
+
+reload()
+{
+	kill -HUP $(cat ${pidfile})
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

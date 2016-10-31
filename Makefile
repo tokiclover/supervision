@@ -74,6 +74,7 @@ dist_SV_SVCS  = \
 	libvirtd \
 	mysql \
 	pcscd \
+	php-fpm5.6 \
 	rsync-daemon \
 	saned \
 	snmpd \
