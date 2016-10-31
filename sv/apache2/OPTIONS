@@ -104,6 +104,7 @@ SVC_CMD="/usr/sbin/apache2"
 SVC_NEED=net
 SVC_USE="mysql dns logger networkfs postgresql"
 SVC_AFTER=sshd
+SVC_PROVIDE=httpd
 
 configtest()
 {

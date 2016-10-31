@@ -10,6 +10,7 @@ SVC_GROUP=${name}
 SVC_USER=${name}
 SVC_USE=logger
 SVC_NEED=net
+SVC_PROVIDE=httpd
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
