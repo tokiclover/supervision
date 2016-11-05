@@ -12,7 +12,9 @@
  * @(#)sv-shutdown.c
  */
 
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #include "error.h"
 #include "helper.h"
 #include <grp.h>

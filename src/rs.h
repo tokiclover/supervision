@@ -18,7 +18,9 @@
 	"There is NO WARANTY, to the extend permitted by law.\n"
 
 
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
