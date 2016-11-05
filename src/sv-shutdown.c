@@ -42,7 +42,7 @@
 
 const char *prgname;
 
-static const char *shortopts = "06rshpfFEntkuv";
+static const char *shortopts = "06rshpfFEHPntkuv";
 static const struct option longopts[] = {
 	{ "reboot",   0, NULL, 'r' },
 	{ "shutdown", 0, NULL, 's' },
@@ -59,8 +59,8 @@ static const struct option longopts[] = {
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
-	"System reboot   (-6 alias)",
-	"System shutdown (-0 alias)",
+	"System reboot",
+	"System shutdown",
 	"System halt     (-0 alias)",
 	"System poweroff (-0 alias)",
 	"Skip  fsck(8) on reboot",
@@ -82,9 +82,15 @@ __NORETURN__ static void help_message(int status)
 	printf("    -6, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
 		longopts_help[i]);
 	i++;
-	for ( ; i < 4; i++)
-		printf("    -0, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
-			longopts_help[i]);
+	printf("    -0, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
+		longopts_help[i]);
+	i++;
+	printf("    -H, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
+		longopts_help[i]);
+	i++;
+	printf("    -P, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
+		longopts_help[i]);
+	i++;
 	for ( ; longopts_help[i]; i++) {
 		printf("        -%c, --%-9s", longopts[i].val, longopts[i].name);
 		if (longopts[i].has_arg)
@@ -203,11 +209,13 @@ int main(int argc, char *argv[])
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (opt) {
 		case '0':
-		case 's':
+		case 'P':
 		case 'p':
+		case 's':
 			action = SV_ACTION_SHUTDOWN;
 			rb_flag = RB_POWER_OFF;
 			break;
+		case 'H':
 		case 'h':
 			action = SV_ACTION_SHUTDOWN;
 			rb_flag = RB_HALT_SYSTEM;
