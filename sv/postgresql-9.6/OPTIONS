@@ -1,0 +1,112 @@
+#
+# $Header: /etc/sv/postgresql-9.6/OPTIONS                  Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+# XXX: just make symlinks for new instances!!!
+#
+
+# Which port and socket to bind PostgreSQL
+PGPORT="5432"
+
+# How long to wait for server to start in seconds
+START_TIMEOUT=10
+
+# NICE_QUIT ignores new connections and wait for clients to disconnect from
+# server before shutting down. NICE_TIMEOUT in seconds determines how long to
+# wait for this to succeed.
+NICE_TIMEOUT=60
+
+# Forecfully disconnect clients from server and shut down. This is performed
+# after NICE_QUIT. Terminated client connections have their open transactions
+# rolled back.
+# Set RUDE_QUIT to "NO" to disable. RUDE_TIMEOUT in seconds.
+RUDE_QUIT="YES"
+RUDE_TIMEOUT=30
+
+# If the server still fails to shutdown, you can force it to quit by setting
+# this to YES and a recover-run will execute on the next startup.
+# Set FORCE_QUIT to "YES" to enable. FORCE_TIMEOUT in seconds.
+FORCE_QUIT="NO"
+FORCE_TIMEOUT=2
+
+# Extra options to run postmaster with, e.g.:
+# -N is the maximal number of client connections
+# -B is the number of shared buffers and has to be at least 2x the value for -N
+# Please read the man-page to postmaster for more options. Many of these
+# options can be set directly in the configuration file.
+#PGOPTS="-N 512 -B 1024"
+
+PGDATA="/etc/${SVC_NAME}"
+DATA_DIR="/var/lib/postgresql/${SVC_NAME#*-}/data"
+PG_INITDB_OPTS="--encoding=UTF8"
+
+SVC_CONFIGFILE="/etc/${SVC_NAME}/postgresql.conf"
+get_config()
+{
+	eval echo $(sed -e 's:#.*::g' ${SVC_CONFIGFILE} | \
+		awk '$1 == "'$1'" { print ($2 == "=" ? $3 : $2) }')
+}
+[ "$(get_config log_destination)" = "syslog" ] && SVC_USE="${SVC_USE} logger"
+port=$(get_config port)
+: ${port:=${PGPORT}}
+socket=$(get_config unix_socket_directories)
+: ${socket:=/run/postgresql}
+
+SVC_COMMANDS=reload
+SVC_CMD=/usr/lib/${SVC_NAME}/bin/postgres
+SVC_USER=postgres
+SVC_GROUP=postgres
+SVC_REQ_FILES="/etc/${SVC_NAME}/pg_hba.conf /etc/${SVC_NAME}/pg_ident.conf"
+SVC_OPTS="-D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data_directory=${DATA_DIR}"
+ENV_CMD="env"
+ENV_OPTS="- PGPORT=${PGPORT} PGDATA=${PGDATA}"
+PRE_CMD="setuidgid"
+PRE_OPTS="${SVC_USER}"
+
+SVC_USE="loopback net"
+# localfs needed for $DATA_DIR
+SVC_NEED=localfs
+SVC_PROVIDE=postgresql
+
+check_config()
+{
+	local f
+	for f in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
+		if [ -e ${f} ]; then
+			checkpath -f -m 600 -o ${SVC_USER}:${SVC_GROUP} ${f}
+		else
+			error "${f} not found (HINT: cp ${DATA_DIR%/*}/${f##*/} ${PGDATA})"
+			return 1
+		fi
+	done
+	for f in ${socket//,/ }; do
+		checkpath -d -m 1775 -o ${SVC_USER}:${SVC_GROUP} ${f}
+		f=${f%/*}/.s.PGSQL.${port}
+		if [ -e ${f} ]; then
+			error "${f} is already used (HINT: change port number)"
+			return 1
+		fi
+	done
+}
+
+start_pre()
+{
+	check_config && SVC_OPTS="${SVC_OPTS} </dev/null"
+}
+stop_pre()
+{
+	${SVC_CMD/}/pg_ctl stop -t \
+		$((${NICE_TIMEOUT}+${RUDE_TIMEOUT}+${FORCE_TIMEOUT})) \
+		-D ${PGDATA} -m smart -s
+	return 0
+}
+
+reload()
+{
+	kill -HUP $(cat ${SVC_PIDFILE}) ||
+		${SVC_CMD%/}/pg_ctl reload -s -D ${PGDATA}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
