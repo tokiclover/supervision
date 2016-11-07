@@ -487,7 +487,7 @@ svc_log_run()
 	checkpath -q -d ${LOG_MODE:+-m} ${LOG_MODE} \
 		${SVC_USER:+-o} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} ${SVC_LOGDIR}
 	svc_command log_start_pre
-	exec ${PRE_CMD} ${PRE_OPTS} ${LOG_CMD} ${LOG_OPTS}
+	exec ${LOG_PRE_CMD} ${LOG_PRE_OPTS} ${LOG_CMD} ${LOG_OPTS}
 }
 
 svc_log_finish()
