@@ -1,5 +1,14 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.2.6:
+
+Minor fixes:
+- do not start the init-system related services when depending on localfs;
+- use other LOG_PRE_{CMD,OPTS} for log directory instead of PRE_{CMD,OPTS};
+
+SERVICE ADDITION:
+SUPERVISION/SERVICES: php-fpm5.6, postgresql-9.6;
+
 0.12.2.5:
 
 Added a tiny utility for waiting files for efficiency; properly wait
