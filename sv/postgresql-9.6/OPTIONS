@@ -2,8 +2,6 @@
 # $Header: /etc/sv/postgresql-9.6/OPTIONS                  Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
-# XXX: just make symlinks for new instances!!!
-#
 
 # Which port and socket to bind PostgreSQL
 PGPORT="5432"
@@ -38,7 +36,6 @@ FORCE_TIMEOUT=2
 
 PGDATA="/etc/${SVC_NAME}"
 DATA_DIR="/var/lib/postgresql/${SVC_NAME#*-}/data"
-PG_INITDB_OPTS="--encoding=UTF8"
 
 SVC_CONFIGFILE="/etc/${SVC_NAME}/postgresql.conf"
 get_config()
@@ -57,7 +54,7 @@ SVC_CMD=/usr/lib/${SVC_NAME}/bin/postgres
 SVC_USER=postgres
 SVC_GROUP=postgres
 SVC_REQ_FILES="/etc/${SVC_NAME}/pg_hba.conf /etc/${SVC_NAME}/pg_ident.conf"
-SVC_OPTS="-D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data_directory=${DATA_DIR}"
+SVC_OPTS="-l -D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data_directory=${DATA_DIR} <${NULL}"
 ENV_CMD="env"
 ENV_OPTS="- PGPORT=${PGPORT} PGDATA=${PGDATA}"
 PRE_CMD="setuidgid"
@@ -91,20 +88,13 @@ check_config()
 
 start_pre()
 {
-	check_config && SVC_OPTS="${SVC_OPTS} </dev/null"
-}
-stop_pre()
-{
-	${SVC_CMD/}/pg_ctl stop -t \
-		$((${NICE_TIMEOUT}+${RUDE_TIMEOUT}+${FORCE_TIMEOUT})) \
-		-D ${PGDATA} -m smart -s
-	return 0
+	check_config
 }
 
 reload()
 {
 	kill -HUP $(cat ${SVC_PIDFILE}) ||
-		${SVC_CMD%/}/pg_ctl reload -s -D ${PGDATA}
+		${PRE_CMD} ${PRE_OPTS} ${SVC_CMD%/*}/pg_ctl reload -s -D ${PGDATA}
 }
 
 #
