@@ -8,24 +8,7 @@ PGPORT="5432"
 
 # How long to wait for server to start in seconds
 START_TIMEOUT=10
-
-# NICE_QUIT ignores new connections and wait for clients to disconnect from
-# server before shutting down. NICE_TIMEOUT in seconds determines how long to
-# wait for this to succeed.
-NICE_TIMEOUT=60
-
-# Forecfully disconnect clients from server and shut down. This is performed
-# after NICE_QUIT. Terminated client connections have their open transactions
-# rolled back.
-# Set RUDE_QUIT to "NO" to disable. RUDE_TIMEOUT in seconds.
-RUDE_QUIT="YES"
-RUDE_TIMEOUT=30
-
-# If the server still fails to shutdown, you can force it to quit by setting
-# this to YES and a recover-run will execute on the next startup.
-# Set FORCE_QUIT to "YES" to enable. FORCE_TIMEOUT in seconds.
-FORCE_QUIT="NO"
-FORCE_TIMEOUT=2
+STOP_TIMEOUT=60
 
 # Extra options to run postmaster with, e.g.:
 # -N is the maximal number of client connections
@@ -55,6 +38,7 @@ SVC_USER=postgres
 SVC_GROUP=postgres
 SVC_REQ_FILES="/etc/${SVC_NAME}/pg_hba.conf /etc/${SVC_NAME}/pg_ident.conf"
 SVC_OPTS="-l -D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data_directory=${DATA_DIR} <${NULL}"
+SVC_WAIT_DOWN="${STOP_TIMEOUT}"
 ENV_CMD="env"
 ENV_OPTS="- PGPORT=${PGPORT} PGDATA=${PGDATA}"
 PRE_CMD="setuidgid"
