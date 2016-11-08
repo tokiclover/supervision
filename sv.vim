@@ -29,7 +29,7 @@ syn keyword svVars LOG_CMD LOG_OPTS LOG_FIN_CMD LOG_FIN_OPTS SVC_NEED RC_OPTS
 syn keyword svVars CGROUP_CLEANUP CGROUP_INHERIT SV_CGROUP SVC_DEPS SVC_PIDFILE
 syn keyword svVars NULL SV_SVCDIR SV_TMPDIR SV_RUNDIR SV_SERVICE SV_OPTS SV_CMD
 syn keyword svVars LOGDIR LOG_ARGS LOG_STAT LOG_COMP LOG_PREFIX LOG_SIZE SVC_COMMANDS
-syn keyword svVars LOG_PRE_CMD LOG_PRE_OPTS SVC_REQ_FILES
+syn keyword svVars LOG_PRE_CMD LOG_PRE_OPTS SVC_REQ_FILES SVC_WAIT_DOWN SVC_WAIT_UP
 syn keyword svVars description __cmd__ __cmd_dir__ __cmd_args__ name
 
 syn cluster shCommandSubList add=svKwd
