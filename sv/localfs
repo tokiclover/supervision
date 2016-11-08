@@ -72,6 +72,12 @@ mount_command()
 
 start()
 {
+	#
+	# XXX: start the service only when appropriate;
+	#      permit other services to start
+	#
+	[ "${RS_STAGE}" = 1 ] || return 0
+
 	local netfs exclude fs mnt_opts
 
 	if [ "${SVC_NAME}" = localfs ]; then
@@ -93,6 +99,9 @@ start()
 
 stop()
 {
+	#
+	# XXX: stop the service only when appropriate
+	#
 	[ "${RS_STAGE}" = 3 ] || return 1
 
 	local i mnt_args mnt_point mnt_fstype=rootfs mountpoints net_fstype
