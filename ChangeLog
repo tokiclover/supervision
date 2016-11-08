@@ -2,9 +2,12 @@ Header: supervision/ChangeLog, 2015/04/24
 
 0.12.2.6:
 
+Added support per service wait up/down delay setup;
+
 Minor fixes:
 - do not start the init-system related services when depending on localfs;
 - use other LOG_PRE_{CMD,OPTS} for log directory instead of PRE_{CMD,OPTS};
+- fix SV_LIBDIR setup in sv-config (0.12.2.4 move to sbin sub-directory);
 
 SERVICE ADDITION:
 SUPERVISION/SERVICES: php-fpm5.6, postgresql-9.6;
