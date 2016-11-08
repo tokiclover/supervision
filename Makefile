@@ -75,6 +75,7 @@ dist_SV_SVCS  = \
 	mysql \
 	pcscd \
 	php-fpm5.6 \
+	postgresql-9.6 \
 	rsync-daemon \
 	saned \
 	snmpd \
