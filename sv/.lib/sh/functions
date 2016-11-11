@@ -2,9 +2,10 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.4 2016/06/08 21:09:26                      Exp $
+# $Version: 1.4 2016/11/11 21:09:26                      Exp $
 #
 
+if [ -z "${__FUNCTIONS__}" ]; then
 __FUNCTIONS__=1
 :	${NULL:=/dev/null}
 
@@ -138,7 +139,7 @@ SOURCE()
 	done
 
 	for arg; do
-	[ -e "${1}" ] && source "${1}"
+	[ -e "${1}" ] && . "${1}"
 	case "${?}" in
 		(0)
 			;;
@@ -213,6 +214,7 @@ device_info()
 	done
 	return "${ret}"
 }
+fi # __FUNCTIONS__
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
