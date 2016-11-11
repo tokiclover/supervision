@@ -38,7 +38,7 @@ if test "$E1" != 0 || test "$E2" = 0; then
 	echo "ERROR: bash, ksh, zsh, and try again" >&2
 	exit 1
 fi
-if ! source sv/.lib/sh/functions; then
+if ! . sv/.lib/sh/functions; then
 	echo "ERROR: Failed to source required file" >&2
 	exit 1
 fi
@@ -243,21 +243,6 @@ set_default(){
 	done
 }
 
-is_in(){
-	local sep val="$1"
-	shift
-	case "$*" in
-		*','*) sep=',';;
-		*';'*) sep=';';;
-		*':'*) sep=':';;
-		*)     sep=' ';;
-	esac
-	case "$sep$*$sep" in
-		*"$sep$val$sep"*) return 0;;
-		*) return 1;;
-	esac
-}
-
 print_enabled(){
 	local suffix="$1" val
 	shift
@@ -295,14 +280,14 @@ append_unique(){
 	local val var="$1"
 	shift
 	for val; do
-		eval is_in "$val \$$var" || append "$var" "$val"
+		eval isin "$val \$$var" || append "$var" "$val"
 	done
 }
 prepend_unique(){
 	local val var="$1"
 	shift
 	for val; do
-		eval is_in "$val \$$var" || prepend "$var" "$val"
+		eval isin "$val \$$var" || prepend "$var" "$val"
 	done
 }
 
@@ -614,7 +599,7 @@ for opt; do
 	optname="${opt%%=*}"
 	case "$opt" in
 		--extra-*flags=*)
-		is_in "${optname#--}" $CMDLINE_APPEND || die_illegal
+		isin "${optname#--}" $CMDLINE_APPEND || die_illegal
 		add_$(toupper "${optname#--extra-}") "$optvalue"
 		;;
 		--help|-h)
@@ -625,17 +610,17 @@ for opt; do
 		;;
 		--enable-*)
 		optname="${optname#--enable-}"
-		is_in "$optname" $CMDLINE_ENABLE || die_illegal "$opt"
+		isin "$optname" $CMDLINE_ENABLE || die_illegal "$opt"
 		eval "${optname//-/_}=yes"
 		;;
 		--disable-*)
 		optname="${optname#--disable-}"
-		is_in "$optname" $CMDLINE_ENABLE || die_illegal "$opt"
+		isin "$optname" $CMDLINE_ENABLE || die_illegal "$opt"
 		eval "${optname//-/_}=no"
 		;;
 		--*=*)
 		optname="${optname#--}"
-		is_in "${optname#--}" $CMDLINE_SET || die_illegal "$opt"
+		isin "${optname#--}" $CMDLINE_SET || die_illegal "$opt"
 		eval "${optname//-/_}='$optvalue'"
 		;;
 		*)
