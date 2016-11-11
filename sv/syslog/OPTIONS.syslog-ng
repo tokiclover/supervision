@@ -11,8 +11,9 @@ SVC_STATEFILE="${SVC_STATEFILE_DIR}/${name}.persist"
 
 SVC_CMD="/usr/sbin/${name}"
 SVC_OPTS="--cfgfile ${SVC_CONFIGFILE} --foreground --persist-file ${SVC_STATEFILE}"
+SVC_COMMADS=reload
 
-start_start_start_start_pre()
+start_pre()
 {
 	if [ -n "${SVC_USER}" ]; then
 		checkpath -q -d -m 0700 -o "${SVC_USER}${SVC_GROUP:+:$SVC_GROUP}" \
@@ -25,6 +26,11 @@ start_start_start_start_pre()
 check_config()
 {
 	eval ${SVC_CMD} --syntax-only --cfgfile "${SVC_CONFIGFILE}"
+}
+
+reload()
+{
+	kill -HUP $(cat ${SVC_PIDFILE})
 }
 
 #
