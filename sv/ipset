@@ -12,7 +12,8 @@ description_save="Save IP sets rules to file"
 SVC_AFTER="kmod"
 SVC_BEFORE="iptables ip6tables"
 SVC_NEED="localfs"
-SVC_COMMANDS="check reload save"
+SVC_COMMANDS="check"
+SVC_STARTED_COMMANDS="reload save"
 :	${IPSET_RULES_FILE:=/var/lib/ipset/rules-save}
 ipset="$(command -v ipset 2>${NULL})"
 

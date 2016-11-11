@@ -9,7 +9,8 @@
 description="Set up temporary directories/filesystems (with optional backup)"
 description_restore="Restore temporary directories"
 description_save="Archive temporary directories"
-SVC_COMMANDS="restore save"
+SVC_COMMANDS="restore"
+SVC_STARTED_COMMANDS="save"
 
 :	${compressor:=lz4 -1}
 :	${extension:=.tar.${compressor%% *}}

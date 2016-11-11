@@ -77,7 +77,7 @@ SVC_CONFIGFILE=/etc/apache2/httpd.conf
 RELOAD_TYPE="graceful"
 
 SVC_STARTED_COMMANDS="configdump fullstatus graceful gracefulstop reload"
-SVC_COMMANDS="configtest modules virtualhosts $SVC_STARTED_COMMANDS"
+SVC_COMMANDS="configtest modules virtualhosts"
 
 description_configdump="Dumps the configuration of the runing apache server. Requires server-info to be enabled and www-client/lynx."
 description_configtest="Run syntax tests for configuration files."

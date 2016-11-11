@@ -32,7 +32,7 @@ port=$(get_config port)
 socket=$(get_config unix_socket_directories)
 : ${socket:=/run/postgresql}
 
-SVC_COMMANDS=reload
+SVC_STARTED_COMMANDS=reload
 SVC_CMD=/usr/lib/${SVC_NAME}/bin/postgres
 SVC_USER=postgres
 SVC_GROUP=postgres

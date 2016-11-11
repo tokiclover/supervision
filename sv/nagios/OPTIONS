@@ -5,7 +5,7 @@
 #
 
 SVC_STARTED_COMMANDS="reload"
-SVC_COMMANDS="checkconfig ${SVC_STARTED_COMMANDS}"
+SVC_COMMANDS="checkconfig"
 SVC_CONFIGFILE="/etc/nagios/nagios.cfg"
 SVC_CMD="/usr/sbin/nagios"
 SVC_OPTS="${SVC_CONFIGFILE}"

@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 4.1 2016/10/28 21:09:26                      Exp $
+# $Version: 4.2 2016/11/11 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -379,14 +379,25 @@ svc_command()
 #
 svc_commands()
 {
-	if [ -z "${SVC_COMMANDS}" ]; then
-		error "No extra commands found."
+	local cmd=${1} started=false
+
+	svc_state -s || svc_state -p && started=true
+
+	if     isin ${cmd} ${SVC_STARTED_COMMANDS}; then
+		if ! ${started}; then
+			error "service not started."
+			return 2
+		fi
+	elif   isin ${cmd} ${SVC_STOPPED_COMMANDS}; then
+		if ${started}; then
+			error "service is started."
+			return 2
+		fi
+	elif ! isin ${cmd} ${SVC_COMMANDS}; then
+		error "No command found."
 		return 1
-	elif [ "${SVC_COMMANDS/${@}}" = "${SVC_COMMANDS}" ]; then
-		error "${@} command not found."
-		return 2
 	fi
-	local cmd; cmd=${1}
+
 	if command -v ${cmd} >${NULL} 2>&1; then
 		shift
 		begin "processing ${cmd} ..."

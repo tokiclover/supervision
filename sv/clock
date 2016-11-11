@@ -8,7 +8,8 @@
 description="Set up hardware/system clock"
 description_save="Save the current system clock to hardware clock"
 description_show="Display the current hardware time"
-SVC_COMMANDS="save show"
+SVC_COMMANDS="show"
+SVC_STARTED_COMMANDS="save"
 
 :	${CLOCK:=UTC}
 if [ "${CLOCK}" = "UTC" ]; then

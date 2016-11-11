@@ -13,7 +13,8 @@ SVC_AFTER="kmod ipset"
 SVC_BEFORE="net"
 SVC_USE="logger"
 SVC_NEED="localfs"
-SVC_COMMANDS="check reload save"
+SVC_COMMANDS="check"
+SVC_STARTED_COMMANDS="reload save"
 
 case "${SVC_NAME}" in
 	(iptables|ip6tables) iptables_name="${SVC_NAME}";;
