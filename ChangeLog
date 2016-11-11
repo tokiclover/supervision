@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.3:
+
+Added support to SVC_ST{ATRED,OPPED}_COMMANDS in addition to SVC_COMMANDS
+for more control; use . instead of source for shell compatibility.
+
 0.12.2.6:
 
 Added support per service wait up/down delay setup;
