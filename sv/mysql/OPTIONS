@@ -8,7 +8,7 @@ SVC_CMD=/usr/sbin/mysqld
 SVC_USER=mysql
 SVC_GROUP=mysql
 SVC_CONFIGFILE="${MY_CNF:=/etc/${SVC_NAME}/my.cnf}"
-SVC_OPTS="--defaults-file=${MY_CNF} ${MY_ARGS} --loose-skip-grant-tables --loose-skip-host-cache --loose-skip-name-resolve --loose-skip-networking --loose-skip-slave-start --loose-skip-federated --loose-skip-ssl --loose-skip-log-bin --loose-skip-relay-log --loose-skip-slow-query-log --loose-skip-external-locking --loose-skip-log-slave-updates --user=${SVC_GROUP} --user=${SVC_USER} --log-warnings=0 --max_allowed_packet=8M --net_buffer_length=16K --default-storage-engine=MyISAM --explicit_defaults_for_timestamp"
+SVC_OPTS="--defaults-file=${MY_CNF} ${MY_ARGS} --loose-skip-grant-tables --loose-skip-host-cache --loose-skip-name-resolve --loose-skip-networking --loose-skip-slave-start --loose-skip-federated --loose-skip-ssl --loose-skip-log-bin --loose-skip-relay-log --loose-skip-slow-query-log --loose-skip-external-locking --loose-skip-log-slave-updates --group=${SVC_GROUP} --user=${SVC_USER} --log-warnings=0 --max_allowed_packet=8M --net_buffer_length=16K --default-storage-engine=MyISAM --explicit_defaults_for_timestamp"
 
 SVC_USE=loopback
 # localfs needed for $basedir
@@ -23,21 +23,21 @@ SVC_NEED=localfs
 # Do your MySQL ACLs refer to hostnames not in your /etc/hosts?
 # If so, you need DNS before you can accept connections.
 # Avoid dependency circular loops if you use MySQL to power a local DNS server.
-#SVC_USE="$SVC_USE dns"
-#SVC_AFTER="SVC_AFTER dns"
+#SVC_USE="$${SVC_USE} dns"
+#SVC_AFTER="${SVC_AFTER} dns"
 
 # Does your MySQL bind to an IP on an interface other than loopback?
 # Alternatively you might wish to specify the exact interface here e.g. net.eth0.
-#SVC_USE="$SVC_USE net"
-#SVC_AFTER="SVC_AFTER net"
+#SVC_USE="${SVC_USE} net"
+#SVC_AFTER="${SVC_AFTER} net"
 
 # Do you store your MySQL files on a SAN or other network filesystem, that is
-# provided by the networkfs init script?
-#SVC_NEED="$SVC_NEED networkfs"
+# provided by the networkfs service?
+#SVC_NEED="${SVC_NEED} networkfs"
 
 # Or from NFS? P.S. This is not a good idea in most cases, but does have some
 # valid usage cases, so we provide the option.
-#SVC_NEED="$SVC_NEED nfs"
+#SVC_NEED="${SVC_NEED} nfs"
 
 # Should any one of the instances satisfy the requirement for MySQL coming up?
 # By default, we say no.
@@ -104,7 +104,7 @@ start_pre()
 
 	SVC_OPTS="${SVC_OPTS} --basedir=${basedir} --datadir=${datadir} --socket=${socket} --pid-file=${pidfile}"
 	local piddir="${pidfile%/*}"
-	checkpath -d --owner mysql:mysql --mode 0755 "${piddir}"
+	checkpath -d --owner ${SVC_USER}:${SVC_GROUP} --mode 0755 "${piddir}"
 	if [ $? -ne 0 ]; then
 		error "Directory ${piddir} for pidfile does not exist and cannot be created"
 		return 1
@@ -125,7 +125,7 @@ start_post()
 	env_svc basedir
 }
 
-checkconfig()
+check_config()
 {
 	${SVC_CMD} --defaults-file="${MY_CNF}" --help --verbose > /dev/null
 }
