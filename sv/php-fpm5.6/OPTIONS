@@ -7,14 +7,21 @@ SVC_USE=logger
 SVC_NEED=net
 SVC_BEFORE=httpd
 SVC_CONFIGFILE=/etc/php/fpm-php5.6/php-fpm.conf
-SVC_REQ_FILES="${SVC_CONFIGFILE} /etc/php/fpm-php5.6/php.ini"
+SVC_REQ_FILES="/etc/php/fpm-php5.6/php.ini"
 SVC_CMD=/usr/bin/php-fpm5.6
-SVC_OPTS="--nodaemonize --php-ini /etc/php/fpm-php5.6/php-fpm.conf --fpm-config ${SVC_CONFIGFILE}"
-pidfile=/var/run/php-fpm.pid
+SVC_OPTS="--nodaemonize --php-ini /etc/php/fpm-php5.6/php.ini --fpm-config ${SVC_CONFIGFILE}"
+PIDFILE=/var/run/php-fpm.pid
 
+start_pre()
+{
+	#
+	# XXX: check SVC_CONFIGFILE for user:group and socket path
+	#
+	checkpath -qd -m 770 -o nobody:nobody /var/run/php-fpm
+}
 reload()
 {
-	kill -HUP $(cat ${pidfile})
+	kill -HUP $(cat ${PIDFILE})
 }
 
 #
