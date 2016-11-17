@@ -1,5 +1,13 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.4:
+
+Added ability to start daemons with runscript services when fghack(8) fails
+to keep daemons in the foreground (see supervision(5));
+
+SERVICE ADDIDION:
+RUNSCRIPT/SERVICES: nginx, nrpe, rrdcached;
+
 0.12.3:
 
 Added support to SVC_ST{ATRED,OPPED}_COMMANDS in addition to SVC_COMMANDS
