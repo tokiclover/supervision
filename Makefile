@@ -131,6 +131,7 @@ dist_RS_SVCS  = \
 	procfs \
 	rdonlyfs \
 	rootfs \
+	rrdcached \
 	sysctl \
 	sysfs \
 	swaps \

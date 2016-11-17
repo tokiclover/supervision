@@ -1,0 +1,17 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/rrdcached                               Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="RRDtool data caching daemon"
+SVC_PIDFILE=/run/rrdcached.pid
+SVC_CMD=/usr/bin/rrdcached
+SVC_OPTS="-p ${SVC_PIDFILE}"
+SVC_NEED="localfs net"
+SVC_USE="logger"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
+
