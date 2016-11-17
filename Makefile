@@ -126,6 +126,7 @@ dist_RS_SVCS  = \
 	loopback \
 	miscfs \
 	mtab \
+	nginx \
 	nrpe \
 	procfs \
 	rdonlyfs \

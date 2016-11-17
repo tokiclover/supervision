@@ -1,0 +1,89 @@
+#!/bin/rs
+#
+# $Header: /etc/sv/nginx/OPTIONS                           Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Robust, small and high performance http and reverse proxy server"
+description_configtest="Run nginx' internal config check."
+description_upgrade="Upgrade the nginx binary without losing connections."
+description_reload="Reload the nginx configuration without losing connections."
+
+SVC_CONFIGFILE=/etc/nginx/nginx.conf
+SVC_COMMANDS=configtest
+SVC_STARTED_COMMANDS="reload upgrade"
+SVC_OPTS="${SVC_OPTS} -c ${SVC_CONFIGFILE}"
+SVC_CMD=/usr/sbin/nginx
+SVC_USER=nginx
+SVC_GROUP=nginx
+SVC_NEED=net
+SVC_USE="mysql dns logger networkfs postgresql"
+SVC_AFTER=sshd
+SVC_PROVIDE=httpd
+SVC_PIDFILE=/run/nginx.pid
+
+start_pre()
+{
+	if [ "${__cmd__}" != "restart" ]; then
+		configtest || return 1
+	fi
+}
+start_post()
+{
+	svc_wait "${TIMEOUT:-60}" "${SVC_PIDFILE}"
+}
+
+stop_pre()
+{
+	if [ "${__cmd__}" = "restart" ]; then
+		configtest || return 1
+	fi
+
+	PID=$(cat ${SVC_PIDFILE} 2>${NULL})
+	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -s stop
+}
+stop_post()
+{
+	[ -f ${SVC_PIDFILE} ] && pgrep -P ${PID} nginx >${NULL} &&
+		${SVC_CMD} ${SVC_OPTS} -s stop
+	rm ${SVC_PIDFILE}
+}
+
+reload()
+{
+	configtest || return 1
+	kill -HUP $(cat ${SVC_PIDFILE})
+}
+upgrade()
+{
+	configtest || return 1
+
+	info "Sending USR2 to old binary"
+	kill -USR2 $(cat ${SVC_PIDFILE}) &>${NULL}
+	sleep 3
+
+	if [ ! -f ${SVC_PIDFILE}.oldbin ]; then
+		error "File with old pid not found"
+		return 2
+	fi
+
+	if [ ! -f ${pidfile} ]; then
+		error "New binary failed to start"
+		return 3
+	fi
+
+	info "Sleeping 3 seconds before WINCH"
+	sleep 3 ; kill -WINCH $(cat ${SVC_PIDFILE}.oldbin)
+
+	info "Sending QUIT to old binary"
+	kill -QUIT $(cat ${SVC_PIDFILE}.oldbin)
+}
+
+configtest()
+{
+	${SVC_CMD} -c ${SVC_CONFIGFILE} -t -q ||
+		${SVC_CMD} -c ${SVC_CONFIGFILE} -t
+}
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
