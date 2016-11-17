@@ -130,6 +130,8 @@ svc_wait()
 
 start()
 {
+	[ -n "${SVC_CMD}" ] || return 0
+
 	#
 	# Set up CGroup
 	#
@@ -142,6 +144,8 @@ start()
 }
 stop()
 {
+	[ -n "${SVC_CMD}" ] || return 0
+
 	if [ "${OS_NAME}" = "Linux" ]; then
 		if yesno "${SV_CGROUP}"; then
 			cgroup_remove_service && return
