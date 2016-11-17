@@ -1,0 +1,28 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/nrpe                                    Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+SVC_CONFIGFILE=/etc/nagios/nrpe.cfg
+SVC_CMD=/usr/libexec/${SVC_NAME}
+#
+# XXX: fghack does not work here (a dead nrpe instance will remain in the
+#      foreground)
+#
+SVC_OPTS="-c ${SVC_CONFIGFILE} --daemon"
+
+get_config()
+{
+    sed -n -e 's:^[ \t]*'$1'=\([^#]\+\).*:\1:p' ${SVC_CONFIGFILE}
+}
+
+start_pre()
+{
+	SVC_PIDFILE="$(get_config pid_file)"
+	env_svc SVC_PIDFILE
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
