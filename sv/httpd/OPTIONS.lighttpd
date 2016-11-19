@@ -19,6 +19,16 @@ start_pre()
 {
 	checkpath -q -d -m 0750 -o "${SVC_USER}:${SVC_GROUP}" "${SVC_STATEDIR}"
 }
+stop_pre()
+{
+	#
+	# XXX: send a signal to gracefully stop lighttpd
+	#
+	local args
+	[ -n "${__SIGWDWN__}" ] && args="${__SIGWDWN__/$__SIGSTRT__/$__SIGINT__}" ||
+		args="${__SIGINT__}"
+	${__SVCCMD__} ${args} ${SV_RUNDIR}/${SVC_NAME}
+}
 
 check_config()
 {
@@ -26,7 +36,8 @@ check_config()
 }
 reload()
 {
-	kill -HUP $(cat ${SVC_PIDFILE})
+	${__SVCCMD__} ${__SIGHUP__} ${SV_RUNDIR}/${SVC_NAME} ||
+		kill -HUP $(cat ${SVC_PIDFILE})
 }
 
 #
