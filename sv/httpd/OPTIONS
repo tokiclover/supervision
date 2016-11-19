@@ -8,7 +8,7 @@ description='Web Server Daemon'
 name=lighttpd
 SVC_GROUP=${name}
 SVC_USER=${name}
-SVC_USE=logger
+SVC_USE="logger cgi php-fpm"
 SVC_NEED=net
 SVC_PROVIDE=httpd
 

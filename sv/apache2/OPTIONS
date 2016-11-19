@@ -36,7 +36,7 @@
 #  SSL_DEFAULT_VHOST  Enables default vhost for SSL (you should enable this
 #                     when you enable SSL)
 #
-SVC_OPTS="-D DEFAULT_VHOST -D INFO -D SSL -D SSL_DEFAULT_VHOST -D LANGUAGE"
+SVC_OPTS="-D DEFAULT_VHOST -D INFO -D SSL -D SSL_DEFAULT_VHOST -D LANGUAGE -D NAGIOS -D HTTP2 -D AUTH_DIGEST -D CACHE -D DAVE -D INFO -D STATUS -D USERDIR -D PROXY -D PHP"
 
 # Extended options for advanced uses of Apache ONLY
 # You don't need to edit these unless you are doing crazy Apache stuff
@@ -102,7 +102,7 @@ SVC_OPTS="${SVC_OPTS} -d ${SERVERROOT}"
 SVC_OPTS="${SVC_OPTS} -f ${SVC_CONFIGFILE}"
 SVC_CMD="/usr/sbin/apache2"
 SVC_NEED=net
-SVC_USE="mysql dns logger networkfs postgresql"
+SVC_USE="mysql dns logger networkfs postgresql php-fpm"
 SVC_AFTER=sshd
 SVC_PROVIDE=httpd
 
