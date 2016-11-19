@@ -7,6 +7,7 @@ name=lighttpd
 SVC_USER=lighttpd
 SVC_GROUP=lighttpd
 SVC_COMMANDS=check_config
+SVC_STARTED_COMMANDS=reload
 SVC_CONFIGFILE="/etc/${name}/${name}.conf"
 SVC_STATEDIR="/var/run/${name}"
 SVC_CMD="/usr/sbin/${name}"
@@ -22,6 +23,10 @@ start_pre()
 check_config()
 {
 	eval ${SVC_CMD} -t -f "${SVC_CONFIGFILE}"
+}
+reload()
+{
+	kill -HUP $(cat ${SVC_PIDFILE})
 }
 
 #
