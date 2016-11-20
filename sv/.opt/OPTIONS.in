@@ -3,10 +3,18 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-#SVC_CMD=
-#SVC_OPTS=
-#ENV_DIR=Enable
+#SVC_CONFIGFILE=/etc/NAME.conf
+#SVC_REQ_FILES="/etc/FILE1.conf /etc/FILE2.conf"
+#SVC_COMMANDS=configtes
+#SVC_STARTED_COMMAND=reload
+#SVC_CMD=/path/to/binary
+#SVC_OPTS="-f -c ${SVC_CONFIGFILE}"
+#SVC_AFTER=logger
+#SVC_USE=logger
+#SVC_NEED=net
+#SVC_BEFORE=httpd
 
+#ENV_DIR=Enable
 #PRE_CMD=
 #PRE_OPTS=
 #FIN_CMD=
@@ -40,6 +48,16 @@
 #{
 #}
 
+#configtest()
+#{
+#	eval ${SVC_CMD} -t -f "${SVC_CONFIGFILE}"
+#}
+#reload()
+#{
+#	eval ${__SVCCMD__} ${__SIGHUP__} ${SV_RUNDIR}/${SVC_NAME} ||
+#		kill -HUP $(cat ${SVC_PIDFILE})
+#}
+
 #
-# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #
