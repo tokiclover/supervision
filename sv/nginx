@@ -46,7 +46,7 @@ stop_post()
 {
 	[ -f ${SVC_PIDFILE} ] && pgrep -P ${PID} nginx >${NULL} &&
 		${SVC_CMD} ${SVC_OPTS} -s stop
-	[ -f ${SVC_PIDFILE} ] && rm ${SVC_PIDFILE}
+	[ -f ${SVC_PIDFILE} ] && rm ${SVC_PIDFILE} || return 0
 }
 
 reload()
