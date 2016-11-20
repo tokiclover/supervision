@@ -16,9 +16,8 @@ start_pre()
 {
 	begin "Setting up Control Groups"
 	${CGCONFIGPARSER} --load=${SVC_CONFIGFILE} >/dev/null 2>&1
-	local ret=${?}
-	end "${ret}"
-	if ! [ ${ret} -eq 0 ]; then
+	end "${?}"
+	if ! [ ${?} -eq 0 ]; then
 		error "Failed to Setup CGroups"
 		return 1
 	fi
@@ -39,11 +38,11 @@ stop_post()
 	local ctrl eq mnt_pnt mnt_pts
 	while read ctrl eq mnt_pnt; do
 		case "${ctrl}" in
-			(\#*)    continue    ;;
-			(mount*) mnt_pts=true;;
-			(\}*)    mnt_pts=    ;;
+			('#'*)    continue    ;;
+			(mount*) mnt_pts=true ;;
+			('}'*)   mnt_pts=false;;
 			(*)
-				[ -n "${mnt_pts}" ] || continue
+				${mnt_pts} || continue
 				mnt_pnt="${mnt_pnt%;}"
 				begin "Unmounting ${mnt_pnt}"
 				umount "${mnt_pnt}"
