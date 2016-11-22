@@ -5,10 +5,9 @@
 #
 
 description="RRDtool data caching daemon"
-SVC_PIDFILE=/run/rrdcached.pid
 SVC_CMD=/usr/bin/rrdcached
-SVC_OPTS="-p ${SVC_PIDFILE}"
-SVC_NEED="localfs net"
+SVC_OPTS="-g -t 8 -m0660 -s nobody -l /rub/rrdcached.sock -P FLUSH,PENDING -l 127.0.0.1:42217"
+SVC_NEED="localfs networkfs net"
 SVC_USE="logger"
 
 #

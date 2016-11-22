@@ -6,7 +6,8 @@ Added ability to start daemons with runscript services when fghack(8) fails
 to keep daemons in the foreground (see supervision(5));
 
 SERVICE ADDIDION:
-RUNSCRIPT/SERVICES: nginx, nrpe, rrdcached;
+RUNSCRIPT/SERVICES: nginx, nrpe;
+SUPERVISION/SERVICES: rrdcached;
 
 0.12.3:
 

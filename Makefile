@@ -76,6 +76,7 @@ dist_SV_SVCS  = \
 	pcscd \
 	php-fpm5.6 \
 	postgresql-9.6 \
+	rrdcached \
 	rsync-daemon \
 	saned \
 	snmpd \
@@ -131,7 +132,6 @@ dist_RS_SVCS  = \
 	procfs \
 	rdonlyfs \
 	rootfs \
-	rrdcached \
 	sysctl \
 	sysfs \
 	swaps \
