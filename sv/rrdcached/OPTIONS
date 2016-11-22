@@ -1,12 +1,29 @@
-#!/sbin/rs
 #
-# $Header: /etc/sv/rrdcached                               Exp $
+# $Header: /etc/sv/rrdcached/OPTIONS                       Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
+#
+# Run th daemon as unprivileged user/group
+# XXX: base and journal directory should have the appropriate mode!
+SVC_OPTS="${SVC_OPTS} -G nobody -U nobody"
+#
+# Use 8 threads for writing files to improve IO performances
+SVC_OPTS="${SVC_OPTS} -t8"
+#
+# Use a unix socket with write access to nobody
+SVC_OPTS="${SVC_OPTS} -m0660 -s nobody -l /rub/rrdcached.sock"
+#
+# Use a local address with less privileged operations
+SVC_OPTS="${SVC_OPTS} -P FLUSH,PENDING,GRAPH -l 127.0.0.1:42217"
+#
+# Use system wide base and journal directory
+# (journal directory will improve performance by writing to many files at once)
+SVC_OPTS="${SVC_OPTS} -BR -b /var/lib/rrdcached/db -j /var/lib/rrdcached/journal"
+
 description="RRDtool data caching daemon"
 SVC_CMD=/usr/bin/rrdcached
-SVC_OPTS="-g -t 8 -m0660 -s nobody -l /rub/rrdcached.sock -P FLUSH,PENDING -l 127.0.0.1:42217"
+SVC_OPTS="${SVC_OPTS} -Og -p /var/run/rrdcached.pid"
 SVC_NEED="localfs networkfs net"
 SVC_USE="logger"
 
