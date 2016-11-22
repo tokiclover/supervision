@@ -79,6 +79,7 @@ dist_SV_SVCS  = \
 	rrdcached \
 	rsync-daemon \
 	saned \
+	spawn-fcgi \
 	snmpd \
 	sulogin \
 	syslog \
@@ -98,6 +99,7 @@ dist_SVC_INSTANCES  = \
 	getty-tty3:getty-tty1 getty-ttyS0:getty-tty1 getty-ttyS1:getty-tty1 \
 	getty-tty2:getty-tty1 \
 	tmpfiles.setup:tmpfiles.dev \
+	spawn-fcgi.lighttpd:spawn-fcgi spawn-fcgi.nginx:spawn-fcgi \
 	swapfiles:swaps \
 	networkfs:localfs \
 	dhcp.wlan0:dhcp wpa_supplicant.wlan0:wpa_supplicant \
@@ -110,6 +112,7 @@ dist_SV_OPTS  = \
 	httpd/OPTIONS.busybox-httpd httpd/OPTIONS.lighttpd \
 	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
+	spawn-fcgi/OPTIONS.lighttpd spawn-fcgi/OPTIONS.nginx \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 
 dist_RS_SVCS  = \

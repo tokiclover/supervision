@@ -1,0 +1,135 @@
+#
+# $Header:  /etc/sv/spawn-fcgi/OPTIONS                   Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+# DO NOT MODIFY THIS FILE DIRECTLY! CREATE A COPY AND MODIFY THAT INSTEAD!
+# LIKE OPTIONS.nginx FOR NGNIX WEB SERVER
+#
+# The FCGI process can be made available through a filesystem socket or
+# through a inet socket. One and only one of the two types must be choosen.
+# Default is the inet socket.
+#
+# Leave empty to use an IP socket (default). See below. Enabling this, 
+# disables the IP socket.
+# 
+FCGI_SOCKET=
+
+# When using FCGI_PORT, connections will only be accepted from the following
+# address. The default is 127.0.0.1. Use 0.0.0.0 to bind to all addresses.
+#
+FCGI_ADDRESS=127.0.0.1
+
+# The port specified by FCGI_PORT is the port used
+# by the first child process. If this is set to 1234 then subsequent child
+# processes will use 1235, 1236, etc.
+#
+FCGI_PORT=8001
+
+# The number of child processes to spawn. The default is 1.
+# XXX: This is only used when using multiwatch(1) to supervise children!
+#
+FCGI_CHILDREN=1
+#
+# XXX: Alternatively, if using fcgiwrap(1), uncommenting the newt line will
+# enable to start the children instead.
+#FCGI_OPTIONS="${FCGI_OPTIONS} -c ${FCGI_CHILDREN}"
+
+# The path to your FastCGI application. These sometimes carry the .fcgi
+# extension but not always. For PHP, you should usually point this to
+# /usr/bin/php-cgi.
+#
+#FCGI_PROGRAM=/usr/bin/php-cgi
+#FCGI_PROGRAM=/usr/bin/fcgi-cgi
+#FCGI_PROGRAM=/usr/sbin/fcgiwrap
+#
+# If multiwatch is used to supervice CGI children uncomment the following:
+#FCGI_PROGRAM="/usr/bin/multiwatch -f ${FCGI_CHILDREN} -- ${FCGI_PROGRAM}"
+
+# If you want to run your application inside a chroot then specify the
+# directory here. Leave this blank otherwise.
+#
+FCGI_CHROOT=
+
+# If you want to run your application from a specific directiory specify
+# it here. Leave this blank otherwise.
+#
+FCGI_CHDIR=
+
+# The user and group to run your application as. If you do not specify these,
+# the application will be run as root:root.
+#
+FCGI_USER=
+FCGI_GROUP=
+
+# If your application requires additional environment variables, you may
+# specify them here. See PHP example below.
+#
+ALLOWED_ENV="PATH"
+
+# PHP ONLY :: These two options are specific to PHP. The first is the number
+# of child processes to spawn. The second is the number of requests to be
+# served by a single PHP process before it is restarted.
+#
+#PHP_FCGI_CHILDREN=5
+#PHP_FCGI_MAX_REQUESTS=500
+#
+# For this to work you would set
+# ALLOWED_ENV="${ALLOWED_ENV} PHP_FCGI_CHILDREN PHP_FCGI_MAX_REQUESTS"
+
+description='spawn CGI applications'
+SVC_CMD=/usr/bin/spawn-fcgi
+SVC_OPTS=-n
+SVC_NEED=net
+PRE_CMD=/usr/bin/env
+PRE_OPTS='-i ${ENVIRONMENT}'
+
+name="${SVC_NAME#*.}"
+FGI_INSTANCE="${name}"
+
+start_pre()
+{
+	local FCGI_CMD="${FCGI_PROGRAM%% *}" i
+
+	if [ "${SVC_NAME}" = "${name}" ]; then
+		error "This service should not be used directly; make an instance"
+		error "instead: ln -s spawn-cgi ${SV_SVCDIR}/${SVC_NAME}.lighttpd"
+		error "And then copy copy ${SVC_DIR}/OPTIONS to ${SVC_DIR}/OPTIONS.lighttpd"
+		error "and modify the configuration file to suit a particular usage"
+		return 1
+	fi
+
+	if [ -n "${FCGI_PORT}" -a -n "${FCGI_SOCKET}" ]; then
+		error "FCGI_PORT and FCGI_SOCKET cannot be defined at the same time"
+		return 1
+	fi
+
+	if [ ! -x "${FCGI_CMD}" ]; then
+		error "FCGI_PROGRAM should be defined"
+		return 1
+	fi
+
+	:	${FCGI_ADDRESS:=127.0.0.1}
+	:	${FCGI_CHILDREN:=1}
+
+	if [ "x${FCGI_USER}" != "xroot" ]; then
+		SVC_OPTS="${SVC_OPTS} -u ${FCGI_USER}"
+	fi
+	if [ "x${FCGI_GROUP}" != "xroot" ]; then
+		SVC_OPTS="${SVC_OPTS} -g ${FCGI_GROUP}"
+	fi
+	SVC_OPTS="${SVC_OPTS} ${FCGI_CHROOT:+-c} ${FCGI_CHROOT}"
+	SVC_OPTS="${SVC_OPTS} ${FCGI_CHDIR:+-d} ${FCGI_CHDIR}"
+	SVC_OPTS="${SVC_OPTS} ${FCGI_SOCKET:+-s} ${FCGI_SOCKET}"
+	SVC_OPTS="${SVC_OPTS} ${FCGI_PORT:+-a ${FCGI_ADDRESS} -p} ${FCGI_PORT}"
+	SVC_OPTS="${SVC_OPTS} -- ${FCGI_PROGRAM} ${FCGI_OPTIONS}"
+
+	ENVIRONMENT=
+	for i in ${ALLOWED_ENV}; do
+		eval ENVIRONMENT="\"${ENVIRONMENT} ${i}=\$${i}\""
+	done
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
