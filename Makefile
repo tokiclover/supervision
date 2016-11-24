@@ -81,6 +81,7 @@ dist_SV_SVCS  = \
 	saned \
 	spawn-fcgi \
 	snmpd \
+	snmptrapd \
 	sulogin \
 	syslog \
 	inetd \

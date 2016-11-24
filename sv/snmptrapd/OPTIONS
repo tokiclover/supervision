@@ -1,0 +1,35 @@
+#
+# $Header:  /etc/sv/snmptrapd/OPTIONS                    Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+# Initial (empty) options.
+SVC_OPTS=""
+
+# ignore authentication failure traps
+#SVC_OPTS="${SVC_OPTS} -a"
+
+# log messages to specified file
+#SVC_OPTS="${SVC_OPTS} -A -Lf /var/log/snmptrapd.log"
+
+# log messages to syslog with the specified facility
+# where facility is: 'd' = LOG_DAEMON, 'u' = LOG_USER, [0-7] = LOG_LOCAL[0-7]
+#SVC_OPTS="${SVC_OPTS} -Ls d"
+#SVC_NEED=logger
+
+# or use supervision log facilty instead
+# where 'e' is stderr and 'o' stdout
+SVC_OPTS="${SVC_OPTS} -Le"
+
+# connect to agentx address instead of /var/agentx/master
+#SVC_OPTS="${SVC_OPTS} tcp:127.0.0.0:161"
+
+description='Log Simple Network Management Protocol trap messages'
+
+SVC_CONFIGFILE=/etc/snmp/snmptrapd.conf
+SVC_CMD=/usr/sbin/snmptrapd
+SVC_OPTS="-f ${SVC_OPTS}"
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
