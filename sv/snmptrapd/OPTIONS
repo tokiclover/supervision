@@ -29,8 +29,8 @@ SVC_OPTS="${SVC_OPTS} -x tcp:127.0.0.0:161"
 
 description='Log Simple Network Management Protocol trap messages'
 
-#SVC_CONFIGFILE=/etc/snmp/snmptrapd.conf
-[ -z "${SVC_CONFIGFILE}" ] && : ${SNMPTRAPD_ADDRESS:=tcp:127.0.0.1:162}
+SVC_CONFIGFILE=/etc/snmp/snmptrapd.conf
+#: ${SNMPTRAPD_ADDRESS:=tcp:127.0.0.1:162}
 
 SVC_CMD=/usr/sbin/snmptrapd
 SVC_OPTS="-f ${SVC_OPTS} ${SNMPTRAPD_ADDRESS}"
