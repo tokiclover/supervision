@@ -3,8 +3,8 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-# DO NOT MODIFY THIS FILE DIRECTLY! CREATE A COPY AND MODIFY THAT INSTEAD!
-# LIKE OPTIONS.nginx FOR NGNIX WEB SERVER
+# DO NOT MODIFY THIS FILE DIRECTLY! CREATE A COPY AND MODIFY THAT INSTANCE INSTEAD!
+# LIKE OPTIONS.{nginx,lighttpd} FOR {NGNIX,LIGHTTPD} WEB SERVER
 #
 # The FCGI process can be made available through a filesystem socket or
 # through a inet socket. One and only one of the two types must be choosen.
