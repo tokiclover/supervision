@@ -3,9 +3,9 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
+SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_USE=logger
 SVC_NEED=net
-SVC_BEFORE=httpd
 SVC_CONFIGFILE=/etc/php/fpm-php5.6/php-fpm.conf
 SVC_REQ_FILES="/etc/php/fpm-php5.6/php.ini"
 SVC_CMD=/usr/bin/php-fpm5.6
@@ -21,7 +21,7 @@ start_pre()
 }
 reload()
 {
-	kill -HUP $(cat ${PIDFILE})
+	kill -HUP $(cat ${SVC_PIDFILE}) || kill -HUP $(cat ${PIDFILE})
 }
 
 #

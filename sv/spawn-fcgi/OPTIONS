@@ -80,6 +80,7 @@ ALLOWED_ENV="PATH"
 description='spawn CGI applications'
 SVC_CMD=/usr/bin/spawn-fcgi
 SVC_OPTS=-n
+SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_NEED=net
 PRE_CMD=/usr/bin/env
 PRE_OPTS='-i ${ENVIRONMENT}'

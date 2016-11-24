@@ -36,6 +36,7 @@ description='Simple Network Management Protocol Daemon'
 SVC_CONFIGFILE=/etc/snmp/snmpd.conf
 SVC_CMD=/usr/sbin/snmpd
 SVC_OPTS="-f ${SVC_OPTS}"
+SVC_BEFORE="apache2 httpd lighttpd nginx"
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:

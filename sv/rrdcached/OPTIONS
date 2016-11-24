@@ -24,6 +24,7 @@ SVC_OPTS="${SVC_OPTS} -BR -b /var/lib/rrdcached/db -j /var/lib/rrdcached/journal
 description="RRDtool data caching daemon"
 SVC_CMD=/usr/bin/rrdcached
 SVC_OPTS="${SVC_OPTS} -Og -p /var/run/rrdcached.pid"
+SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_NEED="localfs networkfs net"
 SVC_USE="logger"
 
