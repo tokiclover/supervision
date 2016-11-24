@@ -92,7 +92,13 @@ svc_start()
 	#
 	# XXX: wait five seconds
 	#
-	svc_wait 5 ${SVC_PIDFILE} && val=0 || val=1
+	if svc_state -f; then
+		val=1
+	elif svc_wait 5 ${SVC_PIDFILE}; then
+		val=0
+	else
+		val=1
+	fi
 	if [ "${val}" = 0 ]; then
 		svc_command start_post || val=2
 	fi
@@ -203,7 +209,7 @@ svc_start_pre()
 	local SVC_FAILURE val=0
 	SVC_FAILURE='{ svc_remove; svc_mark -f; return ${val}; }'
 
-	if ! [ "${SVC_CMD#/}" != "${SVC_CMD}" ]; then
+	if [ "${SVC_CMD#/}" = "${SVC_CMD}" ]; then
 		SVC_CMD=$(command -v ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
 	fi
 	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
@@ -473,6 +479,7 @@ svc_run()
 	echo $$ >${SVC_PIDFILE}
 
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
+	svc_state -f
 	rm -f ${SVC_PIDFILE} ${virtual} ${real}
 }
 
@@ -484,7 +491,6 @@ svc_finish()
 	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
-		echo >${virtual}
 	fi
 	rm -f ${SVC_PIDFILE} ${virtual} ${real}
 
