@@ -7,7 +7,7 @@
 SVC_OPTS=""
 
 # ignore authentication failure traps
-#SVC_OPTS="${SVC_OPTS} -a"
+SVC_OPTS="${SVC_OPTS} -a"
 
 # log messages to specified file
 #SVC_OPTS="${SVC_OPTS} -A -Lf /var/log/snmptrapd.log"
@@ -22,13 +22,18 @@ SVC_OPTS=""
 SVC_OPTS="${SVC_OPTS} -Le"
 
 # connect to agentx address instead of /var/agentx/master
-#SVC_OPTS="${SVC_OPTS} tcp:127.0.0.0:161"
+SVC_OPTS="${SVC_OPTS} -x tcp:127.0.0.0:161"
+
+# setup address to listen to TRAP/INFORM messages (default to tcp:127.0.0.1:162)
+#SNMPTRAPD_ADDRESS=tcp:192.168.0.10
 
 description='Log Simple Network Management Protocol trap messages'
 
-SVC_CONFIGFILE=/etc/snmp/snmptrapd.conf
+#SVC_CONFIGFILE=/etc/snmp/snmptrapd.conf
+[ -z "${SVC_CONFIGFILE}" ] && : ${SNMPTRAPD_ADDRESS:=tcp:127.0.0.1:162}
+
 SVC_CMD=/usr/sbin/snmptrapd
-SVC_OPTS="-f ${SVC_OPTS}"
+SVC_OPTS="-f ${SVC_OPTS} ${SNMPTRAPD_ADDRESS}"
 SVC_BEFORE="apache2 httpd lighttpd nginx"
 
 #
