@@ -13,7 +13,6 @@ SVC_STATEDIR="/var/run/${name}"
 SVC_CMD="/usr/sbin/${name}"
 SVC_OPTS="-D -f ${SVC_CONFIGFILE}"
 SVC_USE="${SVC_USE} slapd"
-#ENV_DIR=Yes
 
 start_pre()
 {
