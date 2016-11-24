@@ -1,14 +1,41 @@
 #
 # $Header:  /etc/sv/snmpd/OPTIONS                        Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Dep(used): saned - generating & retrieving SNMP data  Exp $
 #
+
+# Initial (empty) options.
+SVC_OPTS=""
+
+# Disable smux by default
+SVC_OPTS="${SVC_OPTS} -I -smux"
+
+# Enable connection logging.
+#SVC_OPTS="${SVC_OPTS} -a"
+
+# Enable syslog and disable file log.
+# where facility is: 'd' = LOG_DAEMON, 'u' = LOG_USER, [0-7] = LOG_LOCAL[0-7]
+#SVC_OPTS="${SVC_OPTS} -Lsd -Lf /dev/null"
+#SVC_NEED=logger
+
+# log messages to specified file
+#SVC_OPTS="${SVC_OPTS} -A -Lf /var/log/snmptrapd.log"
+
+# or use supervision log facilty instead
+# where 'e' is stderr and 'o' stdout
+SVC_OPTS="${SVC_OPTS} -Le"
+# Enable agentx socket as /var/agentx/master
+# *NOTE* Before uncommenting this, make sure
+#        the /var/agentx directory exists.
+#SVC_OPTS="${SVC_OPTS} -x /var/agentx/master"
+
+# run snmpd with lesser privilege
+SVC_OPTS="${SVC_OPTS} -u nobody -g nobody"
 
 description='Simple Network Management Protocol Daemon'
 
 SVC_CONFIGFILE=/etc/snmp/snmpd.conf
-SVC_OPTS='-A -c ${SVC_CONFIGFILE} -f -q'
-SVC_USE=logger
+SVC_CMD=/usr/sbin/snmpd
+SVC_OPTS="-f ${SVC_OPTS}"
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
