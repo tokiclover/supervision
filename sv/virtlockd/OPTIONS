@@ -5,7 +5,6 @@
 
 description="libvirt virtual machine lock manager"
 SVC_CMD="/usr/sbin/virtlockd"
-pidfile="/var/run/virtlockd.pid"
 SVC_OPTS="--pid-file ${pidfile}"
 SVC_STARTED_COMMANDS="reload"
 description_reload="reload the daemon, while maintaining locks and clients"
@@ -13,8 +12,7 @@ SVC_AFTER="ntp-client ntp nfs nfsmount corosync"
 
 reload()
 {
-    [ -e ${pidfile} ] && read pid <${pidfile} || return
-    kill -SIGUSR1 "${pid}"
+    svc_sig SIGUSR1
 }
 
 #
