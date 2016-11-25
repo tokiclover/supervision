@@ -115,7 +115,9 @@ svc_sig()
 	fi
 
 	if [ -n "${SVC_PIDFILE}" -a -e "${SVC_PIDFILE}" ]; then
-		kill "-${1}" $(cat ${SVC_PIDFILE})
+		local pid
+		read pid <${SVC_PIDFILE}
+		kill -${1} ${pid}
 	else
 		error "no pidfile (SVC_PIDFILE) defined"
 		return 1
