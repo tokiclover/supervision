@@ -37,7 +37,7 @@ SVC_CMD=/usr/lib/${SVC_NAME}/bin/postgres
 SVC_USER=postgres
 SVC_GROUP=postgres
 SVC_REQ_FILES="/etc/${SVC_NAME}/pg_hba.conf /etc/${SVC_NAME}/pg_ident.conf"
-SVC_OPTS="-l -D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data_directory=${DATA_DIR} <${NULL}"
+SVC_OPTS="-l -D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data-directory=${DATA_DIR} <${NULL}"
 SVC_WAIT_DOWN="${STOP_TIMEOUT}"
 ENV_CMD="env"
 ENV_OPTS="- PGPORT=${PGPORT} PGDATA=${PGDATA}"
@@ -77,7 +77,7 @@ start_pre()
 
 reload()
 {
-	kill -HUP $(cat ${SVC_PIDFILE}) ||
+	svc_sig HUP ||
 		${PRE_CMD} ${PRE_OPTS} ${SVC_CMD%/*}/pg_ctl reload -s -D ${PGDATA}
 }
 
