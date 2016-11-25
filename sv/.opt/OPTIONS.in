@@ -25,6 +25,7 @@
 #
 #start_pre()
 #{
+#	checkpath -qd -o nobody:nobody -m 775 /var/run/fcgi
 #}
 
 #
@@ -32,6 +33,7 @@
 #
 #start_post()
 #{
+#	svc_wait "${TIMEOUT:60}" /run/daemon.pid
 #}
 
 #
@@ -54,8 +56,7 @@
 #}
 #reload()
 #{
-#	eval ${__SVCCMD__} ${__SIGHUP__} ${SV_RUNDIR}/${SVC_NAME} ||
-#		kill -HUP $(cat ${SVC_PIDFILE})
+#	svc_sig HUP
 #}
 
 #
