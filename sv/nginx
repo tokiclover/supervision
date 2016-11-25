@@ -52,14 +52,14 @@ stop_post()
 reload()
 {
 	configtest || return 1
-	kill -HUP $(cat ${SVC_PIDFILE})
+	svc_sig HUP
 }
 upgrade()
 {
 	configtest || return 1
 
 	info "Sending USR2 to old binary"
-	kill -USR2 $(cat ${SVC_PIDFILE}) &>${NULL}
+	svc_sig USR2
 	sleep 3
 
 	if [ ! -f ${SVC_PIDFILE}.oldbin ]; then
@@ -67,7 +67,7 @@ upgrade()
 		return 2
 	fi
 
-	if [ ! -f ${pidfile} ]; then
+	if [ ! -f ${SVC_PIDFILE} ]; then
 		error "New binary failed to start"
 		return 3
 	fi
