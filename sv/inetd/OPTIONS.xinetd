@@ -5,9 +5,23 @@
 
 name=xinetd
 
+SVC_STARTED_COMMANDS="check dump reload"
 SVC_CONFIGFILE=/etc/xinetd.conf
 SVC_OPTS='-f ${SVC_CONFIGFILE} -dontfork -stayalive'
 SVC_USE=net
+
+reload()
+{
+	svc_sig HUP
+}
+dump()
+{
+	svc_sig USR1
+}
+check()
+{
+	svc_sig IOT
+}
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
