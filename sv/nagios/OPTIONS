@@ -21,7 +21,7 @@ SVC_AFTER="mysql postgresql"
 reload()
 {
 	checkconfig || return 1
-	[ -f ${pidfile} ] && kill -HUP $(cat ${pidfile})
+	svc_sig HUP
 }
 
 checkconfig()
@@ -39,7 +39,7 @@ start_pre()
 
 stop_post()
 {
-	rm -f /var/nagios/status.log /var/nagios/nagios.tmp ${pidfile} ${_cmdfile}
+	rm -f /var/nagios/status.log /var/nagios/nagios.tmp ${pidfile} ${cmdfile}
 }
 
 #
