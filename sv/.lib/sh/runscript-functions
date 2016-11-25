@@ -1,8 +1,8 @@
 #
-# $Header:  /lib64/sv/sh/runscript-functions               Exp $
+# $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/11/16 21:09:26                      Exp $
+# $Version: 1.3 2016/11/25 21:09:26                      Exp $
 #
 
 __RUNSCRIPT_FUNCTIONS__=1
@@ -105,6 +105,21 @@ rs_cmd()
 	done
 	end ${val-${?}}
 	return ${val}
+}
+
+svc_sig()
+{
+	if [ -z "${1}" ]; then
+		error "insufficient/invalid argument"
+		return 1
+	fi
+
+	if [ -n "${SVC_PIDFILE}" -a -e "${SVC_PIDFILE}" ]; then
+		kill "-${1}" $(cat ${SVC_PIDFILE})
+	else
+		error "no pidfile (SVC_PIDFILE) defined"
+		return 1
+	fi
 }
 
 svc_wait()

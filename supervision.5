@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2016-11-16" "0.12.4" "Supervision Framework"
+.TH SUPERVISION 5 "2016-11-25" "0.12.5" "Supervision Framework"
 .SH NAME
 Supervision \- Supervision Framework init-system and service-manager
 .SH DESCRIPTION
@@ -528,6 +528,9 @@ Remove service from runlevel directory
 T}
 \fBsvc_remove\fR@T{
 Clean up service from running directory
+T}
+\fBsvc_sig -SIGNAL\fR@T{
+Send a particular SIGNAL to the daemon service
 T}
 \fBsvc_wait [-E] TIMEOUT FILE\fR@T{
 Wait a service file to appear or disapear--with \fI-E\fR option
