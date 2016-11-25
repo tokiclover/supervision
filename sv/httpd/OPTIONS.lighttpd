@@ -35,8 +35,7 @@ check_config()
 }
 reload()
 {
-	eval ${__SVCCMD__} ${__SIGHUP__} ${SV_RUNDIR}/${SVC_NAME} ||
-		kill -HUP $(cat ${SVC_PIDFILE})
+	svc_sig HUP
 }
 
 #
