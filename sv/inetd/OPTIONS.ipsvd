@@ -3,26 +3,16 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-name=ipsvd
-
-SVC_DBD=/etc/ipsvd.d
-SVC_CDB=${SVC_DBD%d}cdb
-SVC_CMD=${name}
-SVC_HOST=
-SVC_PORT=
-SVC_USER=nobody
-SVC_GROUP=nobody
-SVC_OPTS='-u ${SVC_USER}:${SVC_GROUP} -x $SVC_CDB ${SVC_HOST} ${SVC_PORT}'
+case "${SVC_NAME}" in
+	(*.udpsvd) name=udpsvd SVC_CMD=/usr/bin/udpsvd SVC_OPTS="-i /etc/udpsvd.d";;
+	(*.tcpsvd) name=tcpsvd SVC_CMD=/usr/bin/tcpsvd SVC_OPTS="-i /etc/tcpsvd.d";;
+	(*)
+	error "invalid service name -- ${SVC_NAME}"
+	error "{tc,ud}psvd instances shall be used instead"
+	exit 1
+	;;
+esac
 SVC_USE=net
-
-check_config()
-{
-	if [ ! -e ${SVC_CDB} ]; then
-		checkpath -q -d -m 0775 ${SVC_DBD}
-		ipsvd-cdb ${SVC_CDB} ${SVC_CDB}.tmp ${SVC_DBD} ||
-			SVC_OPTS="${SVC_OPTS/-x \$SVC_CDB/-i \$SVC_DBD}"
-	fi
-}
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
