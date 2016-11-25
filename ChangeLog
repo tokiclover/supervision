@@ -1,5 +1,13 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.5:
+
+Added svc_sig() shell function utility to send SIGNAL to daemon services
+instead of re-writing the same piece of code *ad nauseam*;
+
+SERVICE ADDIDION:
+SUPERVISION/SERVICES: snmptrapd, spawn-fcgi.{lighttpd,nginx};
+
 0.12.4:
 
 Added ability to start daemons with runscript services when fghack(8) fails
