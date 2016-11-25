@@ -21,7 +21,7 @@ start_pre()
 }
 reload()
 {
-	kill -HUP $(cat ${SVC_PIDFILE}) || kill -HUP $(cat ${PIDFILE})
+	svc_sig HUP || kill -HUP $(cat ${PIDFILE})
 }
 
 #
