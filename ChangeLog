@@ -32,7 +32,7 @@ Minor fixes:
 - fix SV_LIBDIR setup in sv-config (0.12.2.4 move to sbin sub-directory);
 
 SERVICE ADDITION:
-SUPERVISION/SERVICES: php-fpm5.6, postgresql-9.6;
+SUPERVISION/SERVICES: php-fpm, postgresql;
 
 0.12.2.5:
 
