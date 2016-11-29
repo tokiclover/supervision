@@ -13,6 +13,7 @@ SVC_AFTER="kmod ipset"
 SVC_BEFORE="net"
 SVC_USE="logger"
 SVC_NEED="localfs"
+SVC_PROVIDE="firewall"
 SVC_COMMANDS="check"
 SVC_STARTED_COMMANDS="reload save"
 
