@@ -4,11 +4,13 @@
 #
 
 #
-# XXX: to use a differrent version just setup name variable and add an new
-# OPTIONS.$name file to refelct the new instance or php version.
-# The default is to use php-5.6
+# XXX: to use a differrent version just setup name variable and add a new
+# OPTIONS.$name file to reflect the new instance or php version.
+# The default is to use php-fpm5.6
 #
-#name=php-fpm5.6
+if [ "${SVC_NAME%.*}" = "${SVC_NAME}" ]; then
+	name=php-fpm5.6
+fi
 
 SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_USE=logger
