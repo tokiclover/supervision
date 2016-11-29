@@ -1,7 +1,19 @@
 #
-# $Header: /etc/sv/postgresql-9.6/OPTIONS                  Exp $
+# $Header: /etc/sv/postgresql/OPTIONS                      Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
+
+#
+# XXX: define this variable to select a version and/or instance.
+# Default behaviour is to use 9.6 unless an instance is used.
+case "${SVC_NAME}" in
+	(*-[0-9].[0-9])
+name="${SVC_NAME}"
+	;;
+	(*)
+name=postgresql-9.6
+	;;
+esac
 
 # Which port and socket to bind PostgreSQL
 PGPORT="5432"
@@ -17,10 +29,10 @@ STOP_TIMEOUT=60
 # options can be set directly in the configuration file.
 #PGOPTS="-N 512 -B 1024"
 
-PGDATA="/etc/${SVC_NAME}"
-DATA_DIR="/var/lib/postgresql/${SVC_NAME#*-}/data"
+PGDATA="/etc/${name}"
+DATA_DIR="/var/lib/postgresql/${name#*-}/data"
 
-SVC_CONFIGFILE="/etc/${SVC_NAME}/postgresql.conf"
+SVC_CONFIGFILE="/etc/${name}/postgresql.conf"
 get_config()
 {
 	eval echo $(sed -e 's:#.*::g' ${SVC_CONFIGFILE} | \
@@ -33,10 +45,10 @@ socket=$(get_config unix_socket_directories)
 : ${socket:=/run/postgresql}
 
 SVC_STARTED_COMMANDS=reload
-SVC_CMD=/usr/lib/${SVC_NAME}/bin/postgres
+SVC_CMD=/usr/lib/${name}/bin/postgres
 SVC_USER=postgres
 SVC_GROUP=postgres
-SVC_REQ_FILES="/etc/${SVC_NAME}/pg_hba.conf /etc/${SVC_NAME}/pg_ident.conf"
+SVC_REQ_FILES="/etc/${name}/pg_hba.conf /etc/${name}/pg_ident.conf"
 SVC_OPTS="-l -D ${PGDATA} ${PGOPTS} -p ${port} -k ${socket} --data-directory=${DATA_DIR} <${NULL}"
 SVC_WAIT_DOWN="${STOP_TIMEOUT}"
 ENV_CMD="env"
