@@ -4,26 +4,22 @@
 #
 
 #
-# XXX: to use a different version just setup name variable and add an optional
-# OPTIONS.$name file to reflect this new instance or php version.
-# The default is to use php-fpm5.6
+# XXX: to use a differrent version just setup name variable and add an new
+# OPTIONS.$name file to refelct the new instance or php version.
+# The default is to use php-5.6
 #
-case "${SVC_NAME}" in
-	(*.[0-9].[0-9])
-name="${SVC_NAME}"
-	;;
-	(*)
-name=php-fpm5.6
-	;;
-esac
+#name=php-fpm5.6
 
 SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_USE=logger
 SVC_NEED=net
-SVC_CONFIGFILE=/etc/php/${name}/php-fpm.conf
-SVC_REQ_FILES="/etc/php/${name}/php.ini"
-SVC_CMD=/usr/bin/${name}
-SVC_OPTS="--nodaemonize --php-ini /etc/php/${name}/php.ini --fpm-config ${SVC_CONFIGFILE}"
+SVC_CONFIGFILE=/etc/php/fpm-php5.6/php-fpm.conf
+SVC_REQ_FILES="/etc/php/fpm-php5.6/php.ini"
+SVC_CMD=/usr/bin/php-fpm5.6
+#
+# XXX: do not expand in case an instance or different php is used
+#
+SVC_OPTS='--nodaemonize --php-ini ${SVC_CONFIGFILE%/*}/php.ini --fpm-config ${SVC_CONFIGFILE}'
 PIDFILE=/var/run/php-fpm.pid
 
 start_pre()

@@ -113,6 +113,7 @@ dist_SV_OPTS  = \
 	httpd/OPTIONS.busybox-httpd httpd/OPTIONS.lighttpd \
 	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
+	php-fpm/OPTIONS.php-fpm5.6 \
 	spawn-fcgi.nginx/OPTIONS.lighttpd spawn-fcgi.nginx/OPTIONS.nginx \
 	syslog/OPTIONS.rsyslog syslog/OPTIONS.socklog syslog/OPTIONS.syslog-ng
 
