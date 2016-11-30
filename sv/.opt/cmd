@@ -22,7 +22,11 @@ case "${SVC_DIR}" in
 	;;
 esac
 :	${RS_TYPE=sv}
-:	${SV_LIBDIR=${SV_RUNDIR:-${SV_SVCDIR}}/.lib}
+# XXX: remove this to have the right PATH value (with no SV_SVCDIR prefix)
+# for GRSecurity and SELinux security. This may be handy to test everything
+# in place!!!
+#
+#:	${SV_LIBDIR=${SV_RUNDIR:-${SV_SVCDIR}}/.lib}
 
 case "${head}" in
 	(*/log) __cmd_dir__=log;;
