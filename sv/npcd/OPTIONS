@@ -1,0 +1,19 @@
+#
+# $Header:  /etc/sv/npcd/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+description="Nagios Performance C Daemon"
+SVC_CONFIGFILE=/etc/pnp/npcd.cfg
+SVC_OPTS="--config ${SVC_CONFIGFILE}"
+SVC_USE="net syslog"
+SVC_STARTED_COMMANDS=reload
+
+reload()
+{
+	svc_sig HUP
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

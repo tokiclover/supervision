@@ -87,6 +87,7 @@ dist_SV_SVCS  = \
 	inetd \
 	httpd \
 	nagios \
+	npcd \
 	ntp \
 	sshd \
 	virtlockd \
