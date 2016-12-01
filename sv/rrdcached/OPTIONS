@@ -35,7 +35,7 @@ SVC_OPTS="${SVC_OPTS} -l -P FLUSH,PENDING,BATCH -l 192.168.0.27:42217"
 #
 # Use system wide base and journal directory
 # (journal directory will improve performance by writing to many files at once)
-SVC_OPTS="${SVC_OPTS} -BR -b ${databasedir} -j ${journaldir}"
+SVC_OPTS="${SVC_OPTS} -b ${databasedir} -j ${journaldir}"
 
 description="RRDtool data caching daemon"
 SVC_CMD=/usr/bin/rrdcached

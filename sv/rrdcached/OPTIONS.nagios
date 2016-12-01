@@ -28,7 +28,7 @@ SVC_OPTS="${SVC_OPTS} -l 127.0.0.1:42217"
 #
 # Use system wide base and journal directory
 # (journal directory will improve performance by writing to many files at once)
-SVC_OPTS="${SVC_OPTS} -BR -b ${databasedir} -j ${journaldir}"
+SVC_OPTS="${SVC_OPTS} -b ${databasedir} -j ${journaldir}"
 
 SVC_OPTS="${SVC_OPTS} -Og"
 SVC_BEFORE="${SVC_BEFORE} nagios"
