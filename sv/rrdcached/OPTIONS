@@ -14,8 +14,8 @@ esac
 # Setup sane default values
 #
 SVC_OPTS=""
-SVC_USER=${SVC_USER}
-SVC_GROUP=${SVC_USER}
+SVC_USER=nobody
+SVC_GROUP=nobody
 databasedir=/var/lib/rrdcached/db
 journaldir=/var/lib/rrdcached/journal
 
@@ -28,7 +28,7 @@ SVC_OPTS="${SVC_OPTS} -G ${SVC_USER} -U ${SVC_GROUP}"
 SVC_OPTS="${SVC_OPTS} -t8"
 #
 # Use a unix socket with write access to ${SVC_USER}
-SVC_OPTS="${SVC_OPTS} -m666 -s ${SVC_GROUP} -l unix:/var/run/rrdcached.sock"
+SVC_OPTS="${SVC_OPTS} -m 666 -s ${SVC_GROUP} -l unix:/run/${SVC_NAME}.sock"
 #
 # Use a local address with less privileged operations
 SVC_OPTS="${SVC_OPTS} -l -P FLUSH,PENDING,BATCH -l 192.168.0.27:42217"

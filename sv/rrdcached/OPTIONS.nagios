@@ -21,7 +21,7 @@ SVC_OPTS="${SVC_OPTS} -G ${SVC_USER} -U ${SVC_USER}"
 SVC_OPTS="${SVC_OPTS} -t8"
 #
 # Use a unix socket with write access to nobody
-SVC_OPTS="${SVC_OPTS} -m660 -s ${SVC_GROUP} -l unix:/var/nagios/rw/rrdcached.sock"
+SVC_OPTS="${SVC_OPTS} -m 660 -s ${SVC_GROUP} -l unix:/run/${SVC_NAME}.sock"
 #
 # Use a local address with less privileged operations
 SVC_OPTS="${SVC_OPTS} -l 127.0.0.1:42217"
