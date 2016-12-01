@@ -3,28 +3,40 @@
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
+#
+# Setup sane default values
+#
 SVC_OPTS=""
+SVC_USER=nagios
+SVC_GROUP=nagios
+databasedir=/var/${SVC_USER}/perfdata
+journaldir=/var/${SVC_USER}/journal
 
 #
 # Run th daemon as unprivileged user/group
 # XXX: base and journal directory should have the appropriate mode!
-SVC_OPTS="${SVC_OPTS} -G nagios -U nagios"
+SVC_OPTS="${SVC_OPTS} -G ${SVC_USER} -U ${SVC_USER}"
 #
 # Use 8 threads for writing files to improve IO performances
 SVC_OPTS="${SVC_OPTS} -t8"
 #
 # Use a unix socket with write access to nobody
-SVC_OPTS="${SVC_OPTS} -m660 -s nagios -l unix:/var/nagios/rw/rrdcached.sock"
+SVC_OPTS="${SVC_OPTS} -m660 -s ${SVC_GROUP} -l unix:/var/nagios/rw/rrdcached.sock"
 #
 # Use a local address with less privileged operations
 SVC_OPTS="${SVC_OPTS} -l 127.0.0.1:42217"
 #
 # Use system wide base and journal directory
 # (journal directory will improve performance by writing to many files at once)
-SVC_OPTS="${SVC_OPTS} -BR -b /var/nagios/perfdata -j /var/nagios/journal"
+SVC_OPTS="${SVC_OPTS} -BR -b ${databasedir} -j ${journaldir}"
 
 SVC_OPTS="${SVC_OPTS} -Og"
 SVC_BEFORE="${SVC_BEFORE} nagios"
+
+start_pre()
+{
+	checkpath -qd -o ${SVC_USER}:${SVC_GROUP} ${databasedir} ${journaldir}
+}
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
