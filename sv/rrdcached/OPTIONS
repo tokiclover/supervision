@@ -4,18 +4,25 @@
 #
 
 #
+# XXX: SUPPORT SERVICE INSTANCES (SEE OPTIONS.nagios)
+#
+case "${SVC_NAME}" in
+	(*.*) name="${SVC_NAME#*.}";;
+esac
+
+#
 # Run th daemon as unprivileged user/group
 # XXX: base and journal directory should have the appropriate mode!
-SVC_OPTS="${SVC_OPTS} -G nobody -U nobody"
+SVC_OPTS="${SVC_OPTS} -G nobody -U nagios"
 #
 # Use 8 threads for writing files to improve IO performances
 SVC_OPTS="${SVC_OPTS} -t8"
 #
 # Use a unix socket with write access to nobody
-SVC_OPTS="${SVC_OPTS} -m660 -s nobody -l /var/run/rrdcached.sock"
+SVC_OPTS="${SVC_OPTS} -m666 -s nobody -l unix:/var/run/rrdcached.sock"
 #
 # Use a local address with less privileged operations
-SVC_OPTS="${SVC_OPTS} -P FLUSH,PENDING,GRAPH -l 127.0.0.1:42217"
+SVC_OPTS="${SVC_OPTS} -l -P FLUSH,PENDING,BATCH -l 192.168.0.27:42217"
 #
 # Use system wide base and journal directory
 # (journal directory will improve performance by writing to many files at once)
@@ -23,7 +30,7 @@ SVC_OPTS="${SVC_OPTS} -BR -b /var/lib/rrdcached/db -j /var/lib/rrdcached/journal
 
 description="RRDtool data caching daemon"
 SVC_CMD=/usr/bin/rrdcached
-SVC_OPTS="${SVC_OPTS} -Og -p /var/run/rrdcached.pid"
+SVC_OPTS="${SVC_OPTS} -Og"
 SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_NEED="localfs networkfs net"
 SVC_USE="logger"
