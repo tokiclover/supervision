@@ -21,6 +21,7 @@ reload()
 {
 	checkconfig || return 1
 	svc_sig HUP
+	start_post
 }
 
 checkconfig()
@@ -35,7 +36,15 @@ start_pre()
 	checkpath -f -o nagios:nagios /var/nagios/nagios.log /var/nagios/status.sav
 	rm -f ${cmdfile}
 }
-
+start_post()
+{
+	local socket=/var/nagios/rw/live
+	if [ -e ${socket} ]; then
+		chgrp apache ${socket}
+	else
+		return 0
+	fi
+}
 stop_post()
 {
 	rm -f /var/nagios/status.log /var/nagios/nagios.tmp ${pidfile} ${cmdfile}
