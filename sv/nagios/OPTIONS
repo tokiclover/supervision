@@ -3,13 +3,24 @@
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
+#
+# Setup SSH-Agent for the daemon to speed SSH connections for service checks
+# with Check_MK for example; and add keychain to keep up idendities for an
+# addtional SSH connection optimization.
+SSH_SETUP=true
+KEYCHAIN_SETUP=true
+
 SVC_STARTED_COMMANDS="reload"
-SVC_COMMANDS="checkconfig"
+SVC_COMMANDS="checkconfig ssh_agent_setup"
 SVC_CONFIGFILE="/etc/nagios/nagios.cfg"
 SVC_CMD="/usr/sbin/nagios"
 SVC_OPTS="${SVC_CONFIGFILE}"
+SVC_USER=nagios
+SVC_GROUP=nagios
 PRE_CMD="/usr/bin/env"
-PRE_OPTS="- HOME=/var/nagios/home"
+HOME=/var/nagios/home
+PRE_OPTS="- HOME=${HOME} USER=${SVC_USER}"
+
 cmdfile="/var/nagios/rw/nagios.cmd"
 pidfile="/var/nagios/nagios.lock"
 
@@ -29,12 +40,62 @@ checkconfig()
 	${SVC_CMD} -v ${SVC_CONFIGFILE} >${NULL} 2>&1 ||
 	${SVC_CMD} -v ${SVC_CONFIGFILE}
 }
+ssh_agent_setup()
+{
+	yesno "${SSH_SETUP}" || [ "${__cmd__}" = "ssh_agent_setup" ] || return 0
+	yesno "${SSH_SETUPED}" && return 0
+
+	export HOME=/var/nagios/home USER="${SVC_USER}"
+	local envfile=${HOME}/.ssh-agent-env sudo=/usr/bin/sudo
+	local ssh_agent=/usr/bin/ssh-agent
+	local timeout=/usr/bin/timeout keychain=/usr/bin/keychain
+	SSH_AGENT_PID= SSH_AGENT_PID=
+
+	#
+	# Setup SSH-Agent
+	#
+	[ -e ${envfile} ] && source ${envfile}
+	if [ -n "${SSH_AUTH_SOCK}" -a -e "${SSH_AUTH_SOCK}" ]; then
+		export SSH_AUTH_SOCK="${SSH_AUTH_SOCK}" SSH_AGENT_PID="${SSH_AGENT_PID}"
+	else
+		eval export $(${sudo} -u "${SVC_USER}" -g "${SVC_GROUP}" ${ssh_agent} -s)
+		printf "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}\nSSH_AGENT_PID=${SSH_AGENT_PID}\n" >${envfile}
+	fi
+
+	#
+	# Save environment
+	#
+	SSH_SETUPED=true
+	env_svc SSH_SETUPED
+
+	#
+	# Setup Keychain
+	#
+	yesno "${KEYCHAIN_SETUP}" || return 0
+	if [ ! -x ${keychain} ]; then
+		error "no binary found -- ${keychain}"
+		return 1
+	fi
+	local key keys
+	for key in id_dsa id_ecdsa id_rsa "${@}"; do
+		[ -e "${HOME}/.ssh/${type}" ] && keys="${keys} ${key}"
+	done
+	if [ -z "${keys}" ]; then
+		error "no SSH key found"
+		return 2
+	fi
+	${sudo} -u "${SVC_USER}" -g "${SVC_GROUP}" ${timeout} --foreground \
+		--preserve-status  --kill-after=5 --signal=SIGKILL 5 ${keychain} \
+		--env ${envfile} --nogui --quiet ${keys}
+}
 
 start_pre()
 {
 	checkconfig || return 1
-	checkpath -f -o nagios:nagios /var/nagios/nagios.log /var/nagios/status.sav
+	checkpath -qf -o nagios:nagios /var/nagios/nagios.log /var/nagios/status.sav
 	rm -f ${cmdfile}
+
+	ssh_agent_setup
 }
 start_post()
 {
@@ -45,6 +106,7 @@ start_post()
 		return 0
 	fi
 }
+
 stop_post()
 {
 	rm -f /var/nagios/status.log /var/nagios/nagios.tmp ${pidfile} ${cmdfile}
