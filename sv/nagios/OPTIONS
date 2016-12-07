@@ -21,24 +21,43 @@ PRE_CMD="/usr/bin/env"
 HOME=/var/nagios/home
 PRE_OPTS="- HOME=${HOME} USER=${SVC_USER}"
 
-cmdfile="/var/nagios/rw/nagios.cmd"
-pidfile="/var/nagios/nagios.lock"
+tmpdir="/var/nagios"
+live_socket=${tmpdir}/rw/live
+cmdfile="${tmpdir}/rw/nagios.cmd"
+pidfile="${tmpdir}/nagios.lock"
+logfile="${tmpdir}/status.log"
+tmpfile="${tmpdir}/nagios.tmp"
 
 SVC_NEED=net
-SVC_USE="dns logger firewall"
-SVC_AFTER="mysql postgresql"
+SVC_USE="dns logger firewall rrdcached"
+SVC_AFTER="mysql postgresqli rrdcached"
 
 reload()
 {
 	checkconfig || return 1
 	svc_sig HUP
-	start_post
+	live_socket
 }
 
 checkconfig()
 {
 	${SVC_CMD} -v ${SVC_CONFIGFILE} >${NULL} 2>&1 ||
 	${SVC_CMD} -v ${SVC_CONFIGFILE}
+}
+live_socket()
+{
+	#
+	# Coment this out if mk-livestatus is used
+	#
+	return 0
+
+	[ "${__cmd__}" = "reload" ] && sleep 1
+	svc_wait 10 ${live_socket}
+	if [ -e ${live_socket} ]; then
+		chgrp apache ${live_socket}
+	else
+		return 0
+	fi
 }
 ssh_agent_setup()
 {
@@ -92,24 +111,21 @@ ssh_agent_setup()
 start_pre()
 {
 	checkconfig || return 1
-	checkpath -qf -o nagios:nagios /var/nagios/nagios.log /var/nagios/status.sav
+	checkpath -qd -o nagios:nagios ${tmpdir} ${tmpdir}/perfdata ${tmpdir}/rw
+	checkpath -qf -o nagios:nagios ${tmpfile} ${tmpdir}/status.sav
 	rm -f ${cmdfile}
 
 	ssh_agent_setup
+	live_socket
 }
 start_post()
 {
-	local socket=/var/nagios/rw/live
-	if [ -e ${socket} ]; then
-		chgrp apache ${socket}
-	else
-		return 0
-	fi
+	live_socket
 }
 
 stop_post()
 {
-	rm -f /var/nagios/status.log /var/nagios/nagios.tmp ${pidfile} ${cmdfile}
+	rm -f ${tmpfile} ${logfile} ${pidfile} ${cmdfile}
 }
 
 #
