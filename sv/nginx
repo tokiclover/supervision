@@ -39,12 +39,12 @@ stop_pre()
 		configtest || return 1
 	fi
 
-	PID=$(cat ${SVC_PIDFILE} 2>${NULL})
+	[ -f ${SVC_PIDFILE} ] && pread PID <${SVC_PIDFILE} || PID=
 	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -s stop
 }
 stop_post()
 {
-	[ -f ${SVC_PIDFILE} ] && pgrep -P ${PID} nginx >${NULL} &&
+	[ -n "${PID}" ] && pgrep -P ${PID} nginx >${NULL} &&
 		${SVC_CMD} ${SVC_OPTS} -s stop
 	[ -f ${SVC_PIDFILE} ] && rm ${SVC_PIDFILE} || return 0
 }
@@ -73,10 +73,12 @@ upgrade()
 	fi
 
 	info "Sleeping 3 seconds before WINCH"
-	sleep 3 ; kill -WINCH $(cat ${SVC_PIDFILE}.oldbin)
+	read PID <${SVC_PIDFILE}.oldbin
+	sleep 3 ; kill -WINCH ${PID}
 
 	info "Sending QUIT to old binary"
-	kill -QUIT $(cat ${SVC_PIDFILE}.oldbin)
+	read PID <${SVC_PIDFILE}.oldbin
+	kill -QUIT ${PID}
 }
 
 configtest()
