@@ -104,7 +104,8 @@ svc_tmpdir()
 {
 	rm -fr "${SV_TMPDIR}"
 	mkdir -p "${SV_TMPDIR}"
-	ln -fs "${SV_SVCDIR}"/.[eol]* "${SV_RUNDIR}"
+	ln -fs "${SV_SVCDIR}"/.opt "${SV_RUNDIR}"
+	ln -fs "${SV_LIBDIR}" "${SV_RUNDIR}"/.lib
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/deps "${SV_TMPDIR}"/fail \
 		"${SV_TMPDIR}"/pids "${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
 	#
