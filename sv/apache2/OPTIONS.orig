@@ -157,13 +157,14 @@ stop_pre()
 		checkconfig || return 1
 	fi
 
-	PID=$(cat ${PIDFILE} 2>${NULL})
+	[ -f ${PIDFILE} ] && read PID <${PIDFILE} || PID=
 	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -k stop
 }
 stop_post()
 {
-	[ -f ${PIDFILE} ] && pgrep -P ${PID} apache2 >${NULL} &&
-	svc_wait "${TIMEOUT}" "${PIDFILE}"
+	[ -n "${PID}" ] && pgrep -P ${PID} apache2 >${NULL} &&
+		svc_wait "${TIMEOUT}" "${PIDFILE}"
+	return 0
 }
 
 reload()
