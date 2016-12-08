@@ -5,7 +5,8 @@
 
 description="libvirt virtual machine lock manager"
 SVC_CMD="/usr/sbin/virtlockd"
-SVC_OPTS="--pid-file ${pidfile}"
+SVC_OPTS=""
+SVC_CONFIGFILE="/etc/libvirt/virtlockd.conf"
 SVC_STARTED_COMMANDS="reload"
 description_reload="reload the daemon, while maintaining locks and clients"
 SVC_AFTER="ntp-client ntp nfs nfsmount corosync"
