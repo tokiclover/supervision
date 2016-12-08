@@ -9,7 +9,7 @@
 help_message() {
 	cat <<-EOH
  usage: rs [OPTIONS] SERVICE COMMAND [ARGS]
-   COMMAND: add|del|remove|restart|start|stop|status|zap
+   COMMAND: add|del|desc|remove|reload|restart|start|stop|status|zap|cgroup_remove_service
    OPTIONS: [OPTS] SERVICE COMMAND [ARGS]
      -D, --nodeps     Disable dependencies
      -g, --debug      Enable debug mode
@@ -36,6 +36,7 @@ done
 :	${SV_LIBDIR:=${0%/sh/*}}
 :	${SVC_NAME:=${1##*/}}
 :	${name=${SVC_NAME}}
+:	${__cmd__=${2}}
 
 if [ -z "${RS_TYPE}" ]; then
 	[ -d "${1}" ] && RS_TYPE=sv || RS_TYPE=rs
@@ -51,29 +52,29 @@ case "${1}" in
 	;;
 esac
 shift
-source "${0%/*}"/runscript-functions ||
+. "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 if [ ${#} -lt 1 ]; then
 	error "Insufficient number of arguments"
 	exit 2
 fi
-source ${SV_SVCDIR}/.opt/SVC_OPTIONS
+. ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
 #
 # Handle command
 #
 case "${RS_TYPE}" in
 	(rs) rs_cmd "${@}";;
-	(*)
+	(sv)
 		export SVC_DEPS SVC_DEBUG RS_STAGE RS_TYPE
 		set | while read line; do
 			case "${line}" in
 				(COLUMNS*|SVC_DEPS*|SVC_DEBUG*|RS_TYPE*)
-					echo "${line}";;
+					printf "${line}\n";;
 			esac
 		done >${SV_TMPDIR}/${SVC_NAME}_ENV
-		svc_cmd "${@}";;
-
+		svc_cmd "${@}"
+		;;
 esac
 
 #
