@@ -110,9 +110,9 @@ ssh_agent_setup()
 
 start_pre()
 {
-	checkconfig || return 1
 	checkpath -qd -o nagios:nagios ${tmpdir} ${tmpdir}/perfdata ${tmpdir}/rw
 	checkpath -qf -o nagios:nagios ${tmpfile} ${tmpdir}/status.sav
+	checkconfig || return 1
 	rm -f ${cmdfile}
 
 	ssh_agent_setup
