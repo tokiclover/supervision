@@ -1,6 +1,9 @@
 Header: supervision/ChangeLog, 2015/04/24
 
-0.12.5:
+0.12.4.1:
+
+Fix setting up PATH by using SV_LIBDIR and not SV_SVCDIR, so that, not path
+beginning with SV_SVCDIR will be expanded in PATH environment variable.
 
 Added svc_sig() shell function utility to send SIGNAL to daemon services
 instead of re-writing the same piece of code *ad nauseam*;
