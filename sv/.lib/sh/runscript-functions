@@ -72,8 +72,7 @@ svc_del()
 }
 svc_zap()
 {
-	rm -f ${SV_TMPDIR}/${SVC_NAME}_[EO]* ${SVC_PIDFILE} \
-		${SV_TMPDIR}/*/${SVC_NAME}
+	rm -f ${SV_TMPDIR}/${SVC_NAME}_[EO]* ${SV_TMPDIR}/*/${SVC_NAME}
 }
 
 rs_cmd()
