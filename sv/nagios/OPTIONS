@@ -97,7 +97,7 @@ ssh_agent_setup()
 	fi
 	local key keys
 	for key in id_dsa id_ecdsa id_rsa "${@}"; do
-		[ -e "${HOME}/.ssh/${type}" ] && keys="${keys} ${key}"
+		[ -e "${HOME}/.ssh/${key}" ] && keys="${keys} ${HOME}/.ssh/${key}"
 	done
 	if [ -z "${keys}" ]; then
 		error "no SSH key found"
