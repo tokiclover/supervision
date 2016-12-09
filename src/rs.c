@@ -281,7 +281,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 		return 0;
 	}
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STATUS]) == 0) {
-		if (svc_state(run->name, 's')) {
+		if (svc_state(run->name, 's') || svc_state(run->name, 'p')) {
 			printf("%s: service is started\n", run->name);
 			return 0;
 		}
@@ -742,8 +742,7 @@ static void svc_zap(const char *svc)
 	int i;
 	char path[BUFSIZ];
 	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL,
-		SV_TMPDIR_PIDS, SV_TMPDIR_STAR,
-		SV_TMPDIR_WAIT, NULL };
+		SV_TMPDIR_STAR, SV_TMPDIR_WAIT, NULL };
 	const char *files[] = { "ENV", "OPTIONS", NULL };
 
 	for (i = 0; dirs[i]; i++) {
