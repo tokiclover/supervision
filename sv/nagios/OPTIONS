@@ -29,12 +29,13 @@ logfile="${tmpdir}/status.log"
 tmpfile="${tmpdir}/nagios.tmp"
 
 SVC_NEED=net
-SVC_USE="dns logger firewall rrdcached"
-SVC_AFTER="mysql postgresqli rrdcached"
+SVC_USE="dns logger firewall npcd rrdcached.nagios"
+SVC_AFTER="mysql postgresqli npcd rrdcached.nagios"
 
 reload()
 {
 	checkconfig || return 1
+	rm -f ${live_socket}
 	svc_sig HUP
 	live_socket
 }
@@ -51,7 +52,6 @@ live_socket()
 	#
 	return 0
 
-	[ "${__cmd__}" = "reload" ] && sleep 1
 	svc_wait 10 ${live_socket}
 	if [ -e ${live_socket} ]; then
 		chgrp apache ${live_socket}
