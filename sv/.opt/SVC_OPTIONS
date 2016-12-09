@@ -105,12 +105,13 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	# Set default log options
 	#
 		if [ "${__SV_NAM__}" = "runit" ]; then
-	:	${LOG_ARGS:=-tt p${LOG_PREFIX}}
+	:	${LOG_ARGS:="p${LOG_PREFIX}\ns${LOG_SIZE}\n!'${LOG_PROC}'"}
+	:	${LOG_OPTS:=-tt ${SVC_LOGDIR}}
 		else
-	:	${LOG_ARGS:="T +^${LOG_STAT} =${SVC_LOGDIR}/status"}
+	:	${LOG_ARGS:="s${LOG_SIZE} !'${LOG_PROC}'"}
+	:	${LOG_OPTS:="T +^${LOG_STAT} =${SVC_LOGDIR}/status ${LOG_ARGS}"}
 		fi # __SV_NAM__
-:	${LOG_OPTS:="${LOG_ARGS} s${LOG_SIZE} !'${LOG_PROC}' ${SVC_LOGDIR}"}
-	unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE LOG_ARGS
+	unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE
 
 	fi # __cmd_dir__=log
 fi # RS_TYPE=sv

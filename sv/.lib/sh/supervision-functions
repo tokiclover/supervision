@@ -504,6 +504,9 @@ svc_log_run()
 	checkpath -q -d ${LOG_MODE:+-m} ${LOG_MODE} \
 		${SVC_USER:+-o} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} ${SVC_LOGDIR}
 	svc_command log_start_pre
+	if [ "${__SV_NAM__}" = "runit" ]; then
+		printf "${LOG_ARGS}\n" >config
+	fi
 	exec ${LOG_PRE_CMD} ${LOG_PRE_OPTS} ${LOG_CMD} ${LOG_OPTS}
 }
 
