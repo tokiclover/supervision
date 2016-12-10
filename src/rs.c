@@ -234,7 +234,7 @@ __NORETURN__ static void help_message(int exit_val)
 	int i;
 
 	printf("usage: rs [OPTIONS] SERVICE COMMAND\n");
-	printf("  COMMAND: add|del|remove|restart|start|stop|status|zap\n");
+	printf("  COMMAND: add|del|remove|restart|start|stop|status|zap|...\n");
 	printf("  OPTIONS: [OPTS] SERVICE COMMAND\n");
 	for ( i = 0; i < 2; i++)
 		printf("    -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
@@ -1196,6 +1196,8 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+	else if (strcmp(argv[optind], "scan") == 0)
+		goto scan;
 	else if (argc-optind == 1)
 		goto rc;
 	else
@@ -1246,6 +1248,10 @@ rc:
 		exit(EXIT_FAILURE);
 	}
 
+scan:
+	setenv("SVCDEPS_UPDATE", on, 1);
+	execv(SV_DEPGEN, &argv[optind]);
+	ERROR("Failed to execv(%s, &argv[optind])", SV_DEPGEN);
 service:
 	/* handle service command or
 	 * support systemV compatiblity rc command
