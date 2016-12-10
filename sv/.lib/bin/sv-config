@@ -6,6 +6,21 @@
 # $Version: 1.4 2016/11/08 21:09:26                      Exp $
 #
 
+#
+# ZSH compatibility
+#
+if [ -n "${ZSH_VERSION}" ]; then
+	emulate sh
+	NULLCMD=:
+	setopt NO_GLOB_SUBST
+	setopt SH_WORD_SPLIT
+	disable -r end
+else
+	case "$(set -o 2>/dev/null)" in
+		(*posix*) set -o posix;;
+	esac
+fi
+
 :	${name=${0##*/}}
 :	${SV_LIBDIR:=${0%/*bin/*}}
 source ${SV_LIBDIR}/sh/runscript-functions ||
