@@ -82,7 +82,7 @@ if [ "${#}" = 0 ]; then
 else
 	read SVCLIST <${svclist}
 	for svc; do
-		sed "/^${svc}:/d" -i ${svcdeps}
+		[ -n "${SVCDEPS_UPDATE}" ] && sed "/^${svc}:/d" -i ${svcdeps}
 		if dep_gen "${svc}"; then
 			isin "${svc}" "${SVCLIST}" || SVCLIST="${SVCLIST} ${svc}"
 		fi
