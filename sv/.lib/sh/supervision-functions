@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 4.2 2016/11/11 21:09:26                      Exp $
+# $Version: 4.2 2016/12/08 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -360,6 +360,11 @@ env_run()
 	SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 }
 
+svc_deps()
+{
+	SVCDEPS_UPDATE=1 ${SV_LIBDIR}/sh/dep "${SVC_NAME}" "${@}"
+}
+
 svc_desc()
 {
 	local desc
@@ -423,6 +428,7 @@ svc_cmd()
 			(add|del|desc|remove|zap)    cmd=${1} ;;
 			(reload|restart|start|stop|status) cmd=${1} ;;
 			(cgroup_remove_service) cmd=${1} pfx= ;;
+			(scan) cmd=deps ;;
 			(*) opt='"${@}"' cmd=commands; break  ;;
 		esac
 		shift
