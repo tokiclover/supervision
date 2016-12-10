@@ -44,6 +44,8 @@ extern "C" {
 #endif
 #define SV_TMPDIR SV_RUNDIR "/.tmp"
 #define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
+#define RS_SVCLIST_FILE SV_TMPDIR_DEPS "/svclist"
+#define RS_SVCDEPS_FILE SV_TMPDIR_DEPS "/svcdeps"
 
 extern int rs_stage;
 

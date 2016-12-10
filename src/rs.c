@@ -264,11 +264,12 @@ static int svc_cmd(struct svcrun *run, int flags)
 		svc_sigsetup();
 		setup = 0;
 	}
+	run->depends = NULL;
 
 	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0) {
 		command = 's';
 		if (svc_deps)
-			svc_deps = 2;
+			run->depends = rs_svcdeps_find(run->name);
 	}
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
 		command = 'S';
@@ -313,11 +314,6 @@ static int svc_cmd(struct svcrun *run, int flags)
 		argv[i] = run->argv[i];
 	/* get service path */
 	if (find) {
-		/* find a real service instead of a virtual */
-		if (rs_stage < 0) {
-			if (run->depends && run->depends->virt)
-				run->name = run->depends->svc;
-		}
 		run->path = argv[3] = svc_find(run->name);
 		if (argv[3] == NULL)
 			return -ENOENT;
@@ -361,7 +357,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 	}
 
 	/* setup dependencies */
-	if (svc_deps == 2) {
+	if (run->depends) {
 		retval = svc_depend(run);
 		if (retval == -ENOENT)
 			;
@@ -436,8 +432,7 @@ static int svc_depend(struct svcrun *run)
 {
 	int type, val, retval = 0;
 	int p = 0;
-	RS_DepTree_T deptree;
-	memset(&deptree, 0, sizeof(RS_DepTree_T));
+	RS_DepTree_T deptree = { NULL, NULL, 0, 0 };
 
 	if (!run->depends)
 		return -ENOENT;
@@ -672,9 +667,9 @@ static void svc_level(void)
 		/* mark network services as started, so nothing will be started */
 		if ((entry && strcmp(entry, rs_stage_name[RS_STAGE_NONETWORK]) == 0) ||
 		    (rs_runlevel == RS_STAGE_NONETWORK)) {
-			for (i = 0; i < rs_virtual_count; i++)
-				if (strcmp(virtual_deplist[i]->virt, "net") == 0)
-					svc_mark(virtual_deplist[i]->svc, 's');
+			for (i = 0; i < SERVICES.virt_count; i++)
+				if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
+					svc_mark(SERVICES.virt_svcdeps[i]->svc, 's');
 			svc_mark("net", 's');
 		}
 		else if ((entry && strcmp(entry, rs_stage_name[RS_STAGE_SINGLE]) == 0) ||
@@ -914,9 +909,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		run.argv[i++] = argv[j];
 	run.argv[i] = (char *)0;
 	run.envp = svc_env();
-	if (!service_deplist)
-		rs_svcdeps_load();
-	run.depends = rs_svcdeps_find(service_deplist, run.name);
+	rs_svcdeps_load(NULL);
 
 	retval = svc_cmd(&run, cmd_flags);
 	switch(retval) {
@@ -964,7 +957,6 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	SLIST_FOREACH(svc, list, entries) {
 		run[n]  = err_malloc(sizeof(struct svcrun));
 		run[n]->name = svc->str;
-		run[n]->depends = rs_svcdeps_find(service_deplist, run[n]->name);
 		run[n]->argc = argc;
 		run[n]->argv = argv;
 		run[n]->envp = envp;
@@ -1033,7 +1025,7 @@ static int svc_stage_command(int stage, int argc, const char *argv[], const char
 
 static void svc_stage(const char *cmd)
 {
-	RS_DepTree_T deptree;
+	RS_DepTree_T deptree = { NULL, NULL, 0, 0 };
 	const char *command = cmd;
 	const char **envp;
 	const char *argv[8] = { "runscript" };
@@ -1045,7 +1037,6 @@ static void svc_stage(const char *cmd)
 	time_t t;
 
 	/* set a few sane environment variables */
-	memset(&deptree, 0, sizeof(RS_DepTree_T));
 	svc_deps  = 0;
 	svc_quiet = 0;
 	snprintf(buf, sizeof(buf), "%d", rs_stage);

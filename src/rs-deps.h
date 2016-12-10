@@ -49,26 +49,25 @@ typedef struct RS_DepTree {
 	size_t size;
 } RS_DepTree_T;
 
-/* the same used for service dependencies */
-extern RS_SvcDepsList_T *service_deplist;
-extern void rs_svcdeps_load(void);
-extern RS_SvcDepsList_T *rs_svcdeps_new(void);
-extern RS_SvcDeps_T *rs_svcdeps_add (RS_SvcDepsList_T *list, const char *svc);
-extern RS_SvcDeps_T *rs_svcdeps_adu (RS_SvcDepsList_T *list, const char *svc);
-extern RS_SvcDeps_T *rs_svcdeps_find(RS_SvcDepsList_T *list, const char *svc);
-extern int           rs_svcdeps_del (RS_SvcDepsList_T *list, const char *svc);
+struct RS_Services {
+	RS_StringList_T  *svclist;
+	RS_SvcDepsList_T *svcdeps;
+	RS_SvcDeps_T **virt_svcdeps;
+	size_t virt_count;
+};
+extern struct RS_Services SERVICES;
 
-extern RS_SvcDepsList_T *service_deplist;
+/* the same used for service dependencies */
+extern RS_SvcDeps_T     *rs_svcdeps_load(const char *svc);
+extern RS_SvcDeps_T *rs_svcdeps_find(const char *svc);
+
+extern void             svc_deptree_load(RS_DepTree_T *deptree);
 extern void              rs_deptree_load(RS_DepTree_T *deptree);
 extern void              rs_deptree_free(RS_DepTree_T *deptree);
 extern RS_StringList_T  *rs_svclist_load(char *dir_path);
 
 /* find a virtual service e.g. {net,dev,logger} */
-extern size_t         rs_virtual_count;
-extern RS_SvcDeps_T **virtual_deplist;
-extern RS_SvcDeps_T  *rs_virtual_find(const char *svc, RS_StringList_T *svclist);
-
-extern void svc_deptree_load(RS_DepTree_T *deptree);
+extern RS_SvcDeps_T  *rs_virtsvc_find(RS_StringList_T *svclist, const char *svc);
 
 #ifdef __cplusplus
 }
