@@ -87,14 +87,14 @@ void rs_stringlist_free(RS_StringList_T **list)
 {
 	RS_String_T *elm;
 
-	if (list) {
-		while (!SLIST_EMPTY(*list)) {
-			elm = SLIST_FIRST(*list);
-			free(elm->str);
-			SLIST_REMOVE_HEAD(*list, entries);
-			free(elm);
-		}
-		*list = NULL;
+	if (!list)
+		return;
+	while (!SLIST_EMPTY(*list)) {
+		elm = SLIST_FIRST(*list);
+		free(elm->str);
+		SLIST_REMOVE_HEAD(*list, entries);
+		free(elm);
 	}
+	*list = NULL;
 }
 
