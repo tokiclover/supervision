@@ -254,6 +254,16 @@ install: install-dir install-dist
 		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
 		-i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
 		$(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
+ifdef RUNIT_INIT_STAGE
+	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
+		-e 's|/run/|$(RUNDIR)/|g' \
+		-i $(DESTDIR)$(SYSCONFDIR)/runit/*
+endif
+ifdef S6_INIT_STAGE
+	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
+		-e 's|/run/|$(RUNDIR)/|g' \
+		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
+endif
 	for svc in $(dist_SVC_INSTANCES); do \
 		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
 	done

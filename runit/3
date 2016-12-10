@@ -7,7 +7,7 @@
 exec >/dev/console 2>&1
 
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
+:	${INIT_STAGE=/lib/sv/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
 
 if [ -x /etc/runit/reboot ]; then

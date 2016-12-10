@@ -8,7 +8,7 @@ exec >/dev/console 2>&1
 
 :	${SV_DIR:=/etc/s6}
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
+:	${INIT_STAGE=/lib/sv/sh/init-stage}
 
 case "${1}" in
 	(-[6ir])     LEVEL=6 ACTION=reboot  ;;

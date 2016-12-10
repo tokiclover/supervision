@@ -6,7 +6,7 @@
 
 :	${SV_DIR:=/etc/s6}
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/etc/sv/.lib/sh/init-stage}
+:	${INIT_STAGE=/lib/sv/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
 
 if [ -x ${INIT_STAGE} ]; then
