@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2016-11-25" "0.12.5" "Supervision Framework"
+.TH SUPERVISION 5 "2016-12-08" "0.12.5" "Supervision Framework"
 .SH NAME
 Supervision \- Supervision Framework init-system and service-manager
 .SH DESCRIPTION
@@ -47,10 +47,10 @@ Standard LSB
 along with
 .I {reload,restart,zap}
 and
-.I {add,desc}
+.I {add,desc,cgroup_remove_service,scan}
 extra commands are supported.
 Supervision-services also support
-.I {new,remove,cgroup_remove_service}
+.I {new,remove}
 command to create a new service with a template.
 .I reload
 command has special meaning for supervision services in that, if no
