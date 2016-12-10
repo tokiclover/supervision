@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH RS 8 "2016-10-30" "0.12.2" "SERVICE MANAGEMENT UTILITY"
+.TH RS 8 "2016-12-08" "0.12.5" "SERVICE MANAGEMENT UTILITY"
 .SH NAME
 rs \- utility to manage services and init-stage
 .SH DESCRIPTION
@@ -37,6 +37,12 @@ directly will still work when not using the init-system part of the package.
 .B rs
 .RB [\| \-h|\-\-help \|]
 .RB [\| \-v|\-\-version \|]
+
+.B SERVICE
+name can be replaced by
+.B scan
+to update the dependency cache of the list of services passed as arguments
+like \fBrs scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
 
 .B SERVICE
 name can be replaced by the special use case
@@ -202,7 +208,7 @@ remove a service from an init-stage or runlevel (stage level argument is require
 remove the
 .B Control Group PIDs
 hierarchy after stopping a service. This command has no effect for runscript
-services.
+services if not used with a daemon.
 .B CGROUP_CLEANUP
 environmenet variable can be enabled for automatic clean up.
 .TP
@@ -221,6 +227,9 @@ A command
 .B name
 argument can be passed to print the description of the command instead of the
 description of the service, `rs udev desc reload' for example.
+.B scan
+update the dependency cache of a service. \fIrs scan\fB SERVICES\fR can be used
+for a list of service instead.
 .SH CONFIGURATION
 See
 .I @SYSCONFDIR@/sv.conf
