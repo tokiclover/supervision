@@ -4,8 +4,11 @@ Header: supervision/ChangeLog, 2015/04/24
 
 Fixed setting up configuration script for svlogd(8) because it does not accept
 the script as command line arguments (like daemontools* ro s6);
+
 Added ability to update dependency list instead of rebuilding each time when a
 new service is added;
+
+Added support for scan service command or using `rs scan SERVICES' instead;
 
 0.12.4.1:
 
