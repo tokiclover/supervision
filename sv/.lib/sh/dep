@@ -35,7 +35,7 @@ add_dep()
 
 	shift 2
 	if [ "${#}" -gt 0 ]; then
-		echo "${svc}:${dep}=\"${@}\"" >&4
+		echo "${svc}:${dep}=\"${@}\"" >>${svcdeps}
 	fi
 }
 dep_gen()
@@ -43,12 +43,14 @@ dep_gen()
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	local dep SVC_PROVIDE
 
-	if [ -d "${SV_SVCDIR}/${1}" ]; then
+	if   [ -d "${SV_SVCDIR}/${1}" ]; then
 		SVC_DIR="${SV_SVCDIR}/${1}" RS_TYPE=sv
-	else
+	elif [ -f "${SV_SVCDIR}/${1}" ]; then
 		SVC_DIR="${SV_SVCDIR}"      RS_TYPE=rs
+	else
+		return
 	fi
-	SERVICE_LIST="${SERVICE_LIST} ${1}"
+	SERVICES="${SERVICES} ${1}"
 	SVC_NAME="${1}"
 	shift
 	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
@@ -71,9 +73,22 @@ dep_scan()
 	done
 }
 
-exec 4>${SV_DEPDIR}/svcdeps
-dep_scan
-echo ${SERVICE_LIST} >${SV_DEPDIR}/svclist
+svclist=${SV_DEPDIR}/svclist
+svcdeps=${SV_DEPDIR}/svcdeps
+if [ "${#}" = 0 ]; then
+	printf '' >${svcdeps}
+	dep_scan
+	echo ${SERVICES} >${svclist}
+else
+	read SVCLIST <${svclist}
+	for svc; do
+		sed "/^${svc}:/d" -i ${svcdeps}
+		if dep_gen "${svc}"; then
+			isin "${svc}" "${SVCLIST}" || SVCLIST="${SVCLIST} ${svc}"
+		fi
+	done
+	echo ${SVCLIST} >${svclist}
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
