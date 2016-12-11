@@ -7,7 +7,7 @@ name=ntpd
 SVC_CONFIGFILE=/etc/${name}.conf
 SVC_COMMANDS=check_config
 
-SVC_CMD=${name}
+SVC_CMD=/usr/sbin/ntpd
 SVC_OPTS='-d -f ${SVC_CONFIGFILE}'
 
 check_config()

@@ -3,7 +3,7 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 name=busybox-ntpd
-SVC_CMD=busybox
+SVC_CMD=/bin/busybox
 SVC_OPTS='ntpd -n'
 
 #
