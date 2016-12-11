@@ -5,11 +5,10 @@
 
 description='Simple server for Git repositories'
 
-ENV_DIR=Yes
-SVC_CMD=git
+SVC_CMD=/usr/bin/git
 SVC_USER=nobody
 SVC_GROUP=nobody
-SVC_OPTS='daemon -e HOME= -e XDG_CONFIG_HOME= -b -m -u ${SVC_USER}:${SVC_GROUP} --verbose'
+SVC_OPTS="daemon -e HOME= -e XDG_CONFIG_HOME= -b -m -u ${SVC_USER}:${SVC_GROUP} --verbose"
 SVC_USE=logger
 
 #
