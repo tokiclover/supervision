@@ -317,10 +317,9 @@ static int rs_svcdeps_gen(const char *svc)
 
 RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 {
-	char dep[128], type[16];
-	char *line = NULL, *ptr, *tmp, svc[128];
+	char cmd[128], *ptr, *svc, *type, *line = NULL;
 	FILE *fp;
-	size_t len, pos, l;
+	size_t len, l;
 	int t = 0;
 
 	if (SERVICES.svcdeps && !service)
@@ -333,8 +332,8 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 
 	/* initialize SV_RUNDIR if necessary */
 	if (!file_test(SV_TMPDIR_DEPS, 'd')) {
-		snprintf(dep, ARRAY_SIZE(dep), "%s -0", SV_INIT_STAGE);
-		if (system(dep))
+		snprintf(cmd, ARRAY_SIZE(cmd), "%s -0", SV_INIT_STAGE);
+		if (system(cmd))
 			WARN("Failed to execute %s: %s\n", SV_INIT_STAGE, strerror(errno));
 	}
 
@@ -365,15 +364,13 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 		}
 
 		/* get service name */
+		svc = line;
 		ptr = strchr(line, ':');
 		*ptr++ = '\0';
-		pos = ptr-line;
-		memcpy(svc, line, pos);
-
-		/* get dependency type/name */
+		/* get dependency type */
+		type = ptr;
 		ptr = strchr(ptr, '=');
 		*ptr++ = '\0';
-		memcpy(type, line+pos, ptr-line-pos);
 
 		if (!svc_deps || strcmp(svc, svc_deps->svc)) {
 			svc_deps = rs_svcdeps_add(svc);
@@ -391,15 +388,12 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 
 		/* append service list */
 		ptr = shell_string_value(ptr);
-		while (*ptr) {
-			if ((tmp = strchr(ptr, ' ')) == NULL)
-				pos = strlen(ptr);
-			else
-				pos = tmp-ptr;
-			memcpy(dep, ptr, pos);
-			dep[pos] = '\0';
-			rs_stringlist_add(svc_deps->deps[t], dep);
-			ptr += pos+1;
+		while (ptr && *ptr) {
+			svc = ptr;
+			ptr = strchr(ptr, ' ');
+			if (ptr)
+				*ptr++ = '\0';
+			rs_stringlist_add(svc_deps->deps[t], svc);
 		}
 	}
 	fclose(fp);
@@ -419,16 +413,12 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 	SERVICES.svclist = rs_stringlist_new();
 	while (rs_getline(fp, &line, &len) > 0) {
 		ptr = line;
-		pos = 0;
-		while (*ptr) {
-			if ((tmp = strchr(ptr, ' ')) == NULL)
-				pos = strlen(ptr);
-			else
-				pos = tmp-ptr;
-			memcpy(svc, ptr, pos);
-			svc[pos] = '\0';
+		while (ptr && *ptr) {
+			svc = ptr;
+			ptr = strchr(ptr, ' ');
+			if (ptr)
+				*ptr++ = '\0';
 			rs_stringlist_add(SERVICES.svclist, svc);
-			ptr += pos+1;
 		}
 	}
 	fclose(fp);
