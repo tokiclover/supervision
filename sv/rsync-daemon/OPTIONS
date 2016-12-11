@@ -4,9 +4,8 @@
 #
 
 description='Simple (anonymous) rsync daemon'
-ENV_DIR=Yes
 SVC_CONFIGFILE=/etc/rsyncd.conf
-SVC_CMD=rsync
+SVC_CMD=/usr/bin/rsync
 SVC_USER=nobody
 SVC_GROUP=nobody
 SVC_OPTS='${RSYNC_OPTS} --config=${SVC_CONFIGFILE} --daemon --no-detach'
