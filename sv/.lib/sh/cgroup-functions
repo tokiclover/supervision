@@ -19,11 +19,7 @@ cgroup_mount_sys()
 	[ -d ${__CGROUP_ROOT__} ] && grep -q cgroup /proc/filesystems || return 1
 
 	if ! mountinfo --quiet ${__CGROUP_ROOT__}; then
-		if [ "${SV_LIBDIR}" = "/etc/sv/.lib" ]; then
-			__CGROUP_RELEASE_AGENT__="$(readlink ${SV_LIBDIR})/sh/cgroup-release-agent"
-		else
-			__CGROUP_RELEASE_AGENT__="${SV_LIBDIR}/sh/cgroup-release-agent"
-		fi
+		__CGROUP_RELEASE_AGENT__="${SV_LIBDIR}/sh/cgroup-release-agent"
 		mount ${opt} -t tmpfs -o ${SYSFS_OPTS},mode=755,size=${CGROUP_FILESYSTEM_SIZE:-10M} \
 			cgroup ${__CGROUP_ROOT__}
 	fi
