@@ -8,8 +8,8 @@ name=dhcpcd
 SVC_CONFIGFILE=/etc/${name}.conf
 SVC_COMMANDS=check_config
 SVC_LOGFILE=${LOGDIR}/${name}.log
-SVC_CMD=${name}
-SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_IFACES}'
+SVC_CMD=/sbin/dhcpcd
+SVC_OPTS='${DHCP_OPTS} --config ${SVC_CONFIGFILE} --quiet --nobackground ${DHCP_IFACES} --denyinterfaces vnet[0-9]_[0-9]'
 SVC_USE=logger
 
 start_pre()
