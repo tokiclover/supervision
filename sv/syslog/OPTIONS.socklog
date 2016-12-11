@@ -5,15 +5,14 @@
 
 name=socklog
 
-ENV_DIR=Yes
-SVC_CMD=socklog
+SVC_CMD=/usr/sbin/socklog
 if [ "${SVC_NAME}" = "syslog" -o "${SVC_NAME}" = "socklog" -o "${SVC_NAME}" = "socklog-unix" ]; then
 	SVC_PROVIDE=logger
 else
 	SVC_PROVIDE=
 fi
 
-start_start_start_start_pre()
+start_pre()
 {
 	case "${SVC_NAME}" in
 		(*-inet)
