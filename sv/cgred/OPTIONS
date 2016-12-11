@@ -4,7 +4,7 @@
 #
 
 description="CGroup Rules Engine Daemon"
-SVC_CMD=cgrulesengd
+SVC_CMD=/usr/sbin/cgrulesengd
 SVC_OPTS='--nodaemon --logfile=-'
 SVC_CONFIGFILE=/etc/cgroup/cgconfig.conf
 
