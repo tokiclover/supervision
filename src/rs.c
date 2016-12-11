@@ -266,11 +266,8 @@ static int svc_cmd(struct svcrun *run, int flags)
 	}
 	run->depends = NULL;
 
-	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0) {
+	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		command = 's';
-		if (svc_deps)
-			run->depends = rs_svcdeps_find(run->name);
-	}
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
 		command = 'S';
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_ADD]) == 0)
@@ -353,6 +350,10 @@ static int svc_cmd(struct svcrun *run, int flags)
 		else
 			retval = 0;
 		goto reterr;
+		break;
+	case 's':
+			if (svc_deps)
+				run->depends = svc_deps_find(run->name);
 		break;
 	}
 

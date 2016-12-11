@@ -26,6 +26,7 @@ static int  rs_deptree_file_save(RS_DepTree_T *deptree);
 static void rs_svcdeps_free(void);
 static RS_SvcDepsList_T *rs_svcdeps_new(void);
 static RS_SvcDeps_T *rs_svcdeps_add (const char *svc);
+static RS_SvcDeps_T *rs_svcdeps_find(const char *svc);
 /* load generate service dependency */
 static int           rs_svcdeps_gen(const char *svc);
 static void rs_virtsvc_insert(RS_SvcDeps_T *elm);
@@ -224,6 +225,13 @@ void svc_deptree_load(RS_DepTree_T *deptree)
 
 	SLIST_FOREACH(ent, deptree->list, entries)
 		rs_deptree_add(RS_DEPS_USE, -1, ent->str, deptree);
+}
+
+RS_SvcDeps_T *svc_deps_find(const char *svc)
+{
+	if (!rs_stringlist_find(SERVICES.svclist, svc))
+		return rs_svcdeps_load(svc);
+	return rs_svcdeps_find(svc);
 }
 
 void rs_deptree_load(RS_DepTree_T *deptree)
@@ -448,12 +456,10 @@ static RS_SvcDeps_T *rs_svcdeps_add(const char *svc)
 	return elm;
 }
 
-RS_SvcDeps_T *rs_svcdeps_find(const char *svc)
+static RS_SvcDeps_T *rs_svcdeps_find(const char *svc)
 {
 	RS_SvcDeps_T *elm;
 
-	if (!rs_stringlist_find(SERVICES.svclist, svc))
-		return rs_svcdeps_load(svc);
 	SLIST_FOREACH(elm, SERVICES.svcdeps, entries)
 		if (strcmp(elm->svc, svc) == 0)
 			return elm;

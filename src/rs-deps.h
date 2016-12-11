@@ -59,8 +59,8 @@ extern struct RS_Services SERVICES;
 
 /* the same used for service dependencies */
 extern RS_SvcDeps_T     *rs_svcdeps_load(const char *svc);
-extern RS_SvcDeps_T *rs_svcdeps_find(const char *svc);
 
+extern RS_SvcDeps_T    *svc_deps_find(const char *svc);
 extern void             svc_deptree_load(RS_DepTree_T *deptree);
 extern void              rs_deptree_load(RS_DepTree_T *deptree);
 extern void              rs_deptree_free(RS_DepTree_T *deptree);
