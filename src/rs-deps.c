@@ -270,18 +270,18 @@ RS_StringList_T *rs_svclist_load(char *dir_path)
 
 	svclist = rs_stringlist_new();
 	while ((ent = readdir(dir))) {
-		if (ent->d_name[0] != '.')
 #ifdef _DIRENT_HAVE_D_TYPE
-			switch (ent->d_type) {
-			case DT_DIR:
-			case DT_LNK:
-			case DT_REG:
-				break;
-			default:
-				continue;
-				break;
-			}
+		switch (ent->d_type) {
+		case DT_DIR:
+		case DT_LNK:
+		case DT_REG:
+			break;
+		default:
+			continue;
+			break;
+		}
 #endif
+		if (ent->d_name[0] != '.')
 			rs_stringlist_add(svclist, ent->d_name);
 	}
 	closedir(dir);
@@ -520,5 +520,6 @@ static void rs_svcdeps_free(void)
 	free(SERVICES.virt_svcdeps);
 	SERVICES.svcdeps      = NULL;
 	SERVICES.virt_svcdeps = NULL;
+	SERVICES.virt_count   = 0;
 }
 
