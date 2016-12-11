@@ -5,10 +5,10 @@
 
 name=dnsmasq
 SVC_CONFIGFILE=/etc/${name}.conf
-SVC_CMD=${name}
-SVC_OPTS='-k -u ${name} -g ${name}'
-SVC_USER=${name}
-SVC_GROUP=${name}
+SVC_CMD=/usr/sbin/dnsmasq
+SVC_USER=nobody
+SVC_GROUP=nobody
+SVC_OPTS="-k ${SVC_USER:+-u} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP}"
 SVC_USE=logger
 
 start_pre()
