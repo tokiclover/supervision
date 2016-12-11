@@ -15,6 +15,8 @@ DOCDIR     ?= $(DATADIR)/doc/$(PACKAGE)-$(VERSION)
 MANDIR     ?= $(DATADIR)/man
 VIMDIR     ?= $(DATADIR)/vim/vimfiles
 RUNDIR     ?= /var/run
+libdir      = $(LIBDIR)/sv
+confdir     = $(SYSCONFDIR)/sv
 
 INSTALL    ?= install
 install_SCRIPT = $(INSTALL) -m 755
@@ -30,10 +32,10 @@ dist_EXTRA  = \
 	TODO \
 	BUGS.md \
 	ChangeLog
-dist_COMMON = \
-	sv/.opt/OPTIONS.in \
-	sv/.opt/SVC_OPTIONS \
-	sv/.opt/SVC_BACKEND
+dist_SH_OPTS = \
+	OPTIONS.in \
+	SVC_OPTIONS \
+	SVC_BACKEND
 dist_SH_BINS  = \
 	sv/.lib/bin/checkpath \
 	sv/.lib/bin/fstabinfo \
@@ -53,8 +55,7 @@ dist_SH_LIBS  = \
 	sv/.lib/sh/runscript-functions \
 	sv/.lib/sh/supervision-functions
 dist_SV_RUNS  =
-dist_SCRIPTS  = \
-	sv/.opt/cmd
+dist_SCRIPTS  =
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
 	apache2 \
@@ -204,22 +205,21 @@ DISTFILES   = $(dist_COMMON) $(dist_EXTRA) \
 	$(dist_SH_BINS) $(dist_SH_SBINS) $(dist_SH_LIBS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
-	$(SBINDIR) $(LIBDIR)/sv/bin $(LIBDIR)/sv/sbin $(LIBDIR)/sv/sh $(DOCDIR) \
-	$(LIBDIR)/sv/cache \
-	$(SYSCONFDIR)/sv.conf.d $(SYSCONFDIR)/sv/.opt $(SYSCONFDIR)/sv/.stage-0 \
-	$(SYSCONFDIR)/sv/.stage-1 $(SYSCONFDIR)/sv/.stage-2 $(SYSCONFDIR)/sv/.stage-3 \
-	$(MANDIR)/man5 $(MANDIR)/man8 $(SYSCONFDIR)/sv/.single
-DISTDIRS    = $(dist_DIRS)
+	$(libdir)/bin $(libdir)/sbin $(libdir)/sh $(DOCDIR) \
+	$(libdir)/cache $(libdir)/opt \
+	$(confdir).conf.d $(confdir)/.stage-0 $(confdir)/.stage-1 \
+	$(confdir)/.stage-2 $(confdir)/.stage-3 $(confdir)/.single
+DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
 define svc_cmd =
 	for cmd in finish run; do \
 		ln -s $(subst log,..,$(2))../.opt/cmd \
-		$(DESTDIR)$(SYSCONFDIR)/sv/$(1)/$(2)/$${cmd}; \
+		$(DESTDIR)$(confdir)/$(1)/$(2)/$${cmd}; \
 	done
 endef
 define stage_sym =
 	for svc in $(2); do \
-		ln -fs $(SYSCONFDIR)/sv/$${svc} $(DESTDIR)$(SYSCONFDIR)/sv/.stage-$(1)/$${svc}; \
+		ln -fs $(confdir)/$${svc} $(DESTDIR)$(confdir)/.stage-$(1)/$${svc}; \
 	done
 endef
 
@@ -233,14 +233,18 @@ $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
 install-svc-dir:
-	$(MKDIR_P) $(dist_SV_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%)
+	$(MKDIR_P) $(dist_SV_SVCS:%=$(DESTDIR)$(confdir)/%)
 install-all: install install-supervision-svc
 install: install-dir install-dist
-	$(install_SCRIPT) sv.conf $(DESTDIR)$(SYSCONFDIR)/sv.conf
+	$(install_SCRIPT) sv.conf $(DESTDIR)$(confdir).conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
-	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(LIBDIR)/sv/sbin/rc
-	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(LIBDIR)/sv/sbin/service
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/rc
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/service
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
+	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
+	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
+	sed -e 's,\(RS_TYPE.*$$\),\1\nSV_LIBDIR=$(libdir)\nSV_SVCDIR=$(confdir),' \
+		-i $(DESTDIR)$(libdir)/opt/cmd
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR@|$(RUNDIR)|g' \
@@ -252,8 +256,8 @@ install: install-dir install-dist
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
-		-i $(DESTDIR)$(LIBDIR)/sv/sh/runscript-functions \
-		$(DESTDIR)$(SYSCONFDIR)/sv/.opt/SVC_OPTIONS
+		-i $(DESTDIR)$(libdir)/sh/runscript-functions \
+		$(DESTDIR)$(libdir)/opt/SVC_OPTIONS
 ifdef RUNIT_INIT_STAGE
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
@@ -265,25 +269,25 @@ ifdef S6_INIT_STAGE
 		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
 endif
 	for svc in $(dist_SVC_INSTANCES); do \
-		ln -fs $${svc#*:} $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+		ln -fs $${svc#*:} $(DESTDIR)$(confdir)/$${svc%:*}; \
 	done
 	for i in 0 1 2 3; do \
-		echo >$(DESTDIR)$(SYSCONFDIR)/sv/.stage-$${i}/.keep_dir-stage-$${i}; \
+		echo >$(DESTDIR)$(confdir)/.stage-$${i}/.keep_dir-stage-$${i}; \
 	done
-	echo >$(DESTDIR)$(LIBDIR)/sv/cache/.keep_dir-cache
+	echo >$(DESTDIR)$(libdir)/cache/.keep_dir-cache
 	$(call stage_sym,0,$(dist_STAGE_0))
 	$(call stage_sym,1,$(dist_STAGE_1))
 	$(call stage_sym,2,$(dist_STAGE_2))
 	$(call stage_sym,3,$(dist_STAGE_3))
-	ln -fs $(LIBDIR)/sv $(DESTDIR)$(SYSCONFDIR)/sv/.lib 
-	ln -fs $(SYSCONFDIR)/sv/sulogin $(DESTDIR)$(SYSCONFDIR)/sv/.single
+	ln -fs $(libdir)/opt $(DESTDIR)$(confdir)/.opt
+	ln -fs $(confdir)/sulogin $(DESTDIR)$(confdir)/.single
 install-dist: $(DISTFILES)
 install-dir :
-	$(MKDIR_P) $(dist_DIRS:%=$(DESTDIR)%)
+	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
 install-doc : $(dist_EXTRA)
 
 %/RUN: %
-	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
+	$(install_SCRIPT) sv/$@ $(DESTDIR)$(confdir)/$@
 $(dist_COMMON): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_SCRIPTS): FORCE
@@ -291,25 +295,25 @@ $(dist_SCRIPTS): FORCE
 $(dist_EXTRA): FORCE
 	$(install_DATA) $@ $(DESTDIR)$(DOCDIR)/$@
 $(dist_SH_BINS): FORCE
-	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(LIBDIR)/sv,$@)
+	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(libdir),$@)
 $(dist_SH_SBINS): FORCE
-	$(install_SCRIPT) $@ $(DESTDIR)$(LIBDIR)/sv/sbin
+	$(install_SCRIPT) $@ $(DESTDIR)$(libdir)/sbin
 $(dist_SH_LIBS): FORCE
-	$(install_DATA) $@ $(DESTDIR)$(LIBDIR)/sv/sh
+	$(install_DATA) $@ $(DESTDIR)$(libdir)/sh
 $(dist_SV_SVCS): FORCE install-svc-dir
 	if test -d sv/$@/log; then \
-		$(MKDIR_P) $(DESTDIR)$(SYSCONFDIR)/sv/$@/log; \
+		$(MKDIR_P) $(DESTDIR)$(confdir)/$@/log; \
 		$(call svc_cmd,$@,log/); \
 	fi
-	-$(install_DATA)  sv/$@/OPTIONS $(DESTDIR)$(SYSCONFDIR)/sv/$@/OPTIONS
+	-$(install_DATA)  sv/$@/OPTIONS $(DESTDIR)$(confdir)/$@/OPTIONS
 	-$(call svc_cmd,$@)
 $(dist_SV_OPTS): $(dist_SV_SVCS)
-	$(install_DATA)  sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
+	$(install_DATA)  sv/$@ $(DESTDIR)$(confdir)/$@
 $(dist_RS_SVCS):
-	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SYSCONFDIR)/sv/$@
-	-$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(SYSCONFDIR)/sv.conf.d/$@
+	$(install_SCRIPT) sv/$@ $(DESTDIR)$(confdir)/$@
+	-$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(confdir).conf.d/$@
 $(dist_OPTS_INSTANCES):
-	$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(SYSCONFDIR)/sv.conf.d/$@
+	$(install_DATA)  sv.conf.d/$@ $(DESTDIR)$(confdir).conf.d/$@
 install-%-svc:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -320,28 +324,27 @@ install-%-svc:
 
 uninstall-all: uninstall unintsall-supervision-svc
 uninstall: uninstall-doc
-	rm -f $(DESTDIR)$(SYSCONFDIR)/sv.conf
+	rm -f $(DESTDIR)$(confdir).conf
 	rm -f $(DESTDIR)$(SBINDIR)/rs
 ifdef SYSVINIT
-	rm -f $(DESTDIR)$(LIBDIR)/sv/bin/initctl
+	rm -f $(DESTDIR)$(libdir)/sbin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5* $(DESTDIR)/$(MANDIR)/man8/rs.8*
 	rm -f $(dist_COMMON:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
+	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(libdir)/opt/%) $(DESTDIR)$(libdir)/opt/cmd
 	for svc in $(dist_SVC_INSTANCES); do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/$${svc%:*}; \
+		rm -fr $(DESTDIR)$(confdir)/$${svc%:*}; \
 	done
-	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%) \
-	       $(dist_RS_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv.conf.d/%) \
-	       $(dist_RS_OPTS:%=$(DESTDIR)$(SYSCONFDIR)/sv.conf.d/%)
-	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SYSCONFDIR)/sv/%)
-	rm -fr $(DESTDIR)$(LIBDIR)/sv/bin/* $(DESTDIR)$(LIBDIR)/sv/sbin/* \
-		$(DESTDIR)$(LIBDIR)/sv/sh/* $(DESTDIR)$(LIBDIR)/sv/cache
-	rm -f $(DESTDIR)$(SYSCONFDIR)/sv/getty-tty*
-	for dir in lib opt stage-; do \
-		rm -fr $(DESTDIR)$(SYSCONFDIR)/sv/.$${dir}*; \
-	done
+	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(confdir)/%) \
+	       $(dist_RS_SVCS:%=$(DESTDIR)$(confdir).conf.d/%) \
+	       $(dist_RS_OPTS:%=$(DESTDIR)$(confdir).conf.d/%)
+	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(confdir)/%)
+	rm -fr $(DESTDIR)$(libdir)/bin/* $(DESTDIR)$(libdir)/sbin/* \
+		$(DESTDIR)$(libdir)/sh/* $(DESTDIR)$(libdir)/cache
+	rm -f $(DESTDIR)$(confdir)/getty-tty* $(DESTDIR)$(confdir)/.opt
+	rm -f $(DESTDIR)$(confdir)/.s*/*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)

@@ -36,12 +36,6 @@ case "${SVC_DIR}" in
 :	${SV_SVCDIR=${SVC_DIR%/*}}
 	;;
 esac
-:	${RS_TYPE=sv}
-# XXX: remove this to have the right PATH value (with no SV_SVCDIR prefix)
-# for GRSecurity and SELinux security. This may be handy to test everything
-# in place!!!
-#
-#:	${SV_LIBDIR=${SV_RUNDIR:-${SV_SVCDIR}}/.lib}
 
 case "${head}" in
 	(*/log) __cmd_dir__=log;;
@@ -49,6 +43,7 @@ case "${head}" in
 esac
 unset head
 __cmd__="${0##*/}"
+RS_TYPE=sv
 
 source "${SVC_DIR}"/../.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
