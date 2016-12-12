@@ -495,32 +495,17 @@ static const char **svc_env(void)
 
 static char *svc_find(const char *svc)
 {
-	char *buf = err_malloc(BUFSIZ), *ptr = NULL;
+	char *buf = err_malloc(512);
 	int i;
-	int err = errno;
 
 	if (!svc)
 		return NULL;
 
-	for (i = 0; i <= 3; i++) {
-		snprintf(buf, BUFSIZ, "%s/.stage-%d/%s", SV_SVCDIR, i, svc);
-		if (!access(buf, F_OK)) {
-			ptr = buf;
-			break;
-		}
-	}
-	if (!ptr) {
-		snprintf(buf, BUFSIZ, "%s/%s", SV_SVCDIR, svc);
-		if (!access(buf, F_OK))
-			ptr = buf;
-	}
-	if (ptr)
-		ptr = err_realloc(buf, strlen(buf)+1);
+	snprintf(buf, 512, "%s/%s", SV_SVCDIR, svc);
+	if (access(buf, F_OK))
+		return err_realloc(buf, 0);
 	else
-		free(buf);
-
-	errno = err;
-	return ptr;
+		return err_realloc(buf, strlen(buf)+1);
 }
 
 static int svc_lock(const char *svc, int lock_fd, int timeout)
