@@ -946,7 +946,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	svc_deps |= SVC_DEPS_CHILD;
 	run = err_malloc(size*sizeof(void*));
 	SLIST_FOREACH(svc, list, entries) {
-		run[n]  = err_malloc(sizeof(struct svcrun));
+		run[n] = err_malloc(sizeof(struct svcrun));
 		run[n]->name = svc->str;
 		run[n]->argc = argc;
 		run[n]->argv = argv;
@@ -973,8 +973,10 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 				run = err_realloc(run, sizeof(void*)*size);
 			}
 		}
-		else if (r)
-			retval++;
+		else {
+			free(run[n]);
+			if (r) retval++;
+		}
 	}
 
 	for (i = 0; i < n; i++) {
