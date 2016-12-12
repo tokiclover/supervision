@@ -28,6 +28,8 @@
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
+#define SVC_DEPS_CHILD 0x02
+
 struct svcrun {
 	RS_SvcDeps_T *depends;
 	const char *name;
@@ -296,7 +298,8 @@ static int svc_cmd(struct svcrun *run, int flags)
 		status = svc_state(run->name, 's');
 		if (status) {
 			if (command == 's') {
-				LOG_WARN("%s: Service is already started\n", run->name);
+				if (!(svc_deps & SVC_DEPS_CHILD))
+					LOG_WARN("%s: Service is already started\n", run->name);
 				return -EBUSY;
 			}
 		}
@@ -496,7 +499,6 @@ static const char **svc_env(void)
 static char *svc_find(const char *svc)
 {
 	char *buf = err_malloc(512);
-	int i;
 
 	if (!svc)
 		return NULL;
@@ -903,6 +905,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	case -EINVAL:
 		exit(EXIT_SUCCESS);
 	case -ENOENT:
+		ERR("inexistant service -- %s\n", run.name);
 		exit(2);
 	case -ECANCELED:
 		exit(4);
@@ -939,6 +942,8 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	else
 		state = 'S';
 
+	/* suppress unnecessary warning messages about started services */
+	svc_deps |= SVC_DEPS_CHILD;
 	run = err_malloc(size*sizeof(void*));
 	SLIST_FOREACH(svc, list, entries) {
 		run[n]  = err_malloc(sizeof(struct svcrun));
@@ -990,6 +995,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		free(run[i]);
 	}
 	free(run);
+	svc_deps &= ~SVC_DEPS_CHILD;
 
 	return retval;
 }
