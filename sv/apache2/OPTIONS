@@ -157,7 +157,7 @@ stop_pre()
 		checkconfig || return 1
 	fi
 
-	PID=$(cat ${PIDFILE} 2>${NULL})
+	[ -f ${PIDFILE} ] && read PID <${PIDFILE} || PID=
 	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -k stop
 }
 stop_post()
