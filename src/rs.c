@@ -15,6 +15,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <poll.h>
 #include <time.h>
@@ -27,8 +28,6 @@
 #define SV_TMPDIR_PIDS SV_TMPDIR "/pids"
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
-
-#define SVC_DEPS_CHILD 0x02
 
 struct svcrun {
 	RS_SvcDeps_T *depends;
@@ -110,7 +109,6 @@ static const char *const env_list[] = {
 
 __NORETURN__ static void help_message(int exit_val);
 
-#define SVC_CMD_FIND 1
 #define SVC_CMD_WAIT 2
 #define SVC_RET_WAIT 256
 /* execute a service command;
@@ -221,12 +219,6 @@ static sigset_t ss_savemask;
 static void svc_sigsetup(void);
 
 /*
- * find a service
- * @return NULL if nothing found or service path (dir/file)
- */
-static char *svc_find(const char *svc);
-
-/*
  * generate a default environment for service
  */
 static const char **svc_env(void);
@@ -254,17 +246,19 @@ static int svc_cmd(struct svcrun *run, int flags)
 	static char nodeps_arg[16] = "--nodeps", deps_arg[8] = "--deps";
 	static char type_rs[8] = "--rs", type_sv[8] = "--sv";
 	static int setup = 1;
+	static struct stat st_dep;
+	struct stat st_buf;
 	int status, command, retval = 1;
-	int find = flags & SVC_CMD_FIND;
 	pid_t pid;
 	int i;
 	const char **argv = NULL;
 	const char *cmd = run->argv[4];
-	char *path;
+	char *path, buf[512];
 
 	if (setup) {
 		svc_sigsetup();
 		setup = 0;
+		stat(RS_SVCDEPS_FILE, &st_dep);
 	}
 	run->depends = NULL;
 
@@ -298,13 +292,12 @@ static int svc_cmd(struct svcrun *run, int flags)
 		status = svc_state(run->name, 's');
 		if (status) {
 			if (command == 's') {
-				if (!(svc_deps & SVC_DEPS_CHILD))
-					LOG_WARN("%s: Service is already started\n", run->name);
+				LOG_WARN("%s: service is already started\n", run->name);
 				return -EBUSY;
 			}
 		}
 		else if (command == 'S') {
-			LOG_WARN("%s: Service is not started\n", run->name);
+			LOG_WARN("%s: service is not started\n", run->name);
 			return -EINVAL;
 		}
 	}
@@ -313,16 +306,22 @@ static int svc_cmd(struct svcrun *run, int flags)
 	for (i = 0; i <= run->argc; i++)
 		argv[i] = run->argv[i];
 	/* get service path */
-	if (find) {
-		run->path = argv[3] = svc_find(run->name);
-		if (argv[3] == NULL)
-			return -ENOENT;
+	if (!run->path) {
+		argv[3] = run->path = buf;
+		snprintf(buf, ARRAY_SIZE(buf), "%s/%s", SV_SVCDIR, run->name);
 	}
-	if (file_test(argv[3], 'd'))
+	if (stat(run->path, &st_buf) < 0)
+		return -ENOENT;
+	/* get service type */
+	if (S_ISDIR(st_buf.st_mode))
 		argv[1] = type_sv;
 	else
 		argv[1] = type_rs;
 	argv[2] = deps_arg;
+	/* check service mtime */
+	if (st_buf.st_mtim.tv_sec > st_dep.st_mtim.tv_sec)
+		LOG_WARN("%s was updated -- `scan' command might be necessary?\n",
+				run->name);
 
 	/* get service status */
 	switch(command) {
@@ -336,8 +335,8 @@ static int svc_cmd(struct svcrun *run, int flags)
 			goto reterr;
 		}
 
-		path = err_malloc(256*sizeof(char));
-		snprintf(path, 256, "%s/.stage-%d/%s", SV_SVCDIR, rs_stage,
+		path = err_malloc(512);
+		snprintf(path, 512, "%s/.stage-%d/%s", SV_SVCDIR, rs_stage,
 				run->name);
 		if (!access(path, F_OK)) {
 			if (command == 'd')
@@ -426,8 +425,6 @@ static int svc_cmd(struct svcrun *run, int flags)
 		ERROR("%s: Failed to fork(): %s\n", __func__, strerror(errno));
 
 reterr:
-	if (find)
-		free((void *)run->path);
 	free(argv);
 	return retval;
 }
@@ -494,20 +491,6 @@ static const char **svc_env(void)
 	envp[i++] = (char *)0;
 	envp[i++] = (char *)0;
 	return envp;
-}
-
-static char *svc_find(const char *svc)
-{
-	char *buf = err_malloc(512);
-
-	if (!svc)
-		return NULL;
-
-	snprintf(buf, 512, "%s/%s", SV_SVCDIR, svc);
-	if (access(buf, F_OK))
-		return err_realloc(buf, 0);
-	else
-		return err_realloc(buf, strlen(buf)+1);
 }
 
 static int svc_lock(const char *svc, int lock_fd, int timeout)
@@ -807,15 +790,6 @@ static int svc_state(const char *svc, int status)
 	}
 
 	switch(status) {
-		case 'e':
-		case 'E':
-			ptr = svc_find(svc);
-			if (ptr)
-				retval = 1;
-			else
-				retval = 0;
-			free(ptr);
-			return retval;
 		case 'f':
 		case 'F':
 			ptr = SV_TMPDIR_FAIL;
@@ -884,8 +858,8 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		run.name = strrchr(argv[0], '/')+1;
 	}
 	else {
-		cmd_flags |= SVC_CMD_FIND;
 		run.name = argv[0];
+		run.path = NULL;
 	}
 	run.argv[0] = "runscript";
 	run.argv[4] = argv[1];
@@ -921,7 +895,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	size_t n = 0, size = 8;
 	int retval = 0;
 	int i, r, state, status;
-	static int parallel, setup, cmd_flags = SVC_CMD_FIND;
+	static int parallel, setup, cmd_flags;
 	struct svcrun **run;
 
 	if (list == NULL) {
@@ -942,8 +916,6 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	else
 		state = 'S';
 
-	/* suppress unnecessary warning messages about started services */
-	svc_deps |= SVC_DEPS_CHILD;
 	run = err_malloc(size*sizeof(void*));
 	SLIST_FOREACH(svc, list, entries) {
 		run[n] = err_malloc(sizeof(struct svcrun));
@@ -951,6 +923,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		run[n]->argc = argc;
 		run[n]->argv = argv;
 		run[n]->envp = envp;
+		run[n]->path = NULL;
 
 		r = svc_cmd(run[n], cmd_flags);
 		switch(r) {
@@ -997,7 +970,6 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		free(run[i]);
 	}
 	free(run);
-	svc_deps &= ~SVC_DEPS_CHILD;
 
 	return retval;
 }
