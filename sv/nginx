@@ -39,7 +39,7 @@ stop_pre()
 		configtest || return 1
 	fi
 
-	[ -f ${SVC_PIDFILE} ] && pread PID <${SVC_PIDFILE} || PID=
+	[ -f ${SVC_PIDFILE} ] && read PID <${SVC_PIDFILE} || PID=
 	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -s stop
 }
 stop_post()
