@@ -355,7 +355,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 		break;
 	case 's':
 			if (svc_deps)
-				run->depends = svc_deps_find(run->name);
+				run->depends = rs_svcdeps_load(run->name);
 		break;
 	}
 
@@ -909,6 +909,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		parallel = rs_conf_yesno("RS_PARALLEL");
 		if (!parallel)
 			cmd_flags |= SVC_CMD_WAIT;
+		setup = 1;
 	}
 	if (strcmp(argv[4], rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state = 's';
