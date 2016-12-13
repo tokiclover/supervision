@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.1 2016/12/08 21:09:26                      Exp $
+# $Version: 1.2 2016/12/12 21:09:26                      Exp $
 #
 
 #
@@ -32,11 +32,8 @@ SV_DEPDIR="${SV_TMPDIR}/deps"
 add_dep()
 {
 	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
-
 	shift 2
-	if [ "${#}" -gt 0 ]; then
-		echo "${svc}:${dep}=\"${@}\"" >>${svcdeps}
-	fi
+	echo "${svc}:${dep}=\"${@}\"" >>${svcdeps}
 }
 dep_gen()
 {
@@ -50,7 +47,6 @@ dep_gen()
 	else
 		return
 	fi
-	SERVICES="${SERVICES} ${1}"
 	SVC_NAME="${1}"
 	shift
 	source ${SV_SVCDIR}/.opt/SVC_OPTIONS
@@ -73,21 +69,17 @@ dep_scan()
 	done
 }
 
-svclist=${SV_DEPDIR}/svclist
 svcdeps=${SV_DEPDIR}/svcdeps
 if [ "${#}" = 0 ]; then
 	printf '' >${svcdeps}
 	dep_scan
-	echo ${SERVICES} >${svclist}
 else
-	read SVCLIST <${svclist}
 	for svc; do
 		[ -n "${SVCDEPS_UPDATE}" ] && sed "/^${svc}:/d" -i ${svcdeps}
 		if dep_gen "${svc}"; then
 			isin "${svc}" "${SVCLIST}" || SVCLIST="${SVCLIST} ${svc}"
 		fi
 	done
-	echo ${SVCLIST} >${svclist}
 fi
 
 #
