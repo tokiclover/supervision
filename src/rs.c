@@ -782,7 +782,6 @@ static int svc_mark(const char *svc, int status)
 static int svc_state(const char *svc, int status)
 {
 	char path[BUFSIZ], *ptr = NULL;
-	int retval;
 
 	if (!svc) {
 		errno = ENOENT;
