@@ -26,6 +26,7 @@ static int  rs_deptree_file_save(RS_DepTree_T *deptree);
 static void rs_svcdeps_free(void);
 static RS_SvcDepsList_T *rs_svcdeps_new(void);
 static RS_SvcDeps_T *rs_svcdeps_add (const char *svc);
+static RS_SvcDeps_T *rs_svcdeps_adu (const char *svc);
 static RS_SvcDeps_T *rs_svcdeps_find(const char *svc);
 /* load generate service dependency */
 static int           rs_svcdeps_gen(const char *svc);
@@ -347,20 +348,26 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 	}
 
 	/* create a new list only when not updating the list */
-	if (!SERVICES.svcdeps)
+	if (!SERVICES.svcdeps) {
 		SERVICES.svcdeps = rs_svcdeps_new();
+		SERVICES.svclist = rs_stringlist_new();
+	}
 	RS_SvcDeps_T *svc_deps = NULL;
 
 	while (rs_getline(fp, &line, &len) > 0) {
-		/* break the loop when updating the list */
-		if (service && strncmp(line, service, l)) {
-			if (svc_deps) {
-				free(line);
-				fclose(fp);
-				return svc_deps;
+		if (service) {
+			/* break the loop when updating the list */
+			if (strncmp(line, service, l)) {
+				if (svc_deps) {
+					free(line);
+					fclose(fp);
+					return svc_deps;
+				}
+				/* skip lines when updating the list */
+				continue;
 			}
-			/* skip lines when updating the list */
-			continue;
+			else
+				svc_deps = rs_svcdeps_adu(svc);
 		}
 
 		/* get service name */
@@ -401,28 +408,6 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 	if (service)
 		return NULL;
 
-	/* get service list file */
-	if (access(RS_SVCLIST_FILE, F_OK))
-		if (rs_svcdeps_gen(NULL))
-			return NULL;
-	if ((fp = fopen(RS_SVCLIST_FILE, "r")) == NULL) {
-		ERR("Failed to open %s: %s\n", RS_SVCLIST_FILE, strerror(errno));
-		return NULL;
-	}
-
-	SERVICES.svclist = rs_stringlist_new();
-	while (rs_getline(fp, &line, &len) > 0) {
-		ptr = line;
-		while (ptr && *ptr) {
-			svc = ptr;
-			ptr = strchr(ptr, ' ');
-			if (ptr)
-				*ptr++ = '\0';
-			rs_stringlist_add(SERVICES.svclist, svc);
-		}
-	}
-	fclose(fp);
-
 	atexit(rs_svcdeps_free);
 	return svc_deps;
 }
@@ -439,11 +424,22 @@ static RS_SvcDeps_T *rs_svcdeps_add(const char *svc)
 	RS_SvcDeps_T *elm = err_malloc(sizeof(RS_SvcDeps_T));
 	elm->svc = err_strdup(svc);
 
+	rs_stringlist_add(SERVICES.svclist, svc);
+
 	for (int i = 0; i < RS_DEPS_TYPE; i++)
 		elm->deps[i] = rs_stringlist_new();
 	SLIST_INSERT_HEAD(SERVICES.svcdeps, elm, entries);
 
 	return elm;
+}
+
+RS_SvcDeps_T *rs_svcdeps_adu(const char *svc)
+{
+	RS_SvcDeps_T *elm = rs_svcdeps_find(svc);
+	if (elm)
+		return elm;
+
+	return rs_svcdeps_add(svc);
 }
 
 static RS_SvcDeps_T *rs_svcdeps_find(const char *svc)
