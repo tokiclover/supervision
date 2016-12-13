@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.6:
+
+Added some bits to warn users to update the dependency cache when a service was
+modified;
+
 0.12.5:
 
 Fixed setting up configuration script for svlogd(8) because it does not accept
