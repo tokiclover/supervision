@@ -201,7 +201,7 @@ static char *get_cmdline_entry(const char *entry);
  * @level: runlevel to set, or NULL to get the current runlevel;
  * @return: current runlevel;
  */
-static char *svc_runlevel(const char *level);
+static const char *svc_runlevel(const char *level);
 
 /*
  * lock file for service to start/stop
@@ -652,43 +652,43 @@ static char *get_cmdline_entry(const char *ent)
 #endif /* __linux__ */
 }
 
-static char *svc_runlevel(const char *level)
+static const char *svc_runlevel(const char *level)
 {
-	static char b[16], p[] = SV_TMPDIR "/softlevel";
-	char *r;
-	int fd, f = O_NONBLOCK|O_CREAT;
+	static char buf[16], path[] = SV_TMPDIR "/softlevel";
+	char *retval;
+	int fd, flags = O_NONBLOCK|O_CREAT, len;
 
 	if (level)
-		f |= O_TRUNC|O_WRONLY;
-	else if (access(p, F_OK))
+		flags |= O_TRUNC|O_WRONLY;
+	else if (access(path, F_OK))
 		return NULL;
 	else
-		f |= O_RDONLY;
-	if ((fd = open(p, f, 0644)) < 0) {
-		WARN("Failed to open `%s': %s\n", p, strerror(errno));
+		flags |= O_RDONLY;
+	if ((fd = open(path, flags, 0644)) < 0) {
+		WARN("Failed to open `%s': %s\n", path, strerror(errno));
 		return NULL;
 	}
 
 	if (level) {
-		f = strlen(level);
-		if (write(fd, level, f) < f) {
-			WARN("Failed to write to `%s': %s\n", p, strerror(errno));
-			r = NULL;
+		len = strlen(level);
+		if (write(fd, level, len) < len) {
+			WARN("Failed to write to `%s': %s\n", path, strerror(errno));
+			retval = NULL;
 		}
 		else
-			r = (char*)level;
+			retval = level;
 	}
 	else {
-		if (( f = read(fd, b, sizeof(b))) < 0) {
-			WARN("Failed to read from `%s': %s\n", p, strerror(errno));
-			r = NULL;
+		if (( len = read(fd, buf, sizeof(buf))) < 0) {
+			WARN("Failed to read from `%s': %s\n", path, strerror(errno));
+			retval = NULL;
 		}
 		else
-			b[f] = '\0', r = b;
+			buf[len++] = '\0', retval = buf;
 	}
 
 	close(fd);
-	return r;
+	return retval;
 }
 
 static void svc_level(void)
@@ -1147,10 +1147,6 @@ static void svc_stage(const char *cmd)
 	/* finish sysinit */
 	if (rs_stage == 0 )
 		svc_stage_command(0, argc, argv, envp);
-	if (rs_runlevel > 0)
-		svc_runlevel(rs_stage_name[rs_runlevel]);
-	else
-		svc_runlevel(rs_stage_name[rs_stage]);
 
 	t = time(NULL);
 	svc_log("\nrs init stage-%d stopped at %s\n", rs_stage, ctime(&t));
