@@ -37,10 +37,6 @@ dist_SH_OPTS = \
 	SVC_OPTIONS \
 	SVC_BACKEND
 dist_SH_BINS  = \
-	sv/.lib/bin/checkpath \
-	sv/.lib/bin/fstabinfo \
-	sv/.lib/bin/mountinfo \
-	sv/.lib/bin/waitfile \
 	sv/.lib/sh/tmpfiles \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/init-stage \
@@ -48,12 +44,17 @@ dist_SH_BINS  = \
 	sv/.lib/sh/dep
 dist_SH_SBINS = \
 	sv/.lib/bin/sv-config \
-	sv/.lib/bin/sv-shutdown
+	src/sv-shutdown
 dist_SH_LIBS  = \
 	sv/.lib/sh/cgroup-functions \
 	sv/.lib/sh/functions \
 	sv/.lib/sh/runscript-functions \
 	sv/.lib/sh/supervision-functions
+dist_SV_BINS  = \
+	src/checkpath \
+	src/fstabinfo \
+	src/mountinfo \
+	src/waitfile
 dist_SV_RUNS  =
 dist_SCRIPTS  =
 dist_SV_SVCS  = \
@@ -200,7 +201,6 @@ endif
 
 DISTFILES   = \
 	$(dist_SV_OPTS) \
-	$(dist_SH_BINS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
 	$(libdir)/bin $(libdir)/sbin $(libdir)/sh $(DOCDIR) \
@@ -227,6 +227,8 @@ install: install-dir install-dist install-sv-svcs
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
 	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
+	$(install_SCRIPT) $(dist_SV_BINS) $(DESTDIR)$(libdir)/bin
+	$(install_SCRIPT) $(dist_SH_BINS) $(DESTDIR)$(libdir)/sh
 	$(install_DATA)   $(dist_SH_LIBS) $(DESTDIR)$(libdir)/sh
 	$(install_SCRIPT) $(dist_SH_SBINS) $(DESTDIR)$(libdir)/sbin
 	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(confdir).conf.d
@@ -278,8 +280,6 @@ install-sv-svcs: install-dir
 	$(install_SCRIPT) sv/$@ $(DESTDIR)$(confdir)/$@
 $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
-$(dist_SH_BINS): FORCE
-	$(install_SCRIPT) $@ $(DESTDIR)$(subst sv/.lib,$(libdir),$@)
 $(dist_SV_OPTS): install-sv-svcs
 	$(install_DATA)  sv/$@ $(DESTDIR)$(confdir)/$@
 install-%-initd:

@@ -29,14 +29,14 @@ all: $(dist_BINS)
 
 clean:
 	rm -f $(dist_BINS) $(dist_OBJS) $(rs_SRCS:%.c=%.o) $(simple_BINS:%=%.o) \
-		$(simple_BINS:%=../sv/.lib/bin/%)
+		$(simple_BINS)
 
 rs: $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(rs_HDRS)
 	$(CC) $(CFLAGS) -o $@ $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS)
 
 mountinfo.o: $(mountinfo_SRCS:%.c=%.o) rs-list.o
 $(simple_BINS): $$@.o $(dist_OBJS) $(dist_HDRS)
-	$(CC) $(CFLAGS) -o ../sv/.lib/bin/$@ $($@_SRCS:%.c=%.o) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS)
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
