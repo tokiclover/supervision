@@ -24,20 +24,16 @@
 #include <fcntl.h>
 #include <sys/reboot.h>
 
-#define VERSION "0.12.0"
+#define VERSION "0.12.6"
 
 #ifndef LIBDIR
 # define LIBDIR "/lib"
 #endif
-#ifndef SYSCONFDIR
-# define SYSCONFDIR "/etc"
-#endif
-#define SV_LIBDIR LIBDIR "/sv"
-#define SV_SVCDIR SYSCONFDIR "/sv"
-#define SV_INIT_STAGE SV_LIBDIR "sh/init-stage"
-#define SV_SVC_BACKEND SV_SVCDIR "/.opt/SVC_BACKEND"
+#define SV_SVC_BACKEND LIBDIR "/sv/opt/SVC_BACKEND"
+#define SV_RC          LIBDIR "/sv/sbin/rc"
 
 #define SV_ACTION_SHUTDOWN 0
+#define SV_ACTION_SINGLE   1
 #define SV_ACTION_REBOOT   6
 
 const char *prgname;
@@ -78,7 +74,8 @@ __NORETURN__ static void help_message(int status)
 {
 	int i = 0;
 
-	printf("Usage: %s [OPTIONS] ACTION [-t TIME] [MESSAGE]\n", prgname);
+	printf("Usage: %s [OPTIONS] [ACTION] [-t TIME] [MESSAGE]\n", prgname);
+	printf("    ACTION: -{h|p|r} (DEFAULT TO SINGLE RUNLEVEL: `%s single')\n", SV_RC);
 	printf("    -6, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
 		longopts_help[i]);
 	i++;
@@ -150,10 +147,14 @@ __NORETURN__ int sv_shutdown(int action)
 	size_t siz = sizeof(ent)-1;
 
 	argv[0] = "rs", argv[2] = NULL;
-	if (action)
+	if (action == 6)
 		argv[1] = "reboot";
-	else
+	else if (action == 0)
 		argv[1] = "shutdown";
+	else {
+		argv[0] = SV_RC, argv[1] = "single";
+		goto shutdown;
+	}
 
 	if ((fp = fopen(SV_SVC_BACKEND, "r")))
 		while (rs_getline(fp, &line, &len) > 0)
@@ -187,13 +188,16 @@ __NORETURN__ int sv_shutdown(int action)
 	else
 		ERR("%s: Failed to get supervision backend\n", __func__);
 
+	goto shutdown;
+
+shutdown:
 	execvp(argv[0], argv);
 	ERROR("Failed to execlp(%s, %s)", *argv, argv[1]);
 }
 
 int main(int argc, char *argv[])
 {
-	int action = -1, fd;
+	int action = SV_ACTION_SINGLE, fd;
 	int rb_flag = 0, rb_force = 0, rb_sync = 1;
 	int open_flags = O_CREAT|O_WRONLY|O_NOFOLLOW;
 	mode_t open_mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
@@ -262,10 +266,6 @@ int main(int argc, char *argv[])
 		retval = sv_wall(argv[optind]);
 	if (message)
 		exit(retval);
-	else if (action == -1) {
-		ERR("-0|-6 required to proceed; see `%s -u'\n", prgname);
-		exit(EXIT_FAILURE);
-	}
 
 	if (rb_sync)
 		sync();
