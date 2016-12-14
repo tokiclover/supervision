@@ -4,6 +4,8 @@ Header: supervision/ChangeLog, 2015/04/24
 
 Added some bits to warn users to update the dependency cache when a service was
 modified;
+Make `rc' alias work again especially with `single' runlevel;
+Synced sv-shutdown to v0.12.5 (was out of date);
 
 0.12.5:
 
