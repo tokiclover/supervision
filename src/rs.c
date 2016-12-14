@@ -623,31 +623,32 @@ static char *get_cmdline_entry(const char *ent)
 {
 #ifdef __linux__
 	FILE *fp;
-	char *line, *ptr, path[] = "/proc/cmdline", *val = NULL;
-	size_t size, len;
+	char *line = NULL, *ptr, path[] = "/proc/cmdline", *val;
+	size_t len;
 
-	if (!access(path, F_OK))
+	if (access(path, F_OK))
 		return NULL;
 	if (!(fp = fopen(path, "r")))
 		return NULL;
-	if (!rs_getline(fp, &line, &size))
+	if (!rs_getline(fp, &line, &len))
 		return NULL;
 
 	len = strlen(ent);
 	ptr = line;
-	while ((ptr = strsep(&ptr, " "))) {
-		if (strncmp(ent, ptr, len) == 0) {
-			ptr += len;
-			switch(ptr[len]) {
+	while ((val = strsep(&ptr, " "))) {
+		if (strncmp(ent, val, len) == 0) {
+			val += len;
+			switch(val[0]) {
 			case '=':
-				ptr++;
+				val++;
 			case ' ':
 			case '\0':
-				val = err_strdup(ptr);
+				val = err_strdup(val);
 				break;
 			default:
 				continue;
 			}
+			break;
 		}
 	}
 	fclose(fp);
@@ -704,24 +705,33 @@ static void svc_level(void)
 
 	entry = get_cmdline_entry("softlevel");
 	if (rs_stage == 1) {
-		/* mark network services as started, so nothing will be started */
-		if ((entry && strcmp(entry, rs_runlevel_name[RS_RUNLEVEL_NONETWORK]) == 0) ||
-		    (rs_runlevel == RS_RUNLEVEL_NONETWORK)) {
-			for (i = 0; i < SERVICES.virt_count; i++)
-				if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
-					svc_mark(SERVICES.virt_svcdeps[i]->svc, RS_SVC_STAT_STAR);
-			svc_mark("net", RS_SVC_STAT_STAR);
-		}
-		else if ((entry && strcmp(entry, rs_runlevel_name[RS_RUNLEVEL_SINGLE]) == 0) ||
-		    (rs_runlevel == RS_RUNLEVEL_SINGLE)) {
-			snprintf(path, sizeof(path), "%s/.%s", SV_SVCDIR,
-					rs_runlevel_name[RS_RUNLEVEL_SINGLE]);
-			DEPTREE.list = rs_svclist_load(path);
-		}
+		goto single;
+		goto nonetwork;
 		goto noinit;
+	}
+	else if (rs_stage == 2) {
+		ptr = svc_runlevel(NULL);
+		if (ptr && strcmp(ptr, rs_runlevel_name[RS_RUNLEVEL_SINGLE]) == 0)
+			goto single;
 	}
 	free(entry);
 
+nonetwork:
+	/* mark network services as started, so nothing will be started */
+	if ((entry && strcmp(entry, rs_runlevel_name[RS_RUNLEVEL_NONETWORK]) == 0) ||
+	    (rs_runlevel == RS_RUNLEVEL_NONETWORK)) {
+		for (i = 0; i < SERVICES.virt_count; i++)
+			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
+				svc_mark(SERVICES.virt_svcdeps[i]->svc, RS_SVC_STAT_STAR);
+		svc_mark("net", RS_SVC_STAT_STAR);
+	}
+single:
+	if ((entry && strcmp(entry, rs_runlevel_name[RS_RUNLEVEL_SINGLE]) == 0) ||
+	    (rs_runlevel == RS_RUNLEVEL_SINGLE)) {
+		snprintf(path, sizeof(path), "%s/.%s", SV_SVCDIR,
+				rs_runlevel_name[RS_RUNLEVEL_SINGLE]);
+		DEPTREE.list = rs_svclist_load(path);
+	}
 noinit:
 	entry = get_cmdline_entry("noinit");
 	if (!entry)
@@ -1104,7 +1114,7 @@ static void svc_stage(const char *cmd)
 			svc_start = 1;
 			unlink(buf);
 		}
-		else if (rs_stage == 1)
+		else if (rs_stage == 1 || rs_stage == 2)
 			svc_level(); /* make SysVinit compatible runlevel */
 		argv[4] = command;
 
