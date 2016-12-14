@@ -23,14 +23,14 @@ fi
 
 :	${name=${0##*/}}
 :	${SV_LIBDIR:=${0%/*bin/*}}
-source ${SV_LIBDIR}/sh/runscript-functions ||
+. ${SV_LIBDIR}/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 
 help_message()
 {
 	cat <<-EOH
  Usage: sp [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
-   COMMAND: [add|del|new|remove|reload|start|stop|status|zap]
+   COMMAND: [add|del|new|remove|reload|start|stop|status|scan|zap]
    COMMAND: (CGroup) cgroup_remove_service
    OPTIONS: new SERVICE [-l]
      -D, --nodeps     Disable dependencies
