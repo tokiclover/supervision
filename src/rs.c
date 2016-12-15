@@ -700,26 +700,33 @@ static const char *svc_runlevel(const char *level)
 
 static void svc_level(void)
 {
-	char *entry = NULL, path[512], *ptr;
+	char *entry = NULL, path[512], *ptr, *old, *ent;
 	int i;
 
 	entry = get_cmdline_entry("softlevel");
 	if (rs_stage == 1) {
-		goto single;
-		goto nonetwork;
 		goto noinit;
 	}
 	else if (rs_stage == 2) {
-		ptr = svc_runlevel(NULL);
+		ptr = (char*)svc_runlevel(NULL);
 		if (ptr && strcmp(ptr, rs_runlevel_name[RS_RUNLEVEL_SINGLE]) == 0)
 			goto single;
 	}
-	free(entry);
 
+noinit:
+	old = entry;
+	entry = ent = get_cmdline_entry("noinit");
+	/* mark no started services as stopped */
+	if (entry) {
+		while ((ptr = strsep(&ent, ",")))
+			svc_mark(ptr, RS_SVC_STAT_STAR);
+		free(entry);
+	}
+	entry = old;
 nonetwork:
 	/* mark network services as started, so nothing will be started */
 	if ((entry && strcmp(entry, rs_runlevel_name[RS_RUNLEVEL_NONETWORK]) == 0) ||
-	    (rs_runlevel == RS_RUNLEVEL_NONETWORK)) {
+		(rs_runlevel == RS_RUNLEVEL_NONETWORK)) {
 		for (i = 0; i < SERVICES.virt_count; i++)
 			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
 				svc_mark(SERVICES.virt_svcdeps[i]->svc, RS_SVC_STAT_STAR);
@@ -732,14 +739,8 @@ single:
 				rs_runlevel_name[RS_RUNLEVEL_SINGLE]);
 		DEPTREE.list = rs_svclist_load(path);
 	}
-noinit:
-	entry = get_cmdline_entry("noinit");
-	if (!entry)
-		return;
-	/* mark no started services as stopped */
-	while ((ptr = strsep(&entry, ",")))
-		svc_mark(ptr, RS_SVC_STAT_STAR);
-	free(entry);
+
+	if (entry) free(entry);
 }
 
 static int svc_log(const char *fmt, ...)
@@ -1281,6 +1282,7 @@ rc:
 			rs_runlevel = opt;
 			setenv("RS_RUNLEVEL", rs_runlevel_name[opt], 1);
 			svc_stage(NULL);
+			exit(EXIT_SUCCESS);
 		}
 	}
 
@@ -1291,9 +1293,9 @@ rc:
 					"(run level)\n", prgname);
 		}
 		else {
-			ERR("invalid arguments -- `%s...'\n", argv[optind]);
-			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
-					"(service command)\n", prgname);
+			ERR("insuficient arguments -- `%s ...'\n", argv[optind]);
+			fprintf(stderr, "Usage: %s [OPTIONS] %s COMMAND [ARGUMENTS] "
+					"(service command)\n", prgname, argv[optind]);
 			fprintf(stderr, "       %s -{0|1|2|3} stage "
 					"(init-stage)\n", prgname);
 		}
