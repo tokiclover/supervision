@@ -16,6 +16,8 @@ Support SysVinit compatible {halt,poweroff,reboot,shutdown} alias with:
 - shutdown default to single runlevel (/etc/nologin is not created);
 as the default behaviour of SysVinit utilities;
 
+Added sv-shutdown(8) manual page.
+
 0.12.5:
 
 Fixed setting up configuration script for svlogd(8) because it does not accept
