@@ -1,0 +1,104 @@
+.\"
+.\" CopyLeft (c) 2016 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH SV-SHUTDOWN 8 "2016-12-12" "0.12.6" "System Halt Utility"
+.SH NAME
+sv-shutdown \- utility to manage system halt/reboot
+.SH DESCRIPTION
+.B sv-shutdown
+is a utility to manage system halt and reboot when
+.B rs
+is used as init-system or service-manager.
+The utility can be used with SysVinit utility name aliases, namely,
+.B {halt,poweroff,reboot,shutdown}
+to adopt the behaviour of the said utility. This means that the utility will
+halt the system if called as
+.B halt
+, poweroff if called as
+.B poweroff
+, put the system to single runlevel if called as
+.B shutdown
+without argument.
+.B sh-shutdown
+requires that an action
+.I --{poweroff|reboot|halt}
+to be specified.
+.SH SYNOPSIS
+.B sv-shutdown
+.RB [\| OPTIONS \| ]
+.RB \| [ACTION] \|
+.RB \| (TIME) \|
+.RB [\| MESSAGE \|]
+
+The
+.B TIME
+argument is only required when called as
+.B shutdown.
+And the
+.B ACTION
+is reuired only if called as
+.B sv-shutdown
+, SysVinit aliases have default actions as previously said above.
+
+.B shutdown
+.RB [\| -krhPHfFnc \|]
+.RB \| TIME \|
+.RB [\| MESSAGE \|]
+
+.B halt \| poweroff \| reboot
+.RB [\| -fnp \|]
+
+.SH OPTIONS
+.TP
+.B \-6 \| \-r \| \-\-reboot
+Reboot the system after shutdown
+.TP
+.B \-0 \| \-s \| \-\-shutdown
+Action to shutdown the system
+.TP
+.B \-H \| \-h \| \-\-halt
+Action to halt the system (equivalent to --poweroff unless --force is used)
+.TP
+.B \-P \| \-p \| \-\-poweroff
+Action to poweroff the msystem (equivalent to --shutdown unless
+.B shutdown
+alias is used)
+.TP
+.B \-f \| \-\-fast
+"Fast boot", skip
+.B fsck(8)
+on reboot
+.TP
+.B \-F \| \--fsck
+Force filesystem check
+.B fsck(8)
+on reboot
+.TP
+.B \-n \| \--nosync
+Do not sync before calling
+.B shutdown
+(default to sync)
+.TP
+.B \-c \| \-\-cancel
+Cancell a previous and waiting call to shutdown
+.TP
+.B \-k \| \-\-message
+Broadcast only the message to everyone
+.TP
+.B \-u \| \-\-usage
+Print the help message
+.TP
+.B \-v \| \-\-version
+Print version string message
+.SH "SEE ALSO"
+.BR supervision (5)
+.BR rs (8)
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"

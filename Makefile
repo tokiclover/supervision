@@ -228,6 +228,7 @@ install: install-dir install-dist install-sv-svcs
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/shutdown
+	$(install_DATA) sv-shutdown.8 $(DESTDIR)$(MANDIR)/man8
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
 	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
