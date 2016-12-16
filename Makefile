@@ -224,10 +224,10 @@ install: install-dir install-dist install-sv-svcs
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/rc
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/service
-	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/halt \
-		$(DESTDIR)$(libdir)/sbin/poweroff \
-		$(DESTDIR)$(libdir)/sbin/reboot \
-		$(DESTDIR)$(libdir)/sbin/shutdown
+	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/halt
+	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
+	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
+	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/shutdown
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
 	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
@@ -302,7 +302,9 @@ ifdef SYSVINIT
 	rm -f $(DESTDIR)$(libdir)/sbin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5* $(DESTDIR)/$(MANDIR)/man8/rs.8*
+	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5 \
+		$(DESTDIR)/$(MANDIR)/man8/rs.8 \
+		$(DESTDIR)/$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(libdir)/opt/%) $(DESTDIR)$(libdir)/opt/cmd
 	for svc in $(dist_SVC_INSTANCES); do \
