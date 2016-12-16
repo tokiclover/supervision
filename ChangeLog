@@ -7,7 +7,14 @@ modified;
 Make `rc' alias work again especially with `single' runlevel;
 Make `rc' compatible runlevel work again with `softlevel={single|nonetwork}'
 kernel command line argument on Linux;
+
 Synced sv-shutdown to v0.12.5 (was out of date);
+Support SysVinit compatible {halt,poweroff,reboot,shutdown} alias with:
+- reboot default to reboot;
+- poweroff default to poweroff;
+- halt default to halt;
+- shutdown default to single runlevel (/etc/nologin is not created);
+as the default behaviour of SysVinit utilities;
 
 0.12.5:
 
