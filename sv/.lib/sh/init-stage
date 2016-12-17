@@ -223,8 +223,10 @@ elif [ "${1}" = "-2" ]; then
 	#
 	svc_rsh
 elif [ "${1}" = "-3" ]; then
-	rs -3 stage
-
+	case "${ACTION}" in
+		(reboot|shutdown) rs "${ACTION}";;
+		(*)    ACTION=  ; rs -3 stage   ;;
+	esac
 	#
 	# CGroup clean up
 	#
