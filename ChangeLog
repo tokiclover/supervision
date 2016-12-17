@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.6.1:
+
+Tiny fix for s6 (v2) init-stage; and tiny init-stage clean up; tiny fix when rs
+binary is called as rc.
+
 0.12.6:
 
 Added some bits to warn users to update the dependency cache when a service was
