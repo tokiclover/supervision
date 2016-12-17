@@ -1076,6 +1076,7 @@ static void svc_stage(const char *cmd)
 	svc_quiet = 0;
 	snprintf(buf, sizeof(buf), "%d", rs_stage);
 	setenv("RS_STAGE", buf, 1);
+	setenv("RS_RUNLEVEL", rs_runlevel_name[rs_runlevel], 1);
 	snprintf(buf, sizeof(buf), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
 
 	if (rs_stage == 0 || command == NULL) /* force service command */
@@ -1172,9 +1173,8 @@ int main(int argc, char *argv[])
 	char on[8] = "1", off[8] = "0";
 
 	/* Show help if insufficient args */
-	if (argc < 2) {
+	if (argc < 2)
 		help_message(1);
-	}
 
 	/* Parse options */
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
@@ -1220,16 +1220,16 @@ int main(int argc, char *argv[])
 	if ((argc-optind) < 1)
 		help_message(1);
 
-	unsetenv("RS_STAGE");
-	unsetenv("RS_RUNLEVEL");
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
 
 	if (strcmp(prgname, "service") == 0)
 		goto service;
-	else if (strcmp(prgname, "rc") == 0)
+	else if (strcmp(prgname, "rc") == 0) {
+		setenv("SVC_DEBUG", off, 1);
 		goto rc;
+	}
 	else if (strcmp(argv[optind], "stage") == 0) {
 		setenv("SVC_DEBUG", off, 1);
 		if (rs_stage >= 0)
@@ -1251,9 +1251,9 @@ int main(int argc, char *argv[])
 
 rc:
 	/* support SystemV compatiblity rc command */
-	for (opt = 0; rs_runlevel_name[opt]; opt++) {
-		if (strcmp(argv[optind], rs_runlevel_name[opt]) == 0) {
-			switch(opt) {
+	for (rs_runlevel = 0; rs_runlevel_name[rs_runlevel]; rs_runlevel++) {
+		if (strcmp(argv[optind], rs_runlevel_name[rs_runlevel]) == 0) {
+			switch(rs_runlevel) {
 			case RS_RUNLEVEL_REBOOT:
 			case RS_RUNLEVEL_SHUTDOWN:
 				rs_stage = 3;
@@ -1265,7 +1265,7 @@ rc:
 				/* stop stage-2 */
 				ptr = (char *)svc_runlevel(NULL);
 				if (ptr && strcmp(ptr, rs_runlevel_name[RS_RUNLEVEL_DEFAULT]) == 0) {
-					rs_runlevel = opt, rs_stage = 2;
+					rs_stage = 2;
 					DEPTREE.list = rs_svclist_load(NULL);
 					svc_stage(rs_svc_cmd[RS_SVC_CMD_STOP]);
 				}
@@ -1279,34 +1279,33 @@ rc:
 				rs_stage = 0;
 				break;
 			}
-			rs_runlevel = opt;
-			setenv("RS_RUNLEVEL", rs_runlevel_name[opt], 1);
 			svc_stage(NULL);
 			exit(EXIT_SUCCESS);
 		}
 	}
 
-	if (rs_runlevel == -1) {
-		if (strcmp(prgname, "rc") == 0) {
-			ERR("invalid run level -- `%s'\n", argv[optind]);
-			fprintf(stderr, "Usage: %s {nonetwork|single|sysinit|boot|default|shutdown|reboot} "
-					"(run level)\n", prgname);
-		}
-		else {
-			ERR("insuficient arguments -- `%s ...'\n", argv[optind]);
-			fprintf(stderr, "Usage: %s [OPTIONS] %s COMMAND [ARGUMENTS] "
-					"(service command)\n", prgname, argv[optind]);
-			fprintf(stderr, "       %s -{0|1|2|3} stage "
-					"(init-stage)\n", prgname);
-		}
-		exit(EXIT_FAILURE);
+	if (strcmp(prgname, "rc") == 0) {
+		ERR("invalid run level -- `%s'\n", argv[optind]);
+		fprintf(stderr, "Usage: %s {nonetwork|single|sysinit|boot|default|shutdown|reboot} "
+				"(run level)\n", prgname);
 	}
+	else {
+		ERR("invalid/insuficient arguments -- `%s ...'\n", argv[optind]);
+		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
+				"(service command)\n", prgname);
+		fprintf(stderr, "       %s -{0|1|2|3} stage "
+				"(init-stage)\n", prgname);
+	}
+	exit(EXIT_FAILURE);
 
 scan:
 	setenv("SVCDEPS_UPDATE", on, 1);
 	execv(SV_DEPGEN, &argv[optind]);
 	ERROR("Failed to execv(%s, &argv[optind])", SV_DEPGEN);
+
 service:
+	unsetenv("RS_STAGE");
+	unsetenv("RS_RUNLEVEL");
 	/* handle service command or
 	 * support systemV compatiblity rc command
 	 */
