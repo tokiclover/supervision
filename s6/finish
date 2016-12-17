@@ -11,17 +11,17 @@ exec >/dev/console 2>&1
 :	${INIT_STAGE=/lib/sv/sh/init-stage}
 
 case "${1}" in
-	(-[6ir])     LEVEL=6 ACTION=reboot  ;;
-	(-[07hpqst]) LEVEL=0 ACTION=shutdown;;
+	(-[6ir]|reboot)            RUNLEVEL=6 ACTION=reboot  ;;
+	(-[07hpqst]|halt|poweroff) RUNLEVEL=0 ACTION=shutdown;;
 esac
-:	${LEVEL:=0}
+:	${RUNLEVEL:=0}
 :	${ACTION:=shutdown}
 
 if [ -x ${INIT_STAGE} ]; then
-	exec env - ACTION=${ACTION} LEVEL=${LEVEL} ${INIT_STAGE} -3
+	exec env - ACTION="${ACTION}" RUNLEVEL="${LEVEL}" ${INIT_STAGE} -3
 fi
 s6-svc -D -T 10000 ${SV_RUNDIR}/*
-RUNLEVEL=${LEVEL} rc ${ACTION}
+RUNLEVEL="${RUNLEVEL}" rc "${ACTION}"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
