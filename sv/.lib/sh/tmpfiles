@@ -19,15 +19,16 @@
 # https://github.com/OpenRC/openrc/blob/master/sh/tmpfiles.sh.in
 #
 
-CHECKPATH="/lib/sv/bin/checkpath"
+SV_LIBDIR="${0%/sh/*}"
+CHECKPATH="${SV_LIBDIR}/bin/checkpath"
 NAME="${0##*/}"
 
 _checkprefix()
 {
-	local pfx="${1}" arg
+	local prefix="${1}" arg
 	shift
 	for arg; do
-		case "${pfx}" in
+		case "${prefix}" in
 			${arg}*) return 0 ;;
 		esac
 	done
@@ -36,8 +37,8 @@ _checkprefix()
 
 _warninvalid()
 {
-	echo "${NAME}: Ignoring invalid entry: line ${LINENUM}: file ${FILE}" >&2
-	error=$((${error}+1))
+	echo "${NAME}: invalid entry -- line: ${LINENUM}: file ${FILE}" >&2
+	ERROR=$((${ERROR}+1))
 }
 
 _relabel()
@@ -203,10 +204,10 @@ _r()
 	${REMOVE} || return 0
 
 	for path in ${paths}; do
-		if [ -f "${path}" ]; then
-			${DRYRUN} rm -f "${path}"
-		elif [ -d "${path}" ]; then
-			${DRYRUN} rmdir "${path}"
+		if [ -f ${path} ]; then
+			${DRYRUN} rm -f ${path}
+		elif [ -d ${path} ]; then
+			${DRYRUN} rmdir ${path}
 		fi
 	done
 }
@@ -221,7 +222,7 @@ _R()
 	${REMOVE} || return 0
 
 	for path in ${paths}; do
-		[ -d "${path}" ] && ${DRYRUN} rm -rf --one-file-system "${path}"
+		[ -d ${path} ] && ${DRYRUN} rm -rf --one-file-system ${path}
 	done
 }
 
@@ -276,19 +277,19 @@ tmpfiles_basenames= tmpfiles_d=
 # `/etc/tmpfiles.d/foo.conf' supersedes `/usr/lib/tmpfiles.d/foo.conf'.
 # `/run/tmpfiles/foo.conf' will always be read after `/etc/tmpfiles.d/bar.conf'
 for d in ${tmpfiles_dirs}; do
-	[ -d "${d}" ] && for f in ${d}/*.conf ; do
+	[ -d "${d}" ] && for f in ${d}*.conf ; do
 		case "${f}" in
 			*/systemd.conf|*/systemd-*.conf) continue ;;
 		esac
 		[ -f "${f}" ] && tmpfiles_basenames="${tmpfiles_basenames}\n${f##*/}"
 	done # for f in ${d}
 done # for d in ${tmpfiles_dirs}
-tmpfiles_basenames="$(echo -e "${tmpfiles_basenames}" | sort -u)"
+tmpfiles_basenames="$(printf "${tmpfiles_basenames}\n" | sort -u)"
 
 for b in ${tmpfiles_basenames}; do
 	real_f=
 	for d in ${tmpfiles_dirs}; do
-		f=${d}/${b}
+		f=${d}${b}
 		[ -f ${f} ] && real_f=${f}
 	done
 	tmpfiles_d="${tmpfiles_d} ${real_f}"
@@ -302,10 +303,10 @@ while [ "${#}" -gt 0 ]; do
 		(--clean)   CLEAN=true   ;; # TODO: Not implemented
 		(--verbose) VERBOSE=true ;;
 		(--dryrun)  DRYRUN=echo  ;;
-		(--exclude-prefix=*) EXCLUDE="${EXCLUDE}${1##--exclude-prefix=} " ;;
-		(--prefix=*) PREFIX="${PREFIX}${1##--prefix=} " ;;
+		(--exclude-prefix=*) EXCLUDE="${EXCLUDE}${1#--exclude-prefix=} ";;
+		(--prefix=*) PREFIX="${PREFIX}${1#--prefix=} " ;;
 		(--help) help_message 0 ;;
-		(*) echo "${NAME}: illegal argument: ${1}" >&2; help_message ;;
+		(*) echo "${NAME}: invalid argument -- ${1}" >&2; help_message ;;
 	esac
 	shift
 done
@@ -317,7 +318,7 @@ fi
 
 ${CREATE} || ${REMOVE} || help_message
 
-error=0
+ERROR=0
 
 # loop through the gathered fragments, sorted globally by filename.
 # `/run/tmpfiles/foo.conf' will always be read after `/etc/tmpfiles.d/bar.conf'
@@ -341,7 +342,7 @@ for FILE in ${tmpfiles_d}; do
 		# Unless we have both command and path, skip this line.
 		[ -n "${path}" ] || continue
 		case "${cmd}" in
-			(\#*|'') continue ;;
+			([#]*|'') continue ;;
 		esac
 
 		while [ "${#cmd}" -gt 1 ]; do
@@ -354,7 +355,7 @@ for FILE in ${tmpfiles_d}; do
 
 		# whine about invalid entries
 		case "${cmd}" in
-			(f|F|w|d|D|p|L|c|C|b|x|X|r|R|z|Z) ;;
+			([fFwdDpLcCbxXrRzZ]) ;;
 			(*) _warninvalid ; continue ;;
 		esac
 
@@ -362,8 +363,8 @@ for FILE in ${tmpfiles_d}; do
 		case "${mode}" in
 			(-|'')
 			case "${cmd}" in
-				(p|f|F) mode=0644 ;;
-				(d|D)   mode=0755 ;;
+				([pfF]) mode=0644 ;;
+				([dD])  mode=0755 ;;
 			esac
 			;;
 		esac
@@ -387,23 +388,19 @@ for FILE in ${tmpfiles_d}; do
 
 		if ${FORCE}; then
 			case "${cmd}" in
-				p|L|c|b) [ -f "${path}" ] && ${DRYRUN} rm -f "${path}"
+				([pLcb]) [ -f "${path}" ] && ${DRYRUN} rm -f "${path}"
 			esac
 		fi
 
 		${VERBOSE} && echo _${cmd} "${@}"
 		_${cmd} "${@}"
-		ret="${?}"
-
-		if [ -z "${DRYRUN}" ]; then
-			case "${ret}" in
-				(0) ;;
-				(*) error=$((${error}+1)) ;;
-			esac
-		fi
+		case "${?}" in
+			(0) ;;
+			(*) [ -z "${DRYRUN}" ] && ERROR=$((${ERROR}+1)) ;;
+		esac
 	done <${FILE}
 done
 
-exit ${error}
+exit ${ERROR}
 
 # vim:fenc=utf-8:ts=2:sw=2:sts=2:noet:ft=sh:
