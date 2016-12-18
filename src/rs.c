@@ -278,7 +278,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 	static int setup = 1;
 	static struct stat st_dep;
 	struct stat st_buf;
-	int state = 0, status, command = 0, retval = 1;
+	int state = 0, status, command = -1, retval = 1;
 	pid_t pid;
 	int i;
 	const char **argv = NULL;
@@ -294,11 +294,13 @@ static int svc_cmd(struct svcrun *run, int flags)
 
 	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state   = RS_SVC_STAT_STAR,
-		status  = svc_state(run->name, RS_SVC_STAT_STAR),
+		status  = svc_state(run->name, RS_SVC_STAT_STAR) ||
+			svc_state(run->name, RS_SVC_STAT_PIDS),
 		command = RS_SVC_CMD_START;
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STOP]) == 0)
 		state   = RS_SVC_MARK_STAR,
-		status  = svc_state(run->name, RS_SVC_STAT_STAR),
+		status  = svc_state(run->name, RS_SVC_STAT_STAR) ||
+			svc_state(run->name, RS_SVC_STAT_PIDS),
 		command = RS_SVC_CMD_STOP;
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_ADD]) == 0)
 		command = RS_SVC_CMD_ADD;
