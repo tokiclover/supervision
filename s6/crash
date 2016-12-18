@@ -4,16 +4,15 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-:	${SV_DIR:=/etc/s6}
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/lib/sv/sh/init-stage}
 :	${SV_RUNDIR:=/run/service}
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+INIT_STAGE=/lib/sv/sh/init-stage
 
 if [ -x ${INIT_STAGE} ]; then
 	exec ${INIT_STAGE} -2
 fi
 
-exec env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
+exec /usr/bin/env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
 exec 2>&1
 exec ${SHELL:-sh} -aim
 

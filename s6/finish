@@ -6,9 +6,9 @@
 
 exec >/dev/console 2>&1
 
-:	${SV_DIR:=/etc/s6}
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/lib/sv/sh/init-stage}
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+INIT_STAGE=/lib/sv/sh/init-stage
+[ -d /lib/sv ] && PATH="${PATH}:/lib/sv/bin:/lib/sv/sbin"
 
 case "${1}" in
 	(-[6ir]|reboot)            RUNLEVEL=6 ACTION=reboot  ;;
@@ -18,10 +18,22 @@ esac
 :	${ACTION:=shutdown}
 
 if [ -x ${INIT_STAGE} ]; then
-	exec env - ACTION="${ACTION}" RUNLEVEL="${LEVEL}" ${INIT_STAGE} -3
+	exec /usr/bin/env - ACTION="${ACTION}" RUNLEVEL="${LEVEL}" ${INIT_STAGE} -3
 fi
+
 s6-svc -D -T 10000 ${SV_RUNDIR}/*
 RUNLEVEL="${RUNLEVEL}" rc "${ACTION}"
+
+case "${ACTION}" in
+	(reboot)
+	reboot -pk
+	reboot -f
+	;;
+	(shutdown)
+	halt -p
+	halt -f
+	;;
+esac
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

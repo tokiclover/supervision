@@ -3,16 +3,15 @@
 # $Header:  /etc/s6/init-stage-1                         Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
-:	${SV_DIR=/etc/s6}
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/lib/sv/sh/init-stage}
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+INIT_STAGE=/lib/sv/sh/init-stage
 :	${SV_RUNDIR:=/run/service}
 :	${SV_SERVICE:=/etc/service}
 
 
 mkdir -m 0755 -p "${SV_RUNDIR}"/.s6-svscan
 for link in crash finish; do
-	ln -f -s "${SV_DIR}"/${link} "${SV_RUNDIR}"/.s6-svscan/${link}
+	ln -f -s /etc/s6/${link} "${SV_RUNDIR}"/.s6-svscan/${link}
 done
 
 if [ -x ${INIT_STAGE} ]; then
@@ -33,7 +32,7 @@ case "${SV_RUNDIR}" in
 	;;
 esac
 
-exec env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
+exec /sur/bin/env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
 exec 2>&1
 exec ${SHELL:-sh} -aim
 
