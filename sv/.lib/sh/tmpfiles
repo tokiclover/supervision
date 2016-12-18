@@ -19,6 +19,14 @@
 # https://github.com/OpenRC/openrc/blob/master/sh/tmpfiles.sh.in
 #
 
+if [ -n "${ZSH_VERSION}" ]; then
+	emulate sh
+	NULLCMD=:
+	setopt NO_GLOB_SUBST SH_WORD_SPLIT NULLGLOB
+elif [ -n "${BASH_VERSION}" ]; then
+	shopt -qs nullglob
+fi
+
 SV_LIBDIR="${0%/sh/*}"
 CHECKPATH="${SV_LIBDIR}/bin/checkpath"
 NAME="${0##*/}"
