@@ -1,5 +1,9 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.6.3:
+
+Fixed restart service command--broken in 0.12.5--by initializing a variable;
+
 0.12.6.2:
 
 Removed all the code redundancy in tmpfiles;
