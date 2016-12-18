@@ -181,11 +181,6 @@ __NORETURN__ static int sv_shutdown(char *message)
 	static const char ent[] = "__SV_NAM__";
 	static size_t siz = sizeof(ent)-1;
 
-	if (geteuid()) {
-		fprintf(stderr, "%s: must be the superuser to proceed\n", prgname);
-		exit(EXIT_FAILURE);
-	}
-
 	if (shutdown_action == SV_ACTION_MESSAGE)
 		exit(sv_wall(message));
 	if (message)
@@ -257,6 +252,7 @@ int main(int argc, char *argv[])
 	struct timespec tms;
 	struct tm *now;
 	char *ptr;
+	const char *options;
 	int open_flags = O_CREAT|O_WRONLY|O_NOFOLLOW|O_TRUNC;
 	mode_t open_mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 
@@ -266,19 +262,27 @@ int main(int argc, char *argv[])
 	else
 		prgname++;
 
+	if (geteuid()) {
+		fprintf(stderr, "%s: must be the superuser to proceed\n", prgname);
+		exit(EXIT_FAILURE);
+	}
+
 	if (strcmp(prgname, "reboot") == 0) {
 		reboot_action = RB_AUTOBOOT;
 		shutdown_action = SV_ACTION_REBOOT;
+		options = "dfiknw";
 		goto reboot;
 	}
 	else if (strcmp(prgname, "halt") == 0) {
 		reboot_action = RB_HALT_SYSTEM;
 		shutdown_action = SV_ACTION_SHUTDOWN;
+		options = "dfhinpw";
 		goto reboot;
 	}
 	else if (strcmp(prgname, "poweroff") == 0) {
 		reboot_action = RB_POWER_OFF;
 		shutdown_action = SV_ACTION_SHUTDOWN;
+		options = "dfhinw";
 		goto reboot;
 	}
 
@@ -391,7 +395,7 @@ shutdown:
 	ERR("invalid TIME argument -- `%s'\n", argv[optind]);
 	exit(EXIT_FAILURE);
 reboot:
-	while ((opt = getopt(argc, argv, "dfhinpw")) != -1) {
+	while ((opt = getopt(argc, argv, options)) != -1) {
 		switch (opt) {
 		case 'p':
 			shutdown_action = SV_ACTION_SHUTDOWN;
@@ -403,11 +407,11 @@ reboot:
 		case 'n':
 			reboot_sync = 0;
 			break;
+		case 'w':
+			return EXIT_SUCCESS;
 		case 'd':
 		case 'i':
 		case 'k':
-		case 't':
-		case 'w':
 			/* ignored */
 			break;
 		default:
