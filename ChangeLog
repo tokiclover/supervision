@@ -1,5 +1,12 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.6.2:
+
+Removed all the code redundancy in tmpfiles;
+Fixed init-stage {reboot,shutdown} action when using s6;
+Added safety system {halt,reboot} into s6 init-stage;
+Fixed command line options to sv-shutdown when called as SysV utility;
+
 0.12.6.1:
 
 Tiny fix for s6 (v2) init-stage; and tiny init-stage clean up; tiny fix when rs
