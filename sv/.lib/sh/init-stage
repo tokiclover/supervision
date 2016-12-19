@@ -217,7 +217,7 @@ elif [ "${1}" = "-2" ]; then
 		rs -1 stage; rs -2 stage;" &
 
 	echo $$ >${pidfile}
-	exec ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
+	exec env - PATH=${PATH} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
 	#
 	# Drop into a rescue shell
 	#
