@@ -25,6 +25,23 @@ PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6
 umask 022
 
 #
+# migrate to new sub-dirs
+#
+if [ ! -d ${SV_TMPDIR}/OPTS ]; then
+	mkdir -p ${SV_TMPDIR}/ENVS ${SV_TMPDIR}/OPTS
+	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/ENV
+	for a in ${SV_TMPDIR}/*_ENV; do
+		b="${a##*/}"
+		mv -f ${a} ${SV_TMPDIR}/ENVS/${b%_*}
+	done
+	for a in ${SV_TMPDIR}/*_OPTIONS; do
+		b="${a##*/}"
+		mv -f ${a} ${SV_TMPDIR}/OPTS/${b%_*}
+	done
+	a= b=
+fi
+
+#
 # Use RC config file if requested
 #
 if yesno "${RC_OPTS}"; then
@@ -32,6 +49,13 @@ if yesno "${RC_OPTS}"; then
 :	${RC_INITDIR:=/etc/init.d}
 	SOURCE ${RC_CONFDIR}/${SVC_NAME}
 fi
+
+env_run()
+{
+	SOURCE ${SV_TMPDIR}/OPTS/${SVC_NAME}
+	SOURCE ${SV_TMPDIR}/ENV
+}
+
 
 #
 # Set up runscript environment
@@ -52,7 +76,7 @@ if   [ "${RS_TYPE}" = "rs" ]; then
 #
 elif [ "${RS_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${SV_SVCDIR}/${SVC_NAME}}
-	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/${SVC_NAME}_ENV
+	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/ENVS/${SVC_NAME}
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 
 	#
@@ -64,6 +88,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	fi
 	env_run
+
 :	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
 	SOURCE -d ${SV_SVCDIR}/.opt/SVC_BACKEND
 

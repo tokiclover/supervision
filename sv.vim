@@ -19,7 +19,7 @@ runtime! syntax/sh.vim
 unlet b:current_syntax
 
 syn keyword svKwd begin die end error eval_colors info yesno checkpath warn SOURCE
-syn keyword svKwd env_svc env_sv  svc_cmd svc_down svc_env svc_mark svc_state
+syn keyword svKwd env_del env_svc env_sv  svc_cmd svc_down svc_mark svc_state
 syn keyword svKwd env_rs rs_cmd svc_sig svc_wait svc_zap mountinfo fstabinfo
 syn keyword svKwd start start_pre start_post stop stop_pre stop_post restart
 syn keyword svVars SVC_DEBUG SVC_CONFIGFILE SVC_CMD SVC_OPTS SVC_GROUP SVC_USER

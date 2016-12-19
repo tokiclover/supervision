@@ -779,19 +779,12 @@ static int svc_log(const char *fmt, ...)
 static void svc_zap(const char *svc)
 {
 	int i;
-	char path[BUFSIZ];
-	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL,
-		SV_TMPDIR_STAR, SV_TMPDIR_WAIT, NULL };
-	const char *files[] = { "ENV", "OPTIONS", NULL };
+	char path[512];
+	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL, SV_TMPDIR_STAR,
+		SV_TMPDIR_WAIT, SV_TMPDIR "/ENVS", SV_TMPDIR "/OPTS", NULL };
 
 	for (i = 0; dirs[i]; i++) {
 		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
-		if (!access(path, F_OK))
-			unlink(path);
-	}
-
-	for (i = 0; files[i]; i++) {
-		snprintf(path, sizeof(path), "%s/%s_%s", SV_TMPDIR, svc, files[i]);
 		if (!access(path, F_OK))
 			unlink(path);
 	}

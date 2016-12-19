@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/11/25 21:09:26                      Exp $
+# $Version: 1.4 2016/12/18 21:09:26                      Exp $
 #
 
 __RUNSCRIPT_FUNCTIONS__=1
@@ -46,11 +46,6 @@ waitfile()
 	${SV_LIBDIR}/bin/waitfile "${@}"
 }
 
-env_rs()
-{
-	[ -n "${*}" ] && set_env "RS_OPTIONS" "${@}"
-}
-
 rs_status()
 {
 	local msg
@@ -72,7 +67,7 @@ svc_del()
 }
 svc_zap()
 {
-	rm -f ${SV_TMPDIR}/${SVC_NAME}_[EO]* ${SV_TMPDIR}/*/${SVC_NAME}
+	rm -f ${SV_TMPDIR}/*/${SVC_NAME}
 }
 
 rs_cmd()

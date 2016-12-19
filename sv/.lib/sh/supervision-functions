@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 4.2 2016/12/08 21:09:26                      Exp $
+# $Version: 4.3 2016/12/18 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -325,12 +325,12 @@ svc_use()
 #
 # @FUNCTION: Set persistent env between run/finish
 #
-set_env()
+svc_env()
 {
 	local OPT env
 	case "${1}" in
-		(*_OPTIONS) OPT=${1}; shift;;
-		(*) OPT=${SVC_NAME}_OPTIONS;;
+		(OPTS*|ENV*) OPT="${1}"; shift;;
+		(*) OPT="OPTS/${SVC_NAME}"    ;;
 	esac
 	for env; do
 		eval echo "${env}=\"'\$${env}'\""
@@ -338,29 +338,22 @@ set_env()
 }
 env_svc()
 {
-	[ -n "${@}" ] && set_env "${SVC_NAME}_OPTIONS" "${@}"
+	[ -n "${*}" ] && svc_env "OPTS/${SVC_NAME}" "${@}"
 }
-env_sv()
+ENV_SVC()
 {
-	[ -n "${@}" ] && set_env "SV_OPTIONS" "${@}"
+	[ -n "${*}" ] && svc_env "ENV" "${@}"
 }
-del_env()
+env_del()
 {
 	local OPT env
 	case "${1}" in
-		(*_OPTIONS) OPT=${1}; shift;;
-		(*) OPT=${SVC_NAME}_OPTIONS;;
+		(OPTS*|ENV*) OPT="${1}"; shift;;
+		(*) OPT="OPTS/${SVC_NAME}"    ;;
 	esac
 	for env; do
 		sed -e "/^${env}=.*$/d" -i ${SV_TMPDIR}/${OPT}
 	done
-}
-
-env_run()
-{
-	SOURCE "${SV_TMPDIR}"/${SVC_NAME}_OPTIONS
-	SOURCE "${SV_TMPDIR}"/RS_OPTIONS
-	SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 }
 
 svc_scan()

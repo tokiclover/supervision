@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.4 2016/12/12                               Exp $
+# $Version: 1.5 2016/12/18                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -107,13 +107,13 @@ svc_tmpdir()
 	ln -fs "${SV_LIBDIR}"/opt "${SV_RUNDIR}"/.opt
 	[ -d ${SV_SVCDIR}/.env ] && cp -a ${SV_SVCDIR}/.env ${SV_TMPDIR}
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/deps "${SV_TMPDIR}"/fail \
+		${SV_TMPDIR}/ENVS ${SV_TMPDIR}/OPTS \
 		"${SV_TMPDIR}"/pids "${SV_TMPDIR}"/star "${SV_TMPDIR}"/wait
 	#
 	# Initialization
 	#
-	echo "${__SV_NAM__}:${SV_CMD}" >"${SV_TMPDIR}"/sv
-	OS_NAME=$(uname -s)
-	env_sv OS_NAME
+	OS_NAME="$(uname -s)"
+	ENV_SVC OS_NAME
 
 	#
 	# Set up CGroup
@@ -126,7 +126,7 @@ svc_tmpdir()
 			(0) SV_CGROUP=Yes;;
 			(*) SV_CGROUP=No ;;
 		esac
-		env_sv SV_CGROUP
+		ENV_SVC SV_CGROUP
 	fi
 }
 
