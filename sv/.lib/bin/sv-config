@@ -100,7 +100,7 @@ sv_backend()
 		BIN=chpst COMMANDS="${COMMANDS} __PRECMD__ __SCANCMD__"
 		PREFIX='' SIGNALS="${SIGNALS} __SIGRELD__"
 		__SIGWTUP__='-w ${SVC_WAIT_UP:-10} up' __SIGWDWN__='-w ${SVC_WAIT_DOWN:-10} down'
-		__SCANCMD__='kill -CONT \$(cat \${SV_TMPDIR}/runsvdir.pid)'
+		__SCANCMD__='pkill -CONT -F \${SV_TMPDIR}/runsvdir.pid'
 		__SIGSTRT__=up __SIGSTOP__=down __SIGSONCE__=once __SIGPAUSE__=pause
 		__SIGCONT__=cont __SIGHUP__=hup __SIGALRM__=alarm __SIGINT__=interrupt
 		__SIGQUIT__=quit __SIGUSR1__=1 __SIGUSR2__=2 __SIGTERM__=term
