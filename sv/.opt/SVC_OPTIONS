@@ -94,7 +94,8 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	if [ "${__cmd_dir__}" = "log" ]; then
 
 :	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
-:	${SVC_USER:=root:root}
+:	${SVC_USER:=root}
+:	${SVC_GROUP:=root}
 :	${LOG_MODE:=0755}
 :	${LOG_PROC:=gzip -nq}
 :	${LOG_SIZE:=2048000}
