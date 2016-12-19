@@ -132,25 +132,20 @@ svc_tmpdir()
 
 kill_svscan()
 {
-	local pid umount_proc=false
+	local args cmd dir pid
 
 	if [ "${OS_NAME}" =      "FreeBSD" ]; then
-		if ! mountinfo --quiet /proc; then
-			mount -t procfs proc /proc || return
-			umount_proc=true
-		fi
+		args=-fl
+	else
+		args=-ax
 	fi
-
-	for pid in $(pgrep "${SV_CMD}"); do
-		read cmdline </proc/${pid}/cmdline
-		case "${cmdline}" in
-			(*${SV_RUNDIR}*) break;;
-			(*) pid=;;
-		esac
+	pgrep ${args} "${SV_CMD}" | \
+	while read pid cmd dir args; do
+		if [ "${dir}" = "${SV_RUNDIR}" ]; then
+			kill -TERM ${pid} 2>${NULL}
+			return
+		fi
 	done
-	[ -n "${pid}" ] && kill -TERM ${pid} 2>${NULL}
-
-	${umount_proc} && umount /proc
 }
 
 case ${SV_CMD} in
@@ -194,26 +189,23 @@ elif [ "${1}" = "-2" ]; then
 	#
 	sh -c ". ${SV_LIBDIR}/sh/runscript-functions;
 		pidfile=${pidfile}; pid=; count=0; SVC_NAME=${SV_CMD};
-		umount_proc=false;
 		svc_wait 10 ${pidfile};
 		if [ ${SV_CMD} = runsvdir ]; then
 		if [ '${OS_NAME}' = 'FreeBSD' ]; then
-			if ! mountinfo --quiet /proc; then
-				mount -t procfs proc /proc && umount_proc=true;
-			fi;
+			args=-fl;
+		else
+			args=-ax;
 		fi;
 		while [ -e ${pidfile} ]; do
-			for pid in \$(pgrep ${SV_CMD}); do
-				read cmdline </proc/\${pid}/cmdline;
-				case \${cmdline} in
-					(*${SV_RUNDIR}*) echo \${pid} >${pidfile}; break 2;;
-				esac;
+			pgrep \${args} ${SV_CMD} | while read pid cmd dir args; do
+				if [ x\${dir} = x${SV_RUNDIR} ]; then
+					echo \${pid} >${pidfile}; break 2;
+				fi;
 			done;
 			sleep 1;
 			count=\$((\${count}+1));
 			[ \${count} = 100 ] && break;
 		done;
-		\${umount_proc} && umount /proc;
 		fi;
 		rs -1 stage; rs -2 stage;" &
 
