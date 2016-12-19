@@ -81,10 +81,10 @@ fi
 case "${RS_TYPE}" in
 	(rs) rs_cmd "${@}";;
 	(sv)
-		export SVC_DEPS SVC_DEBUG RS_STAGE RS_TYPE
+		export SVC_DEPS SVC_DEBUG RS_RUNLEVEL RS_STAGE RS_TYPE
 		set | while read line; do
 			case "${line}" in
-				(COLUMNS*|SVC_DEPS*|SVC_DEBUG*|RS_TYPE*)
+				(COLUMNS=*|SVC_DEPS=*|SVC_DEBUG=*|RS_RUNLEVEL=*|RS_STAGE=*|RS_TYPE=*)
 					printf "${line}\n";;
 			esac
 		done >${SV_TMPDIR}/${SVC_NAME}_ENV
