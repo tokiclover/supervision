@@ -452,16 +452,22 @@ svc_cmd()
 	end "${?}"
 }
 
-svc_env()
+svc_environ()
 {
 	local dir file
-	for dir in ../.env env; do
-		[ -d "${SV_RUNDIR}/${dir}" ] && ENV_CMD="${ENV_CMD} envdir ${SV_RUNDIR}/${dir}"
+	for dir in ${SV_RUNDIR}/.env ${SV_RUNDIR}/${SVC_NAME}/env; do
+		[ -d ${dir} ] && ENV_CMD="${ENV_CMD} envdir ${dir}"
 	done
 	for file in SVC_USER SVC_GROUP; do
-		[ -f "${SV_RUNDIR}/env/${file}" ] && eval ${file}=$(cat "${SV_RUNDIR}/env/${file}")
+		[ -f "${SV_RUNDIR}/${SVC_NAME}/env/${file}" ] &&
+			read ${file} <${SV_RUNDIR}/${SVC_NAME}/env/${file}
 	done
-	ENV_OPTS="${ENV_OPTS} ${SVC_USER:+envuidgid ${SVC_USER}${SVC_GROUP:+:}${SVC_GROUP}}"
+	if [ -z "${ENV_CMD}" ]; then
+	ENV_CMD="${SVC_USER:+envuidgid}"
+	ENV_OPTS="${ENV_OPTS} ${SVC_USER}${SVC_GROUP:+${SVC_GROUP}}"
+	else
+	ENV_OPTS="${ENV_OPTS} ${SVC_USER:+envuidgid} ${SVC_USER}${SVC_GROUP:+${SVC_GROUP}}"
+	fi
 }
 
 svc_run()

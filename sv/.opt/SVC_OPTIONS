@@ -71,7 +71,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	#
 	# Use ENV dir(s) if requested
 	#
-	yesno "${ENV_DIR}" && svc_env
+	yesno "${ENV_DIR}" && svc_environ
 
 	#
 	# Set default getty options
