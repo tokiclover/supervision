@@ -214,14 +214,17 @@ svc_start_pre()
 	fi
 	if ! [ -n "${SVC_CMD}" -a -x "${SVC_CMD}" ]; then
 		error "Command not found."
-		val=1 eval ${SVC_FAILURE}
+		val=1
+		eval ${SVC_FAILURE}
 	fi
 	if ! svc_config; then
 		error "Missing configuration files"
-		val=2 eval ${SVC_FAILURE}
+		val=2
+		eval ${SVC_FAILURE}
 	fi
 	if ! svc_command start_pre; then
-		val=3 eval ${SVC_FAILURE}
+		val=3
+		eval ${SVC_FAILURE}
 	fi
 
 	#
@@ -360,7 +363,7 @@ env_run()
 	SOURCE "${SV_TMPDIR}"/SV_OPTIONS
 }
 
-svc_deps()
+svc_scan()
 {
 	SVCDEPS_UPDATE=1 ${SV_LIBDIR}/sh/dep "${SVC_NAME}" "${@}"
 }
@@ -379,7 +382,7 @@ svc_desc()
 svc_command()
 {
 	if command -v ${1} >${NULL} 2>&1 && ! eval ${1}; then
-		error "Failed to exec ${1}()"
+		error "Failed to execute ${1} shell function"
 		return 1
 	else
 		return 0
@@ -396,16 +399,16 @@ svc_commands()
 
 	if     isin ${cmd} ${SVC_STARTED_COMMANDS}; then
 		if ! ${started}; then
-			error "service not started."
+			error "cannot execute ${cmd} -- service not started"
 			return 2
 		fi
 	elif   isin ${cmd} ${SVC_STOPPED_COMMANDS}; then
 		if ${started}; then
-			error "service is started."
+			error "cannot execute ${cmd} -- service is started"
 			return 2
 		fi
 	elif ! isin ${cmd} ${SVC_COMMANDS}; then
-		error "No command found."
+		error "cannot execute ${cmd} -- no command found"
 		return 1
 	fi
 
@@ -422,13 +425,13 @@ svc_commands()
 
 svc_cmd()
 {
-	local arg cmd opt pfx=svc_ ret
+	local arg cmd opt pfx=svc_
 	for arg; do
 		case "${1}" in
-			(add|del|desc|remove|zap)    cmd=${1} ;;
-			(reload|restart|start|stop|status) cmd=${1} ;;
-			(cgroup_remove_service) cmd=${1} pfx= ;;
-			(scan) cmd=deps ;;
+			(add|del|desc|remove|zap)  cmd="${1}" ;;
+			(reload|restart|start|stop|status) cmd="${1}" ;;
+			(cgroup_remove_service) cmd="${1}" pfx= ;;
+			(scan) cmd=scan ;;
 			(*) opt='"${@}"' cmd=commands; break  ;;
 		esac
 		shift
@@ -438,18 +441,15 @@ svc_cmd()
 
 	if [ "${RS_TYPE}" = "rs" ]; then
 		case "${cmd}" in
-			(start|stop|status) pfx='rs_cmd ';;
+			(restart|start|stop|status) pfx='rs_cmd ';;
 		esac
 	fi
-	case "${cmd}" in
-		(add|desc|start)
-			svc_state -e || { error "Inexistent service"; return 2; };;
-	esac
+
+	svc_state -e || { error "Inexistent service"; return 2; }
+
 	begin "service ${cmd}: "
 	eval ${pfx}${cmd} ${opt}
-	ret="${?}"
-	end "${ret}"
-	return "${ret}"
+	end "${?}"
 }
 
 svc_env()
