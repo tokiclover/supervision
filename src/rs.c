@@ -127,6 +127,7 @@ static const char *const env_list[] = {
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
 	"COLUMNS", "LINES", "SVC_DEBUG", "SVC_DEPS", "SVC_WAIT",
+	"UID", "GID", "EUID", "EGID",
 	"RS_RUNLEVEL", "RS_STAGE", NULL
 };
 
@@ -273,8 +274,8 @@ __NORETURN__ static void help_message(int exit_val)
 
 static int svc_cmd(struct svcrun *run, int flags)
 {
-	static char nodeps_arg[16] = "--nodeps", deps_arg[8] = "--deps";
-	static char type_rs[8] = "--rs", type_sv[8] = "--sv";
+	static char *deps[2] = { "--deps", "--nodeps" };
+	static char *type[2] = { "--rs", "--sv" };
 	static int setup = 1;
 	static struct stat st_dep;
 	struct stat st_buf;
@@ -377,10 +378,10 @@ static int svc_cmd(struct svcrun *run, int flags)
 
 	/* get service type */
 	if (S_ISDIR(st_buf.st_mode))
-		argv[1] = type_sv;
+		argv[1] = type[1];
 	else
-		argv[1] = type_rs;
-	argv[2] = deps_arg;
+		argv[1] = type[0];
+	argv[2] = deps[0];
 
 	/* check service mtime */
 	if (st_buf.st_mtim.tv_sec > st_dep.st_mtim.tv_sec)
@@ -435,7 +436,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 			goto reterr;
 		}
 		else
-			argv[2] = nodeps_arg;
+			argv[2] = deps[1];
 	}
 
 	if (!svc_quiet)
@@ -1136,8 +1137,10 @@ static void svc_stage(const char *cmd)
 		else if (level == 3) {
 			level = 0;
 			/* close the logfile because rootfs will be mounted read-only */
-			if (!fclose(logfp) || !close(logfd))
-				logfd = 0, logfp = NULL;
+			if (!fclose(logfp))
+				logfd = 0;
+			if (!close(logfd))
+				logfp = NULL;
 			/* and finaly start stage-3 */
 			command = rs_svc_cmd[RS_SVC_CMD_START];
 			svc_start = 1;
@@ -1297,8 +1300,6 @@ rc:
 					DEPTREE.list = rs_svclist_load(NULL);
 					svc_stage(rs_svc_cmd[RS_SVC_CMD_STOP]);
 				}
-				rs_stage = 1;
-				break;
 			case RS_RUNLEVEL_NONETWORK:
 			case RS_RUNLEVEL_BOOT:
 				rs_stage = 1;
