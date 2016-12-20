@@ -188,11 +188,11 @@ static int svc_stage_command(int stage, int argc, const char *argv[], const char
 
 /*
  * set service status
- * @svc: service name;
+ * @svc: service name; or @run instead;
  * @status: int value [dfrs]
  * @return: 0 on success;
  */
-static int svc_mark(const char *svc, int status);
+static int svc_mark(const char *svc, int status, const char *what);
 
 /* simple rc compatible runlevel handler*/
 static void svc_level(void);
@@ -311,24 +311,56 @@ static int svc_cmd(struct svcrun *run, int flags)
 		return 0;
 	}
 	else if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_STATUS]) == 0) {
-		if (svc_state(run->name, RS_SVC_STAT_STAR) ||
+		if (svc_state(run->name, RS_SVC_STAT_DOWN)) {
+			printf("%s: %s: down\n", run->name, cmd);
+			return 8;
+		}
+		else if (svc_state(run->name, RS_SVC_STAT_STAR) ||
 			svc_state(run->name, RS_SVC_STAT_PIDS)) {
-			printf("%s: service is started\n", run->name);
+			printf("%s: %s: started\n", run->name, cmd);
 			return 0;
 		}
+		else if (svc_state(run->name, RS_SVC_STAT_FAIL)) {
+			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name);
+			stat(buf, &st_buf);
+			if ((i = open(buf, O_RDONLY)) > 0) {
+				if ((retval = read(i, buf, sizeof(buf))) > 0) {
+					printf("%s: %s: (%s command) failed at %s", run->name,
+							cmd, buf, ctime(&st_buf.st_mtim.tv_sec));
+				}
+			}
+			else
+				printf("%s: %s: failed at %s", run->name, cmd,
+					ctime(&st_buf.st_mtim.tv_sec));
+			return 16;
+		}
+		else if (svc_state(run->name, RS_SVC_STAT_WAIT)) {
+			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name);
+			stat(buf, &st_buf);
+			if ((i = open(buf, O_RDONLY)) > 0) {
+				if ((retval = read(i, buf, sizeof(buf))) > 0) {
+					printf("%s: %s: waiting (%s command) since %s", run->name,
+							cmd, buf, ctime(&st_buf.st_ctim.tv_sec));
+				}
+			}
+			else
+				printf("%s: %s: waiting since %s", run->name, cmd,
+					ctime(&st_buf.st_ctim.tv_sec));
+			return 32;
+		}
 		else {
-			printf("%s: service is stopped\n", run->name);
+			printf("%s: %s: stopped\n", run->name, cmd);
 			return 3;
 		}
 	}
 
 	/* this is done before because of a possible virtual provider */
 	if ((command == RS_SVC_CMD_START) && status) {
-		LOG_WARN("%s: service is already started\n", run->name);
+		LOG_WARN("%s: service started\n", run->name);
 		return -EBUSY;
 	}
 	else if ((command == RS_SVC_CMD_STOP) && !status) {
-		LOG_WARN("%s: service is not started\n", run->name);
+		LOG_WARN("%s: service stopped\n", run->name);
 		return -EINVAL;
 	}
 
@@ -398,6 +430,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 			;
 		else if (retval) {
 			LOG_ERR("%s: Failed to set up service dependencies\n", run->name);
+			svc_mark(run->name, RS_SVC_STAT_FAIL, cmd);
 			retval = -ECANCELED;
 			goto reterr;
 		}
@@ -415,17 +448,17 @@ static int svc_cmd(struct svcrun *run, int flags)
 
 		if (flags & SVC_CMD_WAIT) {
 			waitpid(pid, &status, 0);
-			svc_mark(run->name, RS_SVC_MARK_WAIT);
+			svc_mark(run->name, RS_SVC_MARK_WAIT, NULL);
 
 			retval = WEXITSTATUS(status);
 			if (!svc_quiet)
 				svc_end(run->name, retval);
 			if (retval)
-				svc_mark(run->name, RS_SVC_STAT_FAIL);
+				svc_mark(run->name, RS_SVC_STAT_FAIL, cmd);
 			else if (state) {
-				svc_mark(run->name, state);
+				svc_mark(run->name, state, NULL);
 				if (run->depends && run->depends->virt)
-					svc_mark(run->depends->virt, state);
+					svc_mark(run->depends->virt, state, NULL);
 			}
 			goto reterr;
 		}
@@ -442,6 +475,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 			LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 			_exit(ENOLCK);
 		}
+		write(run->lock, cmd, strlen(cmd)+1);
 		/* close the lockfile to be able to mount rootfs read-only */
 		if (rs_stage == 3 && command == RS_SVC_CMD_START)
 			close(run->lock);
@@ -721,7 +755,7 @@ noinit:
 	/* mark no started services as stopped */
 	if (entry) {
 		while ((ptr = strsep(&ent, ",")))
-			svc_mark(ptr, RS_SVC_STAT_STAR);
+			svc_mark(ptr, RS_SVC_STAT_STAR, NULL);
 		free(entry);
 	}
 	entry = old;
@@ -731,8 +765,8 @@ nonetwork:
 		(rs_runlevel == RS_RUNLEVEL_NONETWORK)) {
 		for (i = 0; i < SERVICES.virt_count; i++)
 			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
-				svc_mark(SERVICES.virt_svcdeps[i]->svc, RS_SVC_STAT_STAR);
-		svc_mark("net", RS_SVC_STAT_STAR);
+				svc_mark(SERVICES.virt_svcdeps[i]->svc, RS_SVC_STAT_STAR, NULL);
+		svc_mark("net", RS_SVC_STAT_STAR, NULL);
 	}
 single:
 	if ((entry && strcmp(entry, rs_runlevel_name[RS_RUNLEVEL_SINGLE]) == 0) ||
@@ -790,9 +824,9 @@ static void svc_zap(const char *svc)
 	}
 }
 
-static int svc_mark(const char *svc, int status)
+static int svc_mark(const char *svc, int status, const char *what)
 {
-	char path[BUFSIZ], *ptr;
+	char path[512], *ptr;
 	int fd;
 	mode_t m;
 
@@ -833,6 +867,8 @@ static int svc_mark(const char *svc, int status)
 			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 			umask(m);
 			if (fd > 0) {
+				if (what)
+					write(fd, what, strlen(what)+1);
 				close(fd);
 				return 0;
 			}
@@ -847,7 +883,7 @@ static int svc_mark(const char *svc, int status)
 
 static int svc_state(const char *svc, int status)
 {
-	char path[BUFSIZ], *ptr = NULL;
+	char path[512], *ptr = NULL;
 
 	if (!svc) {
 		errno = ENOENT;
@@ -1017,15 +1053,15 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 
 	for (i = 0; i < n; i++) {
 		waitpid(run[i].pid, &status, 0);
-		svc_mark(run[i].name, RS_SVC_MARK_WAIT);
+		svc_mark(run[i].name, RS_SVC_MARK_WAIT, NULL);
 		if (WEXITSTATUS(status)) {
 			retval++;
-			svc_mark(run[i].name, RS_SVC_STAT_FAIL);
+			svc_mark(run[i].name, RS_SVC_STAT_FAIL, NULL);
 		}
 		else {
-			svc_mark(run[i].name, state);
+			svc_mark(run[i].name, state, NULL);
 			if (run[i].depends && run[i].depends->virt)
-				svc_mark(run[i].depends->virt, state);
+				svc_mark(run[i].depends->virt, state, NULL);
 		}
 		if (!svc_quiet)
 			svc_end(run[i].name, status);
