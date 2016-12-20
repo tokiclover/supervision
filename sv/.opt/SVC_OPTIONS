@@ -124,7 +124,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 :	${LOG_MODE:=0755}
 :	${LOG_PROC:=gzip -nq}
 :	${LOG_SIZE:=2048000}
-:	${LOG_STAT:=STAT}
+:	${LOG_STAT:=}
 :	${LOG_PREFIX:=${SVC_NAME}}
 :	${LOG_CMD:=${__LOGCMD__}}
 	#
@@ -135,7 +135,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	:	${LOG_OPTS:=-tt ${SVC_LOGDIR}}
 		else
 	:	${LOG_ARGS:="s${LOG_SIZE} !'${LOG_PROC}'"}
-	:	${LOG_OPTS:="T +^${LOG_STAT} =${SVC_LOGDIR}/status ${LOG_ARGS}"}
+	:	${LOG_OPTS:="T ${LOG_STAT:++^${LOG_STAT} =${SVC_LOGDIR}/status} ${LOG_ARGS}"}
 		fi # __SV_NAM__
 	unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE
 

@@ -335,10 +335,10 @@ for the default values before overriding any.)
 tab (@);
 l lx.
 \fBENV_DIR=Yes\fR@T{
-To enable \fIenvdir\fR support mode
+To enable \fIenvdir\fR support mode (or \fIenvuidgid\fR when \fBSVC_{GROUP,USER}\fR are defined)
 T}
 \fBENV_CMD\fR@T{
-Envdir command (default to [\fIenvdir sv/.env\fR][\fIenvdir sv/\fBSERVICE\fI/env\fR])
+Envdir command (default to [\fIenvdir SV_RUNDIR/.env\fR][\fIenvdir SV_RUNDIR/\fBSERVICE\fI/env\fR])
 T}
 \fBENV_OPTS\fR@T{
 Envdir arguments
@@ -374,22 +374,25 @@ T}
 Log Pre-launch arguments
 T}
 \fBLOG_SIZE\fR@T{
-File size limit for log rotation
+File size limit for log rotation (default to \fI2048000\fR)
 T}
 \fBLOG_STATE\fR@T{
-Status options to use (default is \fISTAT\fR)
+Status prefix to use to set up \fI'+^${LOG_STAT} =${SVC_LOGDIR}/status'\fR option
 T}
 \fBLOG_PREFIX\fR@T{
-Prefix to use for logging
+Prefix to use for logging (default to \fI${SVC_NAME}\fR)
 T}
 \fBLOG_PROC\fR@T{
-Processor command to use for log rotation
+Processor command to use for log rotation (default to \fIgzip -nq\fR)
 T}
 \fBLOG_ARGS\fR@T{
-Base options to use besides those defined in \fILOG_{SIZE,PROC}\fR
+Base options to use for logging (default to \fI"s${LOG_SIZE} !'${LOG_PROC}'"\fR)
 T}
 \fBLOGDIR\fR@T{
-Default log directory (default to \fI/var/log\fr)
+Default log directory (default to \fI/var/log\fR)
+T}
+\fBSVC_LOGDIR\fR@T{
+Default service log directory (default to \fI${LOGDIR}/${SVC_NAME}\fR)
 T}
 \fBSVC_WAIT_DOWN\fR@T{
 Delay to wait the command to be down (default 10 seconds)
