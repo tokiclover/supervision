@@ -1189,15 +1189,15 @@ static void svc_stage(const char *cmd)
 
 int main(int argc, char *argv[])
 {
+	int opt;
+	char *ptr;
+	char on[8] = "1", off[8] = "0";
+
 	prgname = strrchr(argv[0], '/');
 	if (!prgname)
 		prgname = argv[0];
 	else
 		prgname++;
-
-	int opt;
-	char *ptr;
-	char on[8] = "1", off[8] = "0";
 
 	/* Show help if insufficient args */
 	if (argc < 2)
@@ -1244,7 +1244,8 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-	if ((argc-optind) < 1)
+	argc -= optind, argv += optind;
+	if (argc < 1)
 		help_message(1);
 
 	/* set this to avoid double waiting for a lockfile for supervision */
@@ -1257,19 +1258,19 @@ int main(int argc, char *argv[])
 		setenv("SVC_DEBUG", off, 1);
 		goto rc;
 	}
-	else if (strcmp(argv[optind], "stage") == 0) {
+	else if (strcmp(*argv, "stage") == 0) {
 		setenv("SVC_DEBUG", off, 1);
 		if (rs_stage >= 0)
-			svc_stage(argv[optind+1]);
+			svc_stage(argv[1]);
 		else {
 			fprintf(stderr, "Usage: %s -(0|1|2|3) stage [start|stop]"
 					"(level argument required)\n", prgname);
 			exit(EXIT_FAILURE);
 		}
 	}
-	else if (strcmp(argv[optind], "scan") == 0)
+	else if (strcmp(*argv, "scan") == 0)
 		goto scan;
-	else if (argc-optind == 1)
+	else if (argc == 1)
 		goto rc;
 	else
 		goto service;
@@ -1279,7 +1280,7 @@ int main(int argc, char *argv[])
 rc:
 	/* support SystemV compatiblity rc command */
 	for (rs_runlevel = 0; rs_runlevel_name[rs_runlevel]; rs_runlevel++) {
-		if (strcmp(argv[optind], rs_runlevel_name[rs_runlevel]) == 0) {
+		if (strcmp(*argv, rs_runlevel_name[rs_runlevel]) == 0) {
 			switch(rs_runlevel) {
 			case RS_RUNLEVEL_REBOOT:
 			case RS_RUNLEVEL_SHUTDOWN:
@@ -1312,12 +1313,12 @@ rc:
 	}
 
 	if (strcmp(prgname, "rc") == 0) {
-		ERR("invalid run level -- `%s'\n", argv[optind]);
+		ERR("invalid run level -- `%s'\n", *argv);
 		fprintf(stderr, "Usage: %s {nonetwork|single|sysinit|boot|default|shutdown|reboot} "
 				"(run level)\n", prgname);
 	}
 	else {
-		ERR("invalid/insuficient arguments -- `%s ...'\n", argv[optind]);
+		ERR("invalid/insuficient arguments -- `%s ...'\n", *argv);
 		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
 				"(service command)\n", prgname);
 		fprintf(stderr, "       %s -{0|1|2|3} stage "
@@ -1327,8 +1328,8 @@ rc:
 
 scan:
 	setenv("SVCDEPS_UPDATE", on, 1);
-	execv(SV_DEPGEN, &argv[optind]);
-	ERROR("Failed to execv(%s, &argv[optind])", SV_DEPGEN);
+	execv(SV_DEPGEN, argv);
+	ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
 
 service:
 	unsetenv("RS_STAGE");
@@ -1336,10 +1337,10 @@ service:
 	/* handle service command or
 	 * support systemV compatiblity rc command
 	 */
-	if ((argc-optind) < 2) {
+	if (argc < 2) {
 		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS]\n",
 				prgname);
 		exit(EXIT_FAILURE);
 	}
-	svc_exec(argc-optind, argv+optind);
+	svc_exec(argc, argv);
 }
