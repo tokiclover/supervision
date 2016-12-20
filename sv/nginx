@@ -73,12 +73,10 @@ upgrade()
 	fi
 
 	info "Sleeping 3 seconds before WINCH"
-	read PID <${SVC_PIDFILE}.oldbin
-	sleep 3 ; kill -WINCH ${PID}
+	sleep 3 ; pkill -WINCH -F ${SVC_PIDFILE}.oldbin
 
 	info "Sending QUIT to old binary"
-	read PID <${SVC_PIDFILE}.oldbin
-	kill -QUIT ${PID}
+	pkill -QUIT -F ${SVC_PIDFILE}.oldbin
 }
 
 configtest()
