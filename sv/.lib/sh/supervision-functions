@@ -158,37 +158,25 @@ svc_reload()
 
 svc_mark()
 {
-	local arg ret
-	for arg; do
-		case "${arg}" in
-			(-d|--down*)  echo >"${SV_TMPDIR}/down/${SVC_NAME}";;
-			(-u|--up*)    rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
-			(-f|--failed) echo >"${SV_TMPDIR}/fail/${SVC_NAME}";;
-			(-s|--start*) echo >"${SV_TMPDIR}/star/${SVC_NAME}";;
-			(-S|--stoped) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
-			(*) return ${ret};;
-		esac
-		ret=$((${ret}+${?}))
-	done
-	return ${ret}
+	case "${1}" in
+		(-f|--fail*) printf "${__cmd__:-$2}" >"${SV_TMPDIR}/fail/${SVC_NAME}";;
+		(-d|--down*) printf "" >"${SV_TMPDIR}/down/${SVC_NAME}";;
+		(-s|--star*) printf "" >"${SV_TMPDIR}/star/${SVC_NAME}";;
+		(-u|--up*)   rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
+		(-S|--stop*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
+	esac
 }
 
 svc_state()
 {
-	local arg ret
-	for arg; do
-		case "${arg}" in
-			(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
-			(-a|--acti*) [ -e "${RS_RUNDIR}/${SVC_NAME}" ];;
-			(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
-			(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
-			(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
-			(-p|--pid*)  [ -e "${SVC_PIDFILE}" ];;
-			(*) return ${ret};;
-		esac
-		ret=$((${ret}+${?}))
-	done
-	return ${ret}
+	case "${1}" in
+		(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
+		(-a|--acti*) [ -e "${RS_RUNDIR}/${SVC_NAME}" ];;
+		(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
+		(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
+		(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
+		(-p|--pid*)  [ -e "${SVC_PIDFILE}" ];;
+	esac
 }
 
 #
