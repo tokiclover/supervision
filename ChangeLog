@@ -1,5 +1,12 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.12.6.4:
+
+Tiny fixes all over the place especially the global environment dir
+(SV_SVCDIR/.env);
+Renamed del_env shell function to env_del;
+Use sub-directories for service options/environment files;
+
 0.12.6.3:
 
 Fixed restart service command--broken in 0.12.5--by initializing a variable;
