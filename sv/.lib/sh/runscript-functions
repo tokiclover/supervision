@@ -72,7 +72,7 @@ svc_zap()
 
 rs_cmd()
 {
-	local ARGS CMD cmd="${1}" val
+	local ARGS='"${@}"' cmd="${1}" val
 
 	case "${cmd}" in
 		(start|stop)
@@ -80,24 +80,25 @@ rs_cmd()
 				svc_config || return 4
 				svc_depend "${cmd}" || return 3
 			fi
-			CMD="${cmd}_pre ${cmd} ${cmd}_post";;
+			cmd="${cmd}_pre ${cmd} ${cmd}_post";;
 		(restart) command -v ${cmd} >${NULL} 2>&1 ||
-			CMD="stop_pre stop stop_post
+			cmd="stop_pre stop stop_post
 			   start_pre start start_post";;
-		(add|status) CMD=rs_${cmd} ;;
+		(add|status) cmd=rs_${cmd} ;;
 		(*) svc_cmd "${@}"; return ;;
 	esac
+	shift
 
-	begin "service ${cmd}: "
-	for cmd in ${CMD}; do
+	begin "service ${__cmd__}: "
+	for cmd in ${cmd}; do
 		command -v ${cmd} >${NULL} 2>&1 || continue
 		eval ${cmd} ${ARGS}
 		case ${?} in
 			(0) ;;
-			(*) val=2; break;;
+			(*) val=1; break;;
 		esac
 	done
-	end ${val-${?}}
+	end ${val:-${?}}
 }
 
 svc_sig()
