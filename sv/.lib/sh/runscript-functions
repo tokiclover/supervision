@@ -98,7 +98,6 @@ rs_cmd()
 		esac
 	done
 	end ${val-${?}}
-	return ${val}
 }
 
 svc_sig()
@@ -109,9 +108,7 @@ svc_sig()
 	fi
 
 	if [ -n "${SVC_PIDFILE}" -a -e "${SVC_PIDFILE}" ]; then
-		local pid
-		read pid <${SVC_PIDFILE}
-		kill -${1} ${pid}
+		pkill -${1} -P ${SVC_PIDFILE}
 	else
 		error "no pidfile (SVC_PIDFILE) defined"
 		return 1
@@ -134,9 +131,8 @@ svc_wait()
 		if [ $((${val}%2)) -eq 0 ]; then
 			info "Waiting for ${file} (${val} seconds)"
 		fi
-		[ ${val} -eq ${limit} ] && return 1
 	done
-	return 0
+	return 1
 }
 
 start()
@@ -163,7 +159,7 @@ stop()
 		fi
 	fi
 	[ -n "${SVC_PIDFILE}" -a -f "${SVC_PIDFILE}" ] &&
-		kill -TERM $(cat ${SVC_PIDFILE})
+		pkill -TERM -F ${SVC_PIDFILE}
 }
 
 
