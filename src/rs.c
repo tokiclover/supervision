@@ -20,7 +20,7 @@
 #include <poll.h>
 #include <time.h>
 
-#define VERSION "0.12.6"
+#define VERSION "0.12.6.4"
 #define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
 #define SV_TMPDIR_DOWN SV_TMPDIR "/down"
