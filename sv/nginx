@@ -39,12 +39,11 @@ stop_pre()
 		configtest || return 1
 	fi
 
-	[ -f ${SVC_PIDFILE} ] && read PID <${SVC_PIDFILE} || PID=
-	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -s stop
+	[ -f ${SVC_PIDFILE} ] && ${SVC_CMD} ${SVC_OPTS} -s stop
 }
 stop_post()
 {
-	[ -n "${PID}" ] && pgrep -P ${PID} nginx >${NULL} &&
+	[ -f ${SVC_PIDFILE} ] && pgrep -F ${SVC_PIDFILE} nginx >${NULL} &&
 		${SVC_CMD} ${SVC_OPTS} -s stop
 	[ -f ${SVC_PIDFILE} ] && rm ${SVC_PIDFILE} || return 0
 }
