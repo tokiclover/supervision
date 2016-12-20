@@ -147,7 +147,13 @@ start()
 			cgroup_add_service
 		fi
 	fi
-	eval ${SVC_CMD} ${SVC_OPTS}
+	#
+	# Use ENV dir(s) if requested
+	#
+	cd ${SV_SVCDIR}
+	yesno "${ENV_DIR}" && svc_environ
+
+	eval ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
 }
 stop()
 {
