@@ -961,7 +961,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	int retval = 0;
 	int i, r, state, status;
 	static int parallel, setup, cmd_flags;
-	struct svcrun **run;
+	struct svcrun *run;
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -982,16 +982,15 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	else
 		state = RS_SVC_MARK_STAR;
 
-	run = err_malloc(size*sizeof(void*));
+	run = err_malloc(size*sizeof(struct svcrun));
 	SLIST_FOREACH(svc, list, entries) {
-		run[n] = err_malloc(sizeof(struct svcrun));
-		run[n]->name = svc->str;
-		run[n]->argc = argc;
-		run[n]->argv = argv;
-		run[n]->envp = envp;
-		run[n]->path = NULL;
+		run[n].name = svc->str;
+		run[n].argc = argc;
+		run[n].argv = argv;
+		run[n].envp = envp;
+		run[n].path = NULL;
 
-		r = svc_cmd(run[n], cmd_flags);
+		r = svc_cmd(&run[n], cmd_flags);
 		switch(r) {
 		case SVC_RET_WAIT:
 			break;
@@ -1009,30 +1008,27 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		if (parallel) {
 			if (n++ == size) {
 				size += 8;
-				run = err_realloc(run, sizeof(void*)*size);
+				run = err_realloc(run, sizeof(struct svcrun)*size);
 			}
 		}
-		else {
-			free(run[n]);
+		else
 			if (r) retval++;
-		}
 	}
 
 	for (i = 0; i < n; i++) {
-		waitpid(run[i]->pid, &status, 0);
-		svc_mark(run[i]->name, RS_SVC_MARK_WAIT);
+		waitpid(run[i].pid, &status, 0);
+		svc_mark(run[i].name, RS_SVC_MARK_WAIT);
 		if (WEXITSTATUS(status)) {
 			retval++;
-			svc_mark(run[i]->name, RS_SVC_STAT_FAIL);
+			svc_mark(run[i].name, RS_SVC_STAT_FAIL);
 		}
 		else {
-			svc_mark(run[i]->name, state);
-			if (run[i]->depends && run[i]->depends->virt)
-				svc_mark(run[i]->depends->virt, state);
+			svc_mark(run[i].name, state);
+			if (run[i].depends && run[i].depends->virt)
+				svc_mark(run[i].depends->virt, state);
 		}
 		if (!svc_quiet)
-			svc_end(run[i]->name, status);
-		free(run[i]);
+			svc_end(run[i].name, status);
 	}
 	free(run);
 
