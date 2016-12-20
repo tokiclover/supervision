@@ -329,7 +329,7 @@ svc_env()
 {
 	local OPT env
 	case "${1}" in
-		(OPTS*|ENV*) OPT="${1}"; shift;;
+		(OPTS/${SVC_NAME}|ENVS/${SVC_NAME}|ENV) OPT="${1}"; shift;;
 		(*) OPT="OPTS/${SVC_NAME}"    ;;
 	esac
 	for env; do
@@ -348,7 +348,7 @@ env_del()
 {
 	local OPT env
 	case "${1}" in
-		(OPTS*|ENV*) OPT="${1}"; shift;;
+		(OPTS/${SVC_NAME}|ENVS/${SVC_NAME}|ENV) OPT="${1}"; shift;;
 		(*) OPT="OPTS/${SVC_NAME}"    ;;
 	esac
 	for env; do
