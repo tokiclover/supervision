@@ -1,4 +1,4 @@
-#!/bin/rs
+#!/sbin/rs
 #
 # $Header: /etc/sv/nginx/OPTIONS                           Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
