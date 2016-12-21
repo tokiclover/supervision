@@ -34,6 +34,14 @@
 #endif
 #define SV_SVC_BACKEND LIBDIR "/sv/opt/SVC_BACKEND"
 
+#define FASTBOOT  "/fastboot"
+#define FORCEFSCK "/forcefsck"
+#ifdef __linux__
+# define NOLOGIN   "/etc/nologin"
+#else
+# define NOLOGIN   "/var/run/nologin"
+#endif
+
 #define SV_ACTION_SHUTDOWN 0
 #define SV_ACTION_SINGLE   1
 #define SV_ACTION_REBOOT   6
@@ -108,31 +116,33 @@ __NORETURN__ static void help_message(int status)
 	exit(status);
 }
 
-static void sighandler(int sig, siginfo_t *info, void *context)
+static void sighandler(int sig)
 {
-	switch (sig) {
-	case SIGINT:
-	case SIGUSR1:
-	case SIGUSR2:
-		/*printf("%s: Caught signal %s ...\n", prgname, strsignal(sig));*/
-		if (!info->si_uid)
-			exit(EXIT_SUCCESS);
-		break;
+	/*printf("%s: Caught signal %s ...\n", prgname, strsignal(sig));*/
+	if (!access(FASTBOOT , F_OK)) unlink(FASTBOOT);
+	if (!access(FORCEFSCK, F_OK)) unlink(FORCEFSCK);
+	if (!access(NOLOGIN  , F_OK)) unlink(NOLOGIN);
+	if (sig > 0) {
+		fprintf(stderr, "%s: cancelling system shutdown\n", prgname);
+		exit(EXIT_SUCCESS);
 	}
 }
-static void sigsetup(void)
+static int sigsetup(void)
 {
 	struct sigaction act;
-	int sig[] = { SIGINT, SIGUSR1, SIGUSR2, 0 };
+	int sig[] = { SIGINT, SIGTERM, SIGUSR1, 0 };
 	int i;
 
-	act.sa_sigaction = sighandler;
-	act.sa_flags = SA_SIGINFO;
+	act.sa_handler = sighandler;
+	act.sa_flags = 0;
 	sigemptyset(&act.sa_mask);
 	sigaddset  (&act.sa_mask, SIGQUIT);
 	for (i = 0; sig[i]; i++)
-		if (sigaction(sig[i], &act, NULL) < 0)
-			ERROR("%s: sigaction(%s, ...)", __func__, strsignal(sig[i]));
+		if (sigaction(sig[i], &act, NULL) < 0) {
+			ERR("sigaction(%s, ...): %s\n", strsignal(sig[i]), strerror(errno));
+			return 1;
+		}
+	return 0;
 }
 
 #ifndef UT_LINESIZE
@@ -143,36 +153,38 @@ static void sigsetup(void)
 # endif
 #endif
 
-static int sv_wall(char *message)
+static int sv_wall(char **argv)
 {
 	struct utmpx *utxent;
 	char dev[UT_LINESIZE+8];
-	int fd, n;
-	size_t len;
+	int i;
+	FILE *fp;
 
-	if (message == NULL) {
+	if (!*argv || !argv[0][0]) {
 		errno = ENOENT;
 		return 1;
 	}
-	len = strlen(message);
 
 	setutxent();
 	while ((utxent = getutxent())) {
 		if (utxent->ut_type != USER_PROCESS)
 			continue;
 		snprintf(dev, UT_LINESIZE, "/dev/%s", utxent->ut_line);
-		if ((fd = open(dev, O_WRONLY | O_CLOEXEC | O_NOCTTY)) < 0)
-			ERROR("Failed to open `%s'", dev);
-		if ((n = write(fd, message, len)) != len)
-			ERROR("Failed to write to `%s'", dev);
-		close(fd);
+		if ((fp = fopen(dev, "w")) == NULL) {
+			ERR("Failed to open `%s': %s\n", dev, strerror(errno));
+			sighandler(-1);
+			exit(EXIT_FAILURE);
+		}
+		for (i = 0; argv[i]; i++)
+			fprintf(fp, "%s\n", argv[i]);
+		fclose(fp);
 	}
 	endutxent();
 
 	return 0;
 }
 
-__NORETURN__ static int sv_shutdown(char *message)
+__NORETURN__ static int sv_shutdown(char **message)
 {
 	FILE *fp;
 	size_t len = 0;
@@ -183,7 +195,7 @@ __NORETURN__ static int sv_shutdown(char *message)
 
 	if (shutdown_action == SV_ACTION_MESSAGE)
 		exit(sv_wall(message));
-	if (message)
+	if (*message)
 		sv_wall(message);
 	if (reboot_sync)
 		sync();
@@ -239,22 +251,25 @@ __NORETURN__ static int sv_shutdown(char *message)
 	goto shutdown;
 
 shutdown:
+	if (!access(NOLOGIN, F_OK))
+		unlink(NOLOGIN);
 	execvp(argv[0], argv);
-	ERROR("Failed to execlp(%s, %s)", *argv, argv[1]);
+	ERR("Failed to execlp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
+	sighandler(-1);
+	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[])
 {
-	int opt;
-	int fd;
-	long h, m, sec;
+	int i;
+	int nologin = 0;
+	FILE *fp;
+	long h, m;
 	time_t t;
-	struct timespec tms;
+	struct timespec ts;
 	struct tm *now;
 	char *ptr;
 	const char *options;
-	int open_flags = O_CREAT|O_WRONLY|O_NOFOLLOW|O_TRUNC;
-	mode_t open_mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 
 	prgname = strrchr(argv[0], '/');
 	if (prgname == NULL)
@@ -287,8 +302,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* Parse options */
-	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
-		switch (opt) {
+	while ((i = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
+		switch (i) {
 		case '0':
 		case 'P':
 		case 'p':
@@ -313,17 +328,21 @@ int main(int argc, char *argv[])
 			reboot_sync = 0;
 			break;
 		case 'c':
-			execlp("killall", "-USR2", prgname, NULL);
+			execlp("pkill",   "pkill",   "-INT", "-x", prgname, NULL);
+			execlp("killall", "killall", "-INT", "-e", prgname, NULL);
+			ERROR("Failed to execute neither pkill nor killall", NULL);
 			break;
 		case 'f':
-			if ((fd = open("/fastboot", open_flags, open_mode)) < 1)
-				ERROR("Failed to create /fastboot", NULL);
-			close(fd);
+			if (fclose(fopen(FASTBOOT, "w"))) {
+				ERR("Failed to create %s\n", FASTBOOT);
+				goto setup_error;
+			}
 			break;
 		case 'F':
-			if ((fd = open("/forcefsck", open_flags, open_mode)) < 1)
-				ERROR("Failed to create /forcefsck", NULL);
-			close(fd);
+			if (fclose(fopen(FORCEFSCK, "w"))) {
+				ERR("Failed to create %s\n", FORCEFSCK);
+				goto setup_error;
+			}
 			break;
 		case 't': /* ignored */
 			break;
@@ -333,70 +352,98 @@ int main(int argc, char *argv[])
 		case 'v':
 			printf("%s version %s\n", prgname, VERSION);
 			exit(EXIT_SUCCESS);
-		case '?':
 		case 'u':
 			help_message(EXIT_SUCCESS);
 		default:
+			sighandler(-1);
 			help_message(EXIT_FAILURE);
 		}
 	}
+	argc -= optind, argv += optind;
 
 	if (strcmp(prgname, "shutdown") == 0) {
 		if (shutdown_action < 0)
 			shutdown_action = SV_ACTION_SINGLE;
-		if (!argv[optind]) {
+		if (!*argv) {
 			fprintf(stderr, "Usage: %s [OPTIONS] TIME [MESSAGE] "
 					"(TIME argument required)\n", prgname);
 			exit(EXIT_FAILURE);
 		}
 
-		if (strncmp(argv[optind], "now", 3) == 0)
-			sec = 0L;
-		else if (argv[optind][0] == '+') {
-			sec = 60L*strtol(argv[optind], NULL, 0);
+		if (strncmp(*argv, "now", 3) == 0)
+			m = 0L;
+		else if (argv[0][0] == '+') {
+			m = strtol(*argv, NULL, 0);
 			if (errno == ERANGE)
-				goto shutdown;
+				goto time_error;
 		}
-		else if (argv[optind][1] == ':' || argv[optind][2] == ':') {
-			h = strtol(argv[optind], &ptr, 0);
+		else if (argv[0][1] == ':' || argv[0][2] == ':') {
+			h = strtol(*argv, &ptr, 0);
 			if (errno == ERANGE)
-				goto shutdown;
+				goto time_error;
 			ptr++, m += strtol(ptr, NULL, 0);
 			if (errno == ERANGE)
-				goto shutdown;
+				goto time_error;
 
 			t = time(NULL);
 			if (!(now = localtime(&t)))
-				goto shutdown;
-			sec = 3600L*(h - now->tm_hour) + 60L*(m - now->tm_min) - now->tm_sec;
-			if (sec < 0)
-				goto shutdown;
+				goto time_error;
+			m = 60L*(h - now->tm_hour) + (m - now->tm_min);
+			if (m < 0)
+				goto time_error;
 		}
+		argv++;
 
 		/* setup signal for shutdown cancellation */
-		sigsetup();
+		if (sigsetup()) goto setup_error;
 
-		if (sec) {
+		if (m) {
 			if (fork() > 0)
 				exit(EXIT_SUCCESS);
 
-			tms.tv_sec = sec, tms.tv_nsec = 0;
-			while (nanosleep(&tms, &tms))
-				if (errno == EINTR)
-					continue;
-				else
-					ERROR("Failed to nanosleep(%d...)", sec);
+			while (m) {
+				ts.tv_sec = 60, ts.tv_nsec = 0;
+
+				if (!nologin && m < 6) {
+					fp = fopen(NOLOGIN, "w");
+					if (fp) {
+						if (*argv && argv[0][0])
+							for (i = 0; argv[i]; i++)
+								fprintf(fp, "%s\n", argv[i]);
+						else {
+							t = time(NULL)+m*60L;
+							fprintf(fp, "The system is going down at %s", ctime(&t));
+						}
+						fclose(fp);
+					}
+					else
+						WARN("Failed to open %s\n", NOLOGIN);
+					nologin++;
+				}
+
+				while (nanosleep(&ts, &ts))
+					if (errno == EINTR)
+						continue;
+					else {
+						ERR("Failed to nanosleep(ts.tv_sec=%ld...): %s\n",
+								ts.tv_sec, strerror(errno));
+						goto setup_error;
+					}
+				m--;
+			}
 		}
 	}
 
-	return sv_shutdown(argv[optind]);
+	return sv_shutdown(argv);
 
-shutdown:
-	ERR("invalid TIME argument -- `%s'\n", argv[optind]);
+time_error:
+	ERR("invalid (TIME) argument -- `%s'\n", *argv);
+setup_error:
+	sighandler(-1);
 	exit(EXIT_FAILURE);
 reboot:
-	while ((opt = getopt(argc, argv, options)) != -1) {
-		switch (opt) {
+	while ((i = getopt(argc, argv, options)) != -1) {
+		switch (i) {
 		case 'p':
 			shutdown_action = SV_ACTION_SHUTDOWN;
 			reboot_action = RB_POWER_OFF;
@@ -423,5 +470,5 @@ reboot:
 		}
 	}
 
-	return sv_shutdown(argv[optind]);
+	return sv_shutdown(argv);
 }
