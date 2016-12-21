@@ -6,6 +6,8 @@ Tiny fixes all over the place especially the global environment dir
 (SV_SVCDIR/.env);
 Renamed del_env shell function to env_del;
 Use sub-directories for service options/environment files;
+Improved sv-shutdown to better handle time, create nologin file and log
+shutdown action to syslog(2);
 
 0.12.6.3:
 
