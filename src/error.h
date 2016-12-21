@@ -9,8 +9,8 @@
  * @(#)error.h
  */
 
-#ifndef _ERROR_H
-#define _ERROR_H
+#ifndef ERROR_H
+#define ERROR_H
 
 #if __GNUC__ > 2 || defined(__INTEL_COMPILER)
 # define __NORETURN__ __attribute__((__noreturn__))

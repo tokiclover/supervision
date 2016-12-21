@@ -9,8 +9,8 @@
  * @(#)rs-deps.h
  */
 
-#ifndef _RS_DEPS_H
-#define _RS_DEPS_H
+#ifndef RS_DEPS_H
+#define RS_DEPS_H
 
 #include "rs.h"
 #include "rs-list.h"

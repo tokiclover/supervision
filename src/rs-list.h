@@ -9,8 +9,8 @@
  * @(#)rs-list.h
  */
 
-#ifndef _RS_LIST_H
-#define _RS_LIST_H
+#ifndef RS_LIST_H
+#define RS_LIST_H
 
 #include "queue.h"
 #include "error.h"
