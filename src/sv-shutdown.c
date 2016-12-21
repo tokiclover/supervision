@@ -25,9 +25,10 @@
 #include <sys/reboot.h>
 #include <string.h>
 #include <signal.h>
+#include <syslog.h>
 #include <time.h>
 
-#define VERSION "0.12.6"
+#define VERSION "0.12.6.4"
 
 #ifndef LIBDIR
 # define LIBDIR "/lib"
@@ -52,6 +53,7 @@ static int reboot_action;
 static int reboot_force;
 static int reboot_sync = 1;
 static int shutdown_action = -1;
+static uid_t real_uid;
 
 static const char *shortopts = "06crshpfFEHPntkuv";
 static const struct option longopts[] = {
@@ -189,7 +191,8 @@ __NORETURN__ static int sv_shutdown(char **message)
 	FILE *fp;
 	size_t len = 0;
 	char *line = NULL, *ptr = NULL;
-	char *argv[8], opt[8];
+	char *argv[8], arg[8];
+	char buf[128];
 	static const char ent[] = "__SV_NAM__";
 	static size_t siz = sizeof(ent)-1;
 
@@ -230,14 +233,14 @@ __NORETURN__ static int sv_shutdown(char **message)
 
 	if (ptr) {
 		if (strcmp(ptr, "runit") == 0) {
-			snprintf(opt, sizeof(opt), "%d", shutdown_action);
+			snprintf(arg, sizeof(arg), "%d", shutdown_action);
 			argv[0] = "runit-init";
-			argv[1] = opt;
+			argv[1] = arg;
 		}
 		else if (strcmp(ptr, "s6") == 0) {
-			snprintf(opt, sizeof(opt), "-%d", shutdown_action);
+			snprintf(arg, sizeof(arg), "-%d", shutdown_action);
 			argv[0] = "s6-svscanctl";
-			argv[1] = opt;
+			argv[1] = arg;
 		}
 		else if (strncmp(ptr, "daemontools", 11) == 0)
 			;
@@ -253,6 +256,20 @@ __NORETURN__ static int sv_shutdown(char **message)
 shutdown:
 	if (!access(NOLOGIN, F_OK))
 		unlink(NOLOGIN);
+
+	if (shutdown_action == SV_ACTION_REBOOT)
+		snprintf(buf, sizeof(buf), "shutting down for system reboot (USER=%s)",
+				getpwuid(real_uid)->pw_name);
+	else if (shutdown_action == SV_ACTION_SINGLE)
+		snprintf(buf, sizeof(buf), "shutting down for single user mode (USER=%s)",
+				getpwuid(real_uid)->pw_name);
+	else
+		snprintf(buf, sizeof(buf), "shutting down for system halt (USER=%s)",
+				getpwuid(real_uid)->pw_name);
+	openlog(prgname, LOG_PID, LOG_USER);
+	syslog(LOG_NOTICE, buf);
+	closelog();
+
 	execvp(argv[0], argv);
 	ERR("Failed to execlp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
 	sighandler(-1);
@@ -271,6 +288,7 @@ int main(int argc, char *argv[])
 	char *ptr;
 	const char *options;
 
+	real_uid = getuid();
 	prgname = strrchr(argv[0], '/');
 	if (prgname == NULL)
 		prgname = argv[0];
@@ -281,6 +299,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: must be the superuser to proceed\n", prgname);
 		exit(EXIT_FAILURE);
 	}
+	/* support setuid to a special group */
+	setuid(geteuid());
 
 	if (strcmp(prgname, "reboot") == 0) {
 		reboot_action = RB_AUTOBOOT;
