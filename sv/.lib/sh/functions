@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/functions                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.4 2016/11/11 21:09:26                      Exp $
+# $Version: 1.5 2016/12/22 21:09:26                      Exp $
 #
 
 if [ -z "${__FUNCTIONS__}" ]; then
@@ -184,6 +184,32 @@ eval_colors()
 if [ -t 1 ] && yesno "${COLOR:-Yes}"; then
 	eval_colors
 fi
+
+boot_option()
+{
+	local cmdline=/proc/cmdline
+	[ -e ${cmdline} -a -n "${1}" ] || return 1
+	read cmdline <${cmdline}
+
+	for cmdline in ${cmdline}; do
+		[ "${1}" = "${cmdline}" ] && return 0
+	done
+	return 1
+}
+
+get_boot_option()
+{
+	local cmdline=/proc/cmdline
+	[ -e ${cmdline} -a -n "${1}" ] || return 1
+	read cmdline <${cmdline}
+
+	for cmdline in ${cmdline}; do
+		case "${cmdline}" in
+			(${1}=*) eval "${cmdline}"; break;;
+		esac
+	done
+	eval echo "\"\$${1}\""
+}
 
 #
 # @FUNCTION: device info helper
