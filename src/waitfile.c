@@ -127,25 +127,26 @@ int main(int argc, char *argv[])
 		case 'v':
 			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
-		case '?':
 		case 'h':
 			help_message(EXIT_SUCCESS);
 		default:
 			help_message(EXIT_FAILURE);
 		}
 	}
+	argc -= optind, argv += optind;
 
-	if ((argc-optind) < 2) {
+	if (argc < 2) {
 		fprintf(stderr, "%s: Insufficient number of arguments\n", progname);
 		fprintf(stderr, "usage: %s [-E] TIMEOUT FILENAME\n", progname);
+		exit(EXIT_FAILURE);
 	}
 
-	timeout = strtol(argv[optind], NULL, 10);
+	timeout = strtol(*argv, NULL, 10);
 	if (errno == ERANGE) {
-		fprintf(stderr, "%s: Invalid number or agument: %s\n", progname,
-				strerror(errno));
-		exit(1);
+		fprintf(stderr, "%s: Invalid agument -- %s\n", progname, strerror(errno));
+		exit(EXIT_FAILURE);
 	}
+	argv++;
 
-	return waitfile(argv[optind+1], (int)timeout, flags);
+	return waitfile(*argv, (int)timeout, flags);
 }
