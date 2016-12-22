@@ -11,6 +11,11 @@ SVC_USE='dev kmod clock device-mapper dmcrypt lvm raid'
 REBOOT_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --reboot'
 SHUTDOWN_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --shutdown'
 
+_forcefsck()
+{
+	[ -e /forcefsck ] || boot_option forcefsck
+}
+
 start()
 {
 	local exclude_fs fsck_opts fs
@@ -25,10 +30,8 @@ start()
 		return 0
 	fi
 
-	if [ -e /forcefsck ]; then
-		case " $(cat /proc/cmdline) " in
-			(*" forcefsck "*) fsck_opts="-f ${fsck_opts}";;
-		esac
+	if _forcefsck; then
+		fsck_opts="-f ${fsck_opts}"
 		rm -f /forcefsck
 	fi
 
