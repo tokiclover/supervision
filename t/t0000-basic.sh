@@ -1,6 +1,7 @@
 #!/bin/sh
 
 name="${0##*/}"
+SV_LIBDIR=sv/.lib
 source sv/.lib/sh/runscript-functions
 
 if yesno Enable; then
@@ -21,3 +22,4 @@ mountinfo -P '^/(tmp|run)$' -T '^(tmpfs|cgroup|sysfs)$'
 mountinfo /tmp || error "/tmp is not mounted" && end "$?" /tmp
 info "/ mount arguments: $(fstabinfo -a /)"
 
+echo BOOT_IMAGE=$(get_boot_option BOOT_IMAGE)
