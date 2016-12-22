@@ -42,19 +42,18 @@
 extern "C" {
 #endif
 
-#define PRGNAME prgname
-#define ERR(fmt, ...) fprintf(stderr, "ERROR: %s: " fmt, PRGNAME, __VA_ARGS__)
-#define WARN(fmt, ...) fprintf(stderr, "WARN: %s: " fmt, PRGNAME, __VA_ARGS__)
-#define ERROR(fmt, ...)  error(errno, "ERROR: %s: " fmt, PRGNAME, __VA_ARGS__)
+#define ERR(fmt, ...) fprintf(stderr, "ERROR: %s: " fmt, progname, __VA_ARGS__)
+#define WARN(fmt, ...) fprintf(stderr, "WARN: %s: " fmt, progname, __VA_ARGS__)
+#define ERROR(fmt, ...)  error(errno, "ERROR: %s: " fmt, progname, __VA_ARGS__)
 #define ERR_EXIT ERROR("", NULL)
 #if defined DEBUG
-#  define DBG(fmt, ...) fprintf(stderr, "%s:%s:%d: " fmt, PRGNAME, __FILE__, __LINE__, __VA_ARGS__)
+#  define DBG(fmt, ...) fprintf(stderr, "%s:%s:%d: " fmt, PROGNAME, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define DBG(fmt, ...)
 #endif
 
 __NORETURN__ void error(int err, const char *fmt, ...);
-extern const char *prgname;
+extern const char *progname;
 
 __UNUSED__ void *err_malloc(size_t size);
 __UNUSED__ void *err_calloc(size_t num, size_t size);

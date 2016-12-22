@@ -34,7 +34,7 @@
 #define REGFREE(var) if(var) { regfree(var); free(var); }
 #define REGCOMP(var) REGFREE(var); var = comp_regex(optarg)
 
-const char *prgname;
+const char *progname;
 static RS_StringList_T *mount_list;
 
 enum {
@@ -316,7 +316,7 @@ __NORETURN__ static void help_message(int status)
 {
 	int i;
 
-	printf("Usage: %s [OPTIONS] <MOUNTPOINTS>\n", prgname);
+	printf("Usage: %s [OPTIONS] <MOUNTPOINTS>\n", progname);
 	for (i = 0; longopts_help[i]; i++) {
 		printf("  -%c, --%-20s", longopts[i].val, longopts[i].name);
 		if (longopts[i].has_arg)
@@ -351,11 +351,11 @@ int main(int argc, char *argv[])
 	int quiet = 1;
 	RS_String_T *s;
 
-	prgname = strrchr(argv[0], '/');
-	if (prgname == NULL)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (progname == NULL)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 	memset(&args, 0, sizeof(args));
 
 	/* Parse options */
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
 			quiet = 0;
 			break;
 		case 'v':
-			printf("%s version %s\n", prgname, VERSION);
+			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
 		case '?':
 		case 'h':

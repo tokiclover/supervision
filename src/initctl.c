@@ -24,7 +24,7 @@
 #define INIT_REQ_LEN 384
 #define SV_SHUTDOWN SYSCONFDIR "/sv/.lib/bin/sv-shutdown"
 
-const char *prgname;
+const char *progname;
 
 int main(int argc, char *argv[])
 {
@@ -34,11 +34,11 @@ int main(int argc, char *argv[])
 	char arg[512];
 	mode_t m;
 
-	prgname = strrchr(argv[0], '/');
-	if (!prgname)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (!progname)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 
 	if (!file_test(INIT_FIFO, 'p')) {
 		m = umask(0);

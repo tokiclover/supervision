@@ -48,7 +48,7 @@
 #define SV_ACTION_REBOOT   6
 #define SV_ACTION_MESSAGE  8
 
-const char *prgname;
+const char *progname;
 static int reboot_action;
 static int reboot_force;
 static int reboot_sync = 1;
@@ -93,7 +93,7 @@ __NORETURN__ static void help_message(int status)
 {
 	int i = 0;
 
-	printf("Usage: %s [OPTIONS] [ACTION] (TIME) [MESSAGE]\n", prgname);
+	printf("Usage: %s [OPTIONS] [ACTION] (TIME) [MESSAGE]\n", progname);
 	printf("    -6, -%c, --%-9s         %s\n", longopts[i].val, longopts[i].name,
 		longopts_help[i]);
 	i++;
@@ -120,12 +120,12 @@ __NORETURN__ static void help_message(int status)
 
 static void sighandler(int sig)
 {
-	/*printf("%s: Caught signal %s ...\n", prgname, strsignal(sig));*/
+	/*printf("%s: Caught signal %s ...\n", progname, strsignal(sig));*/
 	if (!access(FASTBOOT , F_OK)) unlink(FASTBOOT);
 	if (!access(FORCEFSCK, F_OK)) unlink(FORCEFSCK);
 	if (!access(NOLOGIN  , F_OK)) unlink(NOLOGIN);
 	if (sig > 0) {
-		fprintf(stderr, "%s: cancelling system shutdown\n", prgname);
+		fprintf(stderr, "%s: cancelling system shutdown\n", progname);
 		exit(EXIT_SUCCESS);
 	}
 }
@@ -215,7 +215,7 @@ __NORETURN__ static int sv_shutdown(char **message)
 		goto shutdown;
 	}
 	else {
-		ERR("-0|-6 is required to proceed; see `%s -u'\n", prgname);
+		ERR("-0|-6 is required to proceed; see `%s -u'\n", progname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -266,7 +266,7 @@ shutdown:
 	else
 		snprintf(buf, sizeof(buf), "shutting down for system halt (USER=%s)",
 				getpwuid(real_uid)->pw_name);
-	openlog(prgname, LOG_PID, LOG_USER);
+	openlog(progname, LOG_PID, LOG_USER);
 	syslog(LOG_NOTICE, buf);
 	closelog();
 
@@ -289,32 +289,32 @@ int main(int argc, char *argv[])
 	const char *options;
 
 	real_uid = getuid();
-	prgname = strrchr(argv[0], '/');
-	if (prgname == NULL)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (progname == NULL)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 
 	if (geteuid()) {
-		fprintf(stderr, "%s: must be the superuser to proceed\n", prgname);
+		fprintf(stderr, "%s: must be the superuser to proceed\n", progname);
 		exit(EXIT_FAILURE);
 	}
 	/* support setuid to a special group */
 	setuid(geteuid());
 
-	if (strcmp(prgname, "reboot") == 0) {
+	if (strcmp(progname, "reboot") == 0) {
 		reboot_action = RB_AUTOBOOT;
 		shutdown_action = SV_ACTION_REBOOT;
 		options = "dfiknw";
 		goto reboot;
 	}
-	else if (strcmp(prgname, "halt") == 0) {
+	else if (strcmp(progname, "halt") == 0) {
 		reboot_action = RB_HALT_SYSTEM;
 		shutdown_action = SV_ACTION_SHUTDOWN;
 		options = "dfhinpw";
 		goto reboot;
 	}
-	else if (strcmp(prgname, "poweroff") == 0) {
+	else if (strcmp(progname, "poweroff") == 0) {
 		reboot_action = RB_POWER_OFF;
 		shutdown_action = SV_ACTION_SHUTDOWN;
 		options = "dfhinw";
@@ -348,8 +348,8 @@ int main(int argc, char *argv[])
 			reboot_sync = 0;
 			break;
 		case 'c':
-			execlp("pkill",   "pkill",   "-INT", "-x", prgname, NULL);
-			execlp("killall", "killall", "-INT", "-e", prgname, NULL);
+			execlp("pkill",   "pkill",   "-INT", "-x", progname, NULL);
+			execlp("killall", "killall", "-INT", "-e", progname, NULL);
 			ERROR("Failed to execute neither pkill nor killall", NULL);
 			break;
 		case 'f':
@@ -370,7 +370,7 @@ int main(int argc, char *argv[])
 			shutdown_action = SV_ACTION_MESSAGE;
 			break;
 		case 'v':
-			printf("%s version %s\n", prgname, VERSION);
+			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
 		case 'u':
 			help_message(EXIT_SUCCESS);
@@ -381,12 +381,12 @@ int main(int argc, char *argv[])
 	}
 	argc -= optind, argv += optind;
 
-	if (strcmp(prgname, "shutdown") == 0) {
+	if (strcmp(progname, "shutdown") == 0) {
 		if (shutdown_action < 0)
 			shutdown_action = SV_ACTION_SINGLE;
-		if (!*argv) {
+		if (argc < 1) {
 			fprintf(stderr, "Usage: %s [OPTIONS] TIME [MESSAGE] "
-					"(TIME argument required)\n", prgname);
+					"(TIME argument required)\n", progname);
 			exit(EXIT_FAILURE);
 		}
 
@@ -482,7 +482,7 @@ reboot:
 			/* ignored */
 			break;
 		default:
-			printf("Usage: %s [-n] [-w] [-d] [-f] [-i] [-p] [-h]\n", prgname);
+			printf("Usage: %s [-fnp]\n", progname);
 			puts(  "    -f    Force halt or reboot, don't call shutdown");
 			puts(  "    -n    Don't sync before system halt or reboot");
 			puts(  "    -p    Switch off the power when halting the system");

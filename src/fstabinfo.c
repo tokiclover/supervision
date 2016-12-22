@@ -44,7 +44,7 @@
 
 #define VERSION "0.12.0"
 
-const char *prgname;
+const char *progname;
 
 #if defined(HAVE_GETMNTENT)
 static FILE *ptrtab;
@@ -97,7 +97,7 @@ __NORETURN__ static void help_message(int status)
 {
 	int i;
 
-	printf("Usage: %s [OPTIONS] <MOUNTPOINTS>\n", prgname);
+	printf("Usage: %s [OPTIONS] <MOUNTPOINTS>\n", progname);
 	for (i = 0; longopts_help[i]; i++)
 		printf("  -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
 			longopts_help[i]);
@@ -227,11 +227,11 @@ int main(int argc, char *argv[])
 	MNTENT *ent;
 	int retval = 0, task = 0, opt, quiet = 1;
 
-	prgname = strrchr(argv[0], '/');
-	if (prgname == NULL)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (progname == NULL)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 
 	/* Parse options */
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
 			quiet = 0;
 			break;
 		case 'v':
-			printf("%s version %s\n", prgname, VERSION);
+			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
 		case '?':
 		case 'h':
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc-optind) < 1) {
-		fprintf(stderr, "%s: Insufficient number of arguments\n", prgname);
+		fprintf(stderr, "%s: Insufficient number of arguments\n", progname);
 		help_message(EXIT_FAILURE);
 	}
 

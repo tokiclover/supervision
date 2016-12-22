@@ -21,7 +21,7 @@
 
 #define VERSION "0.11.0"
 
-const char *prgname;
+const char *progname;
 
 enum {
 	TYPE_FILE   = 0x01,
@@ -77,7 +77,7 @@ __NORETURN__ static void help_message(int status)
 {
 	int i;
 
-	printf("Usage: %s [OPTIONS] <TEMPLATES>|<DIRS>|<FILES>\n", prgname);
+	printf("Usage: %s [OPTIONS] <TEMPLATES>|<DIRS>|<FILES>\n", progname);
 	for (i = 0; longopts_help[i]; i++) {
 		printf("    -%c, --%-10s", longopts[i].val, longopts[i].name);
 		if (longopts[i].has_arg)
@@ -244,11 +244,11 @@ int main(int argc, char *argv[])
 	struct passwd *pwd = NULL;
 	struct group *grp = NULL;
 
-	prgname = strrchr(argv[0], '/');
-	if (prgname == NULL)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (progname == NULL)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 
 	/* Parse options */
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 		case 'q': /* ignored */
 			break;
 		case 'v':
-			printf("%s version %s\n", prgname, VERSION);
+			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
 		case 'p':
 			type |= TYPE_MKTEMP;
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc-optind) < 1 || !(type & ~TYPE_CHECK)) {
-		fprintf(stderr, "%s: Insufficient number of arguments\n", prgname);
+		fprintf(stderr, "%s: Insufficient number of arguments\n", progname);
 		help_message(EXIT_FAILURE);
 	}
 
@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
 		if (pwd)
 			uid = pwd->pw_uid;
 		else {
-			fprintf(stderr, "%s: Failed to get owner\n", prgname);
+			fprintf(stderr, "%s: Failed to get owner\n", progname);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
 		if (grp)
 			gid = grp->gr_gid;
 		else {
-			fprintf(stderr, "%s: Failed to get group\n", prgname);
+			fprintf(stderr, "%s: Failed to get group\n", progname);
 			exit(EXIT_FAILURE);
 		}
 	}

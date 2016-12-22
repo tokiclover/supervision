@@ -33,10 +33,10 @@
 #define WAIT_MSEC 1000  /* interval for displaying warning */
 #define WAIT_POLL 100   /* poll interval */
 
-const char *prgname;
+const char *progname;
 
-#define ERR(fmt, ...) fprintf(stderr, "ERROR: %s: " fmt, prgname, __VA_ARGS__)
-#define WARN(fmt, ...) fprintf(stderr, "WARN: %s: " fmt, prgname, __VA_ARGS__)
+#define ERR(fmt, ...) fprintf(stderr, "ERROR: %s: " fmt, progname, __VA_ARGS__)
+#define WARN(fmt, ...) fprintf(stderr, "WARN: %s: " fmt, progname, __VA_ARGS__)
 
 enum {
 	FILE_EXIST = 0x01,
@@ -63,7 +63,7 @@ static void help_message(int status)
 {
 	int i = 0;
 
-	printf("Usage: %s [-E] [-m] TIMEOUT FILENAME\n", prgname);
+	printf("Usage: %s [-E] [-m] TIMEOUT FILENAME\n", progname);
 	for ( ; longopts_help[i]; i++)
 		printf("    -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
 				longopts_help[i]);
@@ -110,11 +110,11 @@ int main(int argc, char *argv[])
 	int flags = 0, opt;
 	long timeout;
 
-	prgname = strrchr(argv[0], '/');
-	if (prgname == NULL)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (progname == NULL)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (opt) {
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 			flags |= FILE_MESG;
 			break;
 		case 'v':
-			printf("%s version %s\n", prgname, VERSION);
+			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
 		case '?':
 		case 'h':
@@ -136,13 +136,13 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc-optind) < 2) {
-		fprintf(stderr, "%s: Insufficient number of arguments\n", prgname);
-		fprintf(stderr, "usage: %s [-E] TIMEOUT FILENAME\n", prgname);
+		fprintf(stderr, "%s: Insufficient number of arguments\n", progname);
+		fprintf(stderr, "usage: %s [-E] TIMEOUT FILENAME\n", progname);
 	}
 
 	timeout = strtol(argv[optind], NULL, 10);
 	if (errno == ERANGE) {
-		fprintf(stderr, "%s: Invalid number or agument: %s\n", prgname,
+		fprintf(stderr, "%s: Invalid number or agument: %s\n", progname,
 				strerror(errno));
 		exit(1);
 	}

@@ -55,7 +55,7 @@ static const char *const rs_init_stage[][4] = {
 const char *const rs_runlevel_name[] = { "shutdown", "single", "nonetwork", "default",
 	"sysinit", "boot", "reboot", NULL
 };
-const char *prgname;
+const char *progname;
 
 /* status command to issue to svc_{mark,state} when the STAT querry the status
  * and MARK command remove the status; so the command is only valid with svc_mark
@@ -160,9 +160,9 @@ static FILE *logfp;
 static int logfd, rs_debug;
 
 static int svc_log(const char *fmt, ...);
-#define LOG_ERR(fmt, ...)  svc_log("ERROR: %s: " fmt, PRGNAME, __VA_ARGS__)
-#define LOG_WARN(fmt, ...) svc_log( "WARN: %s: " fmt, PRGNAME, __VA_ARGS__)
-#define LOG_INFO(fmt, ...) svc_log( "INFO: %s: " fmt, PRGNAME, __VA_ARGS__)
+#define LOG_ERR(fmt, ...)  svc_log("ERROR: %s: " fmt, progname, __VA_ARGS__)
+#define LOG_WARN(fmt, ...) svc_log( "WARN: %s: " fmt, progname, __VA_ARGS__)
+#define LOG_INFO(fmt, ...) svc_log( "INFO: %s: " fmt, progname, __VA_ARGS__)
 
 #define RS_LOGFILE SV_TMPDIR "/rs.log"
 
@@ -393,8 +393,8 @@ static int svc_cmd(struct svcrun *run, int flags)
 	case RS_SVC_CMD_ADD:
 	case RS_SVC_CMD_DEL:
 		if (rs_stage < 0) {
-			fprintf(stderr, "%s: stage level argument is required\n", prgname);
-			fprintf(stderr, "Usage: %s -(0|1|2|3) %s %s\n", prgname,
+			fprintf(stderr, "%s: stage level argument is required\n", progname);
+			fprintf(stderr, "Usage: %s -(0|1|2|3) %s %s\n", progname,
 					run->name, rs_svc_cmd[command]);
 			retval = 1;
 			goto reterr;
@@ -1200,11 +1200,11 @@ int main(int argc, char *argv[])
 	char *ptr;
 	char on[8] = "1", off[8] = "0";
 
-	prgname = strrchr(argv[0], '/');
-	if (!prgname)
-		prgname = argv[0];
+	progname = strrchr(argv[0], '/');
+	if (!progname)
+		progname = argv[0];
 	else
-		prgname++;
+		progname++;
 
 	/* Show help if insufficient args */
 	if (argc < 2)
@@ -1239,7 +1239,7 @@ int main(int argc, char *argv[])
 				svc_quiet = 0;
 				break;
 			case 'v':
-				printf("%s version %s\n\n", prgname, VERSION);
+				printf("%s version %s\n\n", progname, VERSION);
 				puts(RS_COPYRIGHT);
 				exit(EXIT_SUCCESS);
 			case '?':
@@ -1259,9 +1259,9 @@ int main(int argc, char *argv[])
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
 
-	if (strcmp(prgname, "service") == 0)
+	if (strcmp(progname, "service") == 0)
 		goto service;
-	else if (strcmp(prgname, "rc") == 0) {
+	else if (strcmp(progname, "rc") == 0) {
 		setenv("SVC_DEBUG", off, 1);
 		goto rc;
 	}
@@ -1271,7 +1271,7 @@ int main(int argc, char *argv[])
 			svc_stage(argv[1]);
 		else {
 			fprintf(stderr, "Usage: %s -(0|1|2|3) stage [start|stop]"
-					"(level argument required)\n", prgname);
+					"(level argument required)\n", progname);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -1317,17 +1317,17 @@ rc:
 		}
 	}
 
-	if (strcmp(prgname, "rc") == 0) {
+	if (strcmp(progname, "rc") == 0) {
 		ERR("invalid run level -- `%s'\n", *argv);
 		fprintf(stderr, "Usage: %s {nonetwork|single|sysinit|boot|default|shutdown|reboot} "
-				"(run level)\n", prgname);
+				"(run level)\n", progname);
 	}
 	else {
 		ERR("invalid/insuficient arguments -- `%s ...'\n", *argv);
 		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS] "
-				"(service command)\n", prgname);
+				"(service command)\n", progname);
 		fprintf(stderr, "       %s -{0|1|2|3} stage "
-				"(init-stage)\n", prgname);
+				"(init-stage)\n", progname);
 	}
 	exit(EXIT_FAILURE);
 
@@ -1344,7 +1344,7 @@ service:
 	 */
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS]\n",
-				prgname);
+				progname);
 		exit(EXIT_FAILURE);
 	}
 	svc_exec(argc, argv);
