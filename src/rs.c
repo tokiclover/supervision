@@ -325,7 +325,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name);
 			stat(buf, &st_buf);
 			if ((i = open(buf, O_RDONLY)) > 0) {
-				if ((retval = read(i, buf, sizeof(buf))) > 0) {
+				if (read(i, buf, sizeof(buf)) > 0) {
 					printf("%s: %s: (%s command) failed at %s", run->name,
 							cmd, buf, ctime(&st_buf.st_mtim.tv_sec));
 				}
@@ -339,7 +339,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name);
 			stat(buf, &st_buf);
 			if ((i = open(buf, O_RDONLY)) > 0) {
-				if ((retval = read(i, buf, sizeof(buf))) > 0) {
+				if (read(i, buf, sizeof(buf)) > 0) {
 					printf("%s: %s: waiting (%s command) since %s", run->name,
 							cmd, buf, ctime(&st_buf.st_ctim.tv_sec));
 				}
@@ -1060,7 +1060,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		svc_mark(run[i]->name, RS_SVC_MARK_WAIT, NULL);
 		if (WEXITSTATUS(status)) {
 			retval++;
-			svc_mark(run[i]->name, RS_SVC_STAT_FAIL, NULL);
+			svc_mark(run[i]->name, RS_SVC_STAT_FAIL, argv[4]);
 		}
 		else {
 			svc_mark(run[i]->name, state, NULL);
