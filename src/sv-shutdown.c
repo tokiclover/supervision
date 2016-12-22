@@ -22,6 +22,7 @@
 #include <utmpx.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <paths.h>
 #include <sys/reboot.h>
 #include <string.h>
 #include <signal.h>
@@ -37,11 +38,6 @@
 
 #define FASTBOOT  "/fastboot"
 #define FORCEFSCK "/forcefsck"
-#ifdef __linux__
-# define NOLOGIN   "/etc/nologin"
-#else
-# define NOLOGIN   "/var/run/nologin"
-#endif
 
 #define SV_ACTION_SHUTDOWN 0
 #define SV_ACTION_SINGLE   1
@@ -53,7 +49,7 @@ static int reboot_action;
 static int reboot_force;
 static int reboot_sync = 1;
 static int shutdown_action = -1;
-static uid_t real_uid;
+static uid_t uid;
 
 static const char *shortopts = "06crshpfFEHPntkuv";
 static const struct option longopts[] = {
@@ -123,7 +119,7 @@ static void sighandler(int sig)
 	/*printf("%s: Caught signal %s ...\n", progname, strsignal(sig));*/
 	if (!access(FASTBOOT , F_OK)) unlink(FASTBOOT);
 	if (!access(FORCEFSCK, F_OK)) unlink(FORCEFSCK);
-	if (!access(NOLOGIN  , F_OK)) unlink(NOLOGIN);
+	if (!access(_PATH_NOLOGIN  , F_OK)) unlink(_PATH_NOLOGIN);
 	if (sig > 0) {
 		fprintf(stderr, "%s: cancelling system shutdown\n", progname);
 		exit(EXIT_SUCCESS);
@@ -171,7 +167,7 @@ static int sv_wall(char **argv)
 	while ((utxent = getutxent())) {
 		if (utxent->ut_type != USER_PROCESS)
 			continue;
-		snprintf(dev, UT_LINESIZE, "/dev/%s", utxent->ut_line);
+		snprintf(dev, UT_LINESIZE, "%s%s", _PATH_DEV, utxent->ut_line);
 		if ((fp = fopen(dev, "w")) == NULL) {
 			ERR("Failed to open `%s': %s\n", dev, strerror(errno));
 			sighandler(-1);
@@ -192,7 +188,8 @@ __NORETURN__ static int sv_shutdown(char **message)
 	size_t len = 0;
 	char *line = NULL, *ptr = NULL;
 	char *argv[8], arg[8];
-	char buf[128];
+	char *whom;
+	struct passwd *pw;
 	static const char ent[] = "__SV_NAM__";
 	static size_t siz = sizeof(ent)-1;
 
@@ -254,20 +251,18 @@ __NORETURN__ static int sv_shutdown(char **message)
 	goto shutdown;
 
 shutdown:
-	if (!access(NOLOGIN, F_OK))
-		unlink(NOLOGIN);
+	if (!access(_PATH_NOLOGIN, F_OK))
+		unlink(_PATH_NOLOGIN);
 
+	if (!(whom = getlogin()))
+		whom = (pw = getpwuid(uid)) ? pw->pw_name : "???";
+	openlog(progname, LOG_PID | LOG_CONS, LOG_AUTH);
 	if (shutdown_action == SV_ACTION_REBOOT)
-		snprintf(buf, sizeof(buf), "shutting down for system reboot (USER=%s)",
-				getpwuid(real_uid)->pw_name);
+		syslog(LOG_CRIT, "system rebooted (by USER=%s)", whom);
 	else if (shutdown_action == SV_ACTION_SINGLE)
-		snprintf(buf, sizeof(buf), "shutting down for single user mode (USER=%s)",
-				getpwuid(real_uid)->pw_name);
+		syslog(LOG_CRIT, "single user mode runlevel (by USER=%s)", whom);
 	else
-		snprintf(buf, sizeof(buf), "shutting down for system halt (USER=%s)",
-				getpwuid(real_uid)->pw_name);
-	openlog(progname, LOG_PID, LOG_USER);
-	syslog(LOG_NOTICE, buf);
+		syslog(LOG_CRIT, "system halted (by USER=%s)", whom);
 	closelog();
 
 	execvp(argv[0], argv);
@@ -288,17 +283,19 @@ int main(int argc, char *argv[])
 	char *ptr;
 	const char *options;
 
-	real_uid = getuid();
 	progname = strrchr(argv[0], '/');
 	if (progname == NULL)
 		progname = argv[0];
 	else
 		progname++;
 
+	uid = getuid();
+#ifndef DEBUG
 	if (geteuid()) {
-		fprintf(stderr, "%s: must be the superuser to proceed\n", progname);
-		exit(EXIT_FAILURE);
+		errno = EPERM;
+		ERROR("must be the superuser to proceed", NULL);
 	}
+#endif
 	/* support setuid to a special group */
 	setuid(geteuid());
 
@@ -425,7 +422,7 @@ int main(int argc, char *argv[])
 				ts.tv_sec = 60, ts.tv_nsec = 0;
 
 				if (!nologin && m < 6) {
-					fp = fopen(NOLOGIN, "w");
+					fp = fopen(_PATH_NOLOGIN, "w");
 					if (fp) {
 						if (*argv && argv[0][0])
 							for (i = 0; argv[i]; i++)
@@ -437,7 +434,7 @@ int main(int argc, char *argv[])
 						fclose(fp);
 					}
 					else
-						WARN("Failed to open %s\n", NOLOGIN);
+						WARN("Failed to open %s\n", _PATH_NOLOGIN);
 					nologin++;
 				}
 
