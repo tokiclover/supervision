@@ -30,7 +30,7 @@
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
 struct svcrun {
-	RS_SvcDeps_T *depends;
+	RS_String_T *svc;
 	const char *name;
 	const char *path;
 	pid_t pid;
@@ -285,13 +285,13 @@ static int svc_cmd(struct svcrun *run, int flags)
 	const char **argv = NULL;
 	const char *cmd = run->argv[4];
 	char *path, buf[512];
+	RS_SvcDeps_T *d = run->svc->data;
 
 	if (setup) {
 		svc_sigsetup();
 		setup = 0;
 		stat(RS_SVCDEPS_FILE, &st_dep);
 	}
-	run->depends = NULL;
 
 	if (strcmp(cmd, rs_svc_cmd[RS_SVC_CMD_START]) == 0)
 		state   = RS_SVC_STAT_STAR,
@@ -384,7 +384,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 	argv[2] = deps[0];
 
 	/* check service mtime */
-	if (st_buf.st_mtim.tv_sec > st_dep.st_mtim.tv_sec)
+	if (st_buf.st_mtime > st_dep.st_mtime)
 		LOG_WARN("%s was updated -- `scan' command might be necessary?\n",
 				run->name);
 
@@ -419,13 +419,13 @@ static int svc_cmd(struct svcrun *run, int flags)
 		goto reterr;
 		break;
 	case RS_SVC_CMD_START:
-			if (svc_deps)
-				run->depends = rs_svcdeps_load(run->name);
+		if (svc_deps && !d)
+			d = run->svc->data = rs_svcdeps_load(run->name);
 		break;
 	}
 
 	/* setup dependencies */
-	if (run->depends) {
+	if (d) {
 		retval = svc_depend(run);
 		if (retval == -ENOENT)
 			;
@@ -458,8 +458,8 @@ static int svc_cmd(struct svcrun *run, int flags)
 				svc_mark(run->name, RS_SVC_STAT_FAIL, cmd);
 			else if (state) {
 				svc_mark(run->name, state, NULL);
-				if (run->depends && run->depends->virt)
-					svc_mark(run->depends->virt, state, NULL);
+				if (d && d->virt)
+					svc_mark(d->virt, state, NULL);
 			}
 			goto reterr;
 		}
@@ -497,19 +497,20 @@ static int svc_depend(struct svcrun *run)
 	int type, val, retval = 0;
 	int p = 0;
 	RS_DepTree_T deptree = { NULL, NULL, 0, 0 };
+	RS_SvcDeps_T *d = run->svc->data;
 
-	if (!run->depends)
+	if (!d)
 		return -ENOENT;
 
 	/* skip before deps type */
 	for (type = RS_DEPS_USE; type < RS_DEPS_TYPE; type++) {
-		if (SLIST_EMPTY(run->depends->deps[type]))
+		if (TAILQ_EMPTY(d->deps[type]))
 			continue;
 		/* build a deptree to avoid segfault because cyclical dependencies */
-		deptree.list = run->depends->deps[type];
+		deptree.list = d->deps[type];
 		svc_deptree_load(&deptree);
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
-			if (!SLIST_EMPTY(deptree.tree[p]))
+			if (!TAILQ_EMPTY(deptree.tree[p]))
 				val = svc_exec_list(deptree.tree[p], run->argc, run->argv, run->envp);
 				--p;
 		} /* PRIORITY_LEVEL_LOOP */
@@ -951,9 +952,11 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	int i = 0, j, retval;
 	int cmd_flags = SVC_CMD_WAIT;
 	struct svcrun run;
+	RS_String_T svc = { NULL, NULL, NULL, NULL, };
 
 	run.argc = 8*(argc/8)+8+ (argc%8) > 4 ? 8 : 0;
 	run.argv = err_malloc(run.argc*sizeof(void*));
+	run.svc = &svc;
 
 	if (argv[0][0] == '/') {
 		run.argv[3] = run.path = argv[0];
@@ -963,6 +966,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 		run.name = argv[0];
 		run.path = NULL;
 	}
+	svc.str = (char*)run.name;
 	run.argv[0] = "runscript";
 	run.argv[4] = argv[1];
 
@@ -999,6 +1003,7 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 	int i, r, state, status;
 	static int parallel, setup, cmd_flags;
 	struct svcrun **run;
+	RS_SvcDeps_T *d;
 
 	if (list == NULL) {
 		errno = ENOENT;
@@ -1020,13 +1025,14 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		state = RS_SVC_MARK_STAR;
 
 	run = err_malloc(size*sizeof(void*));
-	SLIST_FOREACH(svc, list, entries) {
+	TAILQ_FOREACH(svc, list, entries) {
 		run[n] = err_malloc(sizeof(struct svcrun));
 		run[n]->name = svc->str;
 		run[n]->argc = argc;
 		run[n]->argv = argv;
 		run[n]->envp = envp;
 		run[n]->path = NULL;
+		run[n]->svc  = svc;
 
 		r = svc_cmd(run[n], cmd_flags);
 		switch(r) {
@@ -1064,8 +1070,9 @@ static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
 		}
 		else {
 			svc_mark(run[i]->name, state, NULL);
-			if (run[i]->depends && run[i]->depends->virt)
-				svc_mark(run[i]->depends->virt, state, NULL);
+			d = run[n]->svc->data;
+			if (d && d->virt)
+				svc_mark(d->virt, state, NULL);
 		}
 		if (!svc_quiet)
 			svc_end(run[i]->name, status);
@@ -1163,7 +1170,7 @@ static void svc_stage(const char *cmd)
 		else
 			p = 0;
 		while (p >= 0 && p < DEPTREE.size) { /* PRIORITY_LEVEL_LOOP */
-			if (!SLIST_EMPTY(DEPTREE.tree[p])) {
+			if (!TAILQ_EMPTY(DEPTREE.tree[p])) {
 				t = time(NULL);
 				svc_log("\n\tpriority-level-%d started at %s\n", p,	ctime(&t));
 				r = svc_exec_list(DEPTREE.tree[p], argc, argv, envp);

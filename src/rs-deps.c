@@ -50,30 +50,36 @@ void rs_deptree_free(RS_DepTree_T *deptree)
 	deptree->size = 0;
 }
 
-static int rs_deptree_add(int type, int prio, char *svc, RS_DepTree_T *deptree)
+static int rs_deptree_add(int type, int prio, RS_String_T *svc, RS_DepTree_T *deptree)
 {
-	char *s = svc;
-	RS_SvcDeps_T *svc_deps = rs_svcdeps_find(s);
+	char *s = svc->str;
+	RS_SvcDeps_T *d = (RS_SvcDeps_T*)svc->data;
 	RS_String_T *ent, *elm;
 	int add, pri;
 	int p, t, r;
 
 	if (s == NULL)
 		return 0;
+	if (d) {
+		if (d->virt) s = d->svc;
+	}
+	else
+		svc->data = d = rs_svcdeps_find(s);
+
 	/* add service to list if and only if, either a service is {use,need}ed or
 	 * belongs to this particular init-stage
 	 */
 	if (type < RS_DEPS_USE && !rs_stringlist_find(deptree->list, s))
 		return -prio;
 	/* insert the real service instead of a virtual one */
-	if (!svc_deps && (svc_deps = rs_virtsvc_find(deptree->list, s)))
-		s = svc_deps->svc;
+	if (!d && (d = rs_virtsvc_find(deptree->list, s)))
+		s = d->svc, svc->data = d;
 	if (prio < 0) {
-		if (svc_deps) {
-			if (svc_deps->deps[RS_DEPS_AFTER] || svc_deps->deps[RS_DEPS_USE] ||
-					svc_deps->deps[RS_DEPS_NEED])
+		if (d) {
+			if (d->deps[RS_DEPS_AFTER] || d->deps[RS_DEPS_USE] ||
+					d->deps[RS_DEPS_NEED])
 				prio = 0;
-			else if (svc_deps->deps[RS_DEPS_BEFORE])
+			else if (d->deps[RS_DEPS_BEFORE])
 				prio = 1;
 		}
 		else
@@ -85,11 +91,11 @@ static int rs_deptree_add(int type, int prio, char *svc, RS_DepTree_T *deptree)
 	if (pri > deptree->size && deptree->size < RS_DEPTREE_MAX)
 		rs_deptree_alloc(deptree);
 
-	if (svc_deps && pri < RS_DEPTREE_MAX) {
+	if (d && pri < RS_DEPTREE_MAX) {
 		/* handle {after,use,need} type  which insert dependencies above */
 		if (type) {
 			for (t = RS_DEPS_AFTER; t < RS_DEPS_TYPE; t++)
-			SLIST_FOREACH(ent, svc_deps->deps[t], entries) {
+			TAILQ_FOREACH(ent, d->deps[t], entries) {
 				add = 1;
 				for (p = pri; p < deptree->size; p++)
 					if ((elm = rs_stringlist_find(deptree->tree[p], ent->str))) {
@@ -97,12 +103,12 @@ static int rs_deptree_add(int type, int prio, char *svc, RS_DepTree_T *deptree)
 						break;
 					}
 				if (add)
-					rs_deptree_add(t, pri, ent->str, deptree);
+					rs_deptree_add(t, pri, ent, deptree);
 			}
 		}
 		else {
 			/* handle before type which incerts dependencies below */
-			SLIST_FOREACH(ent, svc_deps->deps[type], entries) {
+			TAILQ_FOREACH(ent, d->deps[type], entries) {
 				add = 1;
 				for (p = 0; p < prio; p++)
 					if ((elm = rs_stringlist_find(deptree->tree[p], ent->str))) {
@@ -114,10 +120,10 @@ static int rs_deptree_add(int type, int prio, char *svc, RS_DepTree_T *deptree)
 					/* prio level should be precisely handled here; so, the
 					 * follow up is required to get before along with the others
 					 */
-					r = rs_deptree_add(type, prio, ent->str, deptree);
+					r = rs_deptree_add(type, prio, ent, deptree);
 					if (r < 0)
 						continue;
-					r = rs_deptree_add(RS_DEPS_AFTER, r, ent->str, deptree);
+					r = rs_deptree_add(RS_DEPS_AFTER, r, ent, deptree);
 					prio = ++r > prio ? r : prio;
 				}
 			}
@@ -129,7 +135,7 @@ static int rs_deptree_add(int type, int prio, char *svc, RS_DepTree_T *deptree)
 		if ((elm = rs_stringlist_find(deptree->tree[p], s))) {
 			if (prio < RS_DEPTREE_MAX) {
 				rs_stringlist_mov(deptree->tree[p], deptree->tree[prio], elm);
-				rs_deptree_add(RS_DEPS_AFTER, prio, s, deptree);
+				rs_deptree_add(RS_DEPS_AFTER, prio, svc, deptree);
 			}
 			return prio;
 		}
@@ -209,7 +215,7 @@ static int rs_deptree_file_save(RS_DepTree_T *deptree)
 
 	for (p = 0; p < deptree->size; p++) {
 		fprintf(fp, "dep_%d='", p);
-		SLIST_FOREACH(ent, deptree->tree[p], entries)
+		TAILQ_FOREACH(ent, deptree->tree[p], entries)
 			if (ent)
 				fprintf(fp, "%s ", ent->str);
 		fprintf(fp, "'\n");
@@ -224,8 +230,8 @@ void svc_deptree_load(RS_DepTree_T *deptree)
 	RS_String_T *ent;
 	rs_deptree_alloc(deptree);
 
-	SLIST_FOREACH(ent, deptree->list, entries)
-		rs_deptree_add(RS_DEPS_USE, -1, ent->str, deptree);
+	TAILQ_FOREACH(ent, deptree->list, entries)
+		rs_deptree_add(RS_DEPS_USE, -1, ent, deptree);
 }
 
 void rs_deptree_load(RS_DepTree_T *deptree)
@@ -240,10 +246,10 @@ void rs_deptree_load(RS_DepTree_T *deptree)
 	rs_svcdeps_load(NULL);
 
 	/* XXX: handle {after,use,need} first */
-	SLIST_FOREACH(ent, deptree->list, entries)
-		rs_deptree_add(RS_DEPS_AFTER, -1, ent->str, deptree);
-	SLIST_FOREACH(ent, deptree->list, entries)
-		rs_deptree_add(RS_DEPS_BEFORE, 0, ent->str, deptree);
+	TAILQ_FOREACH(ent, deptree->list, entries)
+		rs_deptree_add(RS_DEPS_AFTER, -1, ent, deptree);
+	TAILQ_FOREACH(ent, deptree->list, entries)
+		rs_deptree_add(RS_DEPS_BEFORE, 0, ent, deptree);
 
 	/* save everything to a file */
 	rs_deptree_file_save(deptree);
@@ -409,7 +415,7 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 static RS_SvcDepsList_T *rs_svcdeps_new(void)
 {
 	RS_SvcDepsList_T *list = err_malloc(sizeof(RS_SvcDepsList_T));
-	SLIST_INIT(list);
+	TAILQ_INIT(list);
 	return list;
 }
 
@@ -420,7 +426,7 @@ static RS_SvcDeps_T *rs_svcdeps_add(const char *svc)
 
 	for (int i = 0; i < RS_DEPS_TYPE; i++)
 		elm->deps[i] = rs_stringlist_new();
-	SLIST_INSERT_HEAD(SERVICES.svcdeps, elm, entries);
+	TAILQ_INSERT_TAIL(SERVICES.svcdeps, elm, entries);
 
 	return elm;
 }
@@ -438,7 +444,7 @@ static RS_SvcDeps_T *rs_svcdeps_find(const char *svc)
 {
 	RS_SvcDeps_T *elm;
 
-	SLIST_FOREACH(elm, SERVICES.svcdeps, entries)
+	TAILQ_FOREACH(elm, SERVICES.svcdeps, entries)
 		if (strcmp(elm->svc, svc) == 0)
 			return elm;
 	return NULL;
@@ -489,17 +495,17 @@ static void rs_svcdeps_free(void)
 	if (!SERVICES.svcdeps)
 		return;
 
-	while (!SLIST_EMPTY(SERVICES.svcdeps)) {
-		elm = SLIST_FIRST(SERVICES.svcdeps);
+	TAILQ_FOREACH(elm, SERVICES.svcdeps, entries) {
+		TAILQ_REMOVE(SERVICES.svcdeps, elm, entries);
+
 		for (i = 0; i < RS_DEPS_TYPE; i++)
 			rs_stringlist_free(&(elm->deps[i]));
-
 		free(elm->svc);
 		if (elm->virt)
 			free(elm->virt);
-		SLIST_REMOVE_HEAD(SERVICES.svcdeps, entries);
 		free(elm);
 	}
+	free(SERVICES.svcdeps);
 	free(SERVICES.virt_svcdeps);
 	SERVICES.svcdeps      = NULL;
 	SERVICES.virt_svcdeps = NULL;

@@ -22,9 +22,10 @@ extern "C" {
 /* singly-linked list using queue(3) */
 typedef struct RS_String {
 	char *str;
-	SLIST_ENTRY(RS_String) entries;
+	void *data;
+	TAILQ_ENTRY(RS_String) entries;
 } RS_String_T;
-typedef SLIST_HEAD(RS_StringList, RS_String) RS_StringList_T;
+typedef TAILQ_HEAD(RS_StringList, RS_String) RS_StringList_T;
 
 /* string list helpers to manage string list using queue(3) */
 extern RS_StringList_T *rs_stringlist_new(void);

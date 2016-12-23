@@ -14,15 +14,17 @@
 RS_StringList_T *rs_stringlist_new(void)
 {
 	RS_StringList_T *list = err_malloc(sizeof(*list));
-	SLIST_INIT(list);
+	TAILQ_INIT(list);
 	return list;
 }
 
 RS_String_T *rs_stringlist_add(RS_StringList_T *list, const char *str)
 {
+	static unsigned id;
 	RS_String_T *elm = err_malloc(sizeof(RS_String_T));
 	elm->str = err_strdup(str);
-	SLIST_INSERT_HEAD(list, elm, entries);
+	elm->data = NULL;
+	TAILQ_INSERT_TAIL(list, elm, entries);
 	return elm;
 }
 
@@ -40,7 +42,7 @@ int rs_stringlist_del(RS_StringList_T *list, const char *str)
 	RS_String_T *elm = rs_stringlist_find(list, str);
 
 	if (elm) {
-		SLIST_REMOVE(list, elm, RS_String, entries);
+		TAILQ_REMOVE(list, elm, entries);
 		free(elm->str);
 		free(elm);
 		return 0;
@@ -52,7 +54,7 @@ int rs_stringlist_del(RS_StringList_T *list, const char *str)
 int rs_stringlist_rem(RS_StringList_T *list, RS_String_T *elm)
 {
 	if (elm) {
-		SLIST_REMOVE(list, elm, RS_String, entries);
+		TAILQ_REMOVE(list, elm, entries);
 		free(elm->str);
 		free(elm);
 		return 0;
@@ -66,7 +68,7 @@ RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str)
 	RS_String_T *elm;
 
 	if (list)
-		SLIST_FOREACH(elm, list, entries)
+		TAILQ_FOREACH(elm, list, entries)
 			if (strcmp(elm->str, str) == 0)
 				return elm;
 	return NULL;
@@ -78,8 +80,8 @@ int rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *e
 		errno = EINVAL;
 		return -1;
 	}
-	SLIST_REMOVE(src, ent, RS_String, entries);
-	SLIST_INSERT_HEAD(dst, ent, entries);
+	TAILQ_REMOVE(src, ent, entries);
+	TAILQ_INSERT_TAIL(dst, ent, entries);
 	return 0;
 }
 
@@ -89,12 +91,12 @@ void rs_stringlist_free(RS_StringList_T **list)
 
 	if (!list)
 		return;
-	while (!SLIST_EMPTY(*list)) {
-		elm = SLIST_FIRST(*list);
+	TAILQ_FOREACH(elm, *list, entries) {
+		TAILQ_REMOVE(*list, elm, entries);
 		free(elm->str);
-		SLIST_REMOVE_HEAD(*list, entries);
 		free(elm);
 	}
+	free(*list);
 	*list = NULL;
 }
 

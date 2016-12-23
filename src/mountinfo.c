@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 	mount_list = rs_stringlist_new();
 	find_mount_point(&args);
 
-	SLIST_FOREACH(s, mount_list, entries) {
+	TAILQ_FOREACH(s, mount_list, entries) {
 		if (retval)
 			retval--;
 		if (quiet)

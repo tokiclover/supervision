@@ -38,9 +38,9 @@ typedef struct RS_SvcDeps {
 	char *virt;
 	/* priority level list [0-RS_DEPS_TYPE] */
 	RS_StringList_T *deps[RS_DEPS_TYPE];
-	SLIST_ENTRY(RS_SvcDeps) entries;
+	TAILQ_ENTRY(RS_SvcDeps) entries;
 } RS_SvcDeps_T;
-typedef SLIST_HEAD(RS_SvcDepsList, RS_SvcDeps) RS_SvcDepsList_T;
+typedef TAILQ_HEAD(RS_SvcDepsList, RS_SvcDeps) RS_SvcDepsList_T;
 
 typedef struct RS_DepTree {
 	RS_StringList_T **tree;
