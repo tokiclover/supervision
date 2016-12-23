@@ -235,7 +235,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]);
  * execute a service list (called from svc_stage())
  * @return 0 on success or number of failed services
  */
-static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
+static int svc_execl(RS_StringList_T *list, int argc, const char *argv[],
 		const char *envp[]);
 
 /*
@@ -511,7 +511,7 @@ static int svc_depend(struct svcrun *run)
 		svc_deptree_load(&deptree);
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(deptree.tree[p]))
-				val = svc_exec_list(deptree.tree[p], run->argc, run->argv, run->envp);
+				val = svc_execl(deptree.tree[p], run->argc, run->argv, run->envp);
 				--p;
 		} /* PRIORITY_LEVEL_LOOP */
 		rs_deptree_free(&deptree);
@@ -994,7 +994,7 @@ __NORETURN__ static int svc_exec(int argc, char *argv[]) {
 	}
 }
 
-static int svc_exec_list(RS_StringList_T *list, int argc, const char *argv[],
+static int svc_execl(RS_StringList_T *list, int argc, const char *argv[],
 		const char *envp[])
 {
 	RS_String_T *svc;
@@ -1092,7 +1092,7 @@ static int svc_stage_command(int stage, int argc, const char *argv[], const char
 	for (i = 0; rs_init_stage[stage][i]; i++)
 		rs_stringlist_add(init_stage_list, rs_init_stage[stage][i]);
 
-	retval = svc_exec_list(init_stage_list, argc, argv, envp);
+	retval = svc_execl(init_stage_list, argc, argv, envp);
 	rs_stringlist_free(&init_stage_list);
 
 	return retval;
@@ -1173,7 +1173,7 @@ static void svc_stage(const char *cmd)
 			if (!TAILQ_EMPTY(DEPTREE.tree[p])) {
 				t = time(NULL);
 				svc_log("\n\tpriority-level-%d started at %s\n", p,	ctime(&t));
-				r = svc_exec_list(DEPTREE.tree[p], argc, argv, envp);
+				r = svc_execl(DEPTREE.tree[p], argc, argv, envp);
 				/* enable dependency tracking only if needed */
 				if (r)
 					svc_deps = 1;
