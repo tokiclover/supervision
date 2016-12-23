@@ -28,6 +28,7 @@ fi
 # Setup a few environment variables beforehand
 #
 :	${COLUMNS:=$(tput cols)}
+trap 'COLUMNS="$(tput cols)"' WINCH
 
 #
 # @FUNCTION: Print error message to stderr
