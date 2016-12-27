@@ -1,7 +1,8 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/procfs                                Exp $
+# $Header: /etc/sv/procfs                                  Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
+# $Copyright: (c) 2015-2016         <tokiclover@gmail.com> Exp $
 # $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
 #
 

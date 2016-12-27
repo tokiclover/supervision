@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/lvm                                 Exp $
+# $Header: /etc/sv/lvm                                   Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
@@ -30,7 +30,7 @@ start()
 
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = 3 ] || return
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 	${lvm} lvchange --noudevsync --sysinit --activate ln
 	${lvm} vgchange --noudevsync --sysinit --activate ln

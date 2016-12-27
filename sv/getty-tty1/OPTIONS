@@ -40,7 +40,7 @@ getty_options()
 }
 rescue_shell()
 {
-	exec ${RS_SHELL:-sh} -aim
+	exec ${SV_SHELL:-sh} -aim
 	exec sh -aim
 	exec busybox sh -aim
 	error "No functional shell found!!!"
@@ -74,7 +74,7 @@ case "${SVC_CMD}" in
 		if [ "${OS_NAME}" = "Linux" ]; then
 			rs sulogin start || exec sulogin -p /dev/tty8 || rescue_shell
 		else
-			[ "${RS_SHELL##*/}" != "sulogin" ] || RS_SHELL="${SHELL:-sh}"
+			[ "${SV_SHELL##*/}" != "sulogin" ] || SV_SHELL="${SHELL:-sh}"
 			rescue_shell
 		fi
 	fi

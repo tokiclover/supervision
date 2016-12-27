@@ -94,7 +94,7 @@ start_pre()
 
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = 3 ] || return
 	local dev type mnt_dir num=0
 	while true; do
 		eval set -- \${ZRAM_DEVICE_${num}}

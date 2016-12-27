@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/swaps                                 Exp $
+# $Header: /etc/sv/swaps                                   Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 # $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
 #
@@ -23,7 +23,7 @@ start()
 }
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = 3 ] || return
 	case "${OS_NAME}" in
 		(OpenBSD|NetBSD) swapctl -U -t noblk >${NULL} 2>&1;;
 		(*) swapoff -a >${NULL} 2>&1;;

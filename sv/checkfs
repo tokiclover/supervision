@@ -8,8 +8,8 @@
 description='Check filesystems'
 SVC_USE='dev kmod clock device-mapper dmcrypt lvm raid'
 
-REBOOT_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --reboot'
-SHUTDOWN_COMMAND='[ "${RS_STAGE}" = 1 ] && sv-shutdown --force --shutdown'
+REBOOT_COMMAND='[ "${SV_STAGE}" = 1 ] && sv-shutdown --force --reboot'
+SHUTDOWN_COMMAND='[ "${SV_STAGE}" = 1 ] && sv-shutdown --force --shutdown'
 
 _forcefsck()
 {
@@ -79,7 +79,7 @@ start()
 
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = 3 ] || return
 	yesno "${CHECKFS_SHUTDOWN}" || return 0
 	start
 }

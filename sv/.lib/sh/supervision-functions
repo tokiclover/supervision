@@ -145,7 +145,7 @@ svc_reload()
 {
 	if command -v reload >${NULL} 2>&1; then
 		reload
-	elif [ "${RS_TYPE}" = "rs" ]; then
+	elif [ "${SV_TYPE}" = "rs" ]; then
 		error "invalid command -- no reload command definition found"
 		return 1
 	elif [ -n "${__SIGRELD__}" ]; then
@@ -171,7 +171,7 @@ svc_state()
 {
 	case "${1}" in
 		(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
-		(-a|--acti*) [ -e "${RS_RUNDIR}/${SVC_NAME}" ];;
+		(-a|--acti*) [ -e "${SV_RUNDIR}/${SVC_NAME}" ];;
 		(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 		(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 		(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
@@ -285,7 +285,7 @@ svc_depend()
 	fi
 
 :	${RET_NEED:=0}
-	if [ "${RS_TYPE}" = "sv" ]; then
+	if [ "${SV_TYPE}" = "sv" ]; then
 		__SVC_DEPEND__="${RET_NEED}"
 		env_svc __SVC_DEPEND__
 	fi
@@ -420,7 +420,7 @@ svc_cmd()
 		break
 	done
 
-	if [ "${RS_TYPE}" = "rs" ]; then
+	if [ "${SV_TYPE}" = "rs" ]; then
 		case "${cmd}" in
 			(restart|start|stop|status) pfx='rs_cmd ';;
 		esac

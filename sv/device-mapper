@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/device-mapper                       Exp $
+# $Header: /etc/sv/device-mapper                         Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
@@ -73,7 +73,7 @@ start()
 
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = 3 ] || return
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 
 	local volume retval=0

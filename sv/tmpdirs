@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/tmpdirs                             Exp $
+# $Header: /etc/sv/tmpdirs                               Exp $
 # $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 # $Version: 0.22.0 2016/06/06 12:33:03                   Exp $

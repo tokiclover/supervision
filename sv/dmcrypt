@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/dmcrypt                             Exp $
+# $Header: /etc/sv/dmcrypt                               Exp $
 # $Author: (c) 2016 tokiclover <tokiclover@gmail.com>    Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
@@ -325,7 +325,7 @@ start()
 
 stop()
 {
-	[ "${RS_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = 3 ] || return
 	local retval=0
 	local volume device keyfile options entry ifs="${IFS}"
 

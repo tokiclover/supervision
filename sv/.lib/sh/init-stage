@@ -88,13 +88,13 @@ svc_init()
 
 svc_rsh()
 {
-:	${RS_SHELL:=${SHELL:-sh}}
-	if [ "${RS_SHELL##*/}" = "sulogin" ]; then
-		exec ${RS_SHELL} -p /dev/tty8
+:	${SV_SHELL:=${SHELL:-sh}}
+	if [ "${SV_SHELL##*/}" = "sulogin" ]; then
+		exec ${SV_SHELL} -p /dev/tty8
 	fi
 	[ "${OS_NAME}" = "Linux" ] && exec sulogin -p /dev/tty8
 	exec 2>&1
-	exec ${RS_SHELL} -aim
+	exec ${SV_SHELL} -aim
 	exec sh -aim
 	exec busybox sh -aim
 	error "No functional shell found!!!"

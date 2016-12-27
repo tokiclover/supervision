@@ -19,7 +19,7 @@ __ERR_END__='{ end 0; return; };'
 __ERR_BUSY__='{ end 1 busy; return 16; };'
 PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
-export PATH SV_LIBDIR RS_RUNDIR SV_SVCDIR SV_TMPDIR
+export PATH SV_LIBDIR SV_RUNDIR SV_SVCDIR SV_TMPDIR
 
 [ -n "${__FUNCTIONS__}"              ] || . "${SV_LIBDIR}"/sh/functions
 [ -n "${__SUPERVISIONS_FUNCTIONS__}" ] || . "${SV_LIBDIR}"/sh/supervision-functions
@@ -56,14 +56,14 @@ rs_status()
 
 svc_add()
 {
-	[ -n "${RS_STAGE}" ] || return
-	svc_state -e && ln -fns ${SV_SVCDIR}/${SVC_NAME} ${RS_RUNDIR}
+	[ -n "${SV_STAGE}" ] || return
+	svc_state -e && ln -fns ${SV_SVCDIR}/${SVC_NAME} ${SV_SVCDIR}/.stage-${SV_STAGE}
 }
 
 svc_del()
 {
-	[ -n "${RS_STAGE}" ] || return
-	rm -fr "${RS_RUNDIR}/${SVC_NAME}"
+	[ -n "${SV_STAGE}" ] || return
+	rm -fr ${SV_SVCDIR}/.stage-${SV_STAGE}/${SVC_NAME}
 }
 svc_zap()
 {

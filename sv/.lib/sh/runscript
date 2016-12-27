@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/runscript                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.6 2016/07/28 21:09:26                      Exp $
+# $Version: 0.6 2016/12/26 21:09:26                      Exp $
 #
 
 #
@@ -24,13 +24,13 @@ fi
 
 help_message() {
 	cat <<-EOH
- usage: rs [OPTIONS] SERVICE COMMAND [ARGS]
+ usage: runscript [OPTIONS] SERVICE COMMAND [ARGUMENTS]
    COMMAND: add|del|desc|remove|reload|restart|start|stop|status|zap|cgroup_remove_service
-   OPTIONS: [OPTS] SERVICE COMMAND [ARGS]
-     -D, --nodeps     Disable dependencies
+   OPTIONS: [OPTIONS] SERVICE COMMAND [ARGUMENTS]
+     -D, --nodeps     Disable dependencies1
      -g, --debug      Enable debug mode
      -r, --rs         Select runscript backend
-     -v, --sv         Select supervision backend
+     -s, --sv         Select supervision backend
      -h, --help       Print help and exit
 EOH
 ${1+exit ${1}}
@@ -41,8 +41,8 @@ while true; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
 		(-d|--deps)  SVC_DEPS=1 ;;
-		(-r|--rs) RS_TYPE="rs" ;;
-		(-v|--sv) RS_TYPE="sv" ;;
+		(-r|--rs) SV_TYPE="rs" ;;
+		(-v|--sv) SV_TYPE="sv" ;;
 		(-g|--debug) set -x ;;
 		(-h|--help) help_message 0 ;;
 		(*) break ;;
@@ -54,14 +54,13 @@ done
 :	${name=${SVC_NAME}}
 :	${__cmd__=${2}}
 
-if [ -z "${RS_TYPE}" ]; then
-	[ -d "${1}" ] && RS_TYPE=sv || RS_TYPE=rs
+if [ -z "${SV_TYPE}" ]; then
+	[ -d "${1}" ] && SV_TYPE=sv || SV_TYPE=rs
 fi
 
 case "${1}" in
 	(*/sv/.stage-[0-3]*)
-:	${RS_RUNDIR:=${1%/*}}
-:	${SV_SVCDIR:=${RS_RUNDIR%/*}}
+:	${SV_SVCDIR:=${1%/.stage-*}}
 	;;
 	(*)
 :	${SV_SVCDIR:=${1%/*}}
@@ -79,13 +78,13 @@ fi
 #
 # Handle command
 #
-case "${RS_TYPE}" in
+case "${SV_TYPE}" in
 	(rs) rs_cmd "${@}";;
 	(sv)
-		export SVC_DEPS SVC_DEBUG RS_RUNLEVEL RS_STAGE RS_TYPE
+		export SVC_DEPS SVC_DEBUG SV_RUNLEVEL SV_STAGE SV_TYPE
 		set | while read line; do
 			case "${line}" in
-				(COLUMNS=*|SVC_DEPS=*|SVC_DEBUG=*|RS_RUNLEVEL=*|RS_STAGE=*|RS_TYPE=*)
+				(COLUMNS=*|SVC_DEPS=*|SVC_DEBUG=*|SV_RUNLEVEL=*|SV_STAGE=*|SV_TYPE=*)
 					printf "${line}\n";;
 			esac
 		done >${SV_TMPDIR}/ENVS/${SVC_NAME}

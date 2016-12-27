@@ -1,6 +1,6 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/rdonlyfs                              Exp $
+# $Header: /etc/sv/rdonlyfs                                Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
 #
 
@@ -8,7 +8,7 @@ description="Mount filesystem read-only"
 
 start()
 {
-	[ "${RS_STAGE}" = 3 ] || return 1
+	[ "${SV_STAGE}" = 3 ] || return 1
 	sync
 
 	local dir mnt_opts mnt_point
@@ -22,8 +22,8 @@ start()
 		end "${?}"
 	done
 
-	if [ "${RS_RUNLEVEL}" = "shutdown" -o "${RS_RUNLEVEL}" = "reboot" ]; then
-		sv-shutdown --force --${RS_RUNLEVEL}
+	if [ "${SV_RUNLEVEL}" = "shutdown" -o "${SV_RUNLEVEL}" = "reboot" ]; then
+		sv-shutdown --force --${SV_RUNLEVEL}
 	fi
 }
 

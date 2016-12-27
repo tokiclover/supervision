@@ -60,21 +60,19 @@ env_run()
 #
 # Set up runscript environment
 #
-if   [ "${RS_TYPE}" = "rs" ]; then
+if   [ "${SV_TYPE}" = "rs" ]; then
 
 	SOURCE "${SV_CFGDIR}"/${SVC_NAME}
 	if [ "${name}" != "${SVC_NAME}" ]; then
 	SOURCE "${SV_CFGDIR}"/${name}
 	fi
-	[ -n "${RS_RUNDIR}" ] &&
-	SOURCE ${SRC_OPTS} "${RS_RUNDIR}"/${SVC_NAME} ||
 	SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
 	env_run
 
 #
 # Set up supervision environment
 #
-elif [ "${RS_TYPE}" = "sv" ]; then
+elif [ "${SV_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${SV_SVCDIR}/${SVC_NAME}}
 	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/ENVS/${SVC_NAME}
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
@@ -140,7 +138,7 @@ elif [ "${RS_TYPE}" = "sv" ]; then
 	unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE
 
 	fi # __cmd_dir__=log
-fi # RS_TYPE=sv
+fi # SV_TYPE=sv
 
 #
 # Set debug options
