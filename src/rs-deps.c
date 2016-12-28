@@ -156,7 +156,7 @@ static int rs_deptree_file_load(RS_DepTree_T *deptree)
 	FILE *fp;
 	size_t len, pos;
 
-	snprintf(path, ARRAY_SIZE(path), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
+	snprintf(path, ARRAY_SIZE(path), "%s/%d_deptree", SV_TMPDIR_DEPS, sv_stage);
 	if (access(path, F_OK))
 		return -1;
 	if ((fp = fopen(path, "r+")) == NULL) {
@@ -207,7 +207,7 @@ static int rs_deptree_file_save(RS_DepTree_T *deptree)
 		return -1;
 	}
 
-	snprintf(path, ARRAY_SIZE(path), "%s/%d_deptree", SV_TMPDIR_DEPS, rs_stage);
+	snprintf(path, ARRAY_SIZE(path), "%s/%d_deptree", SV_TMPDIR_DEPS, sv_stage);
 	if ((fp = fopen(path, "w+")) == NULL) {
 		ERR("Failed to open `%s': %s\n", path, strerror(errno));
 		return -1;
@@ -269,7 +269,7 @@ RS_StringList_T *rs_svclist_load(char *dir_path)
 		ptr = dir_path;
 	else {
 		ptr = path;
-		snprintf(path, ARRAY_SIZE(path), "%s/.stage-%d", SV_SVCDIR, rs_stage);
+		snprintf(path, ARRAY_SIZE(path), "%s/.stage-%d", SV_SVCDIR, sv_stage);
 	}
 	if ((dir = opendir(ptr)) == NULL) {
 		ERR("Failed to open `%s' directory: %s\n", ptr, strerror(errno));
