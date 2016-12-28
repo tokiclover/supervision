@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.h
+ * @(#)rs-deps.h  0.12.6.4 2016/12/24
  */
 
 #ifndef RS_DEPS_H
@@ -16,11 +16,12 @@
 #include "rs-list.h"
 #include "helper.h"
 
-#define RS_DEPS_TYPE   4
+#define RS_DEPS_TYPE   5
 #define RS_DEPS_AFTER  1
 #define RS_DEPS_BEFORE 0
 #define RS_DEPS_USE    2
 #define RS_DEPS_NEED   3
+#define RS_DEPS_KWD    4
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
@@ -36,6 +37,7 @@ typedef struct RS_SvcDeps {
 	/* dependency type {after,before,use,need} */
 	char *svc;
 	char *virt;
+	int timeout;
 	/* priority level list [0-RS_DEPS_TYPE] */
 	RS_StringList_T *deps[RS_DEPS_TYPE];
 	TAILQ_ENTRY(RS_SvcDeps) entries;
@@ -72,4 +74,4 @@ extern RS_SvcDeps_T  *rs_virtsvc_find(RS_StringList_T *svclist, const char *svc)
 }
 #endif
 
-#endif /* _RS_DEPS_H */
+#endif /* RS_DEPS_H */

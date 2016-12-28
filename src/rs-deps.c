@@ -390,17 +390,8 @@ RS_SvcDeps_T *rs_svcdeps_load(const char *service)
 			}
 			continue;
 		}
-		else if (strcmp(type, "timeout") == 0) {
-			if ((ptr = shell_string_value(ptr)))
-				deps->timeout = atoi(ptr);
-			continue;
-		}
-		for (t = 0; t < RS_DEPS_TYPE, strcmp(type, rs_deps_type[t]); t++)
+		for (t = 0; strcmp(type, rs_deps_type[t]); t++)
 			;
-		if (t >= RS_DEPS_TYPE) {
-			WARN("illegal keyword -- `%s'\n", type);
-			continue;
-		}
 
 		/* append service list */
 		ptr = shell_string_value(ptr);
@@ -432,7 +423,7 @@ static RS_SvcDeps_T *rs_svcdeps_add(const char *svc)
 {
 	RS_SvcDeps_T *elm = err_malloc(sizeof(RS_SvcDeps_T));
 	elm->svc = err_strdup(svc);
-	elm->timeout  = 0;
+	elm->timeout = 0;
 
 	for (int i = 0; i < RS_DEPS_TYPE; i++)
 		elm->deps[i] = rs_stringlist_new();
