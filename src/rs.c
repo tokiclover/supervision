@@ -450,7 +450,7 @@ static int svc_cmd(struct svcrun *run)
 	return svc_run(run);
 reterr:
 	if (len)
-		free(run->path);
+		free((void*)run->path);
 	free(run->ARGV);
 	return retval;
 }
@@ -461,7 +461,7 @@ static int svc_run(struct svcrun *run)
 		run->dep->timeout = -1;
 	else
 		run->dep->timeout = SVC_WAIT_SECS;
-	run->status = -EXIT_FAILURE;
+	run->status = -1;
 	run->sig = 0;
 
 	/* block signal before fork() */
@@ -527,7 +527,7 @@ supervise:
 	if (run->dep->timeout > 0)
 		alarm(run->dep->timeout);
 	while (run->cld)
-		sigsuspend(&ss_child);
+		sigsuspend(&ss_old);
 	_exit(run->status);
 }
 
@@ -575,7 +575,7 @@ static int svc_depend(struct svcrun *run)
 		return -ENOENT;
 
 	/* skip before deps type */
-	for (type = RS_DEPS_USE; type < RS_DEPS_NEED; type++) {
+	for (type = RS_DEPS_USE; type <= RS_DEPS_NEED; type++) {
 		if (TAILQ_EMPTY(run->dep->deps[type]))
 			continue;
 		/* build a deptree to avoid segfault because cyclical dependencies */
