@@ -12,8 +12,8 @@ fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c rs-list.c
 waitfile_SRCS  := waitfile.c
 
-rs_SRCS   := rs-conf.c rs-deps.c rs-list.c rs.c
-rs_HDRS   := rs.h
+rs_SRCS   := rs-conf.c rs-deps.c rs.c rs-list.c sv-stage.c
+rs_HDRS   := sv.h
 
 HDRRS      = $(dist_HDRS) $(rs_HDRS)
 simple_BINS := checkpath fstabinfo mountinfo sv-shutdown waitfile

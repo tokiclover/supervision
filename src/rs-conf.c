@@ -5,10 +5,12 @@
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
+ *
+ * @(#)rs-conf.c  0.12.6.4 2016/12/24
  */
 
 #include "helper.h"
-#include "rs.h"
+#include "sv.h"
 
 #define SV_CONFIG_FILE SYSCONFDIR "/sv.conf"
 

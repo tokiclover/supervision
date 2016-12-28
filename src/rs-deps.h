@@ -6,13 +6,13 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.h  0.12.6.4 2016/12/24
+ * @(#)rs-deps.h  0.13.6.4 2016/12/24
  */
 
 #ifndef RS_DEPS_H
 #define RS_DEPS_H
 
-#include "rs.h"
+#include "sv.h"
 #include "rs-list.h"
 #include "helper.h"
 
@@ -58,6 +58,22 @@ struct RS_Services {
 	size_t virt_count;
 };
 extern struct RS_Services SERVICES;
+
+struct svcrun {
+	RS_String_T *svc;
+	RS_SvcDeps_T *dep;
+	const char *name;
+	const char *path;
+	pid_t pid;
+	int lock;
+	int argc;
+	const char **argv;
+	const char **envp;
+	const char **ARGV;
+	int cmd, tmp, mark,
+		sig, status;
+	pid_t cld;
+};
 
 /* the same used for service dependencies */
 extern RS_SvcDeps_T     *rs_svcdeps_load(const char *svc);
