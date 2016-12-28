@@ -252,10 +252,11 @@ static int svc_execl(RS_StringList_T *list, int argc, const char *argv[],
  */
 static void svc_zap(const char *svc);
 
-/* handle SIGCHLD/INT setup */
-static struct sigaction sa_sigint, sa_sigquit;
-static sigset_t ss_savemask;
+/* signal handler/setup */
+static void sv_sighandler(int sig);
+static void sv_sigsetup(void);
 static void svc_sigsetup(void);
+static sigset_t ss_child, ss_full, ss_old;
 
 /*
  * generate a default environment for service
@@ -297,7 +298,6 @@ static int svc_cmd(struct svcrun *run, int flags)
 	RS_SvcDeps_T *d = run->svc->data;
 
 	if (setup) {
-		svc_sigsetup();
 		setup = 0;
 		stat(SV_SVCDEPS_FILE, &st_dep);
 	}
@@ -451,8 +451,13 @@ static int svc_cmd(struct svcrun *run, int flags)
 	if (!svc_quiet)
 		svc_log("[%s] service %s...\n", run->name, cmd);
 
+	/* block signal before fork() */
+	sigprocmask(SIG_SETMASK, &ss_full, NULL);
+
 	pid = fork();
 	if (pid > 0) { /* parent */
+		/* restore signal mask */
+		sigprocmask(SIG_SETMASK, &ss_child, NULL);
 		close(run->lock);
 		run->pid = pid;
 
@@ -477,9 +482,7 @@ static int svc_cmd(struct svcrun *run, int flags)
 	}
 	else if (pid == 0) { /* child */
 		/* restore previous signal actions and mask */
-		sigaction(SIGINT, &sa_sigint, NULL);
-		sigaction(SIGQUIT, &sa_sigquit, NULL);
-		sigprocmask(SIG_SETMASK, &ss_savemask, NULL);
+		sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
 		if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
 			LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
@@ -489,6 +492,9 @@ static int svc_cmd(struct svcrun *run, int flags)
 		/* close the lockfile to be able to mount rootfs read-only */
 		if (sv_stage == 3 && command == RS_SVC_CMD_START)
 			close(run->lock);
+
+		/* restore previous default signal handling */
+		svc_sigsetup();
 
 		execve(RS_RUNSCRIPT, (char *const*)argv, (char *const*)run->envp);
 		_exit(255);
@@ -930,31 +936,74 @@ static int svc_state(const char *svc, int status)
 	return 1;
 }
 
-static void svc_sigsetup(void)
+static void sv_sighandler(int sig)
 {
-	static int sigsetup = 0;
-	static struct sigaction sa_ign;
-	static sigset_t ss_child;
+	int i = -1, serrno = errno;
+	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGKILL",
+		"SIGTERM" };
 
-	if (sigsetup)
-		return;
+	switch (sig) {
+	case SIGINT:
+		if (i < 0) i = 0;
+	case SIGTERM:
+		if (i < 0) i = 3;
+	case SIGQUIT:
+		if (i < 0) i = 1;
+		ERR("caught %s, aborting\n", signame[i]);
+		kill(0, sig);
+		exit(EXIT_FAILURE);
+	case SIGUSR1:
+		fprintf(stderr, "%s: Aborting!\n", progname);
+		/* block child signals */
+		sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
-	/* ignore SIGINT and SIGQUIT */
-	sa_ign.sa_handler = SIG_IGN;
-	sa_ign.sa_flags = 0;
-	sigemptyset(&sa_ign.sa_mask);
+		/* kill any worker process we have started */
+		kill(0, SIGTERM);
 
-	if (sigaction(SIGINT, &sa_ign, &sa_sigint) < 0)
-		ERROR("%s: sigaction(SIGINT)", __func__);
-	if (sigaction(SIGQUIT, &sa_ign, &sa_sigquit) < 0)
-		ERROR("%s: sigaction(SIGQUIT)", __func__);
+		exit(EXIT_FAILURE);
+	default:
+		ERR("caught unknown signal %d\n", sig);
+	}
+
+	/* restore errno */
+	errno = serrno;
+}
+
+static void sv_sigsetup(void)
+{
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+
+	sigfillset(&ss_full);
+	sigemptyset(&ss_old);
 	sigemptyset(&ss_child);
 	sigaddset(&ss_child, SIGCHLD);
-	sigsetup = 1;
+	sigprocmask(SIG_SETMASK, &ss_child, &ss_old);
 
-	/* block SIGCHLD */
-	if (sigprocmask(SIG_BLOCK, &ss_child, &ss_savemask) < 0)
-		ERROR("%s: sigprocmask(SIG_BLOCK)", __func__);
+	sa.sa_handler = sv_sighandler;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGHUP , &sa, NULL);
+	sigaction(SIGINT , &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
+	sigaction(SIGTERM, &sa, NULL);
+	sigaction(SIGUSR1, &sa, NULL);
+ }
+
+void svc_sigsetup(void)
+{
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGALRM, &sa, NULL);
+	sigaction(SIGCHLD, &sa, NULL);
+	sigaction(SIGHUP , &sa, NULL);
+	sigaction(SIGINT , &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
+	sigaction(SIGTERM, &sa, NULL);
+	sigaction(SIGUSR1, &sa, NULL);
+	sigprocmask(SIG_SETMASK, &ss_old, NULL);
 }
 
 __NORETURN__ static int svc_exec(int argc, char *argv[]) {
@@ -1287,6 +1336,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	argc -= optind, argv += optind;
+	sv_sigsetup();
 
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
@@ -1366,6 +1416,7 @@ rc_help:
 	exit(EXIT_FAILURE);
 
 scan:
+	svc_sigsetup();
 	setenv("SVCDEPS_UPDATE", on, 1);
 	execv(SV_DEPGEN, argv);
 	ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
