@@ -42,9 +42,9 @@ dep_gen()
 	local dep SVC_PROVIDE
 
 	if   [ -d "${SV_SVCDIR}/${1}" ]; then
-		SVC_DIR="${SV_SVCDIR}/${1}" RS_TYPE=sv
+		SVC_DIR="${SV_SVCDIR}/${1}" SV_TYPE=sv
 	elif [ -f "${SV_SVCDIR}/${1}" ]; then
-		SVC_DIR="${SV_SVCDIR}"      RS_TYPE=rs
+		SVC_DIR="${SV_SVCDIR}"      SV_TYPE=rs
 	else
 		return
 	fi
