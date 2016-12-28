@@ -29,6 +29,8 @@
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
+#define SV_PIDFILE SV_TMPDIR "/sv.pid"
+
 struct svcrun {
 	RS_String_T *svc;
 	const char *name;
@@ -42,6 +44,7 @@ struct svcrun {
 
 int sv_stage    = -1;
 int sv_runlevel = -1;
+pid_t sv_pid;
 static int svc_deps  = 1;
 static int svc_quiet = 1;
 static RS_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
@@ -1119,9 +1122,18 @@ static void svc_stage(const char *cmd)
 	/* set a few sane environment variables */
 	svc_deps  = 0;
 	svc_quiet = 0;
+	sv_pid    = getpid();
 	snprintf(buf, sizeof(buf), "%d", sv_stage);
 	setenv("SV_STAGE", buf, 1);
 	setenv("SV_RUNLEVEL", sv_runlevel_name[sv_runlevel], 1);
+	snprintf(buf, sizeof(buf), "%d", sv_pid);
+	setenv("SV_PID", buf, 1);
+	if ((r = open(SV_PIDFILE, O_CREAT|O_WRONLY|O_TRUNC, 0644)) > 0) {
+		write(r, buf, strlen(buf));
+		close(r);
+	}
+	else
+		WARN("Failed to open %s\n", SV_PIDFILE);
 	snprintf(buf, sizeof(buf), "%s/%d_deptree", SV_TMPDIR_DEPS, sv_stage);
 
 	if (sv_stage == 0 || command == NULL) /* force service command */
