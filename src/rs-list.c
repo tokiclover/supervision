@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.c
+ * @(#)rs-list.c  0.12.6.4 2016/12/24
  */
 
 #include "rs-list.h"
@@ -20,7 +20,6 @@ RS_StringList_T *rs_stringlist_new(void)
 
 RS_String_T *rs_stringlist_add(RS_StringList_T *list, const char *str)
 {
-	static unsigned id;
 	RS_String_T *elm = err_malloc(sizeof(RS_String_T));
 	elm->str = err_strdup(str);
 	elm->data = NULL;
@@ -72,6 +71,16 @@ RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str)
 			if (strcmp(elm->str, str) == 0)
 				return elm;
 	return NULL;
+}
+
+size_t rs_stringlist_len(RS_StringList_T *list)
+{
+	RS_String_T *elm;
+	size_t len = 0;
+
+	TAILQ_FOREACH(elm, list, entries)
+		len++;
+	return len;
 }
 
 int rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent)

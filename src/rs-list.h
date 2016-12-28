@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-list.h
+ * @(#)rs-list.h  0.12.6.4 2016/12/24
  */
 
 #ifndef RS_LIST_H
@@ -34,6 +34,7 @@ extern RS_String_T *rs_stringlist_adu (RS_StringList_T *list, const char *str);
 extern RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str);
 extern int          rs_stringlist_del (RS_StringList_T *list, const char *str);
 extern int          rs_stringlist_rem (RS_StringList_T *list, RS_String_T *elm);
+extern size_t       rs_stringlist_len (RS_StringList_T *list);
 extern int          rs_stringlist_mov (RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent);
 extern void         rs_stringlist_free(RS_StringList_T **list);
 
@@ -41,4 +42,4 @@ extern void         rs_stringlist_free(RS_StringList_T **list);
 }
 #endif
 
-#endif /* _RS_LIST_H */
+#endif /* RS_LIST_H */
