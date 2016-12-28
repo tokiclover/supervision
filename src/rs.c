@@ -56,8 +56,7 @@ pid_t sv_pid;
 int svc_deps  = 1;
 int svc_quiet = 1;
 static RS_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
-static struct svcrun *RUN, **SVCRUN;
-static size_t RUNLEN;
+static struct svcrun *RUN;
 
 /* list of service to start/stop before|after a stage */
 static const char *const rs_init_stage[][4] = {
@@ -536,6 +535,12 @@ static int svc_waitpid(struct svcrun *run, int flags)
 	int status = 0;
 	pid_t pid;
 
+	/* do this hack to only mark children status */
+	if (run->status != -1) {
+		pid = run->pid;
+		status = run->status;
+		goto status;
+	}
 	do {
 		pid = waitpid(run->cld, &status, flags);
 		if (pid < 0) {
@@ -993,7 +998,7 @@ static int svc_exec(int argc, const char *argv[]) {
 static int svc_execl(RS_StringList_T *list, int argc, const char *argv[])
 {
 	RS_String_T *svc;
-	size_t n = 0, c = 0;
+	size_t c, len, n = 0;
 	int eagain = 0;
 	int i, r, retval = 0, status;
 	struct svcrun **run;
@@ -1004,13 +1009,12 @@ static int svc_execl(RS_StringList_T *list, int argc, const char *argv[])
 		return -EINVAL;
 
 	if (sv_parallel)
-		RUNLEN = rs_stringlist_len(list);
+		len = rs_stringlist_len(list);
 	else
-		RUNLEN = 1;
-	run = err_malloc(RUNLEN*sizeof(void*));
-	memset(run, 0, RUNLEN*sizeof(void*));
+		len = 1;
+	run = err_malloc(len*sizeof(void*));
+	memset(run, 0, len*sizeof(void*));
 	*run = err_malloc(sizeof(struct svcrun));
-	SVCRUN = run;
 
 	TAILQ_FOREACH(svc, list, entries) {
 		run[n]->name = svc->str;
@@ -1049,41 +1053,59 @@ static int svc_execl(RS_StringList_T *list, int argc, const char *argv[])
 		}
 
 		if (sv_parallel)
-			run[n++] = err_malloc(sizeof(struct svcrun));
-		else
+			n++;
+		else {
+			r = svc_waitpid(*run, 0);
 			if (r) retval++;
+		}
+		if (n < len)
+			run[n] = err_malloc(sizeof(struct svcrun));
 	}
 
 	if (!sv_parallel)
 		goto retval;
+	else
+		goto waitpid;
 
 waitpid:
 	c = n;
 	while (c) {
-		for (i = 0; i < n && run[i]; i++) {
-			if (sv_nohang) {
-				if (waitpid(run[i]->pid, &status, WNOHANG) <= 0)
-					continue;
-				if (WIFEXITED(status) && !WEXITSTATUS(status))
-					;
-				else
-					retval++;
+		/* multiple calls of this function may have children to wait for;
+		 * and avoid wasting cpu time in repeatedly calling waipid(3) */
+		r = waitpid(0, &status, 0);
+		if (r < 0) {
+			if (errno == ECHILD) {
+				LOG_ERR("%s: waitpid(): no child to wait for!!!\n", __func__);
+				goto retval;
 			}
-			else {
-				run[i]->cld = run[i]->pid;
-				r = svc_waitpid(run[i], WNOHANG);
-				if (r == SVC_WAITPID)
-					continue;
-				if (r == -1 && errno == ECHILD)
-					LOG_ERR("no child for %s service!!!\n", run[i]->name);
-			}
-			free((void*)run[i]->ARGV);
-			free((void*)run[i]->path);
-			free(run[i]);
-			run[i] = NULL;
-			c--;
-			break;
+			continue;
 		}
+		for (i = 0; i < n; i++)
+			if (run[i] && run[i]->pid == r)
+				break;
+		if (i > n)
+			continue;
+
+		if (sv_nohang) {
+			if (WIFEXITED(status) && !WEXITSTATUS(status))
+				;
+			else
+				retval++;
+		}
+		else {
+			run[i]->status = status;
+			r = svc_waitpid(run[i], WNOHANG);
+			if (r == SVC_WAITPID)
+				continue;
+			if (r == -1 && errno == ECHILD)
+				LOG_ERR("no child for %s service!!!\n", run[i]->name);
+			if (r) retval++;
+		}
+		free((void*)run[i]->ARGV);
+		free((void*)run[i]->path);
+		free(run[i]);
+		run[i] = NULL;
+		c--;
 	}
 	if (eagain)
 		goto eagain;
