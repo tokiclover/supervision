@@ -34,9 +34,7 @@ extern "C" {
 #endif
 #define SV_LIBDIR LIBDIR "/sv"
 #define SV_SVCDIR SYSCONFDIR "/sv"
-#if defined(STATIC_SERVICE)
-# define SV_RUNDIR SV_SERVICE
-#elif defined(__linux__) || (defined(__FreeBSD_kernel__) && \
+#if defined(__linux__) || (defined(__FreeBSD_kernel__) && \
 		defined(__GLIBC__)) || defined(__GNU__)
 #define SV_RUNDIR "/run/sv"
 #else
@@ -44,28 +42,28 @@ extern "C" {
 #endif
 #define SV_TMPDIR SV_RUNDIR "/.tmp"
 #define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
-#define RS_SVCDEPS_FILE SV_TMPDIR_DEPS "/svcdeps"
+#define SV_SVCDEPS_FILE SV_TMPDIR_DEPS "/svcdeps"
 
-extern int rs_stage;
-extern int rs_runlevel;
+extern int sv_stage;
+extern int sv_runlevel;
 
 enum {
-	RS_RUNLEVEL_SHUTDOWN,
-#define RS_RUNLEVEL_SHUTDOWN RS_RUNLEVEL_SHUTDOWN
-	RS_RUNLEVEL_SINGLE,
-#define RS_RUNLEVEL_SINGLE RS_RUNLEVEL_SINGLE
-	RS_RUNLEVEL_NONETWORK,
-#define RS_RUNLEVEL_NONETWORK RS_RUNLEVEL_NONETWORK
-	RS_RUNLEVEL_DEFAULT,
-#define RS_RUNLEVEL_DEFAULT RS_RUNLEVEL_DEFAULT
-	RS_RUNLEVEL_SYSINIT,
-#define RS_RUNLEVEL_SYSINIT RS_RUNLEVEL_SYSINIT
-	RS_RUNLEVEL_BOOT,
-#define RS_RUNLEVEL_BOOT RS_RUNLEVEL_BOOT
-	RS_RUNLEVEL_REBOOT,
-#define RS_RUNLEVEL_REBOOT RS_RUNLEVEL_REBOOT
+	SV_RUNLEVEL_SHUTDOWN,
+#define SV_RUNLEVEL_SHUTDOWN SV_RUNLEVEL_SHUTDOWN
+	SV_RUNLEVEL_SINGLE,
+#define SV_RUNLEVEL_SINGLE SV_RUNLEVEL_SINGLE
+	SV_RUNLEVEL_NONETWORK,
+#define SV_RUNLEVEL_NONETWORK SV_RUNLEVEL_NONETWORK
+	SV_RUNLEVEL_DEFAULT,
+#define SV_RUNLEVEL_DEFAULT SV_RUNLEVEL_DEFAULT
+	SV_RUNLEVEL_SYSINIT,
+#define SV_RUNLEVEL_SYSINIT SV_RUNLEVEL_SYSINIT
+	SV_RUNLEVEL_BOOT,
+#define SV_RUNLEVEL_BOOT SV_RUNLEVEL_BOOT
+	SV_RUNLEVEL_REBOOT,
+#define SV_RUNLEVEL_REBOOT SV_RUNLEVEL_REBOOT
 };
-extern const char *const rs_runlevel_name[];
+extern const char *const sv_runlevel_name[];
 
 /*
  * retrieve a configuration value like getenv(3)
