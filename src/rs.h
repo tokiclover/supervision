@@ -12,7 +12,7 @@
 #ifndef RS_H
 #define RS_H
 
-#define RS_COPYRIGHT "Copyright (C) 2015-6 tokiclover <tokiclover@gmail.com>\n" \
+#define SV_COPYRIGHT "Copyright (C) 2015-6 tokiclover <tokiclover@gmail.com>\n" \
 	"License 2-clause, new, simplified BSD or MIT (at your name choice)\n" \
 	"This is free software: you are free to change and distribute it.\n" \
 	"There is NO WARANTY, to the extend permitted by law.\n"
