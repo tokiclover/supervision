@@ -1,19 +1,33 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/checkfs                               Exp $
+# $Header: /etc/sv/checkfs                                 Exp $
 # $License: 2-clause/new/simplified BSD                    Exp $
+# $Copyright: (c) 2015-2016         <tokiclover@gmail.com> Exp $
 # $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
 #
 
 description='Check filesystems'
 SVC_USE='dev kmod clock device-mapper dmcrypt lvm raid'
+SVC_KEYWORD=timeout
 
-REBOOT_COMMAND='[ "${SV_STAGE}" = 1 ] && sv-shutdown --force --reboot'
-SHUTDOWN_COMMAND='[ "${SV_STAGE}" = 1 ] && sv-shutdown --force --shutdown'
-
+_abort()
+{
+	[ -e ${SV_TMPDIR}/sv.pid ] &&
+		pkill -USR1 -F ${SV_TMPDIR}/sv.pid -x sv-stage ||
+		killall -USR1 -e sv-stage
+		return 1
+}
 _forcefsck()
 {
 	[ -e /forcefsck ] || boot_option forcefsck
+}
+_reboot()
+{
+	[ "${SV_STAGE}" = 1 ] && ${SV_LIBDIR}/sbin/reboot "${@}"
+}
+_shutdown()
+{
+	[ "${SV_STAGE}" = 1 ] && ${SV_LIBDIR}/sbin/shutdown "${@}"
 }
 
 start()
@@ -52,29 +66,29 @@ start()
 			if [ "${OS_NAME}" = Linux ]; then
 				error "Filesystems repaired"
 				warn "System reboot"
-				eval ${REBOOT_COMMAND}
+				_reboot -f
 			else
 				error "Filesystems have errors"
 				error "Mmanual filesystem check required"
-				eval ${SHUTDOWN_COMMAND}
+				_abort
 			fi
 			;;
 		(4)
 			if [ "${OS_NAME}" = Linux ]; then
 				error "Filesystem errors left uncorrected"
-				warn "System shutdown"
-				eval ${SHUTDOWN_COMMAND}
+				warn "Aborting!!!"
+				_abort
 			else
 				error "Filesystems repaired"
 				warn "System reboot"
-				eval ${REBOOT_COMMAND}
+				_reboot
 			fi
 			;;
 		(8) error "Operational error";;
 		(*) error "Filesystems could not be repaired";;
 	esac
-	warn "System shutdown"
-	eval ${SHUTDOWN_COMMAND}
+	warn "Aborting!!!"
+	_abort
 }
 
 stop()
