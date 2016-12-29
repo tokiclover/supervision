@@ -1,13 +1,25 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.13.0:
+
+Improve signal handling so SIGINT is not blocked anymore;
+Improve parallelization of service (to avoid CHILD_MAX hard limit) and improve
+scalabilty to thousends of service in parallel;
+
+Added support for keywords and timeout per service; so a NOHANG option is now
+available to kill hangged service (see sv.conf for more iformation);
+
+Added abilty to abort an init-stage (used to abort and bring single runlevel
+when checkfs service fails to clean up filesystems;
+
 0.12.6.4:
 
-Tiny fixes all over the place especially the global environment dir
-(SV_SVCDIR/.env);
+Tiny fixes all over the place especially the global environment dir;
 Renamed del_env shell function to env_del;
 Use sub-directories for service options/environment files;
-Improved sv-shutdown to better handle time, create nologin file and log
+Improved sv-shutdown to better handle time(out), create nologin file and log
 shutdown action to syslog(2);
+Optimizes service dependency look up (rs);
 
 0.12.6.3:
 
