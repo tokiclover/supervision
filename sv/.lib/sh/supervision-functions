@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/supervision-functions             Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 4.3 2016/12/18 21:09:26                      Exp $
+# $Version: 4.4 2016/12/28 21:09:26                      Exp $
 #
 
 __SUPERVIONS_FUNCTIONS__=1
@@ -252,9 +252,10 @@ svc_stop_post()
 		svc_command stop_post
 		;;
 		(*)
-		SVC_TRY=$((${SVC_TRY}+1))
-		env_svc SVC_TRY
-		if [ ${SVC_TRY:-0} -ge ${SV_TRY:-3} ]; then
+		:	${SVC_TRY:=${SV_TRY:-3}}
+		__SVC_TRY__=$((${SVC_TRY}+1))
+		env_svc __SVC_TRY__
+		if [ ${__SVC_TRY__:-0} -ge ${SVC_TRY} ]; then
 			error "Maximum number of starting attempts reached."
 			svc_remove
 			svc_mark -f
