@@ -1,23 +1,23 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)error.h
+ * @(#)error.h  0.13.0 2016/12/28
  */
 
 #ifndef ERROR_H
 #define ERROR_H
 
 #if __GNUC__ > 2 || defined(__INTEL_COMPILER)
-# define __NORETURN__ __attribute__((__noreturn__))
-# define __UNUSED__ __attribute__((__unused__))
+# define _noreturn_ __attribute__((__noreturn__))
+# define _unused_ __attribute__((__unused__))
 #else
-# define __NORETURN__
-# define __UNUSED__
+# define _noreturn_
+# define _unused_
 #endif
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -52,16 +52,16 @@ extern "C" {
 #  define DBG(fmt, ...)
 #endif
 
-__NORETURN__ void error(int err, const char *fmt, ...);
+_noreturn_ void error(int err, const char *fmt, ...);
 extern const char *progname;
 
-__UNUSED__ void *err_malloc(size_t size);
-__UNUSED__ void *err_calloc(size_t num, size_t size);
-__UNUSED__ void *err_realloc(void *ptr, size_t size);
-__UNUSED__ char *err_strdup(const char *str);
+_unused_ void *err_malloc(size_t size);
+_unused_ void *err_calloc(size_t num, size_t size);
+_unused_ void *err_realloc(void *ptr, size_t size);
+_unused_ char *err_strdup(const char *str);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _ERROR_H */
+#endif /* ERROR_H */

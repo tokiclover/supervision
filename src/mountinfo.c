@@ -1,17 +1,17 @@
 /*
  * Simple utility providing providing mount point checking
  *
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)mountinfo.c
+ * @(#)mountinfo.c  0.13.0 2016/12/28
  */
 
-#include "rs-list.h"
+#include "sv-list.h"
 #include <getopt.h>
 #include <regex.h>
 
@@ -35,7 +35,7 @@
 #define REGCOMP(var) REGFREE(var); var = comp_regex(optarg)
 
 const char *progname;
-static RS_StringList_T *mount_list;
+static SV_StringList_T *mount_list;
 
 enum {
 	mount_point,
@@ -52,7 +52,7 @@ struct mntargs {
 			*reg_TYPE,
 			*reg_OPTS,
 			*reg_POINT;
-	RS_StringList_T *mnt_list;
+	SV_StringList_T *mnt_list;
 	int mnt_type;
 	int mnt_net;
 };
@@ -82,7 +82,7 @@ static char *filter_mount_point(struct mntargs *args, char *node, char *point,
 		if (args->reg_POINT && !regexec(args->reg_POINT, point, 0, NULL, 0))
 			return NULL;
 	}
-	if (args->mnt_list && !rs_stringlist_find(args->mnt_list, point))
+	if (args->mnt_list && !sv_stringlist_find(args->mnt_list, point))
 		return NULL;
 
 	switch(args->mnt_type) {
@@ -103,7 +103,7 @@ static char *filter_mount_point(struct mntargs *args, char *node, char *point,
 		break;
 	}
 	if (p)
-		rs_stringlist_add(mount_list, p);
+		sv_stringlist_add(mount_list, p);
 	return p;
 }
 
@@ -312,7 +312,7 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-__NORETURN__ static void help_message(int status)
+_noreturn_ static void help_message(int status)
 {
 	int i;
 
@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
 	struct mntargs args;
 	int retval = 0;
 	int quiet = 1;
-	RS_String_T *s;
+	SV_String_T *s;
 
 	progname = strrchr(argv[0], '/');
 	if (progname == NULL)
@@ -414,13 +414,13 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc-optind) > 0) {
-		args.mnt_list = rs_stringlist_new();
+		args.mnt_list = sv_stringlist_new();
 		for ( ; argv[optind]; optind++) {
-			rs_stringlist_add(args.mnt_list, argv[optind]);
+			sv_stringlist_add(args.mnt_list, argv[optind]);
 			retval++;
 		}
 	}
-	mount_list = rs_stringlist_new();
+	mount_list = sv_stringlist_new();
 	find_mount_point(&args);
 
 	TAILQ_FOREACH(s, mount_list, entries) {
@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
 			puts(s->str);
 	}
 
-	rs_stringlist_free(&mount_list);
+	sv_stringlist_free(&mount_list);
 	REGFREE(args.reg_type);
 	REGFREE(args.reg_TYPE);
 	REGFREE(args.reg_node);

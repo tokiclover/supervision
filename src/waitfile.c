@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)waitfile.c
+ * @(#)waitfile.c  0.12.6.4 2016/12/24
  */
 
 #define _POSIX_C_SOURCE 200809L

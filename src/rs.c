@@ -1,16 +1,16 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs.c  0.13.0 2016/12/26
+ * @(#)rs.c  0.13.0 2016/12/28
  */
 
 #include "sv.h"
-#include "rs-deps.h"
+#include "sv-deps.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/file.h>
@@ -103,7 +103,7 @@ int svc_exec(int argc, const char *argv[]);
  * execute a service list (called from svc_stage())
  * @return 0 on success or number of failed services
  */
-int svc_execl(RS_StringList_T *list, int argc, const char *argv[]);
+int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 
 /*
  * remove service temporary files
@@ -111,8 +111,8 @@ int svc_execl(RS_StringList_T *list, int argc, const char *argv[]);
 static void svc_zap(const char *svc);
 
 /* signal handler/setup */
-static void rs_sighandler(int sig);
-static void rs_sigsetup(void);
+static void sv_sighandler(int sig);
+static void sv_sigsetup(void);
 void svc_sigsetup(void);
 extern sigset_t ss_child, ss_full, ss_old;
 
@@ -235,7 +235,7 @@ static int svc_cmd(struct svcrun *run)
 	run->ARGV[2] = deps[0];
 	run->ARGV[3] = run->path;
 	if (!run->svc->data)
-		run->svc->data = rs_svcdeps_load(run->name);
+		run->svc->data = sv_svcdeps_load(run->name);
 	run->dep = run->svc->data;
 
 	/* check service mtime */
@@ -303,7 +303,7 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
-	if (rs_stringlist_find(run->dep->deps[RS_DEPS_KWD], "timeout"))
+	if (sv_stringlist_find(run->dep->deps[SV_DEPS_KWD], "timeout"))
 		run->dep->timeout = -1;
 	else
 		run->dep->timeout = SVC_WAIT_SECS;
@@ -360,14 +360,14 @@ runsvc:
 	/* restore previous default signal handling */
 	svc_sigsetup();
 
-	execve(RS_RUNSCRIPT, (char *const*)run->ARGV, (char *const*)run->envp);
+	execve(SV_RUNSCRIPT, (char *const*)run->ARGV, (char *const*)run->envp);
 	_exit(255);
 supervise:
 	RUN = run;
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
 	/* setup SIGCHILD,SIGALRM and unblock SIGCHILD */
-	rs_sigsetup();
+	sv_sigsetup();
 
 	/* setup a timeout and wait for the child */
 	if (run->dep->timeout > 0)
@@ -422,13 +422,13 @@ static int svc_depend(struct svcrun *run)
 {
 	int type, val, retval = 0;
 	int p = 0;
-	RS_DepTree_T deptree = { NULL, NULL, 0, 0 };
+	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
 
 	if (!run->dep)
 		return -ENOENT;
 
 	/* skip before deps type */
-	for (type = RS_DEPS_USE; type <= RS_DEPS_NEED; type++) {
+	for (type = SV_DEPS_USE; type <= SV_DEPS_NEED; type++) {
 		if (TAILQ_EMPTY(run->dep->deps[type]))
 			continue;
 		/* build a deptree to avoid segfault because cyclical dependencies */
@@ -439,8 +439,8 @@ static int svc_depend(struct svcrun *run)
 				val = svc_execl(deptree.tree[p], run->argc, run->argv);
 				--p;
 		} /* PRIORITY_LEVEL_LOOP */
-		rs_deptree_free(&deptree);
-		if (val > 0 && type == RS_DEPS_NEED)
+		sv_deptree_free(&deptree);
+		if (val > 0 && type == SV_DEPS_NEED)
 			retval = val;
 	}
 	return retval;
@@ -681,7 +681,7 @@ static int svc_state(const char *svc, int status)
 	return 1;
 }
 
-static void rs_sighandler(int sig)
+static void sv_sighandler(int sig)
 {
 	int i = -1, serrno = errno;
 	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGKILL",
@@ -714,12 +714,12 @@ static void rs_sighandler(int sig)
 	errno = serrno;
 }
 
-static void rs_sigsetup(void)
+static void sv_sigsetup(void)
 {
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 
-	sa.sa_handler = rs_sighandler;
+	sa.sa_handler = sv_sighandler;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGALRM, &sa, NULL);
 	sigaction(SIGCHLD, &sa, NULL);
@@ -746,7 +746,7 @@ void svc_sigsetup(void)
 int svc_exec(int argc, const char *argv[]) {
 	int i = 0, j, retval;
 	struct svcrun run;
-	RS_String_T svc = { NULL, NULL, NULL, NULL };
+	SV_String_T svc = { NULL, NULL, NULL, NULL };
 
 	run.argc = 8*(argc/8)+8+ (argc%8) > 4 ? 8 : 0;
 	run.argv = err_malloc(run.argc*sizeof(void*));
@@ -770,7 +770,7 @@ int svc_exec(int argc, const char *argv[]) {
 	for ( j = 0; j < argc; j++)
 		run.argv[i++] = argv[j];
 	run.argv[i] = (char *)0;
-	rs_svcdeps_load(NULL);
+	sv_svcdeps_load(NULL);
 
 	retval = svc_cmd(&run);
 	switch(retval) {
@@ -790,9 +790,9 @@ int svc_exec(int argc, const char *argv[]) {
 	}
 }
 
-int svc_execl(RS_StringList_T *list, int argc, const char *argv[])
+int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 {
-	RS_String_T *svc;
+	SV_String_T *svc;
 	size_t c, len, n = 0;
 	int eagain = 0;
 	int i, r, retval = 0, status;
@@ -804,7 +804,7 @@ int svc_execl(RS_StringList_T *list, int argc, const char *argv[])
 		return -EINVAL;
 
 	if (sv_parallel)
-		len = rs_stringlist_len(list);
+		len = sv_stringlist_len(list);
 	else
 		len = 1;
 	run = err_malloc(len*sizeof(void*));

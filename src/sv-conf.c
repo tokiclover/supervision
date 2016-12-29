@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-conf.c  0.12.6.4 2016/12/24
+ * @(#)sv-conf.c  0.13.0 2016/12/28
  */
 
 #include "helper.h"
@@ -18,18 +18,18 @@
 static const char **SV_CONFIG_ARRAY;
 
 /* load configuration file as an environment list */
-static int  rs_conf_load(void);
+static int  sv_conf_load(void);
 /* free an allocated configuration list */
-static void rs_conf_free(void);
+static void sv_conf_free(void);
 
-int rs_conf_yesno(const char *env) {
-	return rs_yesno(rs_getconf(env));
+int sv_conf_yesno(const char *env) {
+	return sv_yesno(sv_getconf(env));
 }
 
-const char *rs_getconf(const char *env)
+const char *sv_getconf(const char *env)
 {
 	if (!SV_CONFIG_ARRAY)
-		if (rs_conf_load())
+		if (sv_conf_load())
 			return NULL;
 	if (!env)
 		return NULL;
@@ -52,7 +52,7 @@ const char *rs_getconf(const char *env)
 	return NULL;
 }
 
-static int rs_conf_load(void)
+static int sv_conf_load(void)
 {
 	FILE *fp;
 	char *line = NULL, *env, *ptr;
@@ -66,7 +66,7 @@ static int rs_conf_load(void)
 	SV_CONFIG_ARRAY = err_calloc(num, sizeof(void *));
 	env = err_malloc(size);
 
-	while (rs_getline(fp, &line, &len) > 0) {
+	while (sv_getline(fp, &line, &len) > 0) {
 		if (line[0] == '#')
 			continue;
 
@@ -105,11 +105,11 @@ static int rs_conf_load(void)
 	SV_CONFIG_ARRAY[count++] = NULL;
 	SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*count);
 
-	atexit(rs_conf_free);
+	atexit(sv_conf_free);
 	return 0;
 }
 
-static void rs_conf_free(void)
+static void sv_conf_free(void)
 {
 	int i = 0;
 	while (SV_CONFIG_ARRAY[i])

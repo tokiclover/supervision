@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv.h  0.13.0 2016/12/26
+ * @(#)sv.h  0.13.0 2016/12/28
  */
 
 #ifndef SV_H
@@ -53,7 +53,7 @@ extern "C" {
 
 #define SV_LOGFILE SV_TMPDIR "/sv.log"
 #define SV_PIDFILE SV_TMPDIR "/sv.pid"
-#define RS_RUNSCRIPT SV_LIBDIR "/sh/runscript"
+#define SV_RUNSCRIPT SV_LIBDIR "/sh/runscript"
 
 /* status command to issue to svc_{mark,state} when the STAT querry the status
  * and MARK command remove the status; so the command is only valid with svc_mark
@@ -99,12 +99,12 @@ extern const char *const sv_runlevel_name[];
  * @envp: configuration list;
  * @env: configuration name;
  */
-extern const char *rs_getconf(const char *env);
+extern const char *sv_getconf(const char *env);
 /*
  * simple helper to ease yes/no querries of config settings
  * @return: true/false;
  */
-extern int rs_conf_yesno(const char *env);
+extern int sv_conf_yesno(const char *env);
 
 /* tiny function to print end string like the shell end() counterpart */
 extern int svc_end(const char *svc, int status);

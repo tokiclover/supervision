@@ -1,14 +1,14 @@
 /*
  * Simple utility providing providing checkpath/mktemp
  *
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)checkpath.c
+ * @(#)checkpath.c  0.12.6.4 2016/12/24
  */
 
 #include "error.h"
@@ -73,7 +73,7 @@ static const char *longopts_help[] = {
 };
 
 
-__NORETURN__ static void help_message(int status)
+_noreturn_ static void help_message(int status)
 {
 	int i;
 

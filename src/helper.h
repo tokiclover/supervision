@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)heleper.h
+ * @(#)heleper.h  0.13.0 2016/12/28
  */
 
 #ifndef HELPER_H
@@ -26,16 +26,16 @@ extern "C" {
  * @mode char like test (whithout the dash) 'e', 'd', etc;
  * @return bool;
  */
-__UNUSED__ int file_test(const char *pathname, int mode);
+_unused_ int file_test(const char *pathname, int mode);
 
-ssize_t rs_getline(FILE *stream, char **buf, size_t *size);
+ssize_t sv_getline(FILE *stream, char **buf, size_t *size);
 
 /*
  * (WARN: only first to second character are used!)
  * simple yes/no helper
  * @return true/false;
  */
-int rs_yesno(const char *str);
+int sv_yesno(const char *str);
 
 /*
  * tiny helper to get terminal cols
@@ -54,4 +54,4 @@ char *shell_string_value(char *str);
 }
 #endif
 
-#endif /* _HELPERS_H */
+#endif /* HELPER_H */

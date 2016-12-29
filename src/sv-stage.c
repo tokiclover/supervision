@@ -1,16 +1,16 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-stage.c  0.13.0 2016/12/26
+ * @(#)sv-stage.c  0.13.0 2016/12/28
  */
 
 #include "sv.h"
-#include "rs-deps.h"
+#include "sv-deps.h"
 #include <stdio.h>
 #include <getopt.h>
 #include <signal.h>
@@ -21,7 +21,7 @@
 #include <fcntl.h>
 
 extern int svc_exec (int argc, const char *argv[]);
-extern int svc_execl(RS_StringList_T *list, int argc, const char *argv[]);
+extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 
 /* signal handleer/setup */
 sigset_t ss_child, ss_full, ss_old;
@@ -35,10 +35,10 @@ int sv_stage    = -1;
 pid_t sv_pid;
 int svc_deps  = 1;
 int svc_quiet = 1;
-static RS_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
+static SV_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
 
 static FILE *logfp;
-static int logfd, rs_debug;
+static int logfd, sv_debug;
 
 /* list of service to start/stop before|after a stage */
 static const char *const sv_init_stage[][4] = {
@@ -85,7 +85,7 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-__NORETURN__ static void help_message(int retval);
+_noreturn_ static void help_message(int retval);
 
 /*
  * bring system to a named level or stage
@@ -110,7 +110,7 @@ static char *get_cmdline_entry(const char *entry);
  */
 static const char *svc_runlevel(const char *level);
 
-__NORETURN__ static void help_message(int retval)
+_noreturn_ static void help_message(int retval)
 {
 	int i;
 
@@ -136,7 +136,7 @@ static char *get_cmdline_entry(const char *ent)
 		return NULL;
 	if (!(fp = fopen(path, "r")))
 		return NULL;
-	if (!rs_getline(fp, &line, &len))
+	if (!sv_getline(fp, &line, &len))
 		return NULL;
 
 	len = strlen(ent);
@@ -243,7 +243,7 @@ single:
 	    (sv_runlevel == SV_RUNLEVEL_SINGLE)) {
 		snprintf(path, sizeof(path), "%s/.%s", SV_SVCDIR,
 				sv_runlevel_name[SV_RUNLEVEL_SINGLE]);
-		DEPTREE.list = rs_svclist_load(path);
+		DEPTREE.list = sv_svclist_load(path);
 	}
 
 	if (entry) free(entry);
@@ -267,16 +267,16 @@ int svc_log(const char *fmt, ...)
 
 
 	/* save logfile if necessary */
-	if (rs_conf_yesno("SV_DEBUG"))
+	if (sv_conf_yesno("SV_DEBUG"))
 		logpath = logfile;
 	else
 		logpath = SV_LOGFILE;
-	if (!logfd && rs_debug) {
+	if (!logfd && sv_debug) {
 		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd < 0)
 			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd > 0) {
-			rs_debug = 1;
+			sv_debug = 1;
 			logfp = fdopen(logfd, "a+");
 		}
 	}
@@ -350,13 +350,13 @@ static void sv_sigsetup(void)
 static int svc_stage_command(int stage, int argc, const char *argv[])
 {
 	int i, retval;
-	RS_StringList_T *list = rs_stringlist_new();
+	SV_StringList_T *list = sv_stringlist_new();
 
 	for (i = 0; sv_init_stage[stage][i]; i++)
-		rs_stringlist_add(list, sv_init_stage[stage][i]);
+		sv_stringlist_add(list, sv_init_stage[stage][i]);
 
 	retval = svc_execl(list, argc, argv);
-	rs_stringlist_free(&list);
+	sv_stringlist_free(&list);
 
 	return retval;
 }
@@ -399,7 +399,7 @@ static void svc_stage(const char *cmd)
 	chdir("/");
 
 	t = time(NULL);
-	rs_debug = 1;
+	sv_debug = 1;
 	svc_log("logging: %s command\n", command);
 	svc_log("%s init stage-%d started at %s\n", progname, sv_stage, ctime(&t));
 
@@ -412,7 +412,7 @@ static void svc_stage(const char *cmd)
 			/* load the started services instead of only stage-[12]
 			 * to be abe to shutdown everything with SV_STAGE=3
 			 */
-			DEPTREE.list = rs_svclist_load(SV_TMPDIR_STAR);
+			DEPTREE.list = sv_svclist_load(SV_TMPDIR_STAR);
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
 			svc_start = 0;
 		}
@@ -435,7 +435,7 @@ static void svc_stage(const char *cmd)
 		t = time(NULL);
 		svc_log( "\n\tstage-%d (%s) at %s\n", sv_stage, command, ctime(&t));
 
-		rs_deptree_load(&DEPTREE);
+		sv_deptree_load(&DEPTREE);
 		if (svc_start)
 			p = DEPTREE.size-1;
 		else
@@ -456,7 +456,7 @@ static void svc_stage(const char *cmd)
 			else
 				++p;
 		} /* PRIORITY_LEVEL_LOOP */
-		rs_deptree_free(&DEPTREE);
+		sv_deptree_free(&DEPTREE);
 
 		/* break shutdown loop */
 		if (!level)
@@ -545,8 +545,8 @@ int main(int argc, char *argv[])
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
 	setenv("SV_VERSION", SV_VERSION, 1);
-	sv_nohang = rs_conf_yesno("SV_NOHANG");
-	sv_parallel = rs_conf_yesno("SV_PARALLEL");
+	sv_nohang = sv_conf_yesno("SV_NOHANG");
+	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	sv_sigsetup();
 
 	if (strcmp(progname, "rs") == 0 || strcmp(progname, "service") == 0)
@@ -599,7 +599,7 @@ rc_help:
 				ptr = (char *)svc_runlevel(NULL);
 				if (ptr && strcmp(ptr, sv_runlevel_name[SV_RUNLEVEL_DEFAULT]) == 0) {
 					sv_stage = 2;
-					DEPTREE.list = rs_svclist_load(NULL);
+					DEPTREE.list = sv_svclist_load(NULL);
 					svc_stage(sv_svc_cmd[SV_SVC_CMD_STOP]);
 				}
 			case SV_RUNLEVEL_NONETWORK:

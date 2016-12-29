@@ -9,10 +9,10 @@ dist_HDRS := error.h helper.h
 checkpath_SRCS := checkpath.c $(dist_SRCS)
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 fstabinfo_SRCS := fstabinfo.c error.c
-mountinfo_SRCS := mountinfo.c error.c rs-list.c
+mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := waitfile.c
 
-rs_SRCS   := rs-conf.c rs-deps.c rs.c rs-list.c sv-stage.c
+rs_SRCS   := sv-conf.c sv-deps.c rs.c sv-list.c sv-stage.c
 rs_HDRS   := sv.h
 
 HDRRS      = $(dist_HDRS) $(rs_HDRS)
@@ -34,7 +34,7 @@ clean:
 rs: $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(rs_HDRS)
 	$(CC) $(CFLAGS) -o $@ $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS)
 
-mountinfo.o: $(mountinfo_SRCS:%.c=%.o) rs-list.o
+mountinfo.o: $(mountinfo_SRCS:%.c=%.o) sv-list.o
 $(simple_BINS): $$@.o $(dist_OBJS) $(dist_HDRS)
 	$(CC) $(CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS)
 

@@ -1,44 +1,44 @@
 /*
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-list.c  0.12.6.4 2016/12/24
+ * @(#)sv-list.c  0.13.0 2016/12/28
  */
 
-#include "rs-list.h"
+#include "sv-list.h"
 
-RS_StringList_T *rs_stringlist_new(void)
+SV_StringList_T *sv_stringlist_new(void)
 {
-	RS_StringList_T *list = err_malloc(sizeof(*list));
+	SV_StringList_T *list = err_malloc(sizeof(*list));
 	TAILQ_INIT(list);
 	return list;
 }
 
-RS_String_T *rs_stringlist_add(RS_StringList_T *list, const char *str)
+SV_String_T *sv_stringlist_add(SV_StringList_T *list, const char *str)
 {
-	RS_String_T *elm = err_malloc(sizeof(RS_String_T));
+	SV_String_T *elm = err_malloc(sizeof(SV_String_T));
 	elm->str = err_strdup(str);
 	elm->data = NULL;
 	TAILQ_INSERT_TAIL(list, elm, entries);
 	return elm;
 }
 
-RS_String_T *rs_stringlist_adu(RS_StringList_T *list, const char *str)
+SV_String_T *sv_stringlist_adu(SV_StringList_T *list, const char *str)
 {
-	RS_String_T *elm = rs_stringlist_find(list, str);
+	SV_String_T *elm = sv_stringlist_find(list, str);
 	if (elm)
 		return elm;
 
-	return rs_stringlist_add(list, str);
+	return sv_stringlist_add(list, str);
 }
 
-int rs_stringlist_del(RS_StringList_T *list, const char *str)
+int sv_stringlist_del(SV_StringList_T *list, const char *str)
 {
-	RS_String_T *elm = rs_stringlist_find(list, str);
+	SV_String_T *elm = sv_stringlist_find(list, str);
 
 	if (elm) {
 		TAILQ_REMOVE(list, elm, entries);
@@ -50,7 +50,7 @@ int rs_stringlist_del(RS_StringList_T *list, const char *str)
 	return -1;
 }
 
-int rs_stringlist_rem(RS_StringList_T *list, RS_String_T *elm)
+int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
 {
 	if (elm) {
 		TAILQ_REMOVE(list, elm, entries);
@@ -62,9 +62,9 @@ int rs_stringlist_rem(RS_StringList_T *list, RS_String_T *elm)
 	return -1;
 }
 
-RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str)
+SV_String_T *sv_stringlist_find(SV_StringList_T *list, const char *str)
 {
-	RS_String_T *elm;
+	SV_String_T *elm;
 
 	if (list)
 		TAILQ_FOREACH(elm, list, entries)
@@ -73,9 +73,9 @@ RS_String_T *rs_stringlist_find(RS_StringList_T *list, const char *str)
 	return NULL;
 }
 
-size_t rs_stringlist_len(RS_StringList_T *list)
+size_t sv_stringlist_len(SV_StringList_T *list)
 {
-	RS_String_T *elm;
+	SV_String_T *elm;
 	size_t len = 0;
 
 	TAILQ_FOREACH(elm, list, entries)
@@ -83,7 +83,7 @@ size_t rs_stringlist_len(RS_StringList_T *list)
 	return len;
 }
 
-int rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *ent)
+int sv_stringlist_mov(SV_StringList_T *src, SV_StringList_T *dst, SV_String_T *ent)
 {
 	if (src == NULL || dst == NULL) {
 		errno = EINVAL;
@@ -94,9 +94,9 @@ int rs_stringlist_mov(RS_StringList_T *src, RS_StringList_T *dst, RS_String_T *e
 	return 0;
 }
 
-void rs_stringlist_free(RS_StringList_T **list)
+void sv_stringlist_free(SV_StringList_T **list)
 {
-	RS_String_T *elm;
+	SV_String_T *elm;
 
 	if (!list)
 		return;

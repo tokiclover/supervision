@@ -2,14 +2,14 @@
  * Utility providing an interface {halt,reboot,shutdown,poweroff}
  * per supervision backend.
  *
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-shutdown.c
+ * @(#)sv-shutdown.c  0.12.6.4 2016/12/28
  */
 
 #ifdef HAVE_CONFIG_H
@@ -85,7 +85,7 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-__NORETURN__ static void help_message(int status)
+_noreturn_ static void help_message(int status)
 {
 	int i = 0;
 
@@ -182,7 +182,7 @@ static int sv_wall(char **argv)
 	return 0;
 }
 
-__NORETURN__ static int sv_shutdown(char **message)
+_noreturn_ static int sv_shutdown(char **message)
 {
 	FILE *fp;
 	size_t len = 0;
@@ -217,7 +217,7 @@ __NORETURN__ static int sv_shutdown(char **message)
 	}
 
 	if ((fp = fopen(SV_SVC_BACKEND, "r")))
-		while (rs_getline(fp, &line, &len) > 0)
+		while (sv_getline(fp, &line, &len) > 0)
 			if (strncmp(line, ent, siz) == 0) {
 				ptr = shell_string_value(line+siz+1);
 				ptr = err_strdup(ptr);

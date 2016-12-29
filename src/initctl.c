@@ -2,27 +2,30 @@
  * Utility providing an interface to SysVinit's halt, reboot, shutdown,
  * poweroff utilities.
  *
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)initctl.c
+ * @(#)initctl.c  0.12.6.4 2016/12/28
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #include "error.h"
 #include "helper.h"
 #include <initreq.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-#ifndef SYSCONFDIR
-# define SYSCONFDIR "/etc"
+#ifndef LIBDIR
+# define LIBDIR "/lib"
 #endif
 #define INIT_REQ_LEN 384
-#define SV_SHUTDOWN SYSCONFDIR "/sv/.lib/bin/sv-shutdown"
+#define SV_SHUTDOWN LIBDIR "/sv/sbin/sv-shutdown"
 
 const char *progname;
 

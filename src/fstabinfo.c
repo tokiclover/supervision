@@ -1,14 +1,14 @@
 /*
  * fstab utility to querry re/mount entries
  *
- * Copyright (C) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)fstabinfo.c
+ * @(#)fstabinfo.c  0.13.0 2016/12/28
  */
 
 #include "error.h"
@@ -93,7 +93,7 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-__NORETURN__ static void help_message(int status)
+_noreturn_ static void help_message(int status)
 {
 	int i;
 
