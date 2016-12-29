@@ -224,6 +224,7 @@ install: install-dir install-dist install-sv-svcs
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/rc
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/service
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/halt
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
@@ -239,7 +240,7 @@ install: install-dir install-dist install-sv-svcs
 	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(confdir).conf.d
 	-$(install_DATA)  $(dist_RS_SVCS:%=sv.conf.d/%) $(DESTDIR)$(confdir).conf.d
 	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(confdir)
-	sed -e 's,\(RS_TYPE.*$$\),\1\nSV_LIBDIR=$(libdir)\nSV_SVCDIR=$(confdir),' \
+	sed -e 's,\(SV_TYPE.*$$\),\1\nSV_LIBDIR=$(libdir)\nSV_SVCDIR=$(confdir),' \
 		-i $(DESTDIR)$(libdir)/opt/cmd
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
@@ -251,9 +252,8 @@ install: install-dir install-dist install-sv-svcs
 		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
-		-e 's|/sbin/rs|$(SBINDIR)/rs|g' \
 		-i $(DESTDIR)$(libdir)/sh/runscript-functions \
-		$(DESTDIR)$(libdir)/opt/SVC_OPTIONS
+		   $(DESTDIR)$(libdir)/opt/SVC_OPTIONS
 ifdef RUNIT_INIT_STAGE
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
@@ -298,13 +298,13 @@ install-%-initd:
 uninstall-all: uninstall unintsall-supervision-initd
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(confdir).conf
-	rm -f $(DESTDIR)$(SBINDIR)/rs
+	rm -f $(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/rs
 ifdef SYSVINIT
 	rm -f $(DESTDIR)$(libdir)/sbin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5 \
-		$(DESTDIR)/$(MANDIR)/man8/rs.8 \
+		$(DESTDIR)$(MANDIR)/man8/rs.8 \
 		$(DESTDIR)/$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(libdir)/opt/%) $(DESTDIR)$(libdir)/opt/cmd
