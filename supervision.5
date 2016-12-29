@@ -302,6 +302,9 @@ T}
 \fBSVC_PROVIDE\fR@T{
 Provide this virtual service for dependency use
 T}
+\fBSVC_KEYWORD\fR@T{
+Keyword to enable per service (timeout...)
+T}
 \fBSVC_REQ_FILES\fR@T{
 Service required file-s
 T}
@@ -336,6 +339,9 @@ foreground, defining the following variables are useless for runscript services.
 .TS
 tab (@);
 l lx.
+\fBSVC_TRY\fR@T{
+Number of attempts to try start the service before removing from SV_RUNDIR
+T}
 \fBENV_DIR=Yes\fR@T{
 To enable \fIenvdir\fR support mode (or \fIenvuidgid\fR when \fBSVC_{GROUP,USER}\fR are defined)
 T}
