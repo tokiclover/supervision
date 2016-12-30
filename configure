@@ -566,14 +566,14 @@ LINUX_SUPERVISION_SERVICES="
 	udev
 	udev-monitor
 "
-LINUX_STAGE_0="
+LINUX_SYSINIT="
 "
-LINUX_STAGE_1="
+LINUX_SYSBOOT="
 	dmcrypt
 	ipset
 	iptables
 "
-LINUX_STAGE_2="
+LINUX_DEFAULT="
 "
 
 # installation paths
@@ -658,8 +658,8 @@ case "${build:-${host:-$(uname -s)}}" in
 	for type in RUNSCRIPT SUPERVISION; do
 		eval append EXTRA_${type}_SERVICES \$LINUX_${type}_SERVICES
 	done
-	for i in 0 1 2 3; do
-		eval append EXTRA_STAGE_${i} \$LINUX_STAGE_${i}
+	for i in SYSINIT SYSBOOT DEFAULT SHUTDOWN; do
+		eval append EXTRA_${i} \$LINUX_${i}
 	done
 	append EXTRA_SERVICE_INSTANCES $LINUX_SERVICE_INSTANCES
 	append EXTRA_OPTIONS_INSTANCES $LINUX_OPTIONS_INSTANCES
