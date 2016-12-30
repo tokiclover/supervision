@@ -197,7 +197,7 @@ svc_state()
 svc_config()
 {
 	local file
-	for file in ${SVC_CONFIGFILE} ${SVC_REQ_FILES}; do
+	for file in ${SVC_CONFIGFILE} ${SVC_REQUIRED_FILES}; do
 		if [ ! -f "${file}" ]; then
 			error "${file} required file not found"
 			return 1
