@@ -154,15 +154,15 @@ dist_RS_SVCS = \
 dist_RS_OPTS = \
 	$(EXTRA_OPTIONS_INSTANCES)
 
-dist_STAGE_0 = \
-	$(EXTRA_STAGE_0) \
+dist_SYSINIT = \
+	$(EXTRA_SYSINIT) \
 	devfs \
 	dmesg \
 	kmod-static-nodes \
 	sysfs \
 	tmpfiles.dev
-dist_STAGE_1 = \
-	$(EXTRA_STAGE_1) \
+dist_SYSBOOT = \
+	$(EXTRA_SYSBOOT) \
 	kmod \
 	console \
 	checkfs \
@@ -177,11 +177,11 @@ dist_STAGE_1 = \
 	syslog \
 	swaps swapfiles \
 	tmpfiles.setup
-dist_STAGE_2 = \
-	$(EXTRA_STAGE_2) \
+dist_DEFAULT = \
+	$(EXTRA_DEFAULT) \
 	getty-tty6 getty-tty5 getty-tty4 getty-tty3 getty-tty2 getty-tty1
-dist_STAGE_3 = \
-	$(EXTRA_STAGE_3) \
+dist_SHUTDOWN = \
+	$(EXTRA_SHUTDOWN) \
 	rdonlyfs
 
 
@@ -205,8 +205,8 @@ DISTFILES   = \
 dist_DIRS  += \
 	$(libdir)/bin $(libdir)/sbin $(libdir)/sh $(DOCDIR) \
 	$(libdir)/cache $(libdir)/opt \
-	$(confdir).conf.d $(confdir)/.stage-0 $(confdir)/.stage-1 \
-	$(confdir)/.stage-2 $(confdir)/.stage-3 $(confdir)/.single
+	$(confdir).conf.d $(confdir)/.sysinit $(confdir)/.sysboot \
+	$(confdir)/.default $(confdir)/.shutdown $(confdir)/.single
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
 .PHONY: FORCE all install install-doc install-dist install-all
@@ -267,10 +267,10 @@ endif
 	for svc in $(dist_SVC_INSTANCES); do \
 		$(LN_S) -f $${svc#*:} $(DESTDIR)$(confdir)/$${svc%:*}; \
 	done
-	$(LN_S) -f $(dist_STAGE_0:%=$(confdir)/%) $(DESTDIR)$(confdir)/.stage-0/
-	$(LN_S) -f $(dist_STAGE_1:%=$(confdir)/%) $(DESTDIR)$(confdir)/.stage-1/
-	$(LN_S) -f $(dist_STAGE_2:%=$(confdir)/%) $(DESTDIR)$(confdir)/.stage-2/
-	$(LN_S) -f $(dist_STAGE_3:%=$(confdir)/%) $(DESTDIR)$(confdir)/.stage-3/
+	$(LN_S) -f $(dist_SYSINIT:%=$(confdir)/%) $(DESTDIR)$(confdir)/.sysinit/
+	$(LN_S) -f $(dist_SYSBOOT:%=$(confdir)/%) $(DESTDIR)$(confdir)/.sysboot/
+	$(LN_S) -f $(dist_DEFAULT:%=$(confdir)/%) $(DESTDIR)$(confdir)/.default/
+	$(LN_S) -f $(dist_SHUTDOWN:%=$(confdir)/%) $(DESTDIR)$(confdir)/.shutdown/
 	$(LN_S) -f $(libdir)/opt $(DESTDIR)$(confdir)/.opt
 	$(LN_S) -f $(confdir)/sulogin $(DESTDIR)$(confdir)/.single
 install-dist: $(DISTFILES)
