@@ -23,7 +23,7 @@ start()
 }
 stop()
 {
-	[ "${SV_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	case "${OS_NAME}" in
 		(OpenBSD|NetBSD) swapctl -U -t noblk >${NULL} 2>&1;;
 		(*) swapoff -a >${NULL} 2>&1;;

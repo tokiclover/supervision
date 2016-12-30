@@ -8,7 +8,7 @@ description="Mount filesystem read-only"
 
 start()
 {
-	[ "${SV_STAGE}" = 3 ] || return 1
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return 1
 	sync
 
 	local dir mnt_opts mnt_point

@@ -30,7 +30,7 @@ start()
 
 stop()
 {
-	[ "${SV_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 	${lvm} lvchange --noudevsync --sysinit --activate ln
 	${lvm} vgchange --noudevsync --sysinit --activate ln

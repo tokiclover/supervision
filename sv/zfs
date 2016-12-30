@@ -26,7 +26,7 @@ start()
 
 stop()
 {
-	[ "${SV_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	local zfs_opts
 	${zfs} umount -a ${zfs_opts} ${ZPOOL_EXPORT_ARGS}
 }

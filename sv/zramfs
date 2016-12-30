@@ -3,7 +3,7 @@
 # $Header: /etc/sv/zramfs                                Exp $
 # $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.22.1 2016/07/20 12:33:03                   Exp $
+# $Version: 0.22.1 2016/07/20 12:03:03                   Exp $
 #
 
 description="Initialize ZRAM devices and filesystems"
@@ -94,7 +94,7 @@ start_pre()
 
 stop()
 {
-	[ "${SV_STAGE}" = 3 ] || return
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	local dev type mnt_dir num=0
 	while true; do
 		eval set -- \${ZRAM_DEVICE_${num}}
