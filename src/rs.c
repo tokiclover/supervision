@@ -295,8 +295,6 @@ static int svc_cmd(struct svcrun *run)
 
 	return svc_run(run);
 reterr:
-	if (len)
-		free((void*)run->path);
 	free(run->ARGV);
 	return retval;
 }
