@@ -25,23 +25,6 @@ PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6
 umask 022
 
 #
-# migrate to new sub-dirs
-#
-if [ ! -d ${SV_TMPDIR}/OPTS ]; then
-	mkdir -p ${SV_TMPDIR}/ENVS ${SV_TMPDIR}/OPTS
-	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/ENV
-	for a in ${SV_TMPDIR}/*_ENV; do
-		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/ENVS/${b%_*}
-	done
-	for a in ${SV_TMPDIR}/*_OPTIONS; do
-		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/OPTS/${b%_*}
-	done
-	a= b=
-fi
-
-#
 # Use RC config file if requested
 #
 if yesno "${RC_OPTS}"; then
