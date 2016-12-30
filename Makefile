@@ -249,6 +249,10 @@ install: install-dir install-dist install-sv-svcs
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR@|$(RUNDIR)|g' \
+		sv-stage.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
+	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' \
+		-e 's|@RUNDIR@|$(RUNDIR)|g' \
 		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
@@ -304,7 +308,7 @@ ifdef SYSVINIT
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5 \
-		$(DESTDIR)$(MANDIR)/man8/rs.8 \
+		$(DESTDIR)/$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/rs.8 \
 		$(DESTDIR)/$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(libdir)/opt/%) $(DESTDIR)$(libdir)/opt/cmd
