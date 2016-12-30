@@ -100,7 +100,7 @@ svc_start()
 	if svc_state -f; then
 		val=1
 	elif svc_wait ${SV_WAIT_PIDFILE:-5} ${SVC_PIDFILE}; then
-		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} ${SVC_CMD##*/}; then
+		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}; then
 			val=0
 		else
 			val=1
