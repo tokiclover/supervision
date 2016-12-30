@@ -5,6 +5,7 @@ src/fstabinfo
 src/mountinfo
 src/initctl
 src/sv-shutdown
+src/sv-stage
 sv/net/*
 sv/socklog*/*
 sv/*/supervise
