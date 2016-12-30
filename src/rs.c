@@ -446,14 +446,14 @@ static int svc_depend(struct svcrun *run)
 
 static const char **svc_env(void)
 {
-	size_t size = 1024;
+	size_t len = 8, size = 1024;
 	char *env, *ptr;
 	int i = 0, j;
 
 	if (svc_environ)
 		return svc_environ;
 	env = err_malloc(size);
-	svc_environ = err_calloc(ARRAY_SIZE(env_list), sizeof(void *));
+	svc_environ = err_calloc(len, sizeof(void *));
 
 	if (!getenv("COLUMNS")) {
 		sprintf(env, "%d", get_term_cols());
@@ -467,9 +467,12 @@ static const char **svc_env(void)
 			env = err_malloc(size);
 			snprintf(env, size, "%s=%s", env_list[j], ptr);
 			svc_environ[i++] = err_realloc(env, strlen(env)+1);
+			if (i == len) {
+				len += 8;
+				svc_environ = err_realloc(svc_environ, len*sizeof(void*));
+			}
 		}
 	}
-	svc_environ[i++] = (char *)0;
 	svc_environ[i++] = (char *)0;
 	return svc_environ;
 }
