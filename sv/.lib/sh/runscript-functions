@@ -2,7 +2,7 @@
 # $Header:  /lib/sv/sh/runscript-functions               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.4 2016/12/18 21:09:26                      Exp $
+# $Version: 1.4 2016/12/28 21:09:26                      Exp $
 #
 
 __RUNSCRIPT_FUNCTIONS__=1
@@ -19,7 +19,8 @@ __ERR_END__='{ end 0; return; };'
 __ERR_BUSY__='{ end 1 busy; return 16; };'
 PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
-export PATH SV_LIBDIR SV_RUNDIR SV_SVCDIR SV_TMPDIR
+export PATH SV_LIBDIR SV_RUNDIR SV_SVCDIR SV_TMPDIR SV_RUNLEVEL SV_STAGE SV_TYPE \
+	SV_SYSBOOT_LEVEL SV_SHUTDOWN_LEVEL SVC_DEPS SVC_DEBUG
 
 [ -n "${__FUNCTIONS__}"              ] || . "${SV_LIBDIR}"/sh/functions
 [ -n "${__SUPERVISIONS_FUNCTIONS__}" ] || . "${SV_LIBDIR}"/sh/supervision-functions
@@ -57,13 +58,13 @@ rs_status()
 svc_add()
 {
 	[ -n "${SV_STAGE}" ] || return
-	svc_state -e && ln -fns ${SV_SVCDIR}/${SVC_NAME} ${SV_SVCDIR}/.stage-${SV_STAGE}
+	svc_state -e && ln -fns ${SV_SVCDIR}/${SVC_NAME} ${SV_SVCDIR}/.${SV_STAGE}
 }
 
 svc_del()
 {
 	[ -n "${SV_STAGE}" ] || return
-	rm -fr ${SV_SVCDIR}/.stage-${SV_STAGE}/${SVC_NAME}
+	rm -fr ${SV_SVCDIR}/.${SV_STAGE}/${SVC_NAME}
 }
 svc_zap()
 {
