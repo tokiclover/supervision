@@ -156,9 +156,10 @@ svc_reload()
 		return 1
 	elif [ -n "${__SIGRELD__}" ]; then
 		eval ${__SVCCMD__} ${__SIGRELD__} "${SV_RUNDIR}/${SVC_NAME}"
-	else
+	elif [ -n "${__SIGRHUP__}" ]; then
 		eval ${__SVCCMD__} ${__SIGHUP__:-${__SIGEXIT__}} "${SV_RUNDIR}/${SVC_NAME}"
-		svc_start
+	else
+		svc_sig HUP
 	fi
 }
 
