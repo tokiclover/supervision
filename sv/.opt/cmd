@@ -10,10 +10,8 @@
 if [ -n "${ZSH_VERSION}" ]; then
 	emulate sh
 	NULLCMD=:
-	setopt NO_GLOB_SUBST NULLGLOB SH_WORD_SPLIT
+	setopt NO_GLOB_SUBST SH_WORD_SPLIT
 	disable -r end
-elif [ -n "${BASH_VERSION}" ]; then
-	shopt -qs nullglob
 else
 	case "$(set -o 2>/dev/null)" in
 		(*posix*) set -o posix;;
