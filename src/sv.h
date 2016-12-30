@@ -70,29 +70,29 @@ extern "C" {
 
 extern int sv_nohang;
 extern int sv_parallel;
-extern int sv_runlevel;
+extern int sv_level;
 extern int sv_stage;
 extern int svc_deps;
 extern int svc_quiet;
 extern const char *progname;
 
 enum {
-	SV_RUNLEVEL_SHUTDOWN,
-#define SV_RUNLEVEL_SHUTDOWN SV_RUNLEVEL_SHUTDOWN
-	SV_RUNLEVEL_SINGLE,
-#define SV_RUNLEVEL_SINGLE SV_RUNLEVEL_SINGLE
-	SV_RUNLEVEL_NONETWORK,
-#define SV_RUNLEVEL_NONETWORK SV_RUNLEVEL_NONETWORK
-	SV_RUNLEVEL_DEFAULT,
-#define SV_RUNLEVEL_DEFAULT SV_RUNLEVEL_DEFAULT
-	SV_RUNLEVEL_SYSINIT,
-#define SV_RUNLEVEL_SYSINIT SV_RUNLEVEL_SYSINIT
-	SV_RUNLEVEL_BOOT,
-#define SV_RUNLEVEL_BOOT SV_RUNLEVEL_BOOT
-	SV_RUNLEVEL_REBOOT,
-#define SV_RUNLEVEL_REBOOT SV_RUNLEVEL_REBOOT
+	SV_SHUTDOWN_LEVEL,
+#define SV_SHUTDOWN_LEVEL SV_SHUTDOWN_LEVEL
+	SV_SINGLE_LEVEL,
+#define SV_SINGLE_LEVEL SV_SINGLE_LEVEL
+	SV_NOWNETWORK_LEVEL,
+#define SV_NOWNETWORK_LEVEL SV_NOWNETWORK_LEVEL
+	SV_DEFAULT_LEVEL,
+#define SV_DEFAULT_LEVEL SV_DEFAULT_LEVEL
+	SV_SYSINIT_LEVEL,
+#define SV_SYSINIT_LEVEL SV_SYSINIT_LEVEL
+	SV_SYSBOOT_LEVEL,
+#define SV_SYSBOOT_LEVEL SV_SYSBOOT_LEVEL
+	SV_REBOOT_LEVEL,
+#define SV_REBOOT_LEVEL SV_REBOOT_LEVEL
 };
-extern const char *const sv_runlevel_name[];
+extern const char *const sv_runlevel[];
 
 /*
  * retrieve a configuration value like getenv(3)

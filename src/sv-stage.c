@@ -30,7 +30,7 @@ static void sv_sigsetup(void);
 
 int sv_nohang   =  0;
 int sv_parallel =  0;
-int sv_runlevel = -1;
+int sv_level    = -1;
 int sv_stage    = -1;
 pid_t sv_pid;
 int svc_deps  = 1;
@@ -46,39 +46,39 @@ static const char *const sv_init_stage[][4] = {
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
-const char *const sv_runlevel_name[] = { "shutdown", "single", "nonetwork",
-	"default", "sysinit", "boot", "reboot", NULL
+const char *const sv_runlevel[] = { "shutdown", "single", "nonetwork",
+	"default", "sysinit", "sysboot", "reboot", NULL
 };
 
 const char *progname;
 static const char *applet;
 
-static const char *shortopts = "Dg0S1N23Rqvh";
+static const char *shortopts = "0123456DNSbghprsqv";
 static const struct option longopts[] = {
+	{ "shutdown", 0, NULL, 'p' },
+	{ "single",   0, NULL, 's' },
+	{ "nonetwork",0, NULL, 'N' },
+	{ "default",  0, NULL, 'd' },
+	{ "sysinit",  0, NULL, 'S' },
+	{ "sysboot",  0, NULL, 'b' },
+	{ "reboot",   0, NULL, 'r' },
 	{ "nodeps",   0, NULL, 'D' },
 	{ "debug",    0, NULL, 'g' },
-	{ "sysinit",  0, NULL, '0' },
-	{ "single",   0, NULL, 'S' },
-	{ "boot",     0, NULL, '1' },
-	{ "nonetwork",0, NULL, 'N' },
-	{ "default",  0, NULL, '2' },
-	{ "shutdown", 0, NULL, '3' },
-	{ "reboot",   0, NULL, 'R' },
 	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
+	"Select shutdown    run level",
+	"Select single user run level",
+	"Select nonetwork   run level",
+	"Select multi users run level",
+	"Select system init run level",
+	"Select system boot run level",
+	"Select reboot      run level",
 	"Disable dependencies",
 	"Enable debug mode",
-	"Select sysinit     run level",
-	"Select single user run level",
-	"Select boot        run level",
-	"Select nonetwork   run level",
-	"Select default     run level",
-	"Select shutdown    run level",
-	"Select reboot      run level",
 	"Enable quiet mode",
 	"Show help and exit",
 	"Show version and exit",
@@ -115,11 +115,11 @@ _noreturn_ static void help_message(int retval)
 	int i;
 
 	printf("Usage: %s [OPTIONS] (ARGUMENTS)\n", progname);
-	for ( i = 0; i < 2; i++)
-		printf("    -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
+	for ( i = 0; i < 7; i++)
+		printf("    -%d, -%c, --%-12s %s\n", i, longopts[i].val, longopts[i].name,
 				longopts_help[i]);
-	for ( i = 2; longopts_help[i]; i++)
-		printf("    -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
+	for ( i = 7; longopts_help[i]; i++)
+		printf("        -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
 				longopts_help[i]);
 
 	exit(retval);
@@ -206,21 +206,25 @@ static const char *svc_runlevel(const char *level)
 
 static void svc_level(void)
 {
-	char *entry = NULL, path[512], *ptr, *old, *ent;
+	char *entry = NULL, *ptr, *ent;
 	int i;
 
 	entry = get_cmdline_entry("softlevel");
-	if (sv_stage == 1) {
-		goto noinit;
+
+	/* mark network services as started, so nothing will be started */
+	if ((entry && strcmp(entry, sv_runlevel[SV_NOWNETWORK_LEVEL]) == 0) ||
+		(sv_level == SV_NOWNETWORK_LEVEL)) {
+		for (i = 0; i < SERVICES.virt_count; i++)
+			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
+				svc_mark(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR, NULL);
+		svc_mark("net", SV_SVC_STAT_STAR, NULL);
 	}
-	else if (sv_stage == 2) {
-		ptr = (char*)svc_runlevel(NULL);
-		if (ptr && strcmp(ptr, sv_runlevel_name[SV_RUNLEVEL_SINGLE]) == 0)
-			goto single;
+	else if ((entry && strcmp(entry, sv_runlevel[SV_SINGLE_LEVEL]) == 0)) {
+	    if (sv_level != SV_SINGLE_LEVEL)
+			sv_level = SV_SINGLE_LEVEL;
 	}
 
-noinit:
-	old = entry;
+	if (entry) free(entry);
 	entry = ent = get_cmdline_entry("noinit");
 	/* mark no started services as stopped */
 	if (entry) {
@@ -228,25 +232,6 @@ noinit:
 			svc_mark(ptr, SV_SVC_STAT_STAR, NULL);
 		free(entry);
 	}
-	entry = old;
-nonetwork:
-	/* mark network services as started, so nothing will be started */
-	if ((entry && strcmp(entry, sv_runlevel_name[SV_RUNLEVEL_NONETWORK]) == 0) ||
-		(sv_runlevel == SV_RUNLEVEL_NONETWORK)) {
-		for (i = 0; i < SERVICES.virt_count; i++)
-			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
-				svc_mark(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR, NULL);
-		svc_mark("net", SV_SVC_STAT_STAR, NULL);
-	}
-single:
-	if ((entry && strcmp(entry, sv_runlevel_name[SV_RUNLEVEL_SINGLE]) == 0) ||
-	    (sv_runlevel == SV_RUNLEVEL_SINGLE)) {
-		snprintf(path, sizeof(path), "%s/.%s", SV_SVCDIR,
-				sv_runlevel_name[SV_RUNLEVEL_SINGLE]);
-		DEPTREE.list = sv_svclist_load(path);
-	}
-
-	if (entry) free(entry);
 }
 
 int svc_end(const char *svc, int status)
@@ -261,7 +246,7 @@ int svc_end(const char *svc, int status)
 
 int svc_log(const char *fmt, ...)
 {
-	static char logfile[] = "/var/log/rs.log", *logpath;
+	static char logfile[] = "/var/log/sv.log", *logpath;
 	int retval = 0;
 	va_list ap;
 
@@ -376,9 +361,8 @@ static void svc_stage(const char *cmd)
 	svc_deps  = 0;
 	svc_quiet = 0;
 	sv_pid    = getpid();
-	snprintf(buf, sizeof(buf), "%d", sv_stage);
-	setenv("SV_STAGE", buf, 1);
-	setenv("SV_RUNLEVEL", sv_runlevel_name[sv_runlevel], 1);
+	setenv("SV_STAGE"   , sv_runlevel[sv_stage], 1);
+	setenv("SV_RUNLEVEL", sv_runlevel[sv_level], 1);
 	snprintf(buf, sizeof(buf), "%d", sv_pid);
 	setenv("SV_PID", buf, 1);
 	if ((r = open(SV_PIDFILE, O_CREAT|O_RDWR|O_TRUNC|O_CLOEXEC, 0644)) > 0) {
@@ -388,9 +372,8 @@ static void svc_stage(const char *cmd)
 	else
 		ERROR("Failed to open %s\n", SV_PIDFILE);
 	write(r, buf, strlen(buf));
-	snprintf(buf, sizeof(buf), "%s/%d_deptree", SV_TMPDIR_DEPS, sv_stage);
 
-	if (sv_stage == 0 || command == NULL) /* force service command */
+	if (sv_stage == SV_SYSINIT_LEVEL || command == NULL) /* force service command */
 		command = sv_svc_cmd[SV_SVC_CMD_START];
 	if (strcmp(command, sv_svc_cmd[SV_SVC_CMD_STOP]) == 0)
 		svc_start = 0;
@@ -401,39 +384,42 @@ static void svc_stage(const char *cmd)
 	t = time(NULL);
 	sv_debug = 1;
 	svc_log("logging: %s command\n", command);
-	svc_log("%s init stage-%d started at %s\n", progname, sv_stage, ctime(&t));
+	svc_log("%s %s runlevel started at %s\n", progname, sv_runlevel[sv_stage],
+			ctime(&t));
 
-	/* do this extra loop to be able to stop stage-1 with SV_STAGE=3; so that,
-	 * {local,network}fs services etc. can be safely stopped
+	/* do this extra loop to be able to stop sysboot with sv_stage=SV_SHUTDOWN_LEVEL;
+	 * so that, {local,network}fs services etc. can be safely stopped
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
-		if (sv_stage == 3 && !level) {
+		if (sv_stage == SV_SHUTDOWN_LEVEL && !level) {
 			level = sv_stage;
-			/* load the started services instead of only stage-[12]
-			 * to be abe to shutdown everything with SV_STAGE=3
+			/* load the started services instead of only SV_{SYSBOOT,DEFAULT}_LEVEL
+			 * to be abe to shutdown everything with sv_stage=SV_SHUTDOWN_LEVEL
 			 */
 			DEPTREE.list = sv_svclist_load(SV_TMPDIR_STAR);
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
 			svc_start = 0;
 		}
-		else if (level == 3) {
+		else if (level == SV_SHUTDOWN_LEVEL) {
 			level = 0;
 			/* close the logfile because rootfs will be mounted read-only */
 			if (!fclose(logfp))
 				logfd = 0;
 			if (!close(logfd))
 				logfp = NULL;
-			/* and finaly start stage-3 */
+			/* and finaly start shutdown runlevel */
 			command = sv_svc_cmd[SV_SVC_CMD_START];
 			svc_start = 1;
+			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
 			unlink(buf);
 		}
-		else if (sv_stage == 1 || sv_stage == 2)
+		else if (sv_stage == SV_SYSBOOT_LEVEL)
 			svc_level(); /* make SysVinit compatible runlevel */
 		argv[4] = command;
 
 		t = time(NULL);
-		svc_log( "\n\tstage-%d (%s) at %s\n", sv_stage, command, ctime(&t));
+		svc_log( "\n\t%s runlevel (%s command) at %s\n", sv_runlevel[sv_stage],
+				command, ctime(&t));
 
 		sv_deptree_load(&DEPTREE);
 		if (svc_start)
@@ -464,12 +450,13 @@ static void svc_stage(const char *cmd)
 	} /* SHUTDOWN_LOOP */
 
 	/* finish sysinit */
-	if (sv_stage == 0 )
+	if (sv_stage == SV_SYSINIT_LEVEL )
 		svc_stage_command(0, argc, argv);
 
-	svc_runlevel(sv_runlevel_name[sv_runlevel]);
+	svc_runlevel(sv_runlevel[sv_level]);
 	t = time(NULL);
-	svc_log("\n%s init stage-%d stopped at %s\n", progname, sv_stage, ctime(&t));
+	svc_log("\n%s %s runlevel stopped at %s\n", progname, sv_runlevel[sv_stage],
+			ctime(&t));
 }
 
 int main(int argc, char *argv[])
@@ -499,30 +486,39 @@ int main(int argc, char *argv[])
 			case 'g':
 				setenv("SVC_DEBUG", on, 1);
 				break;
-			case '0':
-				sv_runlevel = SV_RUNLEVEL_SYSINIT;
-				sv_stage = 0;
-				break;
-			case 'N':
-				sv_runlevel = SV_RUNLEVEL_NONETWORK;
-			case '1':
-				if (sv_runlevel < 0)
-					sv_runlevel = SV_RUNLEVEL_BOOT;
+			case '4':
 			case 'S':
-				if (sv_runlevel < 0)
-					sv_runlevel = SV_RUNLEVEL_SINGLE;
-				sv_stage = 1;
+				sv_level = SV_SYSINIT_LEVEL;
+				sv_stage = SV_SYSINIT_LEVEL;
 				break;
 			case '2':
-				sv_runlevel = SV_RUNLEVEL_DEFAULT;
-				sv_stage = 2;
+			case 'N':
+				sv_level = SV_NOWNETWORK_LEVEL;
+				sv_stage = SV_SYSBOOT_LEVEL;
+			case '5':
+			case 'b':
+				sv_level = SV_SYSBOOT_LEVEL;
+				sv_stage = SV_SYSBOOT_LEVEL;
 				break;
-			case 'R':
-				sv_runlevel = SV_RUNLEVEL_REBOOT;
+			case '1':
+			case 's':
+				sv_level = SV_SINGLE_LEVEL;
+				sv_stage = SV_SINGLE_LEVEL;
+				break;
 			case '3':
-				if (sv_runlevel < 0)
-					sv_runlevel = SV_RUNLEVEL_SHUTDOWN;
-				sv_stage = 3;
+			case 'd':
+				sv_level = SV_DEFAULT_LEVEL;
+				sv_stage = SV_DEFAULT_LEVEL;
+				break;
+			case '6':
+			case 'r':
+				sv_level = SV_REBOOT_LEVEL;
+				sv_stage = SV_SHUTDOWN_LEVEL;
+				break;
+			case '0':
+			case 'p':
+				sv_level = SV_SHUTDOWN_LEVEL;
+				sv_stage = SV_SHUTDOWN_LEVEL;
 				break;
 			case 'q':
 				svc_quiet = 0;
@@ -545,6 +541,8 @@ int main(int argc, char *argv[])
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
 	setenv("SV_VERSION", SV_VERSION, 1);
+	setenv("SV_SYSBOOT_LEVEL" , sv_runlevel[SV_SYSBOOT_LEVEL] , 1);
+	setenv("SV_SHUTDOWN_LEVEL", sv_runlevel[SV_SHUTDOWN_LEVEL], 1);
 	sv_nohang = sv_conf_yesno("SV_NOHANG");
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	sv_sigsetup();
@@ -556,13 +554,16 @@ int main(int argc, char *argv[])
 		goto rc;
 	}
 	else if (strcmp(progname, "sv-stage") == 0) {
+		if (argc && !(strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_START]) == 0 ||
+					  strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STOP] ) == 0 ))
+			goto rc;
 init_stage:
 		setenv("SVC_DEBUG", off, 1);
 		if (sv_stage >= 0)
 			svc_stage(*argv);
 		else {
-			fprintf(stderr, "Usage: %s -(0|1|2|3) [start|stop]"
-					"(level argument required)\n", progname);
+			fprintf(stderr, "Usage: %s -(0|1|2|3|4|5|6) [start|stop]"
+					"(runlevel argument required)\n", progname);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -578,36 +579,34 @@ init_stage:
 rc:
 	if (argc != 1) {
 rc_help:
-		fprintf(stderr, "Usage: %s {nonetwork|single|sysinit|boot|default|shutdown|reboot} "
-				"(run level)\n", progname);
+		fprintf(stderr, "Usage: %s (nonetwork|single|sysinit|sysboot|default|"
+				"shutdown|reboot)\n", progname);
 		exit(EXIT_FAILURE);
 	}
 
 	/* support SystemV compatiblity rc command */
-	for (sv_runlevel = 0; sv_runlevel_name[sv_runlevel]; sv_runlevel++) {
-		if (strcmp(*argv, sv_runlevel_name[sv_runlevel]) == 0) {
-			switch(sv_runlevel) {
-			case SV_RUNLEVEL_REBOOT:
-			case SV_RUNLEVEL_SHUTDOWN:
-				sv_stage = 3;
+	for (sv_level = 0; sv_runlevel[sv_level]; sv_level++) {
+		if (strcmp(*argv, sv_runlevel[sv_level]) == 0) {
+			switch(sv_level) {
+			case SV_REBOOT_LEVEL:
+			case SV_SHUTDOWN_LEVEL:
+				sv_stage = SV_SHUTDOWN_LEVEL;
 				break;
-			case SV_RUNLEVEL_DEFAULT:
-				sv_stage = 2;
-				break;
-			case SV_RUNLEVEL_SINGLE:
-				/* stop stage-2 */
+			case SV_SINGLE_LEVEL:
+				/* stop default runlevel */
 				ptr = (char *)svc_runlevel(NULL);
-				if (ptr && strcmp(ptr, sv_runlevel_name[SV_RUNLEVEL_DEFAULT]) == 0) {
-					sv_stage = 2;
+				if (ptr && strcmp(ptr, sv_runlevel[SV_DEFAULT_LEVEL]) == 0) {
+					sv_stage = SV_DEFAULT_LEVEL;
 					DEPTREE.list = sv_svclist_load(NULL);
 					svc_stage(sv_svc_cmd[SV_SVC_CMD_STOP]);
 				}
-			case SV_RUNLEVEL_NONETWORK:
-			case SV_RUNLEVEL_BOOT:
-				sv_stage = 1;
+			case SV_NOWNETWORK_LEVEL:
+			case SV_SYSBOOT_LEVEL:
+				sv_stage = SV_SYSBOOT_LEVEL;
 				break;
-			case SV_RUNLEVEL_SYSINIT:
-				sv_stage = 0;
+			case SV_DEFAULT_LEVEL:
+			case SV_SYSINIT_LEVEL:
+				sv_stage = sv_level;
 				break;
 			}
 			svc_stage(NULL);
@@ -618,7 +617,7 @@ rc_help:
 	if (strcmp(progname, "rc") == 0)
 		goto rc_help;
 	ERR("invalid argument -- `%s'\n", *argv);
-	fprintf(stderr, "Usage: %s -{0|1|2|3|R|S|N} [OPTIONS] (init-stage)\n", progname);
+	fprintf(stderr, "Usage: %s -(0|1|2|3|4|5|6) [OPTIONS]\n", progname);
 	exit(EXIT_FAILURE);
 
 scan:

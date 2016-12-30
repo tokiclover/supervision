@@ -35,8 +35,8 @@ static const char *const env_list[] = {
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
 	"COLUMNS", "LINES", "SVC_DEBUG", "SVC_DEPS", "SVC_WAIT",
-	"UID", "GID", "EUID", "EGID",
-	"SV_RUNLEVEL", "SV_STAGE", "SV_VERSION", NULL
+	"SV_RUNLEVEL", "SV_STAGE", "SV_VERSION", "SV_BOOT_LEVEL", "SV_SHUTDOWN_LEVEL",
+	"UID", "GID", "EUID", "EGID", NULL
 };
 
 /* execute a service command;
@@ -248,15 +248,15 @@ static int svc_cmd(struct svcrun *run)
 	case SV_SVC_CMD_ADD:
 	case SV_SVC_CMD_DEL:
 		if (sv_stage < 0) {
-			fprintf(stderr, "%s: stage level argument is required\n", progname);
-			fprintf(stderr, "Usage: %s -(0|1|2|3) %s %s\n", progname,
+			fprintf(stderr, "%s: runlevel argument is required\n", progname);
+			fprintf(stderr, "Usage: %s -(0|1|3|4|5) %s %s\n", progname,
 					run->name, sv_svc_cmd[run->cmd]);
 			retval = 1;
 			goto reterr;
 		}
 
 		path = err_malloc(512);
-		snprintf(path, 512, "%s/.stage-%d/%s", SV_SVCDIR, sv_stage,
+		snprintf(path, 512, "%s/.%s/%s", SV_SVCDIR, sv_runlevel[sv_stage],
 				run->name);
 		if (!access(path, F_OK)) {
 			if (run->cmd == SV_SVC_CMD_DEL)
@@ -335,7 +335,7 @@ runsvc:
 	write(run->lock, run->argv[4], strlen(run->argv[4])+1);
 
 	/* close the lockfile to be able to mount rootfs read-only */
-	if (sv_stage == 3 && run->cmd == SV_SVC_CMD_START)
+	if (sv_stage == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
 		close(run->lock);
 
 	/* supervise the service */

@@ -33,6 +33,8 @@ static SV_SvcDeps_T *sv_svcdeps_find(const char *svc);
 static int           sv_svcdeps_gen(const char *svc);
 static void sv_virtsvc_insert(SV_SvcDeps_T *elm);
 
+static void sv_runlevel_migrate(void);
+
 static void sv_deptree_alloc(SV_DepTree_T *deptree)
 {
 	int p;
@@ -157,7 +159,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 	FILE *fp;
 	size_t len, pos;
 
-	snprintf(path, ARRAY_SIZE(path), "%s/%d_deptree", SV_TMPDIR_DEPS, sv_stage);
+	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
 	if (access(path, F_OK))
 		return -1;
 	if ((fp = fopen(path, "r+")) == NULL) {
@@ -208,7 +210,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 		return -1;
 	}
 
-	snprintf(path, ARRAY_SIZE(path), "%s/%d_deptree", SV_TMPDIR_DEPS, sv_stage);
+	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
 	if ((fp = fopen(path, "w+")) == NULL) {
 		ERR("Failed to open `%s': %s\n", path, strerror(errno));
 		return -1;
@@ -256,6 +258,47 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 	sv_deptree_file_save(deptree);
 }
 
+static void sv_runlevel_migrate(void)
+{
+	char op[256], np[256];
+	DIR *nd, *od;
+	int i, ofd, nfd;
+	struct dirent *ent;
+
+	switch (sv_stage) {
+	case SV_SYSINIT_LEVEL:
+		i = 0; break;
+	case SV_SYSBOOT_LEVEL:
+		i = 1; break;
+	case SV_DEFAULT_LEVEL:
+		i = 2; break;
+	case SV_SHUTDOWN_LEVEL:
+		i = 3; break;
+	default: return; }
+
+	snprintf(op, ARRAY_SIZE(op), "%s/.stage-%d", SV_SVCDIR, i);
+	if (access(op, F_OK))
+		return;
+	od = opendir(op);
+	snprintf(np, ARRAY_SIZE(np), "%s/.%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+	nd = opendir(np);
+	if (!od || !nd)
+		return;
+	ofd = dirfd(od);
+	nfd = dirfd(nd);
+	if (ofd < 0 || nfd < 0)
+		return;
+
+	while ((ent = readdir(od))) {
+		if (*ent->d_name == '.')
+			continue;
+		renameat(ofd, ent->d_name, nfd, ent->d_name);
+	}
+	closedir(od);
+	closedir(nd);
+	rmdir(op);
+}
+
 SV_StringList_T *sv_svclist_load(char *dir_path)
 {
 	char path[256], *ptr;
@@ -270,7 +313,8 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 		ptr = dir_path;
 	else {
 		ptr = path;
-		snprintf(path, ARRAY_SIZE(path), "%s/.stage-%d", SV_SVCDIR, sv_stage);
+		sv_runlevel_migrate();
+		snprintf(path, ARRAY_SIZE(path), "%s/.%s", SV_SVCDIR, sv_runlevel[sv_stage]);
 	}
 	if ((dir = opendir(ptr)) == NULL) {
 		ERR("Failed to open `%s' directory: %s\n", ptr, strerror(errno));
