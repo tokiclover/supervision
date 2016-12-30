@@ -5,34 +5,25 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH RS 8 "2016-12-08" "0.12.5" "SERVICE MANAGEMENT UTILITY"
+.TH RS 8 "2016-12-28" "0.13.0" "SERVICE MANAGEMENT UTILITY"
 .SH NAME
-rs \- utility to manage services and init-stage
+rs \- manage runscript and supervision services
 .SH DESCRIPTION
 .B rs
-is a utility to manage services and init-stages (bundle of services) or runlevel
-for SysVinit terminology.
+is a utility to manage runscript and supervised services.
 This utility is used in conjunction with a supervsion suite like
 .B runit
 ,
 .B s6
 or
 .B daemontools(-encore)
-to get a fully supervised init-system and service-manager. Otherwise, only
-runscript would work out of the box if not. A supported supervision suite
-can be configured to work with this utility by running
-`\fI@LIBDIR@/sv/sbin/sv-config -s \fBSUPERVISION_BACKEND\fR'.
-And then, the recommended way to use this package is to use the included
-`\fI@LIBDIR@/sv/sh/init-stage\fR' handler from `\fI@SYSCONFDIR@/runit/{1,2,3}\fR' for
-example. Although, using
-.B rs
-directly will still work when not using the init-system part of the package.
+to get a fully supervised init-system and service-manager.
 .SH SYNOPSIS
 .B rs
 .RB [\| OPTIONS \| ]
 .RB \| SERVICE \|
 .RB \| COMMAND \|
-.RB \| [ARGUMENTS] \|
+.RB [\| ARGUMENTS \|]
 
 .B rs
 .RB [\| \-h|\-\-help \|]
@@ -48,20 +39,16 @@ like \fBrs scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
 name can be replaced by the special use case
 .B stage
 to manage a whole bundle of services instead of a single service; for example,
-`rs -2 stage' to bring the system to stage-2 (in supervision sense.)
-Unless knowing what to do with init-stage, it's better to use the included
-.B init-stage
-for this and then manage individual service at hand. Still, that command can
-be used to finish a failed init-stage of course. This case dicts the use of
-.B rs
-directly rather than the \fBinit-stage\fR. Although, the
-.B init-stage
-would try to handle this by killing the previous supervisor before launching
-a new one.
+`rs --default stage' to bring the system to default runlevel.
+This usage is now superseded by
+.B sv-stage
+utility, see
+.BR sv-stage (8)
+manual page; and is thus discouraged.
 
 .B NOTE:
 If
-.B {rc,service}
+.B service
 is not installed in the default path, either add
 .B $SV_LIBDIR/bin:$SV_LIBDIR/sbin
 to
@@ -72,91 +59,17 @@ for example to get the same behaviour; or else use
 .B rs
 instead because
 .B service
-or
-.B rc
-are a just limited interfaces to manage service or runlevel.
+is a just limited interfaces to manage service.
 
-.SS SYSTEM-V COMPATIBILITY RC
-.B rc
-.RB \| sysinit|boot|default|shutdown|reboot|single|nonetwork \|
-
-This SystemV compatible form using runlevel alias for stage-{0,1,2,3}.
-.B single
-runlevel is used for system repair; while
-.B nonetwork
-is used to mark
-.I net
-service providers as started to avoid starting network services.
-Those runlevels can be required at bootup by appending a runlevel name to
-.B softlevel
-kernel command line argument like
-.I softlevel=single
-to request a runlevel.
-And extra
-.B noinit
-kernel cmdline argument is also available to mark that comma separated list as
-started to avoid starting them in
-.I any
-runlevels but \fIsysinit\fR, like
-.I noinit=atd,cron
-to avoid starting
-.I cron
-and
-.I atd
-services.
-
-.B WARNING:
-Services marked as started can be safely started after issuing
-.B zap
-service command. And some services will inevitably fail like networkfs.
-Second,
-.B {reboot|shutdown}
-runlevels shall not be used when using
-.I runit
-or \fIs6\fR;
-use \fI@LIBDIR@/sbin/sv-shutdown --{reboot|shutdown}\fR instead to properly
-.B reboot
-or
-.B shutdown
-a system by sending the proper signal to
-.B PID
-1 (\fBinit\fR) instead. Any other
-.B init
-that does not trigger a stage-3/(reboot|shutdown) (by using
-\fI@LIBDIR@/sv/sh/init-stage\fR)
-can be used and then issue a \fIrc {reboot|shutdown}\fR to get almost the same
-effect. However, using
-.I sv-shutdown
-has the same effect... so using it instead of
-.B rc
-binary is more safe when using a supported supervision backend.
-
-.SS SYSTEM-V COMPATIBILITY SERVICE
-.B service
-.RB [\| \-D|\-\-nodeps \|]
-.RB [\| \-g|\-\-debug \]
-.RB [\| \-0|\-\-sysinit \]
-.RB [\| \-1|\-\-boot \|]
-.RB [\| \-2|\-\-default \|]
-.RB [\| \-3|\-\-shutdown \|]
-.RB [\| \-q|\-\-quiet \|]
-.RB  \| SERVICE \|
-.RB \| COMMAND \|
-.RB \| [ARGUMENTS] \|
-
-This variant is used to manage particular services when need be. Do note that,
-it's rather prefered and recommended to use
-.B service
+Do note that it's rather prefered and recommended to use
+.B rs
 command to manage services rather than using the service executable. And this
 is more true for supervision services when dealing with dependencies and
 virtual services. Starting a supervision service shall be done with
-.B service
-binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND ARGUMENTS\fR'.
+.B rs
+binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND [ARGUMENTS]\fR'.
 
 .SH OPTIONS
-.TP
-.B {sysinit|boot|default|shutdown|reboot|single|nonetwork}
-sysvinit compatible runlevels used to start an init-stage-{0,1,2,3}
 .TP
 .B \-D|\-\-nodeps
 Disable dependency tracking when starting/stopping services
@@ -164,8 +77,8 @@ Disable dependency tracking when starting/stopping services
 .B \-g|\-\-debug
 Enable debugging mode for services (shell tracing)
 .TP
-.B \-{0|1|2|3}
-Select a particular stage or runlevel
+.B \-(0|1|2|3|4|5|6)
+Select a particular init stage or runlevel
 .TP
 .B \-h|\-\-help
 Print the help message
@@ -216,9 +129,13 @@ environmenet variable can be enabled for automatic clean up.
 add a new supervised service from a template. This command should be run with
 `\fI@LIBDIR@/sv/bin/sv-config [--log] \fBSERVICE \fInew\fR'.
 .TP
-.B SVC_COMMANDS
+.B extra-commands
 extra comands defined as shell functions and added to
 .B SVC_COMMANDS
+or
+.B SVC_STARTED_COMMANDS
+or
+.B SVC_STOPPED_COMMANDS
 environment variable. Any defined command can be used as a standard LSB command.
 .TP
 .B desc
@@ -241,26 +158,36 @@ for supervision services for the local configuration file,
 and \fBsupervsion\fR(5) for settings related to
 .B rs
 service management.
-.SH "RETURN CODES"
+.SH "RETURN VALUE"
 .TP
 .B 0
 success (service already started/stopped)
 .TP
 .B 1
-miscellaneous operational failures (to read the dependency file, generate the
-dependency file...)
+miscellaneous operational failures; or
+a signal was sent to abort or terminate the program
 .TP
 .B 2
 failure to find the requested service
 .TP
-.B 3
+.B 4
+failure to lock a service lockfile for service command; or timed out when trying to
+lock the lockfile.
+.TP
+.B 8
 for
 .I status
-service command when a service is stopped
+service command when a service is started and down (supervision only)
 .TP
-.B 4
-failure to lock a service lockfile for start/stop; or timed out when trying to
-lock the lockfile.
+.B 16
+for
+.I status
+service command when a service command failed
+.TP
+.B 32
+for
+.I status
+service command when a service is waiting for the lockfile
 .TP
 .B errno
 system call failure (fork...)
@@ -270,9 +197,9 @@ execve system call failure
 .SH "APPLICATION USAGE"
 Some services are added to the service directory? Try starting them then.
 It seems to work? Good, try to add them in a init-stage or runlevel with
-`\fIrs -\fBLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
-by running `\fIrs -\fBLEVEL \fIstage\fR' and then checkout
-\fISV_TMPDIR/deps/\fBLEVEL\fI_deptree\fR to see if the service is inserted
+`\fIrs \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
+by running `\fIsv-stage \fB--RUNLEVEL\fR' and then checkout
+\fISV_TMPDIR/deps/\fBRUNLEVEL\fR to see if the service is inserted
 in the right place depending on the dependency definitions. Or better,
 check out the file beforehand. It looks weird or the order changed dramatically?
 Try removing the file altogether and try again. Else, it can be a case of cyclic
@@ -280,12 +207,14 @@ dependency definition. Major dependency redefinition is necessary.
 
 .B NOTE:
 Cyclical dependency definitions will cause dependency setup to fail when using
-`\fIservice \fBSERVICE \fIstart\fR'
+`\fIrs \fBSERVICE \fIstart\fR'
 or service scheduling havoc in dependency tree files mentionned above.
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
-.BR supervision (5)
+.RB supervision (5)
+.RB sv-stage (8)
+.RB sv-shutdown (8)
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
