@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/init-stage                        Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.6 2016/12/24                               Exp $
+# $Version: 1.6 2016/12/28                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -171,10 +171,10 @@ start_stage_2()
 		done
 	fi
 
-	if sv-stage -1; then
-		sv-stage -2
+	if sv-stage --sysboot; then
+		sv-stage --default
 	else
-		sv-stage single
+		sv-stage --single
 	fi
 }
 
@@ -188,18 +188,18 @@ pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 init_stage()
 {
 begin "Starting Init-Stage${1}\n"
-if   [ "${1}" = "-0" ]; then
+if   [ "${1}" = "--svscan" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 	if [ -e "${pidfile}" ]; then
 		kill_svscan
 	fi
 	echo $$ >${pidfile}
 	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
-elif [ "${1}" = "-1" ]; then
+elif [ "${1}" = "--sysinit" ]; then
 	early_console
 	svc_init
-	sv-stage -0
-elif [ "${1}" = "-2" ]; then
+	sv-stage --sysinit
+elif [ "${1}" = "--default" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 	#
 	# Set up CGroup
@@ -227,10 +227,11 @@ elif [ "${1}" = "-2" ]; then
 	# Drop into a rescue shell
 	#
 	svc_rsh
-elif [ "${1}" = "-3" ]; then
+elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
+	:	${ACTION:=${1}}
 	case "${ACTION}" in
-		(reboot|shutdown) sv-stage "${ACTION}";;
-		(*)    ACTION=  ; sv-stage -3   ;;
+		(--reboot|--shutdown) sv-stage "${ACTION}";;
+		(*)    ACTION=""  ; sv-stage --shutdown   ;;
 	esac
 	#
 	# CGroup clean up
@@ -242,14 +243,14 @@ elif [ "${1}" = "-3" ]; then
 	# Use this safety net in case daemontools(-encore) is used
 	#
 	case "${__SV_NAM__}" in
-		(daemontools*|s6) sv-shutdown --force --${ACTION:-shutdown};;
+		(daemontools*|s6) sv-shutdown --force ${ACTION:---shutdown};;
 	esac
 fi
 end "${?}"
 }
 
 case "${1}" in
-	(-[0123]) init_stage "${@}";;
+	(--[idrs]*) init_stage "${@}";;
 esac
 
 #
