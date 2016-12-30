@@ -27,14 +27,7 @@ with service dependencies, LSB and extra service commands, virtual
 service and service instances and read-only rootfs support to name a few.
 
 Runscript services are also supported with `{after,before,need,use}` service
-dependencies. A special system initialization level (stage-0), with system
-boot (stage-1), running state (stage-2) and shutdown (stage-3) levels are
-supported.
-
-A new init-system is available since 0.12.0_alpha. (It's almost only stage-[01]
-services plus tweakings... *almost* is not all there is to it; there are much
-more bits tweaking and (re-)writing taking a whole third, +4900 lines addtion
-(mainly for init-system services +3550 lines), of this package.)
+dependencies.
 
 *STATS*:
 
@@ -44,6 +37,7 @@ a few union filesystem (OverlayFS+SquashFS),--with 52 system services for short,
 can boot or shut down in 11 seconds thanks to supervision parallel service
 management! Now if _udev_ is used, add 5 seconds to boot up... or it could be
 even worse depending on the number of devices.
+dependencies.
 
 INSTALLATION
 ------------
@@ -67,14 +61,14 @@ DOCUMENTATION/USAGE
 -------------------
 
 The recommanded way to use this package for service management is to use
-`sv/.lib/sh/init-stage -(1|2|3)` to start particular stage. And then use
+`sv/.lib/sh/init-stage --(sysinit|default|shutdown)` to start particular stage. And then use
 `rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services;
 or rather use `$SV_LIBDIR/sbin/service [OPTIONS] SERVICE COMMAND` for
 SystemV compatibility. *NOTE:* That symlink can be copied to `/sbin` if
 necessary to ease administration and if there is no other SystemV binary
 installed in the system.
-Or else, use the magic `-0` command line argument to set up `/service/` and
-`svscan`, and then use `rs -2 stage start|stop` to start/stop daemons.
+Or else, use the magic `--svscan` command line argument to set up `/service/` and
+`svscan`, and then use `sv-stage default` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
 And then... a bit more, new supervision services can be easily added by
