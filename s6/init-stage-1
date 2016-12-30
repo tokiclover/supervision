@@ -15,8 +15,11 @@ for link in crash finish; do
 done
 
 if [ -x ${INIT_STAGE} ]; then
-	eval ${INIT_STAGE} -1
-	exec ${INIT_STAGE} -2
+	if eval ${INIT_STAGE} --sysinit; then
+		exec ${INIT_STAGE} --default
+	else
+		exec sv-stage --single
+	fi
 fi
 RUNLEVEL=S rc sysinit
 RUNLEVEL=S rc boot
