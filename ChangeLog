@@ -2,6 +2,8 @@ Header: supervision/ChangeLog, 2015/04/24
 
 0.13.0:
 
+WARING: SHORT COMMAND LINE OPTION FOR RUNLEVELS CHANGED DRAMATICALLY FROM v.12.x
+
 Improve signal handling so SIGINT is not blocked anymore;
 Improve parallelization of service (to avoid CHILD_MAX hard limit) and improve
 scalabilty to thousends of service in parallel;
@@ -11,6 +13,8 @@ available to kill hangged service (see sv.conf for more iformation);
 
 Added abilty to abort an init-stage (used to abort and bring single runlevel
 when checkfs service fails to clean up filesystems;
+
+Added new manual to document new sv-stage(8) binary and refactorized rs(8);
 
 0.12.6.4:
 
