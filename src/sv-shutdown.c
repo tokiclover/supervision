@@ -116,12 +116,16 @@ _noreturn_ static void help_message(int status)
 
 static void sighandler(int sig)
 {
+	const char *action[] = { "shutdown", "singlge", "reboot" };
+	if (shutdown_action == SV_ACTION_REBOOT)
+		shutdown_action = 2;
 	/*printf("%s: Caught signal %s ...\n", progname, strsignal(sig));*/
 	if (!access(FASTBOOT , F_OK)) unlink(FASTBOOT);
 	if (!access(FORCEFSCK, F_OK)) unlink(FORCEFSCK);
 	if (!access(_PATH_NOLOGIN  , F_OK)) unlink(_PATH_NOLOGIN);
 	if (sig > 0) {
-		fprintf(stderr, "%s: cancelling system shutdown\n", progname);
+		fprintf(stderr, "%s: cancelling system %s\n", progname,
+				action[shutdown_action]);
 		exit(EXIT_SUCCESS);
 	}
 }
@@ -202,7 +206,7 @@ _noreturn_ static int sv_shutdown(char **message)
 	if (reboot_force)
 		exit(reboot(reboot_action));
 
-	argv[0] = "rs", argv[2] = NULL;
+	argv[0] = "sv-stage", argv[2] = NULL;
 	if (shutdown_action == SV_ACTION_REBOOT)
 		argv[1] = "reboot";
 	else if (shutdown_action == SV_ACTION_SHUTDOWN)
