@@ -95,7 +95,11 @@ svc_start()
 	if svc_state -f; then
 		val=1
 	elif svc_wait ${SV_WAIT_PIDFILE:-5} ${SVC_PIDFILE}; then
-		val=0
+		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} ${SVC_CMD##*/}; then
+			val=0
+		else
+			val=1
+		fi
 	else
 		val=1
 	fi
@@ -118,14 +122,16 @@ svc_stop()
 	svc_wait -E ${SV_WAIT_PIDFILE:-5} || eval ${__ERR_BUSY__}
 	fi
 
-	svc_command stop_pre || val=2
+	if ! svc_command stop_pre; then
+		return 2
+	fi
 	eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"
 	if [ "${?}" = 0 ]; then
 		svc_mark -S
+		return 0
 	else
-		val=1
+		return 1
 	fi
-	return ${val}
 }
 
 svc_restart()
