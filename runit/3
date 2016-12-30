@@ -16,7 +16,8 @@ else
 	RUNLEVEL=6 ACTION=shutdown MSG='System shutdown'
 fi
 if [ -x ${INIT_STAGE} ]; then
-	exec env - ACTION="${ACTION}" RUNLEVEL="${RUNLEVEL}" ${INIT_STAGE} -3
+	exec ${INIT_STAGE} --${ACTION}
+	exec sv-stage --${ACTION}
 fi
 
 sv -w 10 force-shutdown ${SV_RUNDIR}/*

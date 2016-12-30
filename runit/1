@@ -9,7 +9,7 @@
 
 touch   /etc/runit/stopit
 chmod 0 /etc/runit/stopit
-[ -x ${INIT_STAGE} ] && exec ${INIT_STAGE} -1
+[ -x ${INIT_STAGE} ] && exec ${INIT_STAGE} --sysinit
 RUNLEVEL=S rc sysinit
 
 #

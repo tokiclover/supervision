@@ -8,7 +8,7 @@
 :	${INIT_STAGE=/lib/sv/sh/init-stage}
 SV_OPTS='log:..................................................................'
 
-[ -x ${INIT_STAGE} ] && SV_OPTS="${SV_OPTS}" exec ${INIT_STAGE} -2
+[ -x ${INIT_STAGE} ] && SV_OPTS="${SV_OPTS}" exec ${INIT_STAGE} --default
 
 RUNLEVEL=S rc boot
 RUNLEVEL=3 rc default
