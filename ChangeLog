@@ -16,6 +16,15 @@ when checkfs service fails to clean up filesystems;
 
 Added new manual to document new sv-stage(8) binary and refactorized rs(8);
 
+API CHANGE:
+
+- short command line option to select a init-stage/runlevel;
+- RS_{TYPE,STAGE} renamed to SV_{TYPE,STAGE};
+- SVC_REQ_FILES   renamed to SVC_REQUIRED_FILES;
+- del_env() builtin function renamed to env_del();
+- two new supervision service command {down,up};
+- send SIGHUP signal for a default reload service command;
+
 0.12.6.4:
 
 Tiny fixes all over the place especially the global environment dir;
