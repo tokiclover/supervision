@@ -154,8 +154,8 @@ static int svc_cmd(struct svcrun *run)
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STOP]) == 0) {
 		run->mark = SV_SVC_MARK_STAR;
-		if (!svc_state(run->name, SV_SVC_STAT_STAR) ||
-			!svc_state(run->name, SV_SVC_STAT_PIDS)) {
+		if (!(svc_state(run->name, SV_SVC_STAT_STAR) ||
+			  svc_state(run->name, SV_SVC_STAT_PIDS))) {
 			LOG_WARN("%s: service stopped\n", run->name);
 			return -EINVAL;
 		}
