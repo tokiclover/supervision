@@ -278,6 +278,14 @@ int svc_log(const char *fmt, ...)
 	return retval;
 }
 
+void sv_cleanup(void)
+{
+	if (!access(SV_ENVIRON, F_OK))
+		unlink(SV_ENVIRON);
+	if (!access(SV_PIDFILE, F_OK))
+		unlink(SV_PIDFILE);
+}
+
 static void sv_sighandler(int sig)
 {
 	int i = -1, serrno = errno;
@@ -457,6 +465,7 @@ static void svc_stage(const char *cmd)
 	t = time(NULL);
 	svc_log("\n%s %s runlevel stopped at %s\n", progname, sv_runlevel[sv_stage],
 			ctime(&t));
+	atexit(sv_cleanup);
 }
 
 int main(int argc, char *argv[])

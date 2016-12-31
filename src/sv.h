@@ -51,6 +51,7 @@ extern "C" {
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
+#define SV_ENVIRON SV_TMPDIR "/environ"
 #define SV_LOGFILE SV_TMPDIR "/sv.log"
 #define SV_PIDFILE SV_TMPDIR "/sv.pid"
 #define SV_RUNSCRIPT SV_LIBDIR "/sh/runscript"
@@ -93,6 +94,8 @@ enum {
 #define SV_REBOOT_LEVEL SV_REBOOT_LEVEL
 };
 extern const char *const sv_runlevel[];
+
+extern void sv_cleanup(void);
 
 /*
  * retrieve a configuration value like getenv(3)
