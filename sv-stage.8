@@ -160,6 +160,18 @@ Print the help message
 .TP
 .B \-q|\-\-quiet
 Suppress verbose message
+.SH "SERVICE COMMANDS"
+.B WARNING:
+service command are only valid when a runlevel is passed as a commnad line option
+.TP
+.B start
+start an init-stage or runlevel
+.TP
+.B stop
+stop an init-stage or runlevel
+.TP
+.B status
+retrieve service status information
 .SH CONFIGURATION
 See
 .I @SYSCONFDIR@/sv.conf
