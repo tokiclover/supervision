@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv.h  0.13.0 2016/12/28
+ * @(#)sv.h  0.13.0 2016/12/30
  */
 
 #ifndef SV_H

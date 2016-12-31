@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs.c  0.13.0 2016/12/28
+ * @(#)rs.c  0.13.0 2016/12/30
  */
 
 #include "sv.h"
@@ -45,7 +45,7 @@ static const char *environ_list[] = {
  * @run: an svcrun structure;
  * @return: -errno on errors,
  */
-static int svc_cmd(struct svcrun *run);
+int svc_cmd(struct svcrun *run);
 static int svc_run(struct svcrun *run);
 static int svc_waitpid(struct svcrun *run, int flags);
 #define SVC_WAITPID 0x0100
@@ -124,7 +124,7 @@ extern sigset_t ss_child, ss_full, ss_old;
 static const char **svc_environ;
 static void svc_env(void);
 
-static int svc_cmd(struct svcrun *run)
+int svc_cmd(struct svcrun *run)
 {
 	static char *deps[2] = { "--deps", "--nodeps" };
 	static char *type[2] = { "--rs", "--sv" };

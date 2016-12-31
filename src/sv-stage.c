@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-stage.c  0.13.0 2016/12/28
+ * @(#)sv-stage.c  0.13.0 2016/12/30
  */
 
 #include "sv.h"
@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+extern int svc_cmd(struct svcrun *run);
 extern int svc_exec (int argc, const char *argv[]);
 extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 
@@ -354,6 +355,22 @@ static int svc_stage_command(int stage, int argc, const char *argv[])
 	return retval;
 }
 
+_noreturn_ static void sv_stage_status(void)
+{
+	const char *argv[8] = { "runscript" };
+	struct svcrun run = { .argc = 8, .argv = argv };
+	SV_String_T *svc;
+	argv[4] = sv_svc_cmd[SV_SVC_CMD_STATUS];
+	argv[5] = (char *)0;
+
+	TAILQ_FOREACH(svc, sv_svclist_load(NULL), entries) {
+		run.svc = svc;
+		run.name = svc->str;
+		svc_cmd(&run);
+	}
+	exit(EXIT_SUCCESS);
+}
+
 static void svc_stage(const char *cmd)
 {
 	const char *command = cmd;
@@ -563,9 +580,12 @@ int main(int argc, char *argv[])
 		goto rc;
 	}
 	else if (strcmp(progname, "sv-stage") == 0) {
+		if (argc &&   strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0)
+			sv_stage_status();
 		if (argc && !(strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_START]) == 0 ||
 					  strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STOP] ) == 0 ))
 			goto rc;
+
 init_stage:
 		setenv("SVC_DEBUG", off, 1);
 		if (sv_stage >= 0)
