@@ -328,32 +328,32 @@ svc_use()
 #
 svc_env()
 {
-	local OPT env
+	local opt env
 	case "${1}" in
-		(OPTS/${SVC_NAME}|ENVS/${SVC_NAME}|ENV) OPT="${1}"; shift;;
-		(*) OPT="OPTS/${SVC_NAME}"    ;;
+		(opts/${SVC_NAME}|env) opt="${1}"; shift;;
+		(*) opt="opts/${SVC_NAME}";;
 	esac
 	for env; do
 		eval echo "${env}=\"'\$${env}'\""
-	done >>"${SV_TMPDIR}/${OPT}"
+	done >>"${SV_TMPDIR}/${opt}"
 }
 env_svc()
 {
-	[ -n "${*}" ] && svc_env "OPTS/${SVC_NAME}" "${@}"
+	[ -n "${*}" ] && svc_env "opts/${SVC_NAME}" "${@}"
 }
 ENV_SVC()
 {
-	[ -n "${*}" ] && svc_env "ENV" "${@}"
+	[ -n "${*}" ] && svc_env "env" "${@}"
 }
 env_del()
 {
-	local OPT env
+	local opt env
 	case "${1}" in
-		(OPTS/${SVC_NAME}|ENVS/${SVC_NAME}|ENV) OPT="${1}"; shift;;
-		(*) OPT="OPTS/${SVC_NAME}"    ;;
+		(opts/${SVC_NAME}|env) opt="${1}"; shift;;
+		(*) opt="opts/${SVC_NAME}";;
 	esac
 	for env; do
-		sed -e "/^${env}=.*$/d" -i ${SV_TMPDIR}/${OPT}
+		sed -e "/^${env}=.*$/d" -i ${SV_TMPDIR}/${opt}
 	done
 }
 

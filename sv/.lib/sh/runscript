@@ -34,19 +34,23 @@ EOH
 ${1+exit ${1}}
 }
 
-[ ${#} -ge 2 ] || help_message 1
 while true; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
 		(-d|--deps)  SVC_DEPS=1 ;;
 		(-r|--rs) SV_TYPE="rs" ;;
-		(-v|--sv) SV_TYPE="sv" ;;
+		(-s|--sv) SV_TYPE="sv" ;;
 		(-g|--debug) set -x ;;
 		(-h|--help) help_message 0 ;;
 		(*) break ;;
 	esac
 	shift
 done
+if ! [ ${#} -ge 2 ]; then
+	echo "ERROR: Insufficient number of arguments" >&2
+	exit 1
+fi
+
 :	${SV_LIBDIR:=${0%/sh/*}}
 :	${SVC_NAME:=${1##*/}}
 :	${name=${SVC_NAME}}
@@ -58,27 +62,18 @@ if [ -z "${SV_TYPE}" ]; then
 	[ -d "${1}" ] && SV_TYPE=sv || SV_TYPE=rs
 fi
 
-. "${0%/*}"/runscript-functions ||
-	{ echo "Required file not found." >&2; exit 1; }
-if [ ${#} -lt 1 ]; then
-	error "Insufficient number of arguments"
-	exit 2
-fi
-. ${SV_SVCDIR}/.opt/SVC_OPTIONS
+. ${SV_SVCDIR}/.opt/SVC_OPTIONS ||
+	{ echo "ERROR: Required file not found." >&2; exit 1; }
 
 #
 # migrate to new sub-dirs
 #
-if [ ! -d ${SV_TMPDIR}/OPTS ]; then
-	mkdir -p ${SV_TMPDIR}/ENVS ${SV_TMPDIR}/OPTS
-	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/ENV
-	for a in ${SV_TMPDIR}/*_ENV; do
-		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/ENVS/${b%_*}
-	done
+if [ ! -d ${SV_TMPDIR}/opts ]; then
+	mkdir -p ${SV_TMPDIR}/opts
+	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/env
 	for a in ${SV_TMPDIR}/*_OPTIONS; do
 		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/OPTS/${b%_*}
+		mv -f ${a} ${SV_TMPDIR}/opts/${b%_*}
 	done
 	a= b=
 fi
@@ -87,14 +82,8 @@ fi
 # Handle command
 #
 case "${SV_TYPE}" in
-	(rs) rs_cmd "${@}";;
-	(sv)
-		for var in COLUMNS SVC_DEPS SVC_DEBUG SV_RUNLEVEL SV_STAGE SV_TYPE \
-			SV_SYSBOOT_LEVEL SV_SHUTDOWN_LEVEL SV_VERSION; do
-			eval echo "${var}=\"\$${var}\""
-		done >${SV_TMPDIR}/ENVS/${SVC_NAME}
-		svc_cmd "${@}"
-		;;
+	(rs)  rs_cmd "${@}";;
+	(sv) svc_cmd "${@}";;
 esac
 
 #

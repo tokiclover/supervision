@@ -35,8 +35,9 @@ fi
 
 env_run()
 {
-	SOURCE ${SV_TMPDIR}/OPTS/${SVC_NAME}
-	SOURCE ${SV_TMPDIR}/ENV
+	SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
+	SOURCE ${SV_TMPDIR}/env
+	SOURCE ${SV_TMPDIR}/environ
 }
 
 
