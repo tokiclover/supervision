@@ -29,14 +29,16 @@ const char *const sv_svc_cmd[] = { "stop", "start",
 	"add", "del", "desc", "remove", "restart", "status", "zap"
 };
 
-static const char *const env_list[] = {
+static const char *const environ_whitelist[] = {
 	"PATH", "SHELL", "SHLVL", "USER", "HOME", "TERM", "TMP", "TMPDIR",
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES", "SVC_DEBUG", "SVC_DEPS", "SVC_WAIT",
-	"SV_RUNLEVEL", "SV_STAGE", "SV_VERSION", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL",
-	"UID", "GID", "EUID", "EGID", NULL
+	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID", NULL
+};
+static const char *environ_list[] = {
+	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE",
+	"SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
 
 /* execute a service command;
@@ -120,7 +122,7 @@ extern sigset_t ss_child, ss_full, ss_old;
  * generate a default environment for service
  */
 static const char **svc_environ;
-static const char **svc_env(void);
+static void svc_env(void);
 
 static int svc_cmd(struct svcrun *run)
 {
@@ -444,14 +446,15 @@ static int svc_depend(struct svcrun *run)
 	return retval;
 }
 
-static const char **svc_env(void)
+static void svc_env(void)
 {
 	size_t len = 8, size = 1024;
 	char *env, *ptr;
+	FILE *fp;
 	int i = 0, j;
 
 	if (svc_environ)
-		return svc_environ;
+		return;
 	env = err_malloc(size);
 	svc_environ = err_calloc(len, sizeof(void *));
 
@@ -461,11 +464,11 @@ static const char **svc_env(void)
 	}
 	free(env);
 
-	for (j = 0; env_list[j]; j++) {
-		ptr = getenv(env_list[j]);
+	for (j = 0; environ_whitelist[j]; j++) {
+		ptr = getenv(environ_whitelist[j]);
 		if (ptr) {
 			env = err_malloc(size);
-			snprintf(env, size, "%s=%s", env_list[j], ptr);
+			snprintf(env, size, "%s=%s", environ_whitelist[j], ptr);
 			svc_environ[i++] = err_realloc(env, strlen(env)+1);
 			if (i == len) {
 				len += 8;
@@ -473,8 +476,23 @@ static const char **svc_env(void)
 			}
 		}
 	}
+	if (i == len) {
+		len += 8;
+		svc_environ = err_realloc(svc_environ, len*sizeof(void*));
+	}
 	svc_environ[i++] = (char *)0;
-	return svc_environ;
+
+	if (!access(SV_ENVIRON, F_OK))
+		return;
+	if (!(fp = fopen(SV_ENVIRON, "w"))) {
+		ERR("Failed to open %s: %s\n", SV_ENVIRON, strerror(errno));
+		return;
+	}
+	env = err_malloc(size);
+	for (j = 0; environ_list[j]; j++)
+		if ((ptr = getenv(environ_list[j])))
+			fprintf(fp, "%s=%s\n", environ_list[j], ptr);
+	free(env);
 }
 
 static int svc_lock(const char *svc, int lock_fd, int timeout)
