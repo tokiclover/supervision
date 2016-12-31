@@ -173,12 +173,12 @@ int svc_cmd(struct svcrun *run)
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0) {
 		if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
-			printf("%s: %s: down\n", run->name, cmd);
+			printf("%-32s: %s: down\n", run->name, cmd);
 			return 8;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 			svc_state(run->name, SV_SVC_STAT_PIDS)) {
-			printf("%s: %s: started\n", run->name, cmd);
+			printf("%-32s: %s: started\n", run->name, cmd);
 			return 0;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
@@ -186,12 +186,12 @@ int svc_cmd(struct svcrun *run)
 			stat(buf, &st_buf);
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if (read(i, buf, sizeof(buf)) > 0) {
-					printf("%s: %s: (%s command) failed at %s", run->name,
+					printf("%-32s: %s: (%s command) failed at %s", run->name,
 							cmd, buf, ctime(&st_buf.st_mtime));
 				}
 			}
 			else
-				printf("%s: %s: failed at %s", run->name, cmd,
+				printf("%-32s: %s: failed at %s", run->name, cmd,
 					ctime(&st_buf.st_mtime));
 			return 16;
 		}
@@ -200,17 +200,17 @@ int svc_cmd(struct svcrun *run)
 			stat(buf, &st_buf);
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if (read(i, buf, sizeof(buf)) > 0) {
-					printf("%s: %s: waiting (%s command) since %s", run->name,
+					printf("%-32s: %s: waiting (%s command) since %s", run->name,
 							cmd, buf, ctime(&st_buf.st_ctime));
 				}
 			}
 			else
-				printf("%s: %s: waiting since %s", run->name, cmd,
+				printf("%-32s: %s: waiting since %s", run->name, cmd,
 					ctime(&st_buf.st_ctime));
 			return 32;
 		}
 		else {
-			printf("%s: %s: stopped\n", run->name, cmd);
+			printf("%-32s: %s: stopped\n", run->name, cmd);
 			return 3;
 		}
 	}
