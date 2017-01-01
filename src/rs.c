@@ -334,7 +334,7 @@ runsvc:
 	/* run a chid process to exec to the service; failure mean _exit(VALUE)! */
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
-		_exit(ENOLCK);
+		_exit(ETIMEDOUT);
 	}
 	write(run->lock, run->argv[4], strlen(run->argv[4])+1);
 
@@ -718,7 +718,7 @@ static void sv_sighandler(int sig)
 			else
 				i = 2, RUN->sig = SIGKILL;
 			alarm(RUN->dep->timeout);
-			LOG_WARN("sending %s to process PID=%d (service %s)!!!\n", signame[i],
+			LOG_WARN("sending %s to process PID=%d (service=%s)!!!\n", signame[i],
 					RUN->cld, RUN->name);
 			kill(RUN->cld, RUN->sig);
 		}
