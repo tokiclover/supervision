@@ -821,11 +821,21 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	int eagain = 0;
 	int i, r, retval = 0, status;
 	struct svcrun **run;
+	pid_t pid;
 
 	if (list == NULL)
 		return -ENOENT;
 	if (argv == NULL)
 		return -EINVAL;
+
+	/* do this to be able to create a new process group for each worker */
+	if ((pid = fork()) > 0)
+		goto waitcld;
+	if (pid < 0) {
+		ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__, strerror(errno));
+		return -errno;
+	}
+	setpgid(0, 0);
 
 	if (sv_parallel)
 		len = sv_stringlist_len(list);
@@ -933,5 +943,15 @@ retval:
 	if (*run)
 		free(*run);
 	free(run);
-	return retval;
+	_exit(retval);
+waitcld:
+	while (waitpid(pid, &status, 0) != pid)
+		if (errno != EINTR) {
+			ERR("%s:%d: Failed to waitpid(%d ...): %s\n", __func__, __LINE__,
+					pid, strerror(errno));
+			return -errno;
+		}
+	if (WIFEXITED(status))
+		return WEXITSTATUS(status);
+	return -EXIT_FAILURE;
 }
