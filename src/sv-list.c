@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-list.c  0.13.0 2016/12/28
+ * @(#)sv-list.c  0.13.0 2016/12/30
  */
 
 #include "sv-list.h"
@@ -107,5 +107,28 @@ void sv_stringlist_free(SV_StringList_T **list)
 	}
 	free(*list);
 	*list = NULL;
+}
+
+SV_StringList_T *sv_stringlist_sort(SV_StringList_T **list)
+{
+	SV_StringList_T *old = *list, *new = sv_stringlist_new();
+	SV_String_T *e, *en, *l, *n;
+
+	TAILQ_FOREACH_SAFE(e, old, entries, en) {
+		TAILQ_REMOVE(old, e, entries);
+		l = NULL;
+		TAILQ_FOREACH(n, new, entries) {
+			if (strcmp(e->str, n->str) < 0)
+				break;
+			l = n;
+		}
+		if (l)
+			TAILQ_INSERT_AFTER(new, l, e, entries);
+		else
+			TAILQ_INSERT_HEAD(new, e, entries);
+	}
+	free(old);
+	*list = new;
+	return new;
 }
 
