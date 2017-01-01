@@ -28,27 +28,27 @@ extern "C" {
  */
 _unused_ int file_test(const char *pathname, int mode);
 
-ssize_t sv_getline(FILE *stream, char **buf, size_t *size);
+_unused_ ssize_t sv_getline(FILE *stream, char **buf, size_t *size);
 
 /*
  * (WARN: only first to second character are used!)
  * simple yes/no helper
  * @return true/false;
  */
-int sv_yesno(const char *str);
+_unused_ int sv_yesno(const char *str);
 
 /*
  * tiny helper to get terminal cols
  * @retrun terminal cols
  */
-int get_term_cols(void);
+_unused_ int get_term_cols(void);
 
 /*
  * get shell string value, removing trailing white spaces and quote
  * @str string;
  * @return string value
  */
-char *shell_string_value(char *str);
+_unused_ char *shell_string_value(char *str);
 
 #ifdef __cplusplus
 }

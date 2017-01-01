@@ -12,7 +12,7 @@
 #include "error.h"
 #include "helper.h"
 
-char *shell_string_value(char *str)
+_unused_ char *shell_string_value(char *str)
 {
 	if (!str)
 		return NULL;
@@ -83,7 +83,7 @@ _unused_ int file_test(const char *pathname, int mode)
 	}
 }
 
-int get_term_cols(void)
+_unused_ int get_term_cols(void)
 {
 	struct winsize winsz;
 	char *ptr = getenv("COLUMNS");
@@ -97,7 +97,7 @@ int get_term_cols(void)
 	return 80;
 }
 
-ssize_t sv_getline(FILE *stream, char **buf, size_t *size)
+_unused_ ssize_t sv_getline(FILE *stream, char **buf, size_t *size)
 {
 	char *ptr;
 	if (!stream) {
@@ -129,7 +129,7 @@ retline:
 	return *size;
 }
 
-int sv_yesno(const char *str)
+_unused_ int sv_yesno(const char *str)
 {
 	if (!str) {
 		errno = ENOENT;
