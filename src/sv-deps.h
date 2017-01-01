@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.h  0.13.0 2016/12/28
+ * @(#)rs-deps.h  0.13.0 2016/12/30
  */
 
 #ifndef SV_DEPS_H
@@ -16,12 +16,12 @@
 #include "sv-list.h"
 #include "helper.h"
 
-#define SV_DEPS_TYPE   5
-#define SV_DEPS_AFTER  1
-#define SV_DEPS_BEFORE 0
-#define SV_DEPS_USE    2
-#define SV_DEPS_NEED   3
-#define SV_DEPS_KWD    4
+#define SV_SVCDEPS_TYPE   5
+#define SV_SVCDEPS_AFTER  1
+#define SV_SVCDEPS_BEFORE 0
+#define SV_SVCDEPS_USE    2
+#define SV_SVCDEPS_NEED   3
+#define SV_SVCDEPS_KWD    4
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
@@ -38,8 +38,8 @@ typedef struct SV_SvcDeps {
 	char *svc;
 	char *virt;
 	int timeout;
-	/* priority level list [0-SV_DEPS_TYPE] */
-	SV_StringList_T *deps[SV_DEPS_TYPE];
+	/* priority level list [0-SV_SVCDEPS_TYPE] */
+	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;
 } SV_SvcDeps_T;
 typedef TAILQ_HEAD(SV_SvcDepsList, SV_SvcDeps) SV_SvcDepsList_T;

@@ -305,7 +305,7 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
-	if (sv_stringlist_find(run->dep->deps[SV_DEPS_KWD], "timeout"))
+	if (sv_stringlist_find(run->dep->deps[SV_SVCDEPS_KWD], "timeout"))
 		run->dep->timeout = -1;
 	else
 		run->dep->timeout = SVC_WAIT_SECS;
@@ -430,7 +430,7 @@ static int svc_depend(struct svcrun *run)
 		return -ENOENT;
 
 	/* skip before deps type */
-	for (type = SV_DEPS_USE; type <= SV_DEPS_NEED; type++) {
+	for (type = SV_SVCDEPS_USE; type <= SV_SVCDEPS_NEED; type++) {
 		if (TAILQ_EMPTY(run->dep->deps[type]))
 			continue;
 		/* build a deptree to avoid segfault because cyclical dependencies */
@@ -442,7 +442,7 @@ static int svc_depend(struct svcrun *run)
 				--p;
 		} /* PRIORITY_LEVEL_LOOP */
 		sv_deptree_free(&deptree);
-		if (val > 0 && type == SV_DEPS_NEED)
+		if (val > 0 && type == SV_SVCDEPS_NEED)
 			retval = val;
 	}
 	return retval;

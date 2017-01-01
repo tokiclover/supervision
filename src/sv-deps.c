@@ -6,13 +6,13 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.c  0.13.0 2016/12/28
+ * @(#)rs-deps.c  0.13.0 2016/12/30
  */
 
 #include "sv-deps.h"
 #include <dirent.h>
 
-static const char *const sv_deps_type[] = { "before", "after", "use", "need",
+static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need",
 	"keyword" };
 
 struct SV_Services SERVICES = {
@@ -72,17 +72,17 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	/* add service to list if and only if, either a service is {use,need}ed or
 	 * belongs to this particular init-stage
 	 */
-	if (type < SV_DEPS_USE && !sv_stringlist_find(deptree->list, s))
+	if (type < SV_SVCDEPS_USE && !sv_stringlist_find(deptree->list, s))
 		return -prio;
 	/* insert the real service instead of a virtual one */
 	if (!d && (d = sv_virtsvc_find(deptree->list, s)))
 		s = d->svc, svc->data = d;
 	if (prio < 0) {
 		if (d) {
-			if (d->deps[SV_DEPS_AFTER] || d->deps[SV_DEPS_USE] ||
-					d->deps[SV_DEPS_NEED])
+			if (d->deps[SV_SVCDEPS_AFTER] || d->deps[SV_SVCDEPS_USE] ||
+					d->deps[SV_SVCDEPS_NEED])
 				prio = 0;
-			else if (d->deps[SV_DEPS_BEFORE])
+			else if (d->deps[SV_SVCDEPS_BEFORE])
 				prio = 1;
 		}
 		else
@@ -97,7 +97,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	if (d && pri < SV_DEPTREE_MAX) {
 		/* handle {after,use,need} type  which insert dependencies above */
 		if (type) {
-			for (t = SV_DEPS_AFTER; t < SV_DEPS_TYPE; t++)
+			for (t = SV_SVCDEPS_AFTER; t < SV_SVCDEPS_TYPE; t++)
 			TAILQ_FOREACH(ent, d->deps[t], entries) {
 				add = 1;
 				for (p = pri; p < deptree->size; p++)
@@ -126,7 +126,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 					r = sv_deptree_add(type, prio, ent, deptree);
 					if (r < 0)
 						continue;
-					r = sv_deptree_add(SV_DEPS_AFTER, r, ent, deptree);
+					r = sv_deptree_add(SV_SVCDEPS_AFTER, r, ent, deptree);
 					prio = ++r > prio ? r : prio;
 				}
 			}
@@ -138,7 +138,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		if ((elm = sv_stringlist_find(deptree->tree[p], s))) {
 			if (prio < SV_DEPTREE_MAX) {
 				sv_stringlist_mov(deptree->tree[p], deptree->tree[prio], elm);
-				sv_deptree_add(SV_DEPS_AFTER, prio, svc, deptree);
+				sv_deptree_add(SV_SVCDEPS_AFTER, prio, svc, deptree);
 			}
 			return prio;
 		}
@@ -234,7 +234,7 @@ void svc_deptree_load(SV_DepTree_T *deptree)
 	sv_deptree_alloc(deptree);
 
 	TAILQ_FOREACH(ent, deptree->list, entries)
-		sv_deptree_add(SV_DEPS_USE, -1, ent, deptree);
+		sv_deptree_add(SV_SVCDEPS_USE, -1, ent, deptree);
 }
 
 void sv_deptree_load(SV_DepTree_T *deptree)
@@ -250,9 +250,9 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 
 	/* XXX: handle {after,use,need} first */
 	TAILQ_FOREACH(ent, deptree->list, entries)
-		sv_deptree_add(SV_DEPS_AFTER, -1, ent, deptree);
+		sv_deptree_add(SV_SVCDEPS_AFTER, -1, ent, deptree);
 	TAILQ_FOREACH(ent, deptree->list, entries)
-		sv_deptree_add(SV_DEPS_BEFORE, 0, ent, deptree);
+		sv_deptree_add(SV_SVCDEPS_BEFORE, 0, ent, deptree);
 
 	/* save everything to a file */
 	sv_deptree_file_save(deptree);
@@ -470,7 +470,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 	elm->svc = err_strdup(svc);
 	elm->timeout = 0;
 
-	for (int i = 0; i < SV_DEPS_TYPE; i++)
+	for (int i = 0; i < SV_SVCDEPS_TYPE; i++)
 		elm->deps[i] = sv_stringlist_new();
 	TAILQ_INSERT_TAIL(SERVICES.svcdeps, elm, entries);
 
@@ -544,7 +544,7 @@ static void sv_svcdeps_free(void)
 	TAILQ_FOREACH(elm, SERVICES.svcdeps, entries) {
 		TAILQ_REMOVE(SERVICES.svcdeps, elm, entries);
 
-		for (i = 0; i < SV_DEPS_TYPE; i++)
+		for (i = 0; i < SV_SVCDEPS_TYPE; i++)
 			sv_stringlist_free(&(elm->deps[i]));
 		free(elm->svc);
 		if (elm->virt)
@@ -557,4 +557,3 @@ static void sv_svcdeps_free(void)
 	SERVICES.virt_svcdeps = NULL;
 	SERVICES.virt_count   = 0;
 }
-
