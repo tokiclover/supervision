@@ -189,6 +189,7 @@ int svc_cmd(struct svcrun *run)
 					printf("%-32s: %s: (%s command) failed at %s", run->name,
 							cmd, buf, ctime(&st_buf.st_mtime));
 				}
+				close(i);
 			}
 			else
 				printf("%-32s: %s: failed at %s", run->name, cmd,
@@ -203,6 +204,7 @@ int svc_cmd(struct svcrun *run)
 					printf("%-32s: %s: waiting (%s command) since %s", run->name,
 							cmd, buf, ctime(&st_buf.st_ctime));
 				}
+				close(i);
 			}
 			else
 				printf("%-32s: %s: waiting since %s", run->name, cmd,
@@ -228,22 +230,6 @@ int svc_cmd(struct svcrun *run)
 		retval = -ENOENT;
 		goto reterr;
 	}
-
-	/* get service type */
-	if (S_ISDIR(st_buf.st_mode))
-		run->ARGV[1] = type[1];
-	else
-		run->ARGV[1] = type[0];
-	run->ARGV[2] = deps[0];
-	run->ARGV[3] = run->path;
-	if (!run->svc->data)
-		run->svc->data = sv_svcdeps_load(run->name);
-	run->dep = run->svc->data;
-
-	/* check service mtime */
-	if (st_buf.st_mtime > st_dep.st_mtime)
-		LOG_WARN("%s was updated -- `scan' command might be necessary?\n",
-				run->name);
 
 	/* get service status */
 	switch(run->cmd) {
@@ -276,6 +262,22 @@ int svc_cmd(struct svcrun *run)
 		goto reterr;
 		break;
 	}
+
+	/* get service type */
+	if (S_ISDIR(st_buf.st_mode))
+		run->ARGV[1] = type[1];
+	else
+		run->ARGV[1] = type[0];
+	run->ARGV[2] = deps[0];
+	run->ARGV[3] = run->path;
+	if (!run->svc->data)
+		run->svc->data = sv_svcdeps_load(run->name);
+	run->dep = run->svc->data;
+
+	/* check service mtime */
+	if (st_buf.st_mtime > st_dep.st_mtime)
+		LOG_WARN("%s was updated -- `scan' command might be necessary?\n",
+				run->name);
 
 	/* setup dependencies */
 	if (run->cmd == SV_SVC_CMD_START && svc_deps && run->dep) {
