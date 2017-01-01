@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/12/22 21:09:26                      Exp $
+# $Version: 1.3 2016/12/30 21:09:26                      Exp $
 #
 
 #
@@ -38,6 +38,7 @@ add_dep()
 	[ -n "${SVC_KEYWORD}" ] && echo "${svc}:keyword=\"${SVC_KEYWORD}\""
 	[ -n "${SVC_PROVIDE}" ] && echo "${svc}:provide=\"${SVC_PROVIDE}\""
 	[ -n "${SVC_TIMEOUT}" ] && echo "${svc}:timeout=\"${SVC_TIMEOUT}\""
+	[ -n "${SVC_NOHANG}"  ] && echo "${svc}:nohang=\"${SVC_NOHANG}\""
 }
 dep_gen()
 {
