@@ -263,7 +263,7 @@ options.
 .TS
 tab (@);
 l lx.
-\fBCOLOR\fR@T{
+\fBCOLOR=Yes\fR@T{
 Enable or disable colored output (default to \fIYES\fR)
 T}
 \fBSVC_CONFIGFILE\fR@T{
@@ -305,6 +305,12 @@ T}
 \fBSVC_KEYWORD\fR@T{
 Keyword to enable per service (timeout...)
 T}
+\fBSVC_NOHANG=Yes\fR@T{
+Enable nohang detection per service (instead of the global \fBSV_NOHANG\fR)
+T}
+\fBSVC_TIMEOUT=30\fR@T{
+Timeout per service to use when nohang detection is enabled to send signals
+T}
 \fBSVC_REQUIRED_FILES\fR@T{
 Service required file-s
 T}
@@ -339,7 +345,7 @@ foreground, defining the following variables are useless for runscript services.
 .TS
 tab (@);
 l lx.
-\fBSVC_TRY\fR@T{
+\fBSVC_TRY=10\fR@T{
 Number of attempts to try start the service before removing from SV_RUNDIR
 T}
 \fBENV_DIR=Yes\fR@T{
