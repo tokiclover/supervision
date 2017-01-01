@@ -423,6 +423,9 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		type = ptr;
 		ptr = strchr(ptr, '=');
 		*ptr++ = '\0';
+		ptr = shell_string_value(ptr);
+		if (!ptr)
+			continue;
 
 		if (!deps || strcmp(svc, deps->svc)) {
 			deps = sv_svcdeps_add(svc);
@@ -435,11 +438,16 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 			}
 			continue;
 		}
-		for (t = 0; strcmp(type, sv_deps_type[t]); t++)
+		else if (strcmp(type, "nohang") == 0 && sv_yesno(ptr)) {
+			SV_SVCOPTS_SET(deps, SV_SVCOPTS_NOHANG);
+			continue;
+		}
+		for (t = 0; strcmp(type, sv_svcdeps_type[t]); t++)
 			;
+		if (t >= SV_SVCDEPS_TYPE)
+			continue;
 
 		/* append service list */
-		ptr = shell_string_value(ptr);
 		while (ptr && *ptr) {
 			svc = ptr;
 			ptr = strchr(ptr, ' ');
@@ -469,6 +477,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 	SV_SvcDeps_T *elm = err_malloc(sizeof(SV_SvcDeps_T));
 	elm->svc = err_strdup(svc);
 	elm->timeout = 0;
+	elm->options = 0;
 
 	for (int i = 0; i < SV_SVCDEPS_TYPE; i++)
 		elm->deps[i] = sv_stringlist_new();

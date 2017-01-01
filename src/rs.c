@@ -343,7 +343,7 @@ runsvc:
 		close(run->lock);
 
 	/* supervise the service */
-	if (sv_nohang) {
+	if (sv_nohang || SV_SVCOPTS_GET(run->dep, SV_SVCOPTS_NOHANG)) {
 		/* block signal before fork() */
 		sigprocmask(SIG_SETMASK, &ss_full, NULL);
 

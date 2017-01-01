@@ -23,6 +23,11 @@
 #define SV_SVCDEPS_NEED   3
 #define SV_SVCDEPS_KWD    4
 
+/* some macro to set/get service options */
+#define SV_SVCOPTS_NOHANG 0x01
+#define SV_SVCOPTS_GET(dep, opt) ((dep)->options  & (opt))
+#define SV_SVCOPTS_SET(dep, opt) ((dep)->options |= (opt))
+
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
 #define SV_DEPTREE_PRIO 16
@@ -38,9 +43,12 @@ typedef struct SV_SvcDeps {
 	char *svc;
 	char *virt;
 	int timeout;
+	int options;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;
+	/* align on 16 words */
+	int __pad[5];
 } SV_SvcDeps_T;
 typedef TAILQ_HEAD(SV_SvcDepsList, SV_SvcDeps) SV_SvcDepsList_T;
 
