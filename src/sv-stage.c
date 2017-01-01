@@ -360,10 +360,12 @@ _noreturn_ static void sv_stage_status(void)
 	const char *argv[8] = { "runscript" };
 	struct svcrun run = { .argc = 8, .argv = argv };
 	SV_String_T *svc;
+	SV_StringList_T *list = sv_svclist_load(NULL);
+	list = sv_stringlist_sort(&list);
 	argv[4] = sv_svc_cmd[SV_SVC_CMD_STATUS];
 	argv[5] = (char *)0;
 
-	TAILQ_FOREACH(svc, sv_svclist_load(NULL), entries) {
+	TAILQ_FOREACH(svc, list, entries) {
 		run.svc = svc;
 		run.name = svc->str;
 		svc_cmd(&run);
