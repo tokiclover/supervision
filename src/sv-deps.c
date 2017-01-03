@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.c  0.13.0 2016/12/30
+ * @(#)rs-deps.c  0.13.0 2016/01/02
  */
 
 #include "sv-deps.h"
@@ -29,6 +29,7 @@ static SV_SvcDepsList_T *sv_svcdeps_new(void);
 static SV_SvcDeps_T *sv_svcdeps_add (const char *svc);
 static SV_SvcDeps_T *sv_svcdeps_adu (const char *svc);
 static SV_SvcDeps_T *sv_svcdeps_find(const char *svc);
+static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent);
 /* load generate service dependency */
 static int           sv_svcdeps_gen(const char *svc);
 static void sv_virtsvc_insert(SV_SvcDeps_T *elm);
@@ -128,7 +129,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 
 	/* move up anything found before anything else */
 	for (p = 0; p < prio; p++)
-		if ((ent = sv_stringlist_find(deptree->tree[p], s))) {
+		if ((ent = sv_stringlist_fid(deptree->tree[p], svc))) {
 			if (prio < SV_DEPTREE_MAX) {
 				sv_stringlist_mov(deptree->tree[p], deptree->tree[prio], ent);
 				sv_deptree_add(SV_SVCDEPS_AFTER, prio, svc, deptree);
@@ -137,7 +138,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		}
 	/* add only if necessary */
 	for (p = prio; p < deptree->size; p++)
-		if (sv_stringlist_find(deptree->tree[p], s))
+		if (sv_stringlist_fid(deptree->tree[p], svc))
 			return p;
 	prio = prio > SV_DEPTREE_MAX ? SV_DEPTREE_MAX-1 : prio;
 	ent = sv_stringlist_add(deptree->tree[prio], s);
@@ -467,7 +468,9 @@ static SV_SvcDepsList_T *sv_svcdeps_new(void)
 
 static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 {
+	static unsigned int id;
 	SV_SvcDeps_T *elm = err_malloc(sizeof(SV_SvcDeps_T));
+	elm->did = id++;
 	elm->svc = err_strdup(svc);
 	elm->timeout = 0;
 	elm->options = 0;
@@ -479,13 +482,28 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 	return elm;
 }
 
-SV_SvcDeps_T *sv_svcdeps_adu(const char *svc)
+static SV_SvcDeps_T *sv_svcdeps_adu(const char *svc)
 {
 	SV_SvcDeps_T *elm = sv_svcdeps_find(svc);
 	if (elm)
 		return elm;
 
 	return sv_svcdeps_add(svc);
+}
+
+static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent)
+{
+	SV_String_T *elm;
+	SV_SvcDeps_T *d, *D = ent->data;
+	TAILQ_FOREACH(elm, list, entries) {
+		if (elm->data)
+			d = elm->data;
+		else
+			continue;
+		if (d->did == D->did)
+			return elm;
+	}
+	return NULL;
 }
 
 static SV_SvcDeps_T *sv_svcdeps_find(const char *svc)

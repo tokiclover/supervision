@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.h  0.13.0 2016/12/30
+ * @(#)rs-deps.h  0.13.0 2016/01/02
  */
 
 #ifndef SV_DEPS_H
@@ -40,6 +40,7 @@ extern "C" {
 
 typedef struct SV_SvcDeps {
 	/* dependency type {after,before,use,need} */
+	unsigned int did;
 	char *svc;
 	char *virt;
 	int timeout;
@@ -48,7 +49,7 @@ typedef struct SV_SvcDeps {
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;
 	/* align on 16 words */
-	int __pad[5];
+	int __pad[4];
 } SV_SvcDeps_T;
 typedef TAILQ_HEAD(SV_SvcDepsList, SV_SvcDeps) SV_SvcDepsList_T;
 
