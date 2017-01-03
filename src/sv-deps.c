@@ -200,10 +200,8 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	char path[256];
 	FILE *fp;
 
-	if (!deptree) {
-		errno = ENOENT;
-		return -1;
-	}
+	if (!deptree)
+		return -ENOENT;
 
 	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
 	if ((fp = fopen(path, "w+")) == NULL) {

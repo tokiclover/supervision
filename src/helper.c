@@ -79,7 +79,7 @@ _unused_ int file_test(const char *pathname, int mode)
 		case 'x': return st_buf.st_mode & X;
 		case 'g': return st_buf.st_mode & S_ISGID;
 		case 'u': return st_buf.st_mode & S_ISUID;
-		default: errno = EINVAL; return 0;
+		default: return 0;
 	}
 }
 
@@ -100,10 +100,8 @@ _unused_ int get_term_cols(void)
 _unused_ ssize_t sv_getline(FILE *stream, char **buf, size_t *size)
 {
 	char *ptr;
-	if (!stream) {
-		errno = EBADF;
-		return -1;
-	}
+	if (!stream)
+		return -EBADF;
 	*size = 0;
 	*buf = err_realloc(*buf, BUFSIZ);
 
@@ -131,10 +129,8 @@ retline:
 
 _unused_ int sv_yesno(const char *str)
 {
-	if (!str) {
-		errno = ENOENT;
+	if (!str)
 		return 0;
-	}
 
 	switch(str[0]) {
 		case 'y':
@@ -164,7 +160,6 @@ _unused_ int sv_yesno(const char *str)
 					return 0;
 			}
 		default:
-			errno = EINVAL;
 			return 0;
 	}
 }

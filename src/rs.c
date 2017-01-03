@@ -506,10 +506,8 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY;
 	static mode_t f_mode = 0644;
 
-	if (svc == NULL) {
-		errno = ENOENT;
+	if (svc == NULL)
 		return -ENOENT;
-	}
 	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, svc);
 
 	if (lock_fd == SVC_LOCK) {
@@ -613,10 +611,8 @@ int svc_mark(const char *svc, int status, const char *what)
 	int fd;
 	mode_t m;
 
-	if (!svc) {
-		errno = ENOENT;
-		return -1;
-	}
+	if (!svc)
+		return -ENOENT;
 
 	switch(status) {
 		case SV_SVC_STAT_FAIL:
@@ -636,8 +632,7 @@ int svc_mark(const char *svc, int status, const char *what)
 			ptr = SV_TMPDIR_WAIT;
 			break;
 		default:
-			errno = EINVAL;
-			return -1;
+			return -EINVAL;
 	}
 
 	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
@@ -668,10 +663,8 @@ static int svc_state(const char *svc, int status)
 {
 	char path[512], *ptr = NULL;
 
-	if (!svc) {
-		errno = ENOENT;
+	if (!svc)
 		return 0;
-	}
 
 	switch(status) {
 		case SV_SVC_STAT_FAIL:
@@ -694,7 +687,6 @@ static int svc_state(const char *svc, int status)
 			ptr = SV_TMPDIR_WAIT;
 			break;
 		default:
-			errno = EINVAL;
 			return 0;
 	}
 	snprintf(path, sizeof(path), "%s/%s", ptr, svc);

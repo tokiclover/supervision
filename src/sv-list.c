@@ -46,8 +46,7 @@ int sv_stringlist_del(SV_StringList_T *list, const char *str)
 		free(elm);
 		return 0;
 	}
-	errno = EINVAL;
-	return -1;
+	return -EINVAL;
 }
 
 int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
@@ -58,8 +57,7 @@ int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
 		free(elm);
 		return 0;
 	}
-	errno = EINVAL;
-	return -1;
+	return -EINVAL;
 }
 
 SV_String_T *sv_stringlist_find(SV_StringList_T *list, const char *str)
@@ -85,10 +83,8 @@ size_t sv_stringlist_len(SV_StringList_T *list)
 
 int sv_stringlist_mov(SV_StringList_T *src, SV_StringList_T *dst, SV_String_T *ent)
 {
-	if (src == NULL || dst == NULL) {
-		errno = EINVAL;
-		return -1;
-	}
+	if (src == NULL || dst == NULL)
+		return -EINVAL;
 	TAILQ_REMOVE(src, ent, entries);
 	TAILQ_INSERT_TAIL(dst, ent, entries);
 	return 0;
