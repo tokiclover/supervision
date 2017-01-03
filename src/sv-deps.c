@@ -56,11 +56,18 @@ void sv_deptree_free(SV_DepTree_T *deptree)
 
 static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *deptree)
 {
-#define FIND_SVCDEPS(ent, first, last) add = 1;                           \
-	for (p = first; p < last; p++)                                        \
-		if (sv_stringlist_find(deptree->tree[p], ent->str)) {             \
-			add = 0; break;                                               \
-		}
+#define FIND_SVCDEPS(ent, first, last) add = 1;                 \
+	if (ent->data) {                                            \
+		for (p = first; p < last; p++)                          \
+		if (sv_stringlist_fid (deptree->tree[p], ent     )) {   \
+			add = 0; break;                                     \
+		};                                                      \
+	} else {                                                    \
+		for (p = first; p < last; p++)                          \
+		if (sv_stringlist_find(deptree->tree[p], ent->str)) {   \
+			add = 0; break;                                     \
+		};                                                      \
+	}
 
 	char *s = svc->str;
 	SV_SvcDeps_T *d = svc->data;
@@ -68,8 +75,6 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	int add, pri;
 	int p, t, r;
 
-	if (s == NULL)
-		return 0;
 	/* add service to list if and only if, either a service is {use,need}ed or
 	 * belongs to this particular init-stage/runlevel */
 	if (type < SV_SVCDEPS_USE && !sv_stringlist_find(deptree->list, s))
