@@ -39,9 +39,9 @@ static void sv_deptree_alloc(SV_DepTree_T *deptree)
 {
 	int p;
 
-	deptree->size += SV_DEPTREE_PRIO;
+	deptree->size += SV_DEPTREE_INC;
 	deptree->tree = err_realloc(deptree->tree, deptree->size*sizeof(void*));
-	for (p = deptree->size-SV_DEPTREE_PRIO; p < deptree->size; p++)
+	for (p = deptree->size-SV_DEPTREE_INC; p < deptree->size; p++)
 		deptree->tree[p] = sv_stringlist_new();
 }
 

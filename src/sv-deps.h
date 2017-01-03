@@ -30,9 +30,9 @@
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
-#define SV_DEPTREE_PRIO 16
+#define SV_DEPTREE_INC 16
 /* safety net for broken cyclic dependency */
-#define SV_DEPTREE_MAX  1024
+#define SV_DEPTREE_MAX  256
 
 #ifdef __cplusplus
 extern "C" {
