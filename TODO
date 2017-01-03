@@ -1,7 +1,8 @@
 * [x] improve performance by removing redundancy (service dependencies);
 * [x] improve logging and debugging;
-* [ ] more testing on FreeBSD, OpenBSD, NetBSB;
+* [ ] more testing and compatiblity code for FreeBSD, OpenBSD, NetBSB;
 * [+] improve RC compatibility: installability runscript services to /etc/init.d
       (easy to do), and adapt rs semantics to rc (LEVEL/ACTION... quite easy);
-  [+] partyly done with runlevels command support (`rs RUNLEVEL');
-* [ ] optimize parallel start/stop by using threads/pthread.h (quite hard);
+  [x] (partyly) done with runlevels command support (`sv-stage RUNLEVEL');
+* [x] optimize parallel start/stop by using threads/pthread.h (*not easy*);
+* [-] improve sv-shutdown compatibilty to SystemV or BSD shutdown/halt utilities;
