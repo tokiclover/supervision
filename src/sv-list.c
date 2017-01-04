@@ -46,7 +46,7 @@ int sv_stringlist_del(SV_StringList_T *list, const char *str)
 		free(elm);
 		return 0;
 	}
-	return -EINVAL;
+	return -ENOENT;
 }
 
 int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
@@ -57,7 +57,7 @@ int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
 		free(elm);
 		return 0;
 	}
-	return -EINVAL;
+	return -ENOENT;
 }
 
 SV_String_T *sv_stringlist_find(SV_StringList_T *list, const char *str)
