@@ -66,7 +66,9 @@ static const char *environ_list[] = {
 	"SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
 
-_noreturn_ static void *thread_signal_handler(void *arg);
+static void thread_signal_action(int sig, siginfo_t *si, void *ctx);
+static void thread_signal_handler(siginfo_t *si);
+_noreturn_ static void *thread_signal_worker(void *arg);
 static void *thread_worker_handler(void *arg);
 static void  thread_worker_cleanup(struct runlist *p);
 
@@ -933,25 +935,17 @@ waitpid:
 retval:
 	pthread_exit((void*)&p->retval);
 }
-_noreturn_ static void *thread_signal_handler(void *arg)
+
+static void thread_signal_action(int sig, siginfo_t *si, void *ctx)
 {
-	int i, r, s;
-	int child_found;
-	siginfo_t si;
-	size_t len;
-	struct runlist *p, *rl;
-	struct timespec ts;
+	int i = -1;
+	int serrno = errno;
+	struct runlist *p;
 	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGTERM" };
 
-wait_signal:
-	do {
-		s = sigwaitinfo(&ss_thread, &si);
-		if (s < 0 && errno != EINTR)
-			ERR("%s:%d: sigwaitinfo: %s\n", __func__, __LINE__, strerror(errno));
-	} while(!s);
-
-	switch(s) {
+	switch(sig) {
 	case SIGCHLD:
+		thread_signal_handler(si);
 		break;
 	case SIGINT:
 		i = 0;
@@ -963,10 +957,10 @@ wait_signal:
 
 		pthread_mutex_lock(&RUNLIST_MUTEX);
 		for (p = RUNLIST; p; p = p->next)
-			pthread_kill(p->tid, s);
+			pthread_kill(p->tid, sig);
 		pthread_mutex_unlock(&RUNLIST_MUTEX);
 
-		kill(0, s);
+		kill(0, sig);
 		exit(EXIT_FAILURE);
 	case SIGUSR1:
 		if (!sv_pid)
@@ -975,38 +969,41 @@ wait_signal:
 
 		pthread_mutex_lock(&RUNLIST_MUTEX);
 		for (p = RUNLIST; p; p = p->next)
-			pthread_kill(p->tid, s);
+			pthread_kill(p->tid, sig);
 		pthread_mutex_unlock(&RUNLIST_MUTEX);
 
 		kill(0, SIGTERM);
 		exit(EXIT_FAILURE);
 	default:
-		ERR("caught unknown signal %d\n", s);
-		goto wait_signal;
+		ERR("caught unknown signal %d\n", sig);
 	}
+	errno = serrno;
+}
+static void thread_signal_handler(siginfo_t *si)
+{
+	int i, r, s;
+	size_t len;
+	struct runlist *p, *rl;
+	struct timespec ts;
 
-wait_child:
 	do {
-		r = waitpid(si.si_pid, &s, WNOHANG);
-		if (r < 0 && errno != EINTR) {
+		r = waitpid(si->si_pid, &s, WNOHANG);
+		if (r < 0 && errno != EINTR)
 			ERR("%s:%d: waitpid: %s\n", __func__, __LINE__, strerror(errno));
-			goto wait_signal;
-		}
 	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
 
 	for (;;) {
-		/* re-read the first job which could have been changed */
+		/* read the first job which could have been changed */
 		pthread_mutex_lock(&RUNLIST_MUTEX);
 		rl = RUNLIST;
 		pthread_mutex_unlock(&RUNLIST_MUTEX);
-		child_found = 0;
 
 		for (p = rl; p; p->next) {
 			pthread_rwlock_rdlock(&p->lock);
 			len = p->len;
 			pthread_rwlock_unlock(&p->lock);
 			for (i = 0; i < len && p->run[i]; i++) {
-				if (p->run[i]->pid != si.si_pid) continue;
+				if (p->run[i]->pid != si->si_pid) continue;
 
 				if (sv_nohang) {
 					if (WIFEXITED(s) && !WEXITSTATUS(s)) r = 0;
@@ -1034,18 +1031,31 @@ wait_child:
 				}
 				pthread_mutex_unlock(&p->mutex);
 
-				goto wait_signal;
+				return;
 			}
 		}
-		if (!child_found) {
-			ts.tv_sec = 0, ts.tv_nsec = 1000000L;
-			do {
-				r = nanosleep(&ts, &ts);
-				if (r < 0 && errno != EINTR)
-					ERR("%s:%d: nanosleep: %s\n", __func__, __LINE__,
-							strerror(errno));
-			} while (r);
-		}
+
+		/* child not found or not yet inserted in the queue */
+		ts.tv_sec = 0;
+		ts.tv_nsec = 100000L;
+		do {
+			r = nanosleep(&ts, &ts);
+			if (r < 0 && errno != EINTR)
+				ERR("%s:%d: nanosleep: %s\n", __func__, __LINE__,
+						strerror(errno));
+		} while (r);
+	}
+}
+_noreturn_ static void *thread_signal_worker(void *arg)
+{
+	int sig;
+	siginfo_t si;
+	for (;;) {
+		sig = sigwaitinfo(&ss_thread, &si);
+		if (sig < 0 && errno != EINTR)
+			ERR("%s:%d: sigwaitinfo: %s\n", __func__, __LINE__, strerror(errno));
+		else
+			thread_signal_action(sig, &si, NULL);
 	}
 }
 
@@ -1083,7 +1093,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		if ((r = pthread_mutex_init(&RUNLIST_MUTEX, &RUNLIST_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
 		if ((r = pthread_create(&RUNLIST_SIGHANDLER_TID, &RUNLIST_ATTR,
-						thread_signal_handler, NULL)))
+						thread_signal_worker, NULL)))
 			HANDLE_ERROR(pthread_create);
 	}
 
