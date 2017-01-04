@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs.c  0.13.0 2016/12/30
+ * @(#)rs.c  0.13.0 2016/01/04
  */
 
 #include "sv.h"
@@ -18,8 +18,30 @@
 #include <sys/wait.h>
 #include <poll.h>
 #include <time.h>
+#include <pthread.h>
+
+struct runlist {
+	unsigned int rid;
+	int argc;
+	const char **argv;
+	SV_StringList_T *list;
+	struct svcrun **run;
+	int retval;
+	size_t job, len, siz, count;
+	struct runlist *next, *prev;
+	pthread_cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_rwlock_t lock;
+	pthread_t tid;
+};
 
 static struct svcrun *RUN;
+static struct runlist *RUNLIST;
+static pthread_cond_t RUNLIST_COND = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t RUNLIST_MUTEX = PTHREAD_MUTEX_INITIALIZER;
+static pthread_attr_t  RUNLIST_ATTR;
+static pthread_mutexattr_t RUNLIST_MUTEX_ATTR;
+static pthread_t RUNLIST_SIGHANDLER_TID;
 
 const char *progname;
 static const char *applet = "rs";
@@ -40,6 +62,10 @@ static const char *environ_list[] = {
 	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE",
 	"SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
+
+static void *thread_signal_handler(void *arg);
+static void *thread_worker_handler(void *arg);
+static void  thread_worker_cleanup(struct runlist *p);
 
 /* execute a service command;
  * @run: an svcrun structure;
@@ -806,81 +832,83 @@ int svc_exec(int argc, const char *argv[]) {
 	}
 }
 
-int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
+static void *thread_worker_handler(void *arg)
 {
 	SV_String_T *svc;
-	size_t c, len, n = 0;
-	int eagain = 0;
-	int i, r, retval = 0, status;
-	struct svcrun **run;
-	pid_t pid;
+	size_t n = 0;
+	long int eagain = 0;
+	int r;
+	struct svcrun *tmp;
+	struct runlist *p = arg;
 
-	if (list == NULL)
-		return -ENOENT;
-	if (argv == NULL)
-		return -EINVAL;
+	tmp = err_malloc(sizeof(struct svcrun));
+	if (!sv_parallel)
+		*p->run = tmp, p->len = 1;
 
-	/* do this to be able to create a new process group for each worker */
-	if ((pid = fork()) > 0)
-		goto waitcld;
-	if (pid < 0) {
-		ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__, strerror(errno));
-		return -errno;
-	}
-	setpgid(0, 0);
+	TAILQ_FOREACH(svc, p->list, entries) {
+		tmp->name = svc->str;
+		tmp->argc = p->argc;
+		tmp->argv = p->argv;
+		tmp->svc  = svc;
+		tmp->path = NULL;
 
-	if (sv_parallel)
-		len = sv_stringlist_len(list);
-	else
-		len = 1;
-	run = err_malloc(len*sizeof(void*));
-	memset(run, 0, len*sizeof(void*));
-	*run = err_malloc(sizeof(struct svcrun));
-
-	TAILQ_FOREACH(svc, list, entries) {
-		run[n]->name = svc->str;
-		run[n]->argc = argc;
-		run[n]->argv = argv;
-		run[n]->svc  = svc;
-		run[n]->path = NULL;
-
-		r = svc_cmd(run[n]);
+		r = svc_cmd(tmp);
 		reterr:
 		switch(r) {
 		case SVC_WAITPID:
 			break;
 		case -ENOENT:
 		case -ECANCELED:
-			retval++;
+			pthread_mutex_lock(&p->mutex);
+			p->count++;
+			p->retval++;
+			pthread_mutex_unlock(&p->mutex);
 			continue;
 		case -EBUSY:
 		case -EINVAL:
+			pthread_mutex_lock(&p->mutex);
+			p->count++;
+			p->retval++;
+			pthread_mutex_unlock(&p->mutex);
 			continue;
 		case -EAGAIN: /* fork(3) failure in svc_run() */
 		case -ENOMEM:
-			if (eagain == n) { /* something went wrong */
-				free(run[n]->ARGV);
-				free(run[n]);
-				retval++;
+			if (eagain == -n) { /* something went wrong */
+				free((void*)tmp->ARGV);
+				free((void*)tmp->path);
+				pthread_mutex_lock(&p->mutex);
+				p->retval++;
+				pthread_mutex_unlock(&p->mutex);
 				goto retval;
 			}
 			else  eagain = 0;
 			eagain += n;
 			goto waitpid;
-		eagain:
-			r = svc_run(run[n]);
-			goto reterr;
 			break;
 		}
 
-		if (sv_parallel)
+		if (sv_parallel) {
+			/* add the job to queue here to be sure to have any child to wait for */
+			if (!p->len) {
+				pthread_mutex_lock(&RUNLIST_MUTEX);
+				p->next = RUNLIST;
+				RUNLIST = p;
+				pthread_cond_signal(&RUNLIST_COND);
+				pthread_mutex_unlock(&RUNLIST_MUTEX);
+			}
+			pthread_rwlock_wrlock(&p->lock);
+			p->run[n] = tmp;
+			p->len++;
+			p->job++;
+			pthread_rwlock_unlock(&p->lock);
 			n++;
-		else {
-			r = svc_waitpid(*run, 0);
-			if (r) retval++;
+			if (n < p->siz)
+				tmp = err_malloc(sizeof(struct svcrun));
 		}
-		if (n < len)
-			run[n] = err_malloc(sizeof(struct svcrun));
+		else {
+			r = svc_waitpid(tmp, 0);
+			if (r) p->retval++;
+		}
 	}
 
 	if (!sv_parallel)
@@ -889,61 +917,186 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		goto waitpid;
 
 waitpid:
-	c = n;
-	while (c) {
-		/* multiple calls of this function may have children to wait for;
-		 * and avoid wasting cpu time in repeatedly calling waipid(3) */
-		r = waitpid(0, &status, 0);
-		if (r < 0) {
-			if (errno == ECHILD) {
-				LOG_ERR("%s: waitpid(): no child to wait for!!!\n", __func__);
-				goto retval;
-			}
-			continue;
-		}
-		for (i = 0; i < n; i++)
-			if (run[i] && run[i]->pid == r)
-				break;
-		if (i > n)
-			continue;
+	pthread_mutex_lock(&p->mutex);
+	while (p->job)
+		pthread_cond_wait(&p->cond, &p->mutex);
+	pthread_mutex_unlock(&p->mutex);
 
-		if (sv_nohang) {
-			if (WIFEXITED(status) && !WEXITSTATUS(status))
-				;
-			else
-				retval++;
-		}
-		else {
-			run[i]->status = status;
-			r = svc_waitpid(run[i], WNOHANG);
-			if (r == SVC_WAITPID)
-				continue;
-			if (r == -1 && errno == ECHILD)
-				LOG_ERR("no child for %s service!!!\n", run[i]->name);
-			if (r) retval++;
-		}
-		free((void*)run[i]->ARGV);
-		free((void*)run[i]->path);
-		free(run[i]);
-		run[i] = NULL;
-		c--;
+	if (eagain > 0) {
+		eagain = -eagain;
+		r = svc_run(tmp);
+		goto reterr;
 	}
-	if (eagain)
-		goto eagain;
 
 retval:
-	if (*run)
-		free(*run);
-	free(run);
-	_exit(retval);
-waitcld:
-	while (waitpid(pid, &status, 0) != pid)
-		if (errno != EINTR) {
-			ERR("%s:%d: Failed to waitpid(%d ...): %s\n", __func__, __LINE__,
-					pid, strerror(errno));
-			return -errno;
+	pthread_exit((void*)&p->retval);
+}
+static void *thread_signal_handler(_unused_ void *arg)
+{
+	int i, r, s;
+	int child_found;
+	int wait_cond = 0;
+	siginfo_t si;
+	size_t len;
+	struct runlist *p, *rl;
+	struct timespec ts;
+
+wait_cond:
+	pthread_mutex_lock(&RUNLIST_MUTEX);
+	while (!(rl = RUNLIST))
+		pthread_cond_wait(&RUNLIST_COND, &RUNLIST_MUTEX);
+	pthread_mutex_unlock(&RUNLIST_MUTEX);
+
+wait_signal:
+	do {
+		s = sigwaitinfo(&ss_child, &si);
+		if (s < 0 && errno != EINTR)
+			ERR("%s:%d: sigwaitinfo: %s\n", __func__, __LINE__, strerror(errno));
+	} while(!s);
+
+wait_child:
+	do {
+		r = waitpid(si.si_pid, &s, WNOHANG);
+		if (r < 0 && errno != EINTR) {
+			ERR("%s:%d: waitpid: %s\n", __func__, __LINE__, strerror(errno));
+			goto wait_signal;
 		}
-	if (WIFEXITED(status))
-		return WEXITSTATUS(status);
-	return -EXIT_FAILURE;
+	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
+
+	for (;;) {
+		/* re-read the first job which could have been changed */
+		pthread_mutex_lock(&RUNLIST_MUTEX);
+		rl = RUNLIST;
+		pthread_mutex_unlock(&RUNLIST_MUTEX);
+		child_found = 0;
+
+		for (p = rl; p; p->next) {
+			pthread_rwlock_rdlock(&p->lock);
+			len = p->len;
+			pthread_rwlock_unlock(&p->lock);
+			for (i = 0; i < len && p->run[i]; i++) {
+				if (p->run[i]->pid != si.si_pid) continue;
+
+				if (sv_nohang) {
+					if (WIFEXITED(s) && !WEXITSTATUS(s)) r = 0;
+					else r = 1;
+				}
+				else {
+					p->run[i]->status = s;
+					r = svc_waitpid(p->run[i], 0);
+				}
+
+				pthread_mutex_lock(&p->mutex);
+				p->count++;
+				p->job--;
+				if (r) p->retval++;
+				if (p->count == p->len)
+					pthread_cond_signal(&p->cond);
+				if (p->count == p->siz) {
+					wait_cond = 1;
+					/* remove job from queue */
+					pthread_mutex_lock(&RUNLIST_MUTEX);
+					if (p->prev) p->prev->next = p->next;
+					if (p->next) p->next->prev = p->prev;
+					pthread_mutex_unlock(&RUNLIST_MUTEX);
+					/* signal that the job is done */
+					pthread_cond_signal(&p->cond);
+				}
+				pthread_mutex_unlock(&p->mutex);
+
+				if (wait_cond) {
+					wait_cond = 0;
+					goto wait_cond;
+				}
+				else goto wait_signal;
+			}
+		}
+		if (!child_found) {
+			ts.tv_sec = 0, ts.tv_nsec = 1000000L;
+			do {
+				r = nanosleep(&ts, &ts);
+				if (r < 0 && errno != EINTR)
+					ERR("%s:%d: nanosleep: %s\n", __func__, __LINE__,
+							strerror(errno));
+			} while (r);
+		}
+	}
+}
+
+int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
+{
+#define HANDLE_ERROR(func) \
+	do { ERR("%s:%d: " #func "\n", __func__, __LINE__); goto retval; } while(0)
+	int r;
+	static unsigned int rid;
+	struct runlist *p;
+
+	if (!list)
+		return -ENOENT;
+	if (!argc || !argv)
+		return -EINVAL;
+
+	if (!rid) {
+		if ((r = pthread_attr_init(&RUNLIST_ATTR)))
+			HANDLE_ERROR(pthread_attr_init);
+		if ((r = pthread_cond_init(&RUNLIST_COND, NULL)))
+			HANDLE_ERROR(pthread_cond_init);
+		if ((r = pthread_mutexattr_init(&RUNLIST_MUTEX_ATTR)))
+			HANDLE_ERROR(pthread_mutexattr_init);
+		if ((r = pthread_mutexattr_settype(&RUNLIST_MUTEX_ATTR, PTHREAD_MUTEX_NORMAL)))
+			HANDLE_ERROR(pthread_mutexattr_settype);
+		if ((r = pthread_mutex_init(&RUNLIST_MUTEX, &RUNLIST_MUTEX_ATTR)))
+			HANDLE_ERROR(pthread_mutex_init);
+		if ((r = pthread_create(&RUNLIST_SIGHANDLER_TID, &RUNLIST_ATTR,
+						thread_signal_handler, NULL)))
+			HANDLE_ERROR(pthread_create);
+	}
+
+	p = err_malloc(sizeof(struct runlist));
+	memset(p, 0, sizeof(struct runlist));
+	if (sv_parallel) {
+		p->siz = sv_stringlist_len(list);
+		p->run = err_calloc(sizeof(void*), p->siz);
+		memset(p->run, 0, p->siz);
+	}
+	p->rid  = rid++;
+	p->list = list;
+	p->argc = argc;
+	p->argv = argv;
+
+	if ((r = pthread_cond_init(&p->cond, NULL)))
+		HANDLE_ERROR(pthread_cond_init);
+	if ((r = pthread_mutex_init(&p->mutex, &RUNLIST_MUTEX_ATTR)))
+		HANDLE_ERROR(pthread_mutex_init);
+	if ((r = pthread_rwlock_init(&p->lock, NULL)))
+		HANDLE_ERROR(pthread_rwlock_init);
+	if ((r = pthread_create(&p->tid, &RUNLIST_ATTR,
+					thread_worker_handler, p)))
+		HANDLE_ERROR(pthread_create);
+	if ((r = pthread_join(p->tid, (void*)NULL)))
+		HANDLE_ERROR(pthread_join);
+retval:
+	if (r)
+		r = -r;
+	else
+		r = p->retval;
+	thread_worker_cleanup(p);
+	return r;
+#undef HANDLE_ERROR
+}
+
+static void thread_worker_cleanup(struct runlist *p)
+{
+	int i;
+
+	for (i = 0; i < p->len && p->run[i]; i++) {
+		free((void*)p->run[i]->ARGV);
+		free((void*)p->run[i]->path);
+		free(p->run[i]);
+	}
+	free(p->run);
+
+	pthread_cond_destroy(&p->cond);
+	pthread_mutex_destroy(&p->mutex);
+	pthread_rwlock_destroy(&p->lock);
 }
