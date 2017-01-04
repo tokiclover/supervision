@@ -18,6 +18,9 @@ Added new manual to document new sv-stage(8) binary and refactorized rs(8);
 Added a status command for init-stage/runlevel to retrieve service status:
 e.g. `sv-stage --default status' to get service status of default runlevel;
 
+Use POSIX threads to improve performance with parallel start/stop instead of
+using only process based technics (child process/fork(2));
+
 API CHANGE:
 
 - short command line option to select a init-stage/runlevel;
