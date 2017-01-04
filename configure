@@ -731,6 +731,8 @@ check_builtin "strerror" "string.h" "strerror(0)" ||
 	DIE "missing strerror() system builtin"
 check_builtin "nanosleep" "time.h" "nanosleep(NULL, NULL)" ||
 	DIE "missing nanosleep() system builtin"
+check_builtin "pthread_kill" "pthread.h" "pthread_kill((pthread_t)0, 0)" ||
+	DIE "missing pthread_kill() system builtin"
 
 
 check_cpp_condition 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \
