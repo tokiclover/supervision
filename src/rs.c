@@ -139,8 +139,8 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 static void svc_zap(const char *svc);
 
 /* signal handler/setup */
-static void sv_sighandler(int sig);
-static void sv_sigsetup(void);
+static void rs_sighandler(int sig);
+static void rs_sigsetup(void);
 void svc_sigsetup(void);
 extern sigset_t ss_child, ss_full, ss_old;
 
@@ -395,7 +395,7 @@ supervise:
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
 	/* setup SIGCHILD,SIGALRM and unblock SIGCHILD */
-	sv_sigsetup();
+	rs_sigsetup();
 
 	/* setup a timeout and wait for the child */
 	if (run->dep->timeout > 0)
@@ -720,7 +720,7 @@ static int svc_state(const char *svc, int status)
 	return 1;
 }
 
-static void sv_sighandler(int sig)
+static void rs_sighandler(int sig)
 {
 	int i = -1, serrno = errno;
 	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGKILL",
@@ -753,12 +753,12 @@ static void sv_sighandler(int sig)
 	errno = serrno;
 }
 
-static void sv_sigsetup(void)
+static void rs_sigsetup(void)
 {
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 
-	sa.sa_handler = sv_sighandler;
+	sa.sa_handler = rs_sighandler;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGALRM, &sa, NULL);
 	sigaction(SIGCHLD, &sa, NULL);
