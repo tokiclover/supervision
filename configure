@@ -503,6 +503,7 @@ HEADERS_LIST="
 	mntent.h
 	poll.h
 	pwd.h
+	time.h
 	sys/file.h
 	sys/ioctl.h
 	sys/stat.h
@@ -510,6 +511,7 @@ HEADERS_LIST="
 	sys/type.h
 	sys/wait.h
 	unistd.h
+	pthread.h
 "
 CMDLINE_ENABLE="
 	runit
@@ -696,7 +698,11 @@ check_CFLAGS -fPIC
 check_CFLAGS -Wall
 check_CFLAGS -Wdisabled-optimization
 check_CFLAGS -Wempty-body
+check_CFLAGS -pthread ||
+	DIE "Cannot build with CFLAGS=-pthread"
 check_LDFLAGS -Wl,--as-needed
+check_LDFLAGS -pthread ||
+	DIE "Caonnot link with LDFLAGS=-pthread"
 
 enabled sysvinit && HEADER_LIST="${HEADER_LIST} initreq.h"
 for header in $HEADER_LIST; do
@@ -723,6 +729,8 @@ check_builtin "poll" "poll.h" "poll((struct pollfd*)0, 0, 0)" ||
 	DIE "missing poll() system builtin"
 check_builtin "strerror" "string.h" "strerror(0)" ||
 	DIE "missing strerror() system builtin"
+check_builtin "nanosleep" "time.h" "nanosleep(NULL, NULL)" ||
+	DIE "missing nanosleep() system builtin"
 
 
 check_cpp_condition 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \
