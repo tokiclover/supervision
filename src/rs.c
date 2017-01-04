@@ -35,6 +35,8 @@ struct runlist {
 	pthread_t tid;
 };
 
+extern pid_t sv_pid;
+
 static struct svcrun *RUN;
 static struct runlist *RUNLIST;
 static pthread_cond_t RUNLIST_COND = PTHREAD_COND_INITIALIZER;
@@ -967,6 +969,8 @@ wait_signal:
 		kill(0, s);
 		exit(EXIT_FAILURE);
 	case SIGUSR1:
+		if (!sv_pid)
+			break;
 		fprintf(stderr, "%s: Aborting!\n", progname);
 
 		pthread_mutex_lock(&RUNLIST_MUTEX);

@@ -33,7 +33,7 @@ int sv_nohang   =  0;
 int sv_parallel =  0;
 int sv_level    = -1;
 int sv_stage    = -1;
-pid_t sv_pid;
+pid_t sv_pid  = 0;
 int svc_deps  = 1;
 int svc_quiet = 1;
 static SV_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
@@ -290,8 +290,7 @@ void sv_cleanup(void)
 static void sv_sighandler(int sig)
 {
 	int i = -1, serrno = errno;
-	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGKILL",
-		"SIGTERM" };
+	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGTERM" };
 
 	switch (sig) {
 	case SIGINT:
