@@ -27,7 +27,6 @@ start_pre()
 	if [ "${__cmd__}" != "restart" ]; then
 		configtest || return 1
 	fi
-	SVC_OPTS="${SVC_OPTS} -g 'pid ${SVC_PIDFILE};'"
 }
 start_post()
 {
