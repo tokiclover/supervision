@@ -42,6 +42,7 @@ static pthread_mutex_t RUNLIST_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 static pthread_attr_t  RUNLIST_ATTR;
 static pthread_mutexattr_t RUNLIST_MUTEX_ATTR;
 static pthread_t RUNLIST_SIGHANDLER_TID;
+static sigset_t ss_thread;
 
 const char *progname;
 static const char *applet = "rs";
@@ -63,7 +64,7 @@ static const char *environ_list[] = {
 	"SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
 
-static void *thread_signal_handler(void *arg);
+_noreturn_ static void *thread_signal_handler(void *arg);
 static void *thread_worker_handler(void *arg);
 static void  thread_worker_cleanup(struct runlist *p);
 
@@ -930,28 +931,55 @@ waitpid:
 retval:
 	pthread_exit((void*)&p->retval);
 }
-_unused_ static void *thread_signal_handler(_unused_ void *arg)
+_noreturn_ static void *thread_signal_handler(void *arg)
 {
 	int i, r, s;
 	int child_found;
-	int wait_cond = 0;
 	siginfo_t si;
 	size_t len;
 	struct runlist *p, *rl;
 	struct timespec ts;
-
-wait_cond:
-	pthread_mutex_lock(&RUNLIST_MUTEX);
-	while (!(rl = RUNLIST))
-		pthread_cond_wait(&RUNLIST_COND, &RUNLIST_MUTEX);
-	pthread_mutex_unlock(&RUNLIST_MUTEX);
+	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGTERM" };
 
 wait_signal:
 	do {
-		s = sigwaitinfo(&ss_child, &si);
+		s = sigwaitinfo(&ss_thread, &si);
 		if (s < 0 && errno != EINTR)
 			ERR("%s:%d: sigwaitinfo: %s\n", __func__, __LINE__, strerror(errno));
 	} while(!s);
+
+	switch(s) {
+	case SIGCHLD:
+		break;
+	case SIGINT:
+		i = 0;
+	case SIGTERM:
+		if (i < 0) i = 3;
+	case SIGQUIT:
+		if (i < 0) i = 1;
+		ERR("caught %s, aborting\n", signame[i]);
+
+		pthread_mutex_lock(&RUNLIST_MUTEX);
+		for (p = RUNLIST; p; p = p->next)
+			pthread_kill(p->tid, s);
+		pthread_mutex_unlock(&RUNLIST_MUTEX);
+
+		kill(0, s);
+		exit(EXIT_FAILURE);
+	case SIGUSR1:
+		fprintf(stderr, "%s: Aborting!\n", progname);
+
+		pthread_mutex_lock(&RUNLIST_MUTEX);
+		for (p = RUNLIST; p; p = p->next)
+			pthread_kill(p->tid, s);
+		pthread_mutex_unlock(&RUNLIST_MUTEX);
+
+		kill(0, SIGTERM);
+		exit(EXIT_FAILURE);
+	default:
+		ERR("caught unknown signal %d\n", s);
+		goto wait_signal;
+	}
 
 wait_child:
 	do {
@@ -992,7 +1020,6 @@ wait_child:
 				if (p->count == p->len)
 					pthread_cond_signal(&p->cond);
 				if (p->count == p->siz) {
-					wait_cond = 1;
 					/* remove job from queue */
 					pthread_mutex_lock(&RUNLIST_MUTEX);
 					if (p->prev) p->prev->next = p->next;
@@ -1003,11 +1030,7 @@ wait_child:
 				}
 				pthread_mutex_unlock(&p->mutex);
 
-				if (wait_cond) {
-					wait_cond = 0;
-					goto wait_cond;
-				}
-				else goto wait_signal;
+				goto wait_signal;
 			}
 		}
 		if (!child_found) {
@@ -1036,6 +1059,15 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		return -EINVAL;
 
 	if (!rid) {
+		memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
+		sigaddset(&ss_thread, SIGHUP);
+		sigaddset(&ss_thread, SIGINT);
+		sigaddset(&ss_thread, SIGTERM);
+		sigaddset(&ss_thread, SIGQUIT);
+		sigaddset(&ss_thread, SIGUSR1);
+		/* block unhandled signals */
+		sigprocmask(SIG_BLOCK, &ss_thread, NULL);
+
 		if ((r = pthread_attr_init(&RUNLIST_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
 		if ((r = pthread_cond_init(&RUNLIST_COND, NULL)))
