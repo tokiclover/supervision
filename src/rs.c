@@ -868,7 +868,6 @@ static void *thread_worker_handler(void *arg)
 		case -EINVAL:
 			pthread_mutex_lock(&p->mutex);
 			p->count++;
-			p->retval++;
 			pthread_mutex_unlock(&p->mutex);
 			continue;
 		case -EAGAIN: /* fork(3) failure in svc_run() */
@@ -931,7 +930,7 @@ waitpid:
 retval:
 	pthread_exit((void*)&p->retval);
 }
-static void *thread_signal_handler(_unused_ void *arg)
+_unused_ static void *thread_signal_handler(_unused_ void *arg)
 {
 	int i, r, s;
 	int child_found;
