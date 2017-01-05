@@ -416,11 +416,9 @@ static int svc_waitpid(struct svcrun *run, int flags)
 	pid_t pid;
 
 	/* do this hack to only mark children status */
-	if (run->status != -1) {
-		pid = run->pid;
+	if (run->status != -1)
 		status = run->status;
-		goto status;
-	}
+	else
 	do {
 		pid = waitpid(run->cld, &status, flags);
 		if (pid < 0) {
@@ -431,12 +429,16 @@ static int svc_waitpid(struct svcrun *run, int flags)
 			return SVC_WAITPID;
 	} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
-status:
+	if (WIFEXITED(status))
+		run->status = WEXITSTATUS(status);
+	else if (flags & WUNTRACED && WIFSTOPPED(status))
+		return SVC_WAITPID;
+	else if (WIFSIGNALED(status))
+		run->status = WTERMSIG(status);
 	if (run->lock)
 		close(run->lock);
-	if (pid > 0 && WIFEXITED(status))
-		run->status =  WEXITSTATUS(status);
 	run->cld = 0;
+
 	svc_mark(run->name, SV_SVC_MARK_WAIT, NULL);
 	if (!svc_quiet)
 		svc_end(run->name, run->status);
@@ -987,7 +989,7 @@ static void thread_signal_handler(siginfo_t *si)
 	struct timespec ts;
 
 	do {
-		r = waitpid(si->si_pid, &s, WNOHANG);
+		r = waitpid(si->si_pid, &s, WNOHANG|WUNTRACED);
 		if (r < 0 && errno != EINTR)
 			ERR("%s:%d: waitpid: %s\n", __func__, __LINE__, strerror(errno));
 	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
@@ -1011,7 +1013,9 @@ static void thread_signal_handler(siginfo_t *si)
 				}
 				else {
 					p->run[i]->status = s;
-					r = svc_waitpid(p->run[i], 0);
+					r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
+					if (r == SVC_WAITPID)
+						return;
 				}
 
 				pthread_mutex_lock(&p->mutex);
