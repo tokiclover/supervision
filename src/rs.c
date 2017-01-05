@@ -993,6 +993,8 @@ static void thread_signal_handler(siginfo_t *si)
 		if (r < 0 && errno != EINTR)
 			ERR("%s:%d: waitpid: %s\n", __func__, __LINE__, strerror(errno));
 	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
+	if (WIFSTOPPED(s)) /* optimize child status mark */
+		return;
 
 	for (;;) {
 		/* read the first job which could have been changed */
