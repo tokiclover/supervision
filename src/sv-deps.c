@@ -9,8 +9,8 @@
  * @(#)rs-deps.c  0.13.0 2016/01/02
  */
 
-#include "sv-deps.h"
 #include <dirent.h>
+#include "sv-deps.h"
 
 static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need",
 	"keyword" };

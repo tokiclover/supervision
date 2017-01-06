@@ -9,8 +9,6 @@
  * @(#)rs.c  0.13.0 2016/01/04
  */
 
-#include "sv.h"
-#include "sv-deps.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/file.h>
@@ -19,6 +17,8 @@
 #include <poll.h>
 #include <time.h>
 #include <pthread.h>
+#include "sv.h"
+#include "sv-deps.h"
 
 struct runlist {
 	unsigned int rid;

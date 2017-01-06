@@ -11,13 +11,13 @@
  * @(#)checkpath.c  0.12.6.4 2016/12/24
  */
 
-#include "error.h"
-#include "helper.h"
 #include <dirent.h>
 #include <grp.h>
 #include <pwd.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include "error.h"
+#include "helper.h"
 
 #define VERSION "0.11.0"
 

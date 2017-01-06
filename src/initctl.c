@@ -12,14 +12,14 @@
  * @(#)initctl.c  0.12.6.4 2016/12/28
  */
 
+#include <initreq.h>
+#include <fcntl.h>
+#include <unistd.h>
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
 #include "error.h"
 #include "helper.h"
-#include <initreq.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #ifndef LIBDIR
 # define LIBDIR "/lib"

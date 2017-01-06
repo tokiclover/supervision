@@ -9,8 +9,6 @@
  * @(#)sv-stage.c  0.13.0 2016/12/30
  */
 
-#include "sv.h"
-#include "sv-deps.h"
 #include <stdio.h>
 #include <getopt.h>
 #include <signal.h>
@@ -19,6 +17,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "sv.h"
+#include "sv-deps.h"
 
 extern int svc_cmd(struct svcrun *run);
 extern int svc_exec (int argc, const char *argv[]);

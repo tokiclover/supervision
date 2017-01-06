@@ -12,11 +12,6 @@
  * @(#)sv-shutdown.c  0.12.6.4 2016/12/28
  */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-#include "error.h"
-#include "helper.h"
 #include <grp.h>
 #include <pwd.h>
 #include <utmpx.h>
@@ -28,6 +23,11 @@
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+#include "error.h"
+#include "helper.h"
 
 #define VERSION "0.12.6.4"
 

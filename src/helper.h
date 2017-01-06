@@ -12,10 +12,10 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-#include "error.h"
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/termios.h>
+#include "error.h"
 
 #ifdef __cplusplus
 extern "C" {

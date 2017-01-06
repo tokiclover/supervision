@@ -11,9 +11,9 @@
  * @(#)mountinfo.c  0.13.0 2016/12/28
  */
 
-#include "sv-list.h"
 #include <getopt.h>
 #include <regex.h>
+#include "sv-list.h"
 
 #if defined(__DragonFly__) || defined(__FreeBSD__)
 # include <sys/ucred.h>

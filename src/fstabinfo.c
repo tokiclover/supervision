@@ -11,10 +11,10 @@
  * @(#)fstabinfo.c  0.13.0 2016/12/28
  */
 
-#include "error.h"
 #include <getopt.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include "error.h"
 
 #if defined(__linux__)
 # define HAVE_GETMNTENT

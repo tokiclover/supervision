@@ -22,13 +22,6 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-#define _POSIX_C_SOURCE 200809L
-#if defined SOLARIS
-#  define _XOPEN_SOURCE 600
-#else
-#  define _XOPEN_SOURCE 700
-#endif
-
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
