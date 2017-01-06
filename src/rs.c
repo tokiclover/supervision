@@ -39,6 +39,7 @@ extern pid_t sv_pid;
 
 static struct svcrun *RUN;
 static struct runlist *RUNLIST;
+static unsigned int RUNLIST_COUNT;
 static pthread_cond_t RUNLIST_COND = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t RUNLIST_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 static pthread_attr_t  RUNLIST_ATTR;
@@ -348,7 +349,10 @@ static int svc_run(struct svcrun *run)
 	run->pid = fork();
 	if (run->pid > 0) { /* parent */
 		/* restore signal mask */
-		sigprocmask(SIG_SETMASK, &ss_child, NULL);
+		if (RUNLIST_COUNT)
+			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
+		else
+			sigprocmask(SIG_SETMASK, &ss_child, NULL);
 		return SVC_WAITPID;
 	}
 	else if (run->pid == 0) /* child */
@@ -1068,7 +1072,6 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 #define HANDLE_ERROR(func) \
 	do { ERR("%s:%d: " #func "\n", __func__, __LINE__); goto retval; } while(0)
 	int r;
-	static unsigned int rid;
 	struct runlist *p;
 
 	if (!list)
@@ -1076,7 +1079,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	if (!argc || !argv)
 		return -EINVAL;
 
-	if (!rid) {
+	if (!RUNLIST_COUNT) {
 		memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
 		sigaddset(&ss_thread, SIGHUP);
 		sigaddset(&ss_thread, SIGINT);
@@ -1108,7 +1111,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		p->run = err_calloc(sizeof(void*), p->siz);
 		memset(p->run, 0, p->siz);
 	}
-	p->rid  = rid++;
+	p->rid  = RUNLIST_COUNT++;
 	p->list = list;
 	p->argc = argc;
 	p->argv = argv;
