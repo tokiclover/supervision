@@ -155,14 +155,14 @@ dist_RS_OPTS = \
 	$(EXTRA_OPTIONS_INSTANCES)
 
 dist_SYSINIT = \
-	$(EXTRA_SYSINIT) \
+	$(EXTRA_SYSINIT_SERVICES) \
 	devfs \
 	dmesg \
 	kmod-static-nodes \
 	sysfs \
 	tmpfiles.dev
 dist_SYSBOOT = \
-	$(EXTRA_SYSBOOT) \
+	$(EXTRA_SYSBOOT_SERVICES) \
 	kmod \
 	console \
 	checkfs \
@@ -178,10 +178,10 @@ dist_SYSBOOT = \
 	swaps swapfiles \
 	tmpfiles.setup
 dist_DEFAULT = \
-	$(EXTRA_DEFAULT) \
+	$(EXTRA_DEFAULT_SERVICES) \
 	getty-tty6 getty-tty5 getty-tty4 getty-tty3 getty-tty2 getty-tty1
 dist_SHUTDOWN = \
-	$(EXTRA_SHUTDOWN) \
+	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
 
