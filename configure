@@ -444,7 +444,7 @@ check_func_headers(){
 }
 
 check_cpp_condition(){
-	log check_cpp_condition "$@"
+	LOG check_cpp_condition "$@"
 	local header="$1" condition="$2"
 	shift 2
 	check_CPP "$@" <<EOF
@@ -512,8 +512,6 @@ HEADERS_LIST="
 	sys/termios.h
 	sys/types.h
 	sys/wait.h
-	unistd.h
-	pthread.h
 "
 CMDLINE_ENABLE="
 	runit
@@ -726,66 +724,47 @@ check_CC <<EOF && add_CPPFLAGS -D_XOPEN_SOURCE=700 || add_CPPFLAGS -D_XOPEN_SOUR
 # error "SOLARIS is defined!!!"
 #endif
 EOF
-
-LOG check_CC _POSIX_JOB_CONTROL
-check_CC <<EOF || WARN "_POSIX_JOB_CONTROL is not defined!"
-#include <unistd.h>
-#ifndef _POSIX_JOB_CONTROL
-# error "_POSIX_JOB_CONTROL is not defined!"
-#endif
-EOF
-LOG check_CC _POSIX_REALTIME_SIGNALS
-check_CC <<EOF || DIE "_POSIX_REALTIME_SIGNALS is not defined!"
-#include <unistd.h>
-#ifndef _POSIX_REALTIME_SIGNALS
-# error "_POSIX_REALTIME_SIGNALS is not defined!"
-#endif
-EOF
-LOG check_CC _POSIX_REGEXP
-check_CC <<EOF || DIE "_POSIX_REGEXP is not defined!"
-#include <unistd.h>
-#ifndef _POSIX_REGEXP
-# error "_POSIX_REGEXP is not defined!"
-#endif
-EOF
-LOG check_CC _POSIX_THREADS
-check_CC <<EOF || DIE "_POSIX_THREADS is not defined!"
-#include <unistd.h>
-#ifndef _POSIX_THREADS
-# error "_POSIX_THREADS is not defined!"
-#endif
-EOF
-LOG check_CC _POSIX_TIMERS
-check_CC <<EOF || DIE "_POSIX_TIMERS is not defined!"
-#include <unistd.h>
-#ifndef _POSIX_TIMERS
-# error "_POSIX_TIMERS is not defined!"
-#endif
-EOF
-LOG check_CC _XOPEN_REALTIME
-check_CC <<EOF || DIE "_XOPEN_REALTIME is not defined!"
-#include <unistd.h>
-#ifndef _XOPEN_REALTIME
-# error "_XOPEN_REALTIME is not defined!"
-#endif
-EOF
-LOG check_CC _XOPEN_REALTIME_THREADS
-check_CC <<EOF || DIE "_XOPEN_REALTIME_THREADS is not defined!"
-#include <unistd.h>
-#ifndef _XOPEN_REALTIME_THREADS
-# error "_XOPEN_REALTIME_THREADS is not defined!"
-#endif
-EOF
+check_cpp_condition "unistd.h" "_POSIX_ASYNCHRONOUS_IO == 200809L" ||
+	DIE "_POSIX_ASYNCHRONOUS_IO != 200809L is not defined!"
+check_cpp_condition "unistd.h" "_POSIX_PRIORITIZED_IO == 200809L" ||
+	DIE "_POSIX_PRIORITIZED_IO != 200809L is not defined!"
+check_cpp_condition "unistd.h" "_POSIX_JOB_CONTROL > 0" ||
+	WARN "_POSIX_JOB_CONTROL is not defined!"
+check_cpp_condition "unistd.h" "_POSIX_REALTIME_SIGNALS == 200809L" ||
+	DIE "_POSIX_REALTIME_SIGNALS is not defined!"
+check_cpp_condition "unistd.h" "_POSIX_REGEXP > 0" ||
+	DIE "_POSIX_REGEXP is not defined!"
+check_cpp_condition "unistd.h" "_POSIX_THREADS == 200809L" ||
+	DIE "_POSIX_THREADS is not defined!"
+check_cpp_condition "unistd.h" "_POSIX_TIMERS == 200809L" ||
+	DIE "_POSIX_TIMERS is not defined!"
+check_cpp_condition "unistd.h" "defined (_XOPEN_REALTIME)" ||
+	DIE "_XOPEN_REALTIME is not defined!"
+check_cpp_condition "unistd.h" "defined (_XOPEN_REALTIME_THREADS)" ||
+	DIE "_XOPEN_REALTIME_THREADS is not defined!"
 
 check_CFLAGS -fPIC
 check_CFLAGS -Wall
 check_CFLAGS -Wdisabled-optimization
 check_CFLAGS -Wempty-body
-check_CFLAGS -pthread ||
-	DIE "Cannot build with CFLAGS=-pthread"
 check_LDFLAGS -Wl,--as-needed
-check_LDFLAGS -pthread ||
-	DIE "Caonnot link with LDFLAGS=-pthread"
+
+LOG check_CC -pthread
+check_CC -pthread <<EOF && PTHREAD_FLAGS=-pthread || DIE "Cannot build with CFLAGS=-pthread"
+#include <unistd.h>
+#include <pthread.h>
+int main(void) {
+	pthread_create((pthread_t*)NULL,(pthread_attr_t*)NULL,NULL,NULL);
+}
+EOF
+LOG check_LD CC -pthread
+check_LD CC -pthread <<EOF || DIE "Caonnot link with LIBS=-pthread"
+#include <unistd.h>
+#include <pthread.h>
+int main(void) {
+	pthread_create((pthread_t*)NULL,(pthread_attr_t*)NULL,NULL,NULL);
+}
+EOF
 
 enabled sysvinit && HEADERS_LIST="${HEADERS_LIST} initreq.h"
 for header in $HEADERS_LIST; do
@@ -814,7 +793,7 @@ check_builtin "strerror" "string.h" "strerror(0)" ||
 	DIE "missing strerror() system builtin"
 check_builtin "nanosleep" "time.h" "nanosleep(NULL, NULL)" ||
 	DIE "missing nanosleep() system builtin"
-check_builtin "pthread_kill" "pthread.h" "pthread_kill((pthread_t)0, 0)" ||
+check_builtin "pthread_kill" "signal.h" "pthread_kill((pthread_t)0, 0)" "$PTHREAD_FLAGS" ||
 	DIE "missing pthread_kill() system builtin"
 check_builtin "sigwaitinfo" "signal.h" "sigwaitinfo((void*)0, (void*)0)" ||
 	DIE "missing sigwaitinfo system builtin"
@@ -886,6 +865,7 @@ LD_O=$LD_O
 LD_LIB=$LD_LIB
 LD_PATH=$LD_PATH
 LDFLAGS=$LDFLAGS
+PTHREAD_FLAGS=$PTHREAD_FLAGS
 RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
 S6_INIT_STAGE=$(yesno "$s6" && echo 1)
 SYSVINIT=$(yesno "$sysvinit" && echo 1)

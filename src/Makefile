@@ -14,6 +14,8 @@ waitfile_SRCS  := waitfile.c
 
 rs_SRCS   := sv-conf.c sv-deps.c rs.c sv-list.c sv-stage.c
 rs_HDRS   := sv.h
+rs_CFLAGS  = $(PTHREAD_FLAGS)
+rs_LDFLAGS = $(PTHREAD_FLAGS)
 
 HDRRS      = $(dist_HDRS) $(rs_HDRS)
 simple_BINS := checkpath fstabinfo mountinfo sv-shutdown waitfile
@@ -32,12 +34,12 @@ clean:
 		$(simple_BINS)
 
 rs: $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(rs_HDRS)
-	$(CC) $(CFLAGS) -o $@ $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 mountinfo.o: $(mountinfo_SRCS:%.c=%.o) sv-list.o
-$(simple_BINS): $$@.o $(dist_OBJS) $(dist_HDRS)
-	$(CC) $(CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS)
+$(simple_BINS): $$@.o $(dist_OBJS) $(dist_HDRS) $($$@_SRCS:%.c=%.o)
+	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $< -c -o $@
+	$(CC) $(CFLAGS) $(@_CFLAGS) $(CPPFLAGS) $(@_CPPFLAGS) $< -c -o $@
 
