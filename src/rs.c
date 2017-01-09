@@ -145,7 +145,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 static void svc_zap(const char *svc);
 
 /* signal handler/setup */
-static void rs_sighandler(int sig);
+static void rs_sighandler(int sig, siginfo_t *si, void *ctx);
 static void rs_sigsetup(void);
 void svc_sigsetup(void);
 extern sigset_t ss_child, ss_full, ss_old;
@@ -731,7 +731,7 @@ static int svc_state(const char *svc, int status)
 	return 1;
 }
 
-static void rs_sighandler(int sig)
+static void rs_sighandler(int sig, siginfo_t *si, void *ctx)
 {
 	int i = -1, serrno = errno;
 	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGKILL",
@@ -753,6 +753,12 @@ static void rs_sighandler(int sig)
 		}
 		break;
 	case SIGCHLD:
+		switch(si->si_code) {
+		case CLD_CONTINUED:
+		case CLD_STOPPED:
+		case CLD_TRAPPED:
+			return;
+		}
 		if (RUN)
 			svc_waitpid(RUN, WNOHANG);
 		break;
@@ -769,7 +775,8 @@ static void rs_sigsetup(void)
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 
-	sa.sa_handler = rs_sighandler;
+	sa.sa_sigaction = rs_sighandler;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGALRM, &sa, NULL);
 	sigaction(SIGCHLD, &sa, NULL);
@@ -951,6 +958,12 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx)
 
 	switch(sig) {
 	case SIGCHLD:
+		switch(si->si_code) {
+		case CLD_CONTINUED:
+		case CLD_STOPPED:
+		case CLD_TRAPPED:
+			return;
+		}
 		thread_signal_handler(si);
 		break;
 	case SIGINT:
@@ -995,7 +1008,7 @@ static void thread_signal_handler(siginfo_t *si)
 	do {
 		r = waitpid(si->si_pid, &s, WNOHANG|WUNTRACED);
 		if (r < 0 && errno != EINTR)
-			ERR("%s:%d: waitpid: %s\n", __func__, __LINE__, strerror(errno));
+			return;
 	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
 
 	for (;;) {
