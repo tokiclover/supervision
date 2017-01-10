@@ -1,19 +1,19 @@
 .\"
-.\" CopyLeft (c) 2016 tokiclover <tokiclover@gmail.com>
+.\" CopyLeft (c) 2016-2017 tokiclover <tokiclover@gmail.com>
 .\"
 .\" Distributed under the terms of the 2-clause BSD License as
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-SHUTDOWN 8 "2016-12-12" "0.12.6" "System Halt Utility"
+.TH SV-SHUTDOWN 8 "2017-01-10" "0.13.0" "System Manager's Utility"
 .SH NAME
-sv-shutdown \- utility to manage system halt/reboot
+sv-shutdown \- utility to manage system halt/reboot/poweroff
 .SH DESCRIPTION
 .B sv-shutdown
-is a utility to manage system halt and reboot when
+is a utility to manage system halt, poweroff and reboot when
 .B rs
 is used as init-system or service-manager.
-The utility can be used with SysVinit utility name aliases, namely,
+The utility can be used with SystemV or BSD utility name aliases, namely,
 .B {halt,poweroff,reboot,shutdown}
 to adopt the behaviour of the said utility. This means that the utility will
 halt the system if called as
@@ -25,13 +25,15 @@ halt the system if called as
 without argument.
 .B sh-shutdown
 requires that an action
-.I --{poweroff|reboot|halt}
+.I --(poweroff|reboot|halt|cancel|message)
+or
+.I -(p|r|h|c|m)
 to be specified.
 .SH SYNOPSIS
 .B sv-shutdown
 .RB [\| OPTIONS \| ]
-.RB \| [ACTION] \|
-.RB \| (TIME) \|
+.RB (\| ACTION \|)
+.RB (\| TIME \|)
 .RB [\| MESSAGE \|]
 
 The
@@ -40,17 +42,18 @@ argument is only required when called as
 .B shutdown.
 And the
 .B ACTION
-is reuired only if called as
-.B sv-shutdown
-, SysVinit aliases have default actions as previously said above.
+is reuired only if called as \fBsv-shutdown\fR,
+the other aliases have default actions as previously said above.
 
 .B shutdown
-.RB [\| -krhPHfFnc \|]
+.RB [\| -c | -h | -m | -p | -r \|]
 .RB \| TIME \|
 .RB [\| MESSAGE \|]
 
 .B halt \| poweroff \| reboot
-.RB [\| -fnp \|]
+.RB [\| -n \|]
+.RB [\| -p \|]
+.RB [\| -q \|]
 
 .SH OPTIONS
 .TP
@@ -79,15 +82,78 @@ Force filesystem check
 on reboot
 .TP
 .B \-n \| \--nosync
-Do not sync before calling
+Do not synchronize filesystems before calling
 .B shutdown
 (default to sync)
 .TP
 .B \-c \| \-\-cancel
 Cancell a previous and waiting call to shutdown
 .TP
-.B \-k \| \-\-message
+.B \-m \| \-\-message
 Broadcast only the message to everyone
+.TP
+.B \-q \| \-\-force
+Force a system {halt,poweroff,reboot} without calling shutdown
+(this option force a shutdown cancellation as well)
+.TP
+.RB (\| TIME \|)
+.I Time
+is the time to shutdown the system and can be either
+.I now
+or specified as \fI+\fBmintues\fR (number of minutes to wait); or else in
+.RB [\| yymmdd \|]hhmm
+format with an optional \fIyear\fR and \fImonth\fR which default to the current
+system values (\fB[\|h\|]h:mm\fR format is also supported when only the
+.I hour
+and
+.I minute
+are specified.
+.TP
+.RB [\| MESSAGE \|]
+Warning message to broadcast; any other argument is included as a new line of
+message to be broadcasted. The
+.I message
+is broadcasted starting at 10 hours before system shutdown; and will become more
+frequent as the deadline approaches. Login will be disabled 5 minutes before
+system shutdown by creating
+.I @_PATH_NOLOGIN@
+and writting the broadcasted message.
+If a user attempts to log in,
+.BR login (1)
+prints its contents and exits. The file is removed just before
+.B shutdown
+exits.
+
+At shutdown time, a message is written to the system log, containing the time of
+shutdown, the person who initiated the shutdown and the reason of the shutdown.
+The appropriate signal is sent to
+.I init
+(PID \fI1\fR), namely
+.I runit-init
+or
+.I s6-svscan
+via
+.I s6-svscanctl
+or else,
+.I sv-stage
+is called directly to shutdown the system which imply a latter call with
+.I --force
+of
+.I -q
+option to force system shutdown once the services are stopped.
+
+A scheduled shutdown can be cancelled by sending
+.B SIGUSR1
+to the utility. In fact sending any of
+.B SIG{INT,TERM,QUIT}
+will cancel a scheduled shutdown; but the usage of
+.B SIGUSR1
+is more safe when other shutdown utilities are used (SystemV or BSD utilities).
+However, cancelling a scheduled shutdown can be done by calling the utility with
+.I --cancel
+or
+.I -c
+option.
 .TP
 .B \-u \| \-\-usage
 Print the help message
@@ -97,6 +163,7 @@ Print version string message
 .SH "SEE ALSO"
 .BR supervision (5)
 .BR rs (8)
+.BR sv-stage (8)
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
