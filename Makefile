@@ -229,7 +229,6 @@ install: install-dir install-dist install-sv-svcs
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/shutdown
-	$(install_DATA) sv-shutdown.8 $(DESTDIR)$(MANDIR)/man8
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
 	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
@@ -254,6 +253,8 @@ install: install-dir install-dist install-sv-svcs
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR@|$(RUNDIR)|g' \
 		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
+	sed -e 's|@_PATH_NOLOGIN@|$(_PATH_NOLOGIN)|g' \
+		sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-i $(DESTDIR)$(libdir)/sh/runscript-functions \

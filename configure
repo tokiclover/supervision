@@ -346,6 +346,13 @@ check_CC(){
 	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_C $CC_O $TMP_O $TMP_C
 }
 
+check_CP(){
+	log check_CP "$@"
+	cat >$TMP_C
+	logfile $TMP_C
+	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_O $TMP_E $TMP_C
+}
+
 check_CPP(){
 	log check_CPP "$@"
 	cat >$TMP_C
@@ -765,6 +772,25 @@ int main(void) {
 	pthread_create((pthread_t*)NULL,(pthread_attr_t*)NULL,NULL,NULL);
 }
 EOF
+check_LD CC -lrt <<EOF && LIBRT_LIBS=-lrt || DIE "Caonnot link with LIBS=-lrt"
+#include <unistd.h>
+#include <aio.h>
+int main(void) {
+	struct aiocb e, **a;
+	aio_write(&e);
+	aio_suspend(  (const struct aiocb *const*)a, 10, NULL);
+	lio_listio(LIO_WAIT,(struct aiocb *const*)a, 10, NULL);
+}
+EOF
+check_CP <<EOF || DIE "Caonnot find paths.h header"
+#include <stdio.h>
+#include <paths.h>
+#ifndef _PATH_NOLOGIN
+#define _PATH_NOLOGIN _PATH_VARRUN "/nologin"
+#endif
+int main(void){puts(_PATH_NOLOGIN); return 0;}
+EOF
+_PATH_NOLOGIN=$($TMP_E)
 
 enabled sysvinit && HEADERS_LIST="${HEADERS_LIST} initreq.h"
 for header in $HEADERS_LIST; do
@@ -866,6 +892,7 @@ LD_LIB=$LD_LIB
 LD_PATH=$LD_PATH
 LDFLAGS=$LDFLAGS
 PTHREAD_FLAGS=$PTHREAD_FLAGS
+LIBRT_LIBS=$LIBRT_LIBS
 RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
 S6_INIT_STAGE=$(yesno "$s6" && echo 1)
 SYSVINIT=$(yesno "$sysvinit" && echo 1)
@@ -873,6 +900,7 @@ DIST_EXTRA=$DIST_EXTRA
 EXTRA_SERVICE_INSTANCES=$EXTRA_SERVICE_INSTANCES
 EXTRA_OPTIONS_INSTANCES=$EXTRA_OPTIONS_INSTANCES
 $(print_extra_services)
+_PATH_NOLOGIN=$_PATH_NOLOGIN
 endif
 CONFIG_MAK_EOF
 
