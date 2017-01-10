@@ -2,7 +2,7 @@
  * Utility providing an interface {halt,reboot,shutdown,poweroff}
  * per supervision backend.
  *
- * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016-2017 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
  * The supervision framework is free software; you can redistribute
