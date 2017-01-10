@@ -40,7 +40,8 @@ static int aiocb_count;
 		defined(__GLIBC__)) || defined(__GNU__)
 # define RA_HALT     RB_HALT_SYSTEM
 # define RA_POWEROFF RB_POWER_OFF
-#elif defined(__DragonFly__) || defined(__FreeBSD__)
+#elif defined(__DragonFly__) || defined(__FreeBSD__) || \
+	defined(__OpenBSD__) || defined(__NetBSD__) || defined(BSD)
 # define RA_HALT     RB_HALT
 # define RA_POWEROFF RB_POWEROFF
 #else
