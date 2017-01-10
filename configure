@@ -245,10 +245,10 @@ disable_safe(){
 }
 
 enabled(){
-	yesno "\$$1"
+	eval yesno "\$$1"
 }
 disabled(){
-	enabled && return 1
+	enabled "$@" && return 1
 }
 
 set_default(){
