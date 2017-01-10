@@ -712,6 +712,7 @@ tmpfile TMP_E
 echo -e "$0 $*\n" >&$LOG_FD
 set >&$LOG_FD
 
+prepend_unique DEFINE_CONFIG_H HAVE_CONFIG_H
 prepend_unique CPPFLAGS -DHAVE_CONFIG_H
 add_CPPFLAGS -D_DEFAULT_SOURCE
 add_CPPFLAGS -D_XOPEN_SOURCE_EXTENDED
@@ -731,8 +732,10 @@ check_CC <<EOF && add_CPPFLAGS -D_XOPEN_SOURCE=700 || add_CPPFLAGS -D_XOPEN_SOUR
 # error "SOLARIS is defined!!!"
 #endif
 EOF
-check_cpp_condition "unistd.h" "_POSIX_ASYNCHRONOUS_IO == 200809L" ||
-	DIE "_POSIX_ASYNCHRONOUS_IO != 200809L is not defined!"
+if check_cpp_condition "unistd.h" "_POSIX_ASYNCHRONOUS_IO != -1"; then
+	enable HAVE_POSIX_ASYNCHRONOUS_IO
+	append DEFINE_CONFIG_H HAVE_POSIX_ASYNCHRONOUS_IO
+fi
 check_cpp_condition "unistd.h" "_POSIX_PRIORITIZED_IO == 200809L" ||
 	DIE "_POSIX_PRIORITIZED_IO != 200809L is not defined!"
 check_cpp_condition "unistd.h" "_POSIX_JOB_CONTROL > 0" ||
@@ -772,6 +775,7 @@ int main(void) {
 	pthread_create((pthread_t*)NULL,(pthread_attr_t*)NULL,NULL,NULL);
 }
 EOF
+if enabled HAVE_POSIX_ASYNCHRONOUS_IO; then
 check_LD CC -lrt <<EOF && LIBRT_LIBS=-lrt || DIE "Caonnot link with LIBS=-lrt"
 #include <unistd.h>
 #include <aio.h>
@@ -782,6 +786,7 @@ int main(void) {
 	lio_listio(LIO_WAIT,(struct aiocb *const*)a, 10, NULL);
 }
 EOF
+fi
 check_CP <<EOF || DIE "Caonnot find paths.h header"
 #include <stdio.h>
 #include <paths.h>
@@ -850,6 +855,11 @@ SUMMARY_EOF
 
 echo "Genrating $CONFIG_MAK"
 
+print_define_config_h(){
+	for i in $DEFINE_CONFIG_H; do
+		echo "# define $i 1"
+	done
+}
 print_extra_services(){
 	for type in $SERVICES_TYPE; do
 		eval echo EXTRA_${type}_SERVICES=\$EXTRA_${type}_SERVICES
@@ -912,6 +922,7 @@ cat >$CONFIG_H <<CONFIG_H_EOF
 # define SYSCONFDIR "$sysconfdir"
 # define LIBDIR     "$libdir"
 # define RUNDIR     "$rundir"
+$(print_define_config_h)
 #endif
 CONFIG_H_EOF
 
