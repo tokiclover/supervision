@@ -31,7 +31,7 @@
 #include <sys/reboot.h>
 #include "error.h"
 #include "helper.h"
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 # include <aio.h>
 static int aiocb_count;
 #endif
@@ -211,7 +211,7 @@ static void sighandler(int sig, siginfo_t *si, void *ctx)
 {
 	int i = -1;
 	int serrno = errno;
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 	struct aiocb *acp;
 #endif
 
@@ -237,7 +237,7 @@ static void sighandler(int sig, siginfo_t *si, void *ctx)
 		break;
 	case SIGUSR2:
 		;
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 		acp = si->si_value.sival_ptr;
 		if (si->si_code == SI_ASYNCIO && acp && acp->aio_fildes > 0) {
 			(void)close(acp->aio_fildes);
@@ -303,7 +303,7 @@ static int sv_wall(void)
 	struct utmpx *utxent;
 	char dev[UT_LINESIZE+8];
 	int fd, rd, rw;
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 	static struct aiocb **aiocb_array;
 	static struct sigevent sigevb;
 	static size_t aiocb_len, siz = 8;
@@ -329,7 +329,7 @@ static int sv_wall(void)
 				break;
 			if (errno == EINTR)
 				continue;
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 			if (errno == ENFILE && aiocb_count) {
 				do {
 					rw = aio_suspend((const struct aiocb *const*)aiocb_array,
@@ -348,7 +348,7 @@ static int sv_wall(void)
 		if (fd < 0)
 			continue;
 
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 		if (!aiocb_len || !aiocb_array[i]) {
 			if (i == siz) {
 				siz += 8;
@@ -382,7 +382,7 @@ static int sv_wall(void)
 	}
 	endutxent();
 
-#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+#ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 wait_lio:
 	if (!aiocb_len) aiocb_len = i;
 	while (aiocb_count) {
