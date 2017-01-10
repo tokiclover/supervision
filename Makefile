@@ -225,6 +225,7 @@ install: install-dir install-dist install-sv-svcs
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/rc
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/service
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
+	$(LN_S) -f $(libdir)/sbin/sv-shutdown $(DESTDIR)$(SBINDIR)
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/halt
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
 	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
@@ -303,7 +304,8 @@ install-%-initd:
 uninstall-all: uninstall unintsall-supervision-initd
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(confdir).conf
-	rm -f $(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/rs
+	rm -f $(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/sv-shutdown \
+		$(DESTDIR)$(SBINDIR)/rs
 ifdef SYSVINIT
 	rm -f $(DESTDIR)$(libdir)/sbin/initctl
 endif
