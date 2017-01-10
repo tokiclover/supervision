@@ -371,7 +371,7 @@ wait_lio:
 	if (!aiocb_len) aiocb_len = i;
 	while (aiocb_count) {
 		for (i = 0; i < aiocb_len; i++)
-			if (aiocb_array[i]->aio_lio_opcode == LIO_NOP)
+			if (aiocb_array[i]->aio_lio_opcode == LIO_WRITE)
 				break;
 		aio_suspend((const struct aiocb *const*)&aiocb_array[i], aiocb_len-i, NULL);
 	}
