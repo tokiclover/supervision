@@ -9,13 +9,6 @@
  * @(#)waitfile.c  0.12.6.4 2016/12/24
  */
 
-#define _POSIX_C_SOURCE 200809L
-#if defined SOLARIS
-#  define _XOPEN_SOURCE 600
-#else
-#  define _XOPEN_SOURCE 700
-#endif
-
 #include <errno.h>
 #include <getopt.h>
 #include <poll.h>
