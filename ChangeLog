@@ -21,6 +21,9 @@ e.g. `sv-stage --default status' to get service status of default runlevel;
 Use POSIX threads to improve performance with parallel start/stop instead of
 using only process based technics (child process/fork(2));
 
+Major refactorization for sv-shutdown to have the BSD behavior of broadcasting
+message; a few short options changed; and use librt to boradcast messages.
+
 API CHANGE:
 
 - short command line option to select a init-stage/runlevel;
