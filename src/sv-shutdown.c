@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-shutdown.c  0.13.0 2016/01/06
+ * @(#)sv-shutdown.c  0.13.0 2016/01/10
  */
 
 #ifdef HAVE_CONFIG_H
@@ -565,14 +565,14 @@ int main(int argc, char *argv[])
 	}
 
 	if (strcmp(progname, action[SD_ACTION_REBOOT]) == 0) {
-		if (shutdown_action > 0 && ai != SD_ACTION_POWEROFF)
+		if (shutdown_action > 0 && ai != SD_ACTION_REBOOT)
 			usage_message(SD_ACTION_REBOOT);
 		reboot_action   = RB_AUTOBOOT;
 		shutdown_action = SD_REBOOT;
 		ai = SD_ACTION_REBOOT;
 	}
 	else if (strcmp(progname, action[SD_ACTION_HALT]) == 0) {
-		if (shutdown_action > 0 && ai != SD_ACTION_POWEROFF)
+		if (shutdown_action > 0 && ai != SD_ACTION_HALT)
 			usage_message(SD_ACTION_HALT);
 		reboot_action   = RA_HALT;
 		shutdown_action = SD_POWEROFF;
