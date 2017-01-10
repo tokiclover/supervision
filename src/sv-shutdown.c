@@ -115,7 +115,7 @@ static struct timeinterval {
 #undef M
 
 _noreturn_ static void help_message(int status);
-static void sighandler(int sig, siginfo_t *info, void *ctx);
+static void sighandler(int sig, siginfo_t *info, void *ctx _unused_);
 static int sigsetup(void);
 static int sv_nologin(void);
 static void sv_timewarn(unsigned long int timeleft);
@@ -207,7 +207,7 @@ _noreturn_ static void help_message(int status)
 	exit(status);
 }
 
-static void sighandler(int sig, siginfo_t *si, void *ctx)
+static void sighandler(int sig, siginfo_t *si, void *ctx _unused_)
 {
 	int i = -1;
 	int serrno = errno;
