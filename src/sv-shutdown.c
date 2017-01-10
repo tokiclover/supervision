@@ -638,7 +638,7 @@ int main(int argc, char *argv[])
 
 #define ATOI(p) (p[0] - '0')*10 + (p[1] - '0'); p += 2;
 	if (strncasecmp(*argv, "now", 3) == 0)
-		offtime = 0L;
+		offtime = 0L, argc--, argv++;
 	else if (**argv == '+') {
 		ptr = *argv, ptr++;
 		if (!isdigit(*ptr))
@@ -713,26 +713,25 @@ message:
 			whom, hostname);
 	timer_pos = strlen(message);
 	ptr = message+timer_pos;
-	sprintf(ptr, "\a-*- System going down at %8.8s    -*-\a\n\n",
+	sprintf(ptr, "\a-*- System going down at %8.8s    -*-\a\n",
 			ctime(&shuttime)+11);
 	timer_pos = strlen(message);
 	ptr = message+timer_pos;
 	message_len = sizeof(message)-timer_pos;
-	len = sizeof(message)-timer_pos;
 	/* set up this len to be able to update the timer warning */
-	timer_pos -= (TIMER_LEN+6U);
+	timer_pos -= (TIMER_LEN+5U);
 
 	if (argc) {
 		for (; *argv; argv++) {
 			len = strlen(*argv);
-			if ((message_len -= len) <= 2)
+			if (message_len-len <= 2)
 				break;
-			if (ptr != message)
-				*ptr++ = '\n';
+			message_len -= len;
+			*++ptr = '\n';
 			memmove(ptr, *argv, len);
 			ptr += len;
 		}
-		*ptr = '\n';
+		*++ptr = '\n';
 		*++ptr = '\0';
 	}
 	message_len = ptr-message;
