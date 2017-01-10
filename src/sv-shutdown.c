@@ -56,11 +56,6 @@
 # define HOST_NAME_MAX MAXHOSTNAMELEN
 #endif
 
-#ifdef DEBUG
-# undef _PATH_NOLOGIN
-# define _PATH_NOLOGIN "./nologin"
-#endif
-
 #define VERSION "0.13.0"
 
 #ifndef LIBDIR
@@ -71,6 +66,15 @@
 
 #define BOOTFILE "/fastboot"
 #define FSCKFILE "/forcefsck"
+
+#ifdef DEBUG
+# undef  _PATH_NOLOGIN
+# define _PATH_NOLOGIN "./nologin"
+# undef  BOOTFILE
+# define BOOTFILE "./fastboot"
+# undef  FSCKFILE
+# define FSCKFILE "./forcefsck"
+#endif
 
 #define SD_POWEROFF 0
 #define SD_SINGLE   1
@@ -123,7 +127,7 @@ static int boot_flag, fsck_flag;
 static int shutdown_action = -1;
 static char hostname[HOST_NAME_MAX+1];
 static char *whom;
-static int ai = 1;
+static int ai = SD_ACTION_SINGLE;
 static const char *action[] = { "shutdown", "single", "halt", "poweroff", "reboot" };
 static const char signame[][8] = { "SIGINT", "SIGTERM", "SIGQUIT", "SIGUSR1",
 	"SIGUSR2", "SIGALRM" };
@@ -174,7 +178,7 @@ static const char *longopts_help[] = {
 
 _noreturn_ static void usage_message(unsigned int index)
 {
-	ERR("invalid shutdown usage -- %s\n", action[ai]);
+	ERR("invalid %s usage -- %s\n", action[SD_ACTION_SHUTDOWN], action[ai]);
 	printf("Usage: %s [-q] [-p] [-n] [time] [message]\n", action[index]);
 	exit(EXIT_FAILURE);
 }
@@ -225,8 +229,7 @@ static void sighandler(int sig, siginfo_t *si, void *ctx)
 		if (!access(FSCKFILE     , F_OK)) unlink(FSCKFILE);
 		if (!access(_PATH_NOLOGIN, F_OK)) unlink(_PATH_NOLOGIN);
 		if (!access(SD_PIDFILE   , F_OK)) unlink(SD_PIDFILE);
-		fprintf(stderr, "%s: cancelling system %s\n", progname,
-				action[ai]);
+		fprintf(stderr, "%s: cancelling system %s\n", progname, action[ai]);
 		exit(EXIT_FAILURE);
 		break;
 	case SIGUSR2:
@@ -267,6 +270,7 @@ static int sigsetup(void)
 	do { rw = message_len; do {                                           \
 		rd = write(fd, message, rw);                                      \
 		if (rd < 0) {                                                     \
+			if (errno == EINTR) continue;                                 \
 			ERR("Failed to write to `%s': %s\n", file, strerror(errno));  \
 			break;                                                        \
 		}                                                                 \
@@ -286,7 +290,7 @@ static int sv_wall(void)
 		fclose(fp);
 		return i;
 	}
-	else {
+	else
 		ERR("Failed to open `%s': %s\n", _PATH_WALL, strerror(errno));
 #undef WALL_CMD
 #endif
@@ -365,13 +369,12 @@ static int sv_wall(void)
 
 wait_lio:
 	if (!aiocb_len) aiocb_len = i;
-	do {
-		rw = lio_listio(LIO_WAIT, (struct aiocb *const*)aiocb_array, aiocb_len, NULL);
-		if (rw && errno != EINTR) {
-			ERR("Failed to write lio_listio(): %s\n", strerror(errno));
-			break;
-		}
-	} while (aiocb_count);
+	while (aiocb_count) {
+		for (i = 0; i < aiocb_len; i++)
+			if (aiocb_array[i]->aio_lio_opcode == LIO_NOP)
+				break;
+		aio_suspend((const struct aiocb *const*)&aiocb_array[i], aiocb_len-i, NULL);
+	}
 	return aiocb_count;
 }
 
