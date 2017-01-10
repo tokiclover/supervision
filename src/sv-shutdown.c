@@ -15,7 +15,6 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
-#include <aio.h>
 #include <ctype.h>
 #include <grp.h>
 #include <pwd.h>
@@ -32,6 +31,10 @@
 #include <sys/reboot.h>
 #include "error.h"
 #include "helper.h"
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
+# include <aio.h>
+static int aiocb_count;
+#endif
 
 #if defined (__linux__) || (defined(__FreeBSD_kernel__) && \
 		defined(__GLIBC__)) || defined(__GNU__)
@@ -134,9 +137,6 @@ static const char signame[][8] = { "SIGINT", "SIGTERM", "SIGQUIT", "SIGUSR1",
 static time_t offtime, shuttime;
 #define TIMER_LEN 12U
 static size_t timer_pos, message_len;
-
-static int aiocb_count;
-
 static jmp_buf alarmbuf;
 
 static char *restricted_environ[] = {
@@ -210,7 +210,9 @@ static void sighandler(int sig, siginfo_t *si, void *ctx)
 {
 	int i = -1;
 	int serrno = errno;
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
 	struct aiocb *acp;
+#endif
 
 	switch(sig) {
 	case SIGALRM:
@@ -233,6 +235,8 @@ static void sighandler(int sig, siginfo_t *si, void *ctx)
 		exit(EXIT_FAILURE);
 		break;
 	case SIGUSR2:
+		;
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
 		acp = si->si_value.sival_ptr;
 		if (si->si_code == SI_ASYNCIO && acp && acp->aio_fildes > 0) {
 			(void)close(acp->aio_fildes);
@@ -244,6 +248,7 @@ static void sighandler(int sig, siginfo_t *si, void *ctx)
 			acp->aio_lio_opcode = LIO_NOP;
 			aiocb_count--;
 		}
+#endif
 		break;
 	default:
 		if (sig > 0)
@@ -296,10 +301,11 @@ static int sv_wall(void)
 #endif
 	struct utmpx *utxent;
 	char dev[UT_LINESIZE+8];
+	int fd, rd, rw;
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
 	static struct aiocb **aiocb_array;
 	static struct sigevent sigevb;
 	static size_t aiocb_len, siz = 8;
-	int fd, rd, rw;
 
 	if (!aiocb_len) {
 		sigevb.sigev_notify = SIGEV_SIGNAL;
@@ -307,6 +313,7 @@ static int sv_wall(void)
 		aiocb_array = err_malloc(siz*sizeof(void*));
 		memset(*aiocb_array, 0, siz);
 	}
+#endif
 	i = 0;
 
 	setutxent();
@@ -321,6 +328,7 @@ static int sv_wall(void)
 				break;
 			if (errno == EINTR)
 				continue;
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
 			if (errno == ENFILE && aiocb_count) {
 				do {
 					rw = aio_suspend((const struct aiocb *const*)aiocb_array,
@@ -332,12 +340,14 @@ static int sv_wall(void)
 				} while (rw);
 				continue;
 			}
+#endif
 			ERR("Failed to open `%s': %s\n", dev, strerror(errno));
 			break;
 		} while (fd < 0);
 		if (fd < 0)
 			continue;
 
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
 		if (!aiocb_len || !aiocb_array[i]) {
 			if (i == siz) {
 				siz += 8;
@@ -364,9 +374,14 @@ static int sv_wall(void)
 		}
 		else aiocb_count++;
 		i++;
+#else
+		WRITE_MESSAGE(dev);
+		close(fd);
+#endif
 	}
 	endutxent();
 
+#ifdef HAVE_POSIX_ASYNCHROUNS_IO
 wait_lio:
 	if (!aiocb_len) aiocb_len = i;
 	while (aiocb_count) {
@@ -376,6 +391,9 @@ wait_lio:
 		aio_suspend((const struct aiocb *const*)&aiocb_array[i], aiocb_len-i, NULL);
 	}
 	return aiocb_count;
+#else
+	return 0;
+#endif
 }
 
 _noreturn_ static void sv_shutdown(void)
