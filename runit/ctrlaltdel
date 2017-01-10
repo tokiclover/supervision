@@ -5,11 +5,16 @@
 #
 
 :	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-MSG="System is going down in 3 seconds..."
+sv_shutdown=/lib/sv/sbin/sv-shutdown
 
 touch /etc/runit/stopit
-chmod 100 /etc/runit/stopit && echo "$MSG" | busybox wall
-sleep 3
+chmod 100 /etc/runit/stopit
+if [ -x ${sv_shutdown} ]; then
+	${sv_shutdown} -h -m
+else
+	echo "System is going down" | busybox wall
+	sleep 3
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
