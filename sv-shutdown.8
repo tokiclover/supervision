@@ -46,7 +46,7 @@ is reuired only if called as \fBsv-shutdown\fR,
 the other aliases have default actions as previously said above.
 
 .B shutdown
-.RB [\| -c | -h | -m | -p | -r \|]
+.RB [\| -c | -m | -h | -p | -r \|]
 .RB \| TIME \|
 .RB [\| MESSAGE \|]
 
@@ -85,6 +85,9 @@ on reboot
 Do not synchronize filesystems before calling
 .B shutdown
 (default to sync)
+.TP
+.B \-l \| \-\-syslog
+Log shutdown action to system log (default) for message broadcast mode
 .TP
 .B \-c \| \-\-cancel
 Cancell a previous and waiting call to shutdown
