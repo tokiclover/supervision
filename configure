@@ -143,19 +143,25 @@ EOH
 	esac
 	exit $ret
 }
+YESNO(){
+	case "${1-NO}" in
+		[Yy][Ee][Ss]|[Ee][Nn][Aa][Bb][Ll][Ee]|[Tt][Rr][Uu][Ee]|[Oo][Nn]|[1YyEeTtOo]) echo yes;;
+		*) echo no;;
+	esac
+}
 
 c_escape(){
-	echo "$*" | sed 's/["\\]/\\\0/g'
+	printf "$*" | sed 's/["\\]/\\\0/g'
 }
 sh_quote(){
-	echo "$*" | sed "s/'/'\\\\''/g"
+	printf "$*" | sed "s/'/'\\\\''/g"
 }
 
 toupper(){
-	echo "$@" | tr '[a-z]' '[A-Z]'
+	printf "$*" | tr '[a-z]' '[A-Z]'
 }
 tolower(){
-	echo "$@" | tr '[A-Z]' '[a-z]'
+	printf "$*" | tr '[A-Z]' '[a-z]'
 }
 
 filter(){
@@ -666,15 +672,6 @@ for opt; do
 	esac
 done
 
-cc_default="${build:+${build}-$cc}"
-ld_default="$cc_default"
-cc="$cc_default"
-ld="$ld_default"
-[ "x$prefix" = "x$prefix_old_default" ] && prefix=$prefix_default
-:	${CC:=${cc-$cc_default}}
-:	${LD:=${ld-$ld_default}}
-:	${TMPDIR:=${TMP:-/tmp}}
-
 case "${build:-${host:-$(uname -s)}}" in
 	*[Ll]inux*)
 	prefix_default='/usr'
@@ -703,6 +700,16 @@ case "${build:-${host:-$(uname -s)}}" in
 	prefix_default='/usr/pkg'
 	;;
 esac
+
+cc_default="${build:+${build}-$cc}"
+ld_default="$cc_default"
+cc="$cc_default"
+ld="$ld_default"
+[ "x$prefix" = "x$prefix_old_default" ] && prefix=$prefix_default
+:	${CC:=${cc-$cc_default}}
+:	${LD:=${ld-$ld_default}}
+:	${TMPDIR:=${TMP:-/tmp}}
+
 
 umask 77
 if touch "$TMPDIR"/conftest >$NULL 2>&1; then
@@ -879,9 +886,12 @@ SUMMARY_EOF
 
 echo "Genrating $CONFIG_MAK"
 
-print_define_config_h(){
+print_config_h(){
+	for i in sysconfdir libdir rundir prefix exec_prefix; do
+		eval [ x\$$i != x ] && eval printf '"# define %-16s \"%s\"\n"' $(toupper $i) \$$i
+	done
 	for i in $DEFINE_CONFIG_H; do
-		echo "# define $i 1"
+		printf "# define %-36s 1\n" $i
 	done
 }
 print_extra_services(){
@@ -927,9 +937,9 @@ LD_PATH=$LD_PATH
 LDFLAGS=$LDFLAGS
 PTHREAD_FLAGS=$PTHREAD_FLAGS
 LIBRT_LIBS=$LIBRT_LIBS
-RUNIT_INIT_STAGE=$(yesno "$runit" && echo 1)
-S6_INIT_STAGE=$(yesno "$s6" && echo 1)
-SYSVINIT=$(yesno "$sysvinit" && echo 1)
+RUNIT_INIT_STAGE=$(YESNO "$runit")
+S6_INIT_STAGE=$(YESNO "$s6")
+SYSVINIT=$(YESNO "$sysvinit")
 DIST_EXTRA=$DIST_EXTRA
 EXTRA_SERVICE_INSTANCES=$EXTRA_SERVICE_INSTANCES
 EXTRA_OPTIONS_INSTANCES=$EXTRA_OPTIONS_INSTANCES
@@ -944,12 +954,7 @@ echo "Generating $CONFIG_H"
 cat >$CONFIG_H <<CONFIG_H_EOF
 #ifndef SUPERVISION_CONFIG_H
 # define SUPERVISION_CONFIG_H
-# define SYSCONFDIR "$sysconfdir"
-# define LIBDIR     "$libdir"
-# define RUNDIR     "$rundir"
-# define PREFIX     "$prefix"
-$([ x$exec_prefix != x ] && echo '#' define EXEC_PREFIX \"$exec_prefix\")
-$(print_define_config_h)
+$(print_config_h)
 #endif
 CONFIG_H_EOF
 
