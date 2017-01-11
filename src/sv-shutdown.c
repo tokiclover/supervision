@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-shutdown.c  0.13.0 2016/01/10
+ * @(#)sv-shutdown.c  0.13.0 2016/01/12
  */
 
 #ifdef HAVE_CONFIG_H
@@ -127,7 +127,7 @@ static char message[BUFSIZ];
 static int reboot_action;
 static int reboot_force;
 static int reboot_sync = 1;
-static int boot_flag, fsck_flag;
+static int boot_flag, fsck_flag, slog_flag;
 static int shutdown_action = -1;
 static char hostname[HOST_NAME_MAX+1];
 static char *whom;
@@ -145,7 +145,7 @@ static char *restricted_environ[] = {
 	NULL
 };
 
-static const char *shortopts = "06crshpfFHPmnquv";
+static const char *shortopts = "06crshpfFHPlmnquv";
 static const struct option longopts[] = {
 	{ "reboot",   0, NULL, 'r' },
 	{ "shutdown", 0, NULL, 's' },
@@ -156,6 +156,7 @@ static const struct option longopts[] = {
 	{ "force",    0, NULL, 'q' },
 	{ "nosync",   0, NULL, 'n' },
 	{ "cancel",   0, NULL, 'c' },
+	{ "syslog",   0, NULL, 'l' },
 	{ "message",  0, NULL, 'm' },
 	{ "usage",    0, NULL, 'u' },
 	{ "version",  0, NULL, 'v' },
@@ -171,6 +172,7 @@ static const char *longopts_help[] = {
 	"Force halt/reboot/poweroff",
 	"Disable filesystem synchronizations",
 	"Cancel a waiting shutdown process",
+	"Log shutdown action to system log",
 	"Broadcast message only",
 	"Print help massage",
 	"Print version string",
@@ -481,11 +483,8 @@ shutdown:
 	}
 	sv_timewarn(0U);
 	(void)printf("\r\n\aSystem %s time has arrived\a\r\n", action[ai]);
-
 	if (!access(SD_PIDFILE, F_OK))
 		unlink(SD_PIDFILE);
-	if (shutdown_action == SD_MESSAGE)
-		exit(EXIT_SUCCESS);
 
 #ifdef DEBUG
 	if (reboot_force)
@@ -495,6 +494,7 @@ shutdown:
 	exit(EXIT_SUCCESS);
 #else
 
+	if (slog_flag) {
 	openlog(progname, LOG_PID | LOG_CONS, LOG_AUTH);
 	if (shutdown_action == SD_SINGLE)
 		syslog(LOG_CRIT, "%s user mode runlevel (by %s@%s)",
@@ -502,6 +502,10 @@ shutdown:
 	else
 		syslog(LOG_CRIT, "system %s (by %s@%s)", action[ai], whom, hostname);
 	closelog();
+	}
+
+	if (shutdown_action == SD_MESSAGE)
+		exit(EXIT_SUCCESS);
 
 	if (reboot_sync)
 		sync();
@@ -773,6 +777,9 @@ message:
 	}
 	if (i < 0)
 		ERROR("Failed to fork()", NULL);
+	/* enable logging to system log by default */
+	if (shutdown_action != SD_MESSAGE)
+		slog_flag++;
 #endif
 	/* setup signal */
 	sigsetup();
