@@ -577,6 +577,9 @@ int main(int argc, char *argv[])
 		case 'F':
 			fsck_flag = 1;
 			break;
+		case 'l':
+			slog_flag = 1;
+			break;
 		case 'm':
 			shutdown_action = SD_MESSAGE;
 			break;
