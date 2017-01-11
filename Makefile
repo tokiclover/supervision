@@ -15,8 +15,8 @@ DOCDIR     ?= $(DATADIR)/doc/$(PACKAGE)-$(VERSION)
 MANDIR     ?= $(DATADIR)/man
 VIMDIR     ?= $(DATADIR)/vim/vimfiles
 RUNDIR     ?= /var/run
-libdir      = $(LIBDIR)/sv
-confdir     = $(SYSCONFDIR)/sv
+SV_LIBDIR   = $(LIBDIR)/sv
+SV_SVCDIR   = $(SYSCONFDIR)/sv
 
 INSTALL    ?= install
 install_SCRIPT = $(INSTALL) -m 755
@@ -184,16 +184,16 @@ dist_SHUTDOWN = \
 	rdonlyfs
 
 
-ifdef RUNIT_INIT_STAGE
+ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_SCRIPTS += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
 dist_DIRS    += $(SYSCONFDIR)/runit
 endif
-ifdef S6_INIT_STAGE
+ifeq ($(S6_INIT_STAGE),yes)
 dist_SCRIPTS += s6/crash s6/finish s6/init-stage-1
 dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
-ifdef SYSVINIT
+ifeq ($(SYSVINIT),yes)
 dist_SH_SBINS += sv/.lib/bin/initctl
 dist_SV_SVCS  += initctl
 endif
@@ -202,10 +202,10 @@ DISTFILES   = \
 	$(dist_SV_OPTS) \
 	$(dist_SCRIPTS) $(dist_SV_RUNS:%=%/RUN)
 dist_DIRS  += \
-	$(libdir)/bin $(libdir)/sbin $(libdir)/sh $(DOCDIR) \
-	$(libdir)/cache $(libdir)/opt \
-	$(confdir).conf.d $(confdir)/.sysinit $(confdir)/.sysboot \
-	$(confdir)/.default $(confdir)/.shutdown $(confdir)/.single
+	$(SV_LIBDIR)/bin $(SV_LIBDIR)/sbin $(SV_LIBDIR)/sh $(DOCDIR) \
+	$(SV_LIBDIR)/cache $(SV_LIBDIR)/opt $(PREFIX)$(SV_SVCDIR) \
+	$(SV_SVCDIR).conf.d $(SV_SVCDIR)/.sysinit $(SV_SVCDIR)/.sysboot \
+	$(SV_SVCDIR)/.default $(SV_SVCDIR)/.shutdown $(SV_SVCDIR)/.single
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
 .PHONY: FORCE all install install-doc install-dist install-all
@@ -219,28 +219,28 @@ $(SUBDIRS): FORCE
 
 install-all: install install-supervision-initd
 install: install-dir install-dist install-sv-svcs
-	$(install_DATA)  sv.conf $(DESTDIR)$(confdir).conf
+	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(install_SCRIPT) src/sv-shutdown $(DESTDIR)$(SBINDIR)
-	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/rc
-	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/service
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SV_LIBDIR)/sbin/rc
+	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SV_LIBDIR)/sbin/service
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
-	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/halt
-	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
-	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
-	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/shutdown
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/halt
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/poweroff
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/reboot
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/shutdown
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
-	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
-	$(install_SCRIPT) $(dist_SV_BINS) $(DESTDIR)$(libdir)/bin
-	$(install_SCRIPT) $(dist_SH_BINS) $(DESTDIR)$(libdir)/sh
-	$(install_DATA)   $(dist_SH_LIBS) $(DESTDIR)$(libdir)/sh
-	$(install_SCRIPT) $(dist_SH_SBINS) $(DESTDIR)$(libdir)/sbin
-	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(confdir).conf.d
-	-$(install_DATA)  $(dist_RS_SVCS:%=sv.conf.d/%) $(DESTDIR)$(confdir).conf.d
-	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(confdir)
-	sed -e 's,\(SV_TYPE.*$$\),\1\nSV_LIBDIR=$(libdir)\nSV_SVCDIR=$(confdir),' \
-		-i $(DESTDIR)$(libdir)/opt/cmd
+	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(SV_LIBDIR)/opt
+	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(SV_LIBDIR)/opt
+	$(install_SCRIPT) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
+	$(install_SCRIPT) $(dist_SH_BINS) $(DESTDIR)$(SV_LIBDIR)/sh
+	$(install_DATA)   $(dist_SH_LIBS) $(DESTDIR)$(SV_LIBDIR)/sh
+	$(install_SCRIPT) $(dist_SH_SBINS) $(DESTDIR)$(SV_LIBDIR)/sbin
+	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
+	-$(install_DATA)  $(dist_RS_SVCS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
+	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
+	sed -e 's,\(SV_TYPE.*$$\),\1\nSV_LIBDIR=$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
+		-i $(DESTDIR)$(SV_LIBDIR)/opt/cmd
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
 		-e 's|@SBINDIR@|$(SBINDIR)|g' \
 		-e 's|@RUNDIR@|$(RUNDIR)|g' \
@@ -257,8 +257,8 @@ install: install-dir install-dist install-sv-svcs
 		sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
-		-i $(DESTDIR)$(libdir)/sh/runscript-functions \
-		   $(DESTDIR)$(libdir)/opt/SVC_OPTIONS
+		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
+		   $(DESTDIR)$(SV_LIBDIR)/opt/SVC_OPTIONS
 ifdef RUNIT_INIT_STAGE
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
@@ -272,28 +272,28 @@ ifdef S6_INIT_STAGE
 		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
 endif
 	for svc in $(dist_SVC_INSTANCES); do \
-		$(LN_S) -f $${svc#*:} $(DESTDIR)$(confdir)/$${svc%:*}; \
+		$(LN_S) -f $${svc#*:} $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
-	$(LN_S) -f $(dist_SYSINIT:%=$(confdir)/%) $(DESTDIR)$(confdir)/.sysinit/
-	$(LN_S) -f $(dist_SYSBOOT:%=$(confdir)/%) $(DESTDIR)$(confdir)/.sysboot/
-	$(LN_S) -f $(dist_DEFAULT:%=$(confdir)/%) $(DESTDIR)$(confdir)/.default/
-	$(LN_S) -f $(dist_SHUTDOWN:%=$(confdir)/%) $(DESTDIR)$(confdir)/.shutdown/
-	$(LN_S) -f $(libdir)/opt $(DESTDIR)$(confdir)/.opt
-	$(LN_S) -f $(confdir)/sulogin $(DESTDIR)$(confdir)/.single
+	$(LN_S) -f $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysinit/
+	$(LN_S) -f $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysboot/
+	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.default/
+	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.shutdown/
+	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(SV_SVCDIR)/.opt
+	$(LN_S) -f $(SV_SVCDIR)/sulogin $(DESTDIR)$(SV_SVCDIR)/.single
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
 install-doc : install-dir
 	$(install_DATA)   $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 install-sv-svcs: install-dir
-	cp -r $(dist_SV_SVCS:%=sv/%) $(DESTDIR)$(confdir)
+	cp -r $(dist_SV_SVCS:%=sv/%) $(DESTDIR)$(SV_SVCDIR)
 
 %/RUN: %
-	$(install_SCRIPT) sv/$@ $(DESTDIR)$(confdir)/$@
+	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
 $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_SV_OPTS): install-sv-svcs
-	$(install_DATA)  sv/$@ $(DESTDIR)$(confdir)/$@
+	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
 install-%-initd:
 	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
 	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
@@ -304,37 +304,37 @@ install-%-initd:
 
 uninstall-all: uninstall unintsall-supervision-initd
 uninstall: uninstall-doc
-	rm -f $(DESTDIR)$(confdir).conf
+	rm -f $(DESTDIR)$(SV_SVCDIR).conf
 	rm -f $(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/sv-shutdown \
 		$(DESTDIR)$(SBINDIR)/rs
 ifdef SYSVINIT
-	rm -f $(DESTDIR)$(libdir)/sbin/initctl
+	rm -f $(DESTDIR)$(SV_LIBDIR)/sbin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	rm -f $(DESTDIR)$(MANDIR)/man5/supervision.5 \
 		$(DESTDIR)/$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/rs.8 \
 		$(DESTDIR)/$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(libdir)/opt/%) $(DESTDIR)$(libdir)/opt/cmd
+	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(SV_LIBDIR)/opt/%) $(DESTDIR)$(SV_LIBDIR)/opt/cmd
 	for svc in $(dist_SVC_INSTANCES); do \
-		rm -f $(DESTDIR)$(confdir)/$${svc%:*}; \
+		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
-	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(confdir)/%) \
-	       $(dist_RS_SVCS:%=$(DESTDIR)$(confdir).conf.d/%) \
-	       $(dist_RS_OPTS:%=$(DESTDIR)$(confdir).conf.d/%)
-	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(confdir)/%)
-	rm -f $(DESTDIR)$(libdir)/bin/* $(DESTDIR)$(libdir)/sbin/* \
-		$(DESTDIR)$(libdir)/sh/* $(DESTDIR)$(libdir)/cache/* \
-		$(DESTDIR)$(confdir)/getty-tty* $(DESTDIR)$(confdir)/.opt \
-		$(DESTDIR)$(confdir)/.s*/*
+	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
+	       $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%) \
+	       $(dist_RS_OPTS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%)
+	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
+	rm -f $(DESTDIR)$(SV_LIBDIR)/bin/* $(DESTDIR)$(SV_LIBDIR)/sbin/* \
+		$(DESTDIR)$(SV_LIBDIR)/sh/* $(DESTDIR)$(SV_LIBDIR)/cache/* \
+		$(DESTDIR)$(SV_SVCDIR)/getty-tty* $(DESTDIR)$(SV_SVCDIR)/.opt \
+		$(DESTDIR)$(SV_SVCDIR)/.s*/*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
 uninstall-%-initd:
-	rm -f $(DESTDIR)$(svcconfdir)/$*
-	rm -f $(DESTDIR)$(svcinitdir)/$*
-	-rmdir $(DESTDIR)$(svcconfdir)
-	-rmdir $(DESTDIR)$(svcinitdir)
+	rm -f $(DESTDIR)$(RC_CONFDIR)/$*
+	rm -f $(DESTDIR)$(RC_INITDIR)/$*
+	-rmdir $(DESTDIR)$(RC_CONFDIR)
+	-rmdir $(DESTDIR)$(RC_INITDIR)
 
 .PHONY: clean
 
