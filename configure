@@ -343,31 +343,31 @@ check_CC(){
 	log check_CC "$@"
 	cat >$TMP_C
 	logfile $TMP_C
-	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_C $CC_O $TMP_O $TMP_C
+	check_cmd $CC $CPPFLAGS $CFLAGS "$@" $CC_C $CC_O $TMP_O $TMP_C
 }
 
 check_CP(){
 	log check_CP "$@"
 	cat >$TMP_C
 	logfile $TMP_C
-	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_O $TMP_E $TMP_C
+	check_cmd $CC $CPPFLAGS $CFLAGS "$@" $CC_O $TMP_E $TMP_C
 }
 
 check_CPP(){
 	log check_CPP "$@"
 	cat >$TMP_C
 	logfile $TMP_C
-	check_cmd $cc $CPPFLAGS $CFLAGS "$@" $CC_E $TMP_O $TMP_C
+	check_cmd $CC $CPPFLAGS $CFLAGS "$@" $CC_E $TMP_O $TMP_C
 }
 
 check_LD(){
 	log check_LD "$@"
 	local type="$1"
 	shift
-	local flags="$(filter_out '-l*|*.so' "$@")"
-	local libs="$(filter '-l*|*.so' "$@")"
+	local FLAGS="$(filter_out '-l*|*.so' "$@")"
+	local LIBS="$(filter '-l*|*.so' "$@")"
 	check_$type $flags || return
-	check_cmd $ld $LDFLAGS $flags $LD_O $TMP_E $TMP_O $libs $extralibs
+	check_cmd $LD $LDFLAGS $FLAGS $LD_O $TMP_E $TMP_O $LIBS $EXTRALIBS
 }
 
 check_FLAGS(){
@@ -457,7 +457,7 @@ check_cpp_condition(){
 	check_CPP "$@" <<EOF
 #include <$header>
 #if !($condition)
-#error "unsatisfied condition: $condition
+#error "unsatisfied condition: $condition"
 #endif
 EOF
 }
@@ -629,6 +629,7 @@ LD_PATH='-L'
 
 set_default cc exec_prefix prefix bindir sbindir mandir datadir docdir infodir \
 	libdir ln_s cp_f sysconfdir rundir ln_s mkdir_p install
+prefix_old_default=$prefix_default
 
 for opt; do
 	optvalue="${opt#*=}"
@@ -665,17 +666,22 @@ for opt; do
 	esac
 done
 
-cc="${build:+${build}-gcc}"
-:	${cc:=$cc_default}
-ld="$cc"
+cc_default="${build:+${build}-$cc}"
+ld_default="$cc_default"
+cc="$cc_default"
+ld="$ld_default"
+[ "x$prefix" = "x$prefix_old_default" ] && prefix=$prefix_default
+:	${CC:=${cc-$cc_default}}
+:	${LD:=${ld-$ld_default}}
 :	${TMPDIR:=${TMP:-/tmp}}
 
 case "${build:-${host:-$(uname -s)}}" in
 	*[Ll]inux*)
+	prefix_default='/usr'
+	rundir="/run"
 	for thing in $LINUX_DIST_EXTRA; do
 		append DIST_EXTRA "$thing"
 	done
-	rundir="/run"
 	for type in $SERVICES_TYPE; do
 		eval append EXTRA_${type}_SERVICES \$LINUX_${type}_SERVICES
 	done
@@ -686,6 +692,15 @@ case "${build:-${host:-$(uname -s)}}" in
 	i=
 	append EXTRA_SERVICE_INSTANCES $LINUX_SERVICE_INSTANCES
 	append EXTRA_OPTIONS_INSTANCES $LINUX_OPTIONS_INSTANCES
+	;;
+	*[Gg][Nn][Uu]-k[Ff]ree[Bb][Ss][Dd]*|*[Gg][Nn][Uu]*)
+	prefix_default='/usr'
+	;;
+	*[Ff]ree[Bb][Ss][Dd]*|*[Dd]ragon[Ff]ly*|*[Bb][Ss][Dd]*)
+	prefix_default='/usr/local'
+	;;
+	*[Nn]et[Bb][Ss][Dd]*)
+	prefix_default='/usr/pkg'
 	;;
 esac
 
@@ -839,7 +854,7 @@ check_builtin "sigwaitinfo" "signal.h" "sigwaitinfo((void*)0, (void*)0)" ||
 	DIE "missing sigwaitinfo system builtin"
 
 
-check_cpp_condition 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \
+check_cpp_condition 'unistd.h' 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \
 	defined(__GLIBC__)) || defined(__GNU__)' &&
 	RUNDIR=/run || RUNDIR=/var/run
 
@@ -894,8 +909,8 @@ PKGCONFIGDIR=$pkgconfigdir
 RUNDIR=$rundir
 SYSCONFDIR=$sysconfdir
 ARCH=$arch
-CC=$cc
-LD=$ld
+CC=$CC
+LD=$LD
 INSTALL=$install
 CP_F=$cp_f
 LN_S=$ln_s
@@ -932,6 +947,8 @@ cat >$CONFIG_H <<CONFIG_H_EOF
 # define SYSCONFDIR "$sysconfdir"
 # define LIBDIR     "$libdir"
 # define RUNDIR     "$rundir"
+# define PREFIX     "$prefix"
+$([ x$exec_prefix != x ] && echo '#' define EXEC_PREFIX \"$exec_prefix\")
 $(print_define_config_h)
 #endif
 CONFIG_H_EOF
