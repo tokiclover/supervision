@@ -40,8 +40,9 @@ case "${head}" in
 	(*/log) __cmd_dir__=log;;
 	(*)     __cmd_dir__="" ;;
 esac
-unset head
 __cmd__="${0##*/}"
+__svc__="${head%/$__cmd_dir__}"
+unset head
 SV_TYPE=sv
 
 source "${SVC_DIR}"/../.opt/SVC_OPTIONS ||

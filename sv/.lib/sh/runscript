@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/runscript                         Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.6 2016/12/30 21:09:26                      Exp $
+# $Version: 0.6 2017/01/10 21:09:26                      Exp $
 #
 
 #
@@ -55,7 +55,13 @@ fi
 :	${SVC_NAME:=${1##*/}}
 :	${name=${SVC_NAME}}
 :	${__cmd__=${2}}
+:	${__cmd_args__=${@#*${2}}}
+:	${__svc__=${1}}
+case "${1}" in
+	(/etc/sv/*)
 :	${SV_SVCDIR:=${1%/*}}
+	;;
+esac
 shift
 
 if [ -z "${SV_TYPE}" ]; then

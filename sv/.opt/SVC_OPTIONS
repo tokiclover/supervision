@@ -50,14 +50,14 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 	if [ "${name}" != "${SVC_NAME}" ]; then
 	SOURCE "${SV_CFGDIR}"/${name}
 	fi
-	SOURCE ${SRC_OPTS} "${SV_SVCDIR}"/${SVC_NAME}
+	SOURCE ${SRC_OPTS} ${__svc__}
 	env_run
 
 #
 # Set up supervision environment
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
-:	${SVC_DIR:=${SV_SVCDIR}/${SVC_NAME}}
+:	${SVC_DIR=$__svc__}
 	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/ENVS/${SVC_NAME}
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 
