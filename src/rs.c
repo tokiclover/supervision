@@ -63,8 +63,8 @@ static const char *const environ_whitelist[] = {
 	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID", NULL
 };
 static const char *environ_list[] = {
-	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE",
-	"SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
+	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE", "SV_RUNDIR", "SV_SVCDIR",
+	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
 
 static void thread_signal_action(int sig, siginfo_t *si, void *ctx _unused_);
@@ -160,6 +160,7 @@ int svc_cmd(struct svcrun *run)
 {
 	static char *deps[2] = { "--deps", "--nodeps" };
 	static char *type[2] = { "--rs", "--sv" };
+	static const char *svcd[] = { "", NULL, NULL, NULL };
 	static struct stat st_dep = { .st_mtime = 0 };
 	struct stat st_buf;
 	int retval;
@@ -167,6 +168,12 @@ int svc_cmd(struct svcrun *run)
 	size_t len = 0;
 	const char *cmd = run->argv[4];
 	char *path, buf[512];
+#if defined(PREFIX)
+	svcd[1] = PREFIX;
+#endif
+#if defined(EXEC_PREFIX)
+	svcd[2] = EXEC_PREFIX;
+#endif
 
 	if (!st_dep.st_mtime) {
 		stat(SV_SVCDEPS_FILE, &st_dep);
@@ -254,14 +261,24 @@ int svc_cmd(struct svcrun *run)
 		run->ARGV[i] = run->argv[i];
 	/* get service path */
 	if (!run->path) {
-		snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
+		retval = -ENOENT;
+		for (i = 0; svcd[i]; i++) {
+			if (i)
+				snprintf(buf, sizeof(buf), "%s/%s/%s", svcd[i], SV_SVCDIR, run->name);
+			else
+				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
+			if (!access(buf, F_OK)) {
+				retval = 0;
+				break;
+			}
+		}
+		if (retval == -ENOENT)
+			return -ENOENT;
+
 		len = strlen(buf)+1;
 		run->path = memcpy(err_malloc(len), buf, len);
 	}
-	if (stat(run->path, &st_buf) < 0) {
-		retval = -ENOENT;
-		goto reterr;
-	}
+	stat(run->path, &st_buf);
 
 	/* get service status */
 	switch(run->cmd) {

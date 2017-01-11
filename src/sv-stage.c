@@ -567,6 +567,9 @@ int main(int argc, char *argv[])
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
+	setenv("SV_LIBDIR", SV_LIBDIR, 1);
+	setenv("SV_RUNDIR", SV_RUNDIR, 1);
+	setenv("SV_SVCDIR", SV_SVCDIR, 1);
 	setenv("SV_VERSION", SV_VERSION, 1);
 	setenv("SV_SYSBOOT_LEVEL" , sv_runlevel[SV_SYSBOOT_LEVEL] , 1);
 	setenv("SV_SHUTDOWN_LEVEL", sv_runlevel[SV_SHUTDOWN_LEVEL], 1);
