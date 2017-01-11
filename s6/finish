@@ -29,14 +29,8 @@ s6-svc -D -T 10000 ${SV_RUNDIR}/*
 RUNLEVEL="${RUNLEVEL}" rc "${ACTION}"
 
 case "${ACTION}" in
-	(reboot)
-	reboot -p
-	reboot -f
-	;;
-	(shutdown)
-	halt -p
-	halt -f
-	;;
+	(reboot) reboot  ; reboot -f ;;
+	(shutdown) halt -p ; halt -f ;;
 esac
 
 #

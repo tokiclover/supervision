@@ -10,7 +10,6 @@ INIT_STAGE=/lib/sv/sh/init-stage
 
 if [ -x ${INIT_STAGE} ]; then
 	exec ${INIT_STAGE} --default
-	exec sv-stage --default
 fi
 
 exec /usr/bin/env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}

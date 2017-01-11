@@ -4,9 +4,9 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-INIT_STAGE=/lib/sv/sh/init-stage
-:	${SV_RUNDIR:=/run/service}
-:	${SV_SERVICE:=/etc/service}
+SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_RUNDIR=/run/service
+SV_SERVICE=/etc/service
 
 
 mkdir -m 0755 -p "${SV_RUNDIR}"/.s6-svscan
@@ -14,15 +14,15 @@ for link in crash finish; do
 	ln -f -s /etc/s6/${link} "${SV_RUNDIR}"/.s6-svscan/${link}
 done
 
-if [ -x ${INIT_STAGE} ]; then
-	if eval ${INIT_STAGE} --sysinit; then
-		exec ${INIT_STAGE} --default
-	else
-		exec sv-stage --single
-	fi
+if [ -x ${SV_INIT_STAGE} ]; then
+	${SV_INIT_STAGE} --sysinit
+	exec ${SV_INIT_STAGE} --default
 fi
 RUNLEVEL=S rc sysinit
 RUNLEVEL=S rc boot
+#
+# XXX: is this really necessary?
+#
 RUNLEVEL=3 rc default
 
 case "${SV_RUNDIR}" in
