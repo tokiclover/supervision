@@ -1,9 +1,9 @@
 #!/bin/sh
 #
 # $Header:  /lib/sv/sh/init-stage                        Exp $
-# $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
+# $Author: (c) 2015-7 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.6 2016/12/30                               Exp $
+# $Version: 1.7 2017/01/10                               Exp $
 #
 
 :	${name=${0##*/}}
@@ -228,10 +228,10 @@ elif [ "${1}" = "--default" ]; then
 	#
 	svc_rsh
 elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
-	:	${ACTION:=${1}}
+	ACTION=${1}
 	case "${ACTION}" in
-		(--reboot|--shutdown) sv-stage "${ACTION}";;
-		(*)    ACTION=""  ; sv-stage --shutdown   ;;
+		(--reboot|--shutdown)  sv-stage ${ACTION};;
+		(*) ACTION=--shutdown; sv-stage ${ACTION};;
 	esac
 	#
 	# CGroup clean up
@@ -239,12 +239,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	if  [ "${OS_NAME}" = "Linux" ]; then
 		SVC_NAME="${SV_CMD}" cgroup_remove_service
 	fi
-	#
-	# Use this safety net in case daemontools(-encore) is used
-	#
-	case "${__SV_NAM__}" in
-		(daemontools*|s6) sv-shutdown --force ${ACTION:---shutdown};;
-	esac
+	${SV_LIBDIR}/sbin/shutdown --force ${ACTION} now
 fi
 end "${?}"
 }
