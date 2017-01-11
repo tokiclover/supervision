@@ -4,16 +4,20 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-sv_shutdown=/lib/sv/sbin/sv-shutdown
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+_PATH_WALL=
+SV_SHUTDOWN=/lib/sv/sbin/shutdown
 
 touch /etc/runit/stopit
 chmod 100 /etc/runit/stopit
-if [ -x ${sv_shutdown} ]; then
-	${sv_shutdown} -h -m
+if [ -x ${SV_SHUTDOWN} ]; then
+	[ -x /etc/runit/reboot ] && ARG=-r || ARG=-p
+	${SV_SHUTDOWN} ${ARG} -l -m now
 else
-	echo "System is going down" | busybox wall
-	sleep 3
+
+echo "System is going down in 3 seconds..." | ${_PATH_WALL:-busybox wall}
+sleep 3
+
 fi
 
 #

@@ -6,22 +6,39 @@
 
 exec >/dev/console 2>&1
 
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/lib/sv/sh/init-stage}
-:	${SV_RUNDIR:=/run/service}
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+_PATH_WALL=
+SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_SHUTDOWN=/lib/sv/sbin/shutdown
+SV_RUNDIR=/run/service
 
 if [ -x /etc/runit/reboot ]; then
-	RUNLEVEL=0 ACTION=reboot   MSG='System reboot'
+	RUNLEVEL=0 ACTION=reboot
 else
-	RUNLEVEL=6 ACTION=shutdown MSG='System shutdown'
+	RUNLEVEL=6 ACTION=shutdown
 fi
-if [ -x ${INIT_STAGE} ]; then
-	exec ${INIT_STAGE} --${ACTION}
-	exec sv-stage --${ACTION}
+if [ -x ${SV_SHUTDOWN} ]; then
+	${SV_SHUTDOWN} --${ACTION} -m now
 fi
+if [ -x ${SV_INIT_STAGE} ]; then
+	${SV_INIT_STAGE} --${ACTION}
+	#
+	# XXX: safety net
+	#
+	${SV_SHUTDOWN} --${ACTION} --force -m now
+else
+
+echo "System ${ACTION}" | ${_PATH_WALL:-busybox wall}
 
 sv -w 10 force-shutdown ${SV_RUNDIR}/*
 RUNLEVEL="${LEVEL}" rc "${ACTION}"
+#
+# XXX: safety net in case rc return
+# assume sysvinit utlities are used (-f)/(-q) for FreeBSD, OpenBSD ...
+#
+${ACTION} -f
+
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

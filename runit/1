@@ -4,13 +4,22 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/lib/sv/sh/init-stage}
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+SV_INIT_STAGE=/lib/sv/sh/init-stage
 
 touch   /etc/runit/stopit
 chmod 0 /etc/runit/stopit
-[ -x ${INIT_STAGE} ] && exec ${INIT_STAGE} --sysinit
+if [ -x ${SV_INIT_STAGE} ]; then
+	${SV_INIT_STAGE} --sysinit
+else
+
+#
+# XXX: only sysinit because boot could hang and
+# runit does not accept any signal in init stage-1
+#
 RUNLEVEL=S rc sysinit
+
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

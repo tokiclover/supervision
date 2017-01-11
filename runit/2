@@ -4,17 +4,20 @@
 # $License: 2-clause/new/simplified BSD                  Exp $
 #
 
-:	${PATH=/bin:/sbin:/usr/bin:/usr/sbin}
-:	${INIT_STAGE=/lib/sv/sh/init-stage}
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+SV_INIT_STAGE=/lib/sv/sh/init-stage
 SV_OPTS='log:..................................................................'
 
-[ -x ${INIT_STAGE} ] && SV_OPTS="${SV_OPTS}" exec ${INIT_STAGE} --default
+[ -x ${SV_INIT_STAGE} ] && SV_OPTS="${SV_OPTS}" exec ${SV_INIT_STAGE} --default
 
 RUNLEVEL=S rc boot
+#
+# XXX: is this really necessary?
+#
 RUNLEVEL=3 rc default
 
-:	${SV_RUNDIR:=/run/service}
-:	${SV_SERVICE:=/etc/service}
+SV_RUNDIR=/var/run/service
+SV_SERVICE=/etc/service
 case "${SV_RUNDIR}" in
 	("${SV_SERVICE}")
 	;;
@@ -25,7 +28,7 @@ case "${SV_RUNDIR}" in
 	;;
 esac
 
-exec env - PATH=${PATH} runsvdir ${SV_RUNDIR} ${SV_OPTS}
+exec /usr/bin/env - PATH=${PATH} runsvdir ${SV_RUNDIR} ${SV_OPTS}
 exec 2>&1
 exec ${SHELL:-sh} -aim
 
