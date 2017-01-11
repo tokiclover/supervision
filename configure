@@ -796,6 +796,15 @@ check_CP <<EOF || DIE "Caonnot find paths.h header"
 int main(void){puts(_PATH_NOLOGIN); return 0;}
 EOF
 _PATH_NOLOGIN=$($TMP_E)
+_PATH_WALL=
+check_CP <<EOF && _PATH_WALL=$($TMP_E)
+#include <stdio.h>
+#include <paths.h>
+#ifndef _PATH_WALL
+#error "_PATH_WALL is not defined!"
+#endif
+int main(void){puts(_PATH_WALL); return 0;}
+EOF
 
 enabled sysvinit && HEADERS_LIST="${HEADERS_LIST} initreq.h"
 for header in $HEADERS_LIST; do
@@ -911,6 +920,7 @@ EXTRA_SERVICE_INSTANCES=$EXTRA_SERVICE_INSTANCES
 EXTRA_OPTIONS_INSTANCES=$EXTRA_OPTIONS_INSTANCES
 $(print_extra_services)
 _PATH_NOLOGIN=$_PATH_NOLOGIN
+_PATH_WALL   =$_PATH_WALL
 endif
 CONFIG_MAK_EOF
 

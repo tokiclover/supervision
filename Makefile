@@ -43,8 +43,7 @@ dist_SH_BINS  = \
 	sv/.lib/sh/cgroup-release-agent \
 	sv/.lib/sh/dep
 dist_SH_SBINS = \
-	sv/.lib/bin/sv-config \
-	src/sv-shutdown
+	sv/.lib/bin/sv-config
 dist_SH_LIBS  = \
 	sv/.lib/sh/cgroup-functions \
 	sv/.lib/sh/functions \
@@ -222,14 +221,14 @@ install-all: install install-supervision-initd
 install: install-dir install-dist install-sv-svcs
 	$(install_DATA)  sv.conf $(DESTDIR)$(confdir).conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
+	$(install_SCRIPT) src/sv-shutdown $(DESTDIR)$(SBINDIR)
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/rc
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(libdir)/sbin/service
 	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
-	$(LN_S) -f $(libdir)/sbin/sv-shutdown $(DESTDIR)$(SBINDIR)
-	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/halt
-	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
-	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
-	$(LN_S) -f sv-shutdown $(DESTDIR)$(libdir)/sbin/shutdown
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/halt
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/poweroff
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/reboot
+	$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(libdir)/sbin/shutdown
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(libdir)/opt
 	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(libdir)/opt
@@ -263,11 +262,13 @@ install: install-dir install-dist install-sv-svcs
 ifdef RUNIT_INIT_STAGE
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
+		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 		-i $(DESTDIR)$(SYSCONFDIR)/runit/*
 endif
 ifdef S6_INIT_STAGE
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
+		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
 endif
 	for svc in $(dist_SVC_INSTANCES); do \
