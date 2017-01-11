@@ -18,8 +18,11 @@ esac
 :	${ACTION:=shutdown}
 
 if [ -x ${INIT_STAGE} ]; then
-	exec ${INIT_STAGE} "--${ACTION}"
-	exec sv-stage "--${ACTION}"
+	${INIT_STAGE} "--${ACTION}" || sv-stage "--${ACTION}"
+case "${ACTION}" in
+	(reboot) reboot -f ;;
+	(shutdown) halt -f ;;
+esac
 fi
 
 s6-svc -D -T 10000 ${SV_RUNDIR}/*
@@ -27,7 +30,7 @@ RUNLEVEL="${RUNLEVEL}" rc "${ACTION}"
 
 case "${ACTION}" in
 	(reboot)
-	reboot -pk
+	reboot -p
 	reboot -f
 	;;
 	(shutdown)
