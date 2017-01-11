@@ -480,13 +480,13 @@ shutdown:
 		ts.tv_sec = ti->ti_wait;
 	}
 	sv_timewarn(0U);
-
 	(void)printf("\r\n\aSystem %s time has arrived\a\r\n", action[ai]);
-	if (shutdown_action == SD_MESSAGE)
-		exit(EXIT_SUCCESS);
 
 	if (!access(SD_PIDFILE, F_OK))
 		unlink(SD_PIDFILE);
+	if (shutdown_action == SD_MESSAGE)
+		exit(EXIT_SUCCESS);
+
 #ifdef DEBUG
 	if (reboot_force)
 		(void)printf("reboot(%X)\n", reboot_action);
@@ -494,13 +494,6 @@ shutdown:
 		(void)printf("execlp(%s, %s, NULL)\n", *argv, argv[1]);
 	exit(EXIT_SUCCESS);
 #else
-	if (!access(_PATH_NOLOGIN, F_OK))
-		unlink(_PATH_NOLOGIN);
-
-	if (reboot_sync)
-		sync();
-	if (reboot_force)
-		exit(reboot(reboot_action));
 
 	openlog(progname, LOG_PID | LOG_CONS, LOG_AUTH);
 	if (shutdown_action == SD_SINGLE)
@@ -509,6 +502,13 @@ shutdown:
 	else
 		syslog(LOG_CRIT, "system %s (by %s@%s)", action[ai], whom, hostname);
 	closelog();
+
+	if (reboot_sync)
+		sync();
+	if (!access(_PATH_NOLOGIN, F_OK))
+		unlink(_PATH_NOLOGIN);
+	if (reboot_force)
+		exit(reboot(reboot_action));
 
 	execvp(*argv, argv);
 	ERR("Failed to execlp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
