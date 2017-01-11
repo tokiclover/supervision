@@ -739,13 +739,13 @@ message:
 			whom, hostname);
 	timer_pos = strlen(message);
 	ptr = message+timer_pos;
-	sprintf(ptr, "\a-*- System going down at %8.8s    -*-\a\n",
+	sprintf(ptr, "\a-*- System going down at %8.8s    -*-\a\n\n",
 			ctime(&shuttime)+11);
 	timer_pos = strlen(message);
 	ptr = message+timer_pos;
 	message_len = sizeof(message)-timer_pos;
 	/* set up this len to be able to update the timer warning */
-	timer_pos -= (TIMER_LEN+5U);
+	timer_pos -= (TIMER_LEN+6U);
 
 	if (argc) {
 		for (; *argv; argv++) {
