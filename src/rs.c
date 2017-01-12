@@ -160,7 +160,7 @@ int svc_cmd(struct svcrun *run)
 {
 	static char *deps[2] = { "--deps", "--nodeps" };
 	static char *type[2] = { "--rs", "--sv" };
-	static const char *svcd[] = { "", NULL, NULL, NULL };
+	static const char *svcd[] = { "", NULL };
 	static struct stat st_dep = { .st_mtime = 0 };
 	struct stat st_buf;
 	int retval;
@@ -170,9 +170,6 @@ int svc_cmd(struct svcrun *run)
 	char *path, buf[512];
 #if defined(PREFIX)
 	svcd[1] = PREFIX;
-#endif
-#if defined(EXEC_PREFIX)
-	svcd[2] = EXEC_PREFIX;
 #endif
 
 	if (!st_dep.st_mtime) {
@@ -262,7 +259,7 @@ int svc_cmd(struct svcrun *run)
 	/* get service path */
 	if (!run->path) {
 		retval = -ENOENT;
-		for (i = 0; svcd[i]; i++) {
+		for (i = 0; i < sizeof(svcd) && svcd[i]; i++) {
 			if (i)
 				snprintf(buf, sizeof(buf), "%s/%s/%s", svcd[i], SV_SVCDIR, run->name);
 			else
