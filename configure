@@ -607,8 +607,8 @@ SERVICES_TYPE="
 package="supervision"
 prefix_default="/usr/local"
 exec_prefix_default=""
-bindir_default='/bin'
-sbindir_default='/sbin'
+bindir_default='${EXEC_PREFIX}/bin'
+sbindir_default='${EXEC_PREFIX}/sbin'
 libdir_default='/lib'
 datadir_default='${PREFIX}/share'
 docdir_default='${PREFIX}/share/doc/${PACKAGE}-${VERSION}'
@@ -672,10 +672,18 @@ for opt; do
 	esac
 done
 
-case "${build:-${host:-$(uname -s)}}" in
-	*[Ll]inux*)
+triplet(){
+	arch="$1" os="$3"
+}
+triplet $(echo "${build-$host}" | sed 's,-, ,g')
+:	${arch:=$(uname -m)}
+:	${os:=$(uname -s)}
+
+case "$os" in
+	[Ll]inux)
 	prefix_default='/usr'
 	rundir="/run"
+	os=Linux
 	for thing in $LINUX_DIST_EXTRA; do
 		append DIST_EXTRA "$thing"
 	done
@@ -690,14 +698,25 @@ case "${build:-${host:-$(uname -s)}}" in
 	append EXTRA_SERVICE_INSTANCES $LINUX_SERVICE_INSTANCES
 	append EXTRA_OPTIONS_INSTANCES $LINUX_OPTIONS_INSTANCES
 	;;
-	*[Gg][Nn][Uu]-k[Ff]ree[Bb][Ss][Dd]*|*[Gg][Nn][Uu]*)
+	[Gg][Nn][Uu]-k[Ff]ree[Bb][Ss][Dd]*)
 	prefix_default='/usr'
+	os=GNU-kFreeBSD
 	;;
-	*[Ff]ree[Bb][Ss][Dd]*|*[Dd]ragon[Ff]ly*|*[Bb][Ss][Dd]*)
+	[Gg][Nn][Uu])
+	prefix_default='/usr'
+	os=GNU
+	;;
+	[Dd]ragon[Ff]ly*)
 	prefix_default='/usr/local'
+	os=DragonFly
 	;;
-	*[Nn]et[Bb][Ss][Dd]*)
+	[Ff]ree[Bb][Ss][Dd]*)
+	prefix_default='/usr/local'
+	os=FreeBSD
+	;;
+	[Nn]et[Bb][Ss][Dd]*)
 	prefix_default='/usr/pkg'
+	os=NetBSD
 	;;
 esac
 
@@ -918,7 +937,10 @@ MANDIR=$mandir
 PKGCONFIGDIR=$pkgconfigdir
 RUNDIR=$rundir
 SYSCONFDIR=$sysconfdir
+HOST=$host
+BUILD=$build
 ARCH=$arch
+OS=$os
 CC=$CC
 LD=$LD
 INSTALL=$install

@@ -6,7 +6,7 @@ SUBDIRS    := src
 
 PREFIX     ?= /usr/local
 SYSCONFDIR ?= /etc
-SBINDIR    ?= /sbin
+SBINDIR    ?= $(EXEC_PREFIX)/sbin
 LIBDIR     ?= /lib
 RC_CONFDIR ?= $(SYSCONFDIR)/conf.d
 RC_INITDIR ?= $(SYSCONFDIR)/init.d
@@ -183,8 +183,10 @@ dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
-ifneq ($(EXEC_PREFIX),)
+ifneq ($(PREFIX),)
+ifneq ($(OS),Linux)
 dist_DIRS += $(EXEC_PREFIX)$(SV_SVCDIR)
+endif
 endif
 
 ifeq ($(RUNIT_INIT_STAGE),yes)
@@ -282,10 +284,9 @@ endif
 	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.default/
 	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.shutdown/
 	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(SV_SVCDIR)/.opt
+ifneq ($(PREFIX),)
+ifneq ($(OS),Linux)
 	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(PREFIX)$(SV_SVCDIR)/.opt
-ifneq ($(EXEC_PREFIX),)
-ifneq ($(EXEC_PREFIX),$(PREFIX))
-	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(EXEC_PREFIX)$(SV_SVCDIR)/.opt
 endif
 endif
 	$(LN_S) -f $(SV_SVCDIR)/sulogin $(DESTDIR)$(SV_SVCDIR)/.single
