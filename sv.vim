@@ -22,6 +22,8 @@ syn keyword svKwd begin die end error eval_colors info yesno checkpath warn SOUR
 syn keyword svKwd env_del env_svc env_sv  svc_cmd svc_down svc_mark svc_state
 syn keyword svKwd env_rs rs_cmd svc_sig svc_wait svc_zap mountinfo fstabinfo
 syn keyword svKwd start start_pre start_post stop stop_pre stop_post restart
+syn keyword svKwd log_start_pre log_stop_post
+syn keyword svVars LOG_MODE LOG_PROC LOG_SIZE LOG_STAT LOG_PREFIX
 syn keyword svVars SVC_DEBUG SVC_CONFIGFILE SVC_CMD SVC_OPTS SVC_GROUP SVC_USER
 syn keyword svVars SVC_USE SVC_NEED SVC_BEFORE SVC_AFTER SV_TRY SVC_PROVIDE
 syn keyword svVars ENV_DIR ENV_CMD ENV_OPTS PRE_CMD PRE_OPTS FIN_CMD FIN_OPTS
