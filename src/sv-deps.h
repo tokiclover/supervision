@@ -16,17 +16,20 @@
 #include "sv-list.h"
 #include "helper.h"
 
-#define SV_SVCDEPS_TYPE   5
+#define SV_SVCDEPS_TYPE   4
 #define SV_SVCDEPS_AFTER  1
 #define SV_SVCDEPS_BEFORE 0
 #define SV_SVCDEPS_USE    2
 #define SV_SVCDEPS_NEED   3
-#define SV_SVCDEPS_KWD    4
 
 /* some macro to set/get service options */
 #define SV_SVCOPTS_NOHANG 0x01
-#define SV_SVCOPTS_GET(dep, opt) ((dep)->options  & (opt))
-#define SV_SVCOPTS_SET(dep, opt) ((dep)->options |= (opt))
+#define SV_SVCOPTS_GET(dep, opt) (dep->options  & (opt))
+#define SV_SVCOPTS_SET(dep, opt) (dep->options |= (opt))
+
+/* some macro to set/get keyword bit */
+#define SV_KEYWORD_GET(dep, kwd) (dep->keywords  & (1<<(kwd)))
+#define SV_KEYWORD_SET(dep, kwd) (dep->keywords |= (1<<(kwd)))
 
 #define SV_DEPGEN SV_LIBDIR "/sh/dep"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
@@ -38,6 +41,11 @@
 extern "C" {
 #endif
 
+enum {
+	SV_KEYWORD_TIMEOUT = 1,
+};
+extern const char *const sv_keywords[];
+
 typedef struct SV_SvcDeps {
 	/* dependency type {after,before,use,need} */
 	unsigned int did;
@@ -45,6 +53,7 @@ typedef struct SV_SvcDeps {
 	char *virt;
 	int timeout;
 	int options;
+	unsigned long int keywords;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;

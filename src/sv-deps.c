@@ -12,8 +12,12 @@
 #include <dirent.h>
 #include "sv-deps.h"
 
-static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need",
-	"keyword" };
+static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need" };
+const char *const sv_keywords[] = {
+	NULL,
+	"timeout",
+	NULL
+};
 
 struct SV_Services SERVICES = {
 	.svclist      = NULL,
@@ -401,8 +405,14 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	while (sv_getline(fp, &line, &len) > 0) {
 		if (service) {
 			/* break the loop when updating the list */
-			if (strncmp(line, service, l))
+			if (strncmp(line, service, l)) {
+				if (deps) {
+					free(line);
+					fclose(fp);
+					return deps;
+				}
 				continue;
+			}
 			else if (!deps)
 				deps = sv_svcdeps_add(service);
 		}
@@ -415,36 +425,39 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		type = ptr;
 		ptr = strchr(ptr, '=');
 		*ptr++ = '\0';
-		ptr = shell_string_value(ptr);
 
 		if (!deps || strcmp(svc, deps->svc))
 			deps = sv_svcdeps_add(svc);
+		if (!(ptr = shell_string_value(ptr)))
+			continue;
+
 		if (strcmp(type, "provide") == 0) {
-			if (ptr) {
-				deps->virt = err_strdup(ptr);
-				sv_virtsvc_insert(deps);
-			}
+			deps->virt = err_strdup(ptr);
+			sv_virtsvc_insert(deps);
 			continue;
 		}
-		else if (strcmp(type, "nohang") == 0 && sv_yesno(ptr)) {
-			SV_SVCOPTS_SET(deps, SV_SVCOPTS_NOHANG);
+		else if (strcmp(type, "nohang") == 0) {
+			if (sv_yesno(ptr))
+				SV_SVCOPTS_SET(deps, SV_SVCOPTS_NOHANG);
 			continue;
 		}
+		else if (strcmp(type, "timeout") == 0) {
+			errno = 0;
+			deps->timeout = (int)strtol(ptr, NULL, 10);
+			if (errno == ERANGE) deps->timeout = 0;
+			continue;
+		}
+
 		for (t = 0; strcmp(type, sv_svcdeps_type[t]); t++)
 			;
 		if (t >= SV_SVCDEPS_TYPE)
 			continue;
-
-		if (!ptr)
-			continue;
 		/* append service list */
-		while (ptr && *ptr) {
-			svc = ptr;
-			ptr = strchr(ptr, ' ');
-			if (ptr)
-				*ptr++ = '\0';
+		if (!(svc = strtok_r(ptr, " \t", &type)))
+			continue;
+		do {
 			sv_stringlist_add(deps->deps[t], svc);
-		}
+		} while ((svc = strtok_r(NULL, " \t", &type)));
 	}
 	fclose(fp);
 	if (service)

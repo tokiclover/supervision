@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs.c  0.13.0 2016/01/04
+ * @(#)rs.c  0.13.0 2016/01/12
  */
 
 #include <stdio.h>
@@ -351,9 +351,9 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
-	if (sv_stringlist_find(run->dep->deps[SV_SVCDEPS_KWD], "timeout"))
+	if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_TIMEOUT))
 		run->dep->timeout = -1;
-	else
+	else if (!run->dep->timeout)
 		run->dep->timeout = SVC_WAIT_SECS;
 	run->status = -1;
 	run->sig = 0;
