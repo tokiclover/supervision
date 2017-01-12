@@ -401,17 +401,10 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	while (sv_getline(fp, &line, &len) > 0) {
 		if (service) {
 			/* break the loop when updating the list */
-			if (strncmp(line, service, l)) {
-				if (deps) {
-					free(line);
-					fclose(fp);
-					return deps;
-				}
-				/* skip lines when updating the list */
+			if (strncmp(line, service, l))
 				continue;
-			}
-			else
-				deps = sv_svcdeps_adu(svc);
+			else if (!deps)
+				deps = sv_svcdeps_add(service);
 		}
 
 		/* get service name */
@@ -423,8 +416,6 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		ptr = strchr(ptr, '=');
 		*ptr++ = '\0';
 		ptr = shell_string_value(ptr);
-		if (!ptr)
-			continue;
 
 		if (!deps || strcmp(svc, deps->svc)) {
 			deps = sv_svcdeps_add(svc);
@@ -446,6 +437,8 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		if (t >= SV_SVCDEPS_TYPE)
 			continue;
 
+		if (!ptr)
+			continue;
 		/* append service list */
 		while (ptr && *ptr) {
 			svc = ptr;
@@ -456,9 +449,8 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		}
 	}
 	fclose(fp);
-	/* nothing found */
 	if (service)
-		return NULL;
+		return deps;
 
 	atexit(sv_svcdeps_free);
 	return deps;
