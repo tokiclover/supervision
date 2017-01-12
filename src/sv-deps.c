@@ -417,12 +417,10 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		*ptr++ = '\0';
 		ptr = shell_string_value(ptr);
 
-		if (!deps || strcmp(svc, deps->svc)) {
+		if (!deps || strcmp(svc, deps->svc))
 			deps = sv_svcdeps_add(svc);
-			deps->virt = NULL;
-		}
 		if (strcmp(type, "provide") == 0) {
-			if ((ptr = shell_string_value(ptr))) {
+			if (ptr) {
 				deps->virt = err_strdup(ptr);
 				sv_virtsvc_insert(deps);
 			}
@@ -469,6 +467,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 	SV_SvcDeps_T *elm = err_malloc(sizeof(SV_SvcDeps_T));
 	elm->did = id++;
 	elm->svc = err_strdup(svc);
+	elm->virt = NULL;
 	elm->timeout = 0;
 	elm->options = 0;
 
