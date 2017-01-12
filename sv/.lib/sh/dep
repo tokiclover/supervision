@@ -3,7 +3,7 @@
 # $Header:  /lib/sv/sh/dep                               Exp $
 # $Author: (c) 2015-6 tokiclover <tokiclover@gmail.com>  Exp $
 # $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.3 2016/12/30 21:09:26                      Exp $
+# $Version: 1.4 2016/01/12 21:09:26                      Exp $
 #
 
 #
@@ -43,16 +43,17 @@ add_dep()
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	local dep SVC_PROVIDE SVC_KEYWORD SVC_TIMEOUT
+	local dep SVC_NOHANG SVC_PROVIDE SVC_KEYWORD SVC_TIMEOUT
 
-	if   [ -d "${SV_SVCDIR}/${1}" ]; then
-		SVC_DIR="${SV_SVCDIR}/${1}" SV_TYPE=sv
-	elif [ -f "${SV_SVCDIR}/${1}" ]; then
-		SVC_DIR="${SV_SVCDIR}"      SV_TYPE=rs
+	SVC_NAME="${1}"
+	__svc__="${SV_SVCDIR}/${1}"
+	if   [ -d ${__svc__} ]; then
+		SV_TYPE=sv
+	elif [ -f ${__svc__} ]; then
+		SV_TYPE=rs
 	else
 		return
 	fi
-	SVC_NAME="${1}"
 	shift
 	. ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
