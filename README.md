@@ -42,40 +42,44 @@ dependencies.
 INSTALLATION
 ------------
 
-`./configure --build=x86_64-pc-linux-gnu`
+`./configure --build=x86_64-pc-linux-gnu --libdir=/lib64`
 
-    - add `--enable-sysvinit` to get an additional SysVinit compatibility service;
+    - add `--enable-sysvinit` to get an additional sysvinit compatibility service;
     - add `--enable-runit` to get Runit init-stage-[123]; and likewise
-	- add `--enable-s6` for S6 init-stage-[123]; and then
-	- (other standard options are available, see `--help`);
+    - add `--enable-s6` for S6 init-stage-[123]; and then
+    - (other standard options are available, see `--help`);
+    - WARNING: this package should be istalled in a non prefixed installation, so,
+    avoid using `--libdir=/usr/lib64` or similar to have system utilities in rootfs;
 
 `make -j2` to build; and finaly
 
 `make DESTDIR=/tmp install-all` or use only `install` (without supervision init
 script for OpenRC) would suffice.
 
-And do not forget to run `sv/.lib/sbin/sv-config -S BACKEND` afterwards!
+And do not forget to run `${LIBDIR}/sv/sbin/sv-config -S BACKEND` afterwards!
 or `${LIBDIR}/sv/sbin/sv-config -S BACKEND` after installation.
 
 DOCUMENTATION/USAGE
 -------------------
 
 The recommanded way to use this package for service management is to use
-`sv/.lib/sh/init-stage --(sysinit|default|shutdown)` to start particular stage. And then use
+`${LIBDIR}/sv/sh/init-stage --(sysinit|default|shutdown)` to start particular stage. And then use
 `rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services;
-or rather use `$SV_LIBDIR/sbin/service [OPTIONS] SERVICE COMMAND` for
+or rather use `${LIBDIR}/sv/sbin/service [OPTIONS] SERVICE COMMAND` for
 SystemV compatibility. *NOTE:* That symlink can be copied to `/sbin` if
 necessary to ease administration and if there is no other SystemV binary
 installed in the system.
 Or else, use the magic `--svscan` command line argument to set up `/service/` and
-`svscan`, and then use `sv-stage default` to start/stop daemons.
+`svscan`, set `SV_SYSTEM="supervision"` in `/etc/sv.conf` and then use
+`sv-stage default` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
 And then... a bit more, new supervision services can be easily added by
-running `/lib/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
+running `${LIBDIR}/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
 would add a *log* directory for the service.)
 
-See supervision(5) and or rs(8) man page for more information.
+See `supervision(5)`, `sv-stage(8)`, `sv-shutdown(8)` and or `rs(8)` man page
+for more information.
 
 REQUIREMENTS
 ------------
