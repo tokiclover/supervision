@@ -247,16 +247,14 @@ install: install-dir install-dist install-sv-svcs
 	sed -e 's,\(SV_TYPE.*$$\),\1\nSV_LIBDIR=$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/opt/cmd
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' \
-		-e 's|@RUNDIR@|$(RUNDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' -e 's|@RUNDIR@|$(RUNDIR)|g' \
 		rs.8 >$(DESTDIR)$(MANDIR)/man8/rs.8
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' \
-		-e 's|@RUNDIR@|$(RUNDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' -e 's|@RUNDIR@|$(RUNDIR)|g' \
 		sv-stage.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
 	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' \
-		-e 's|@RUNDIR@|$(RUNDIR)|g' \
+		-e 's|@SBINDIR@|$(SBINDIR)|g' -e 's|@RUNDIR@|$(RUNDIR)|g' \
+		-e 's|@PREFIX@|$(PREFIX)|g' \
 		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed -e 's|@_PATH_NOLOGIN@|$(_PATH_NOLOGIN)|g' \
 		sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
