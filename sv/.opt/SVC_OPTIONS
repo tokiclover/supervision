@@ -11,6 +11,7 @@
 :	${SV_RUNDIR:=/run/sv}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${SV_CFGDIR:=${SV_SVCDIR}.conf.d}
+:	${__SV_PREFIX__:=}
 :	${name:=${SVC_NAME}}
 :	${__cmd__:=${0##*/}}
 :	${__cmd_args__:="${@}"}

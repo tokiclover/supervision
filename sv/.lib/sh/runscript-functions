@@ -11,6 +11,7 @@ __RUNSCRIPT_FUNCTIONS__=1
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/sv}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
+:	${__SV_PREFIX__:=}
 NETWORKFS='afs ceph cifs coda davfs fuse fuse.sshfs gfs glusterfs lustre ncpfs nfs nfs4 ocfs2 shfs smbfs'
 NULL='/dev/null'
 __SV_DEPS_ORDER__='need:NEED use:USE before:BEFORE after:AFTER'
@@ -20,7 +21,7 @@ __ERR_BUSY__='{ end 1 busy; return 16; };'
 PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 export PATH SV_LIBDIR SV_RUNDIR SV_SVCDIR SV_TMPDIR SV_RUNLEVEL SV_STAGE SV_TYPE \
-	SV_SYSBOOT_LEVEL SV_SHUTDOWN_LEVEL SVC_DEPS SVC_DEBUG
+	SV_PREFIX SV_SYSBOOT_LEVEL SV_SHUTDOWN_LEVEL SVC_DEPS SVC_DEBUG
 
 [ -n "${__FUNCTIONS__}"              ] || . "${SV_LIBDIR}"/sh/functions
 [ -n "${__SUPERVISIONS_FUNCTIONS__}" ] || . "${SV_LIBDIR}"/sh/supervision-functions

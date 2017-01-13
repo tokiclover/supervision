@@ -259,6 +259,7 @@ install: install-dir install-dist install-sv-svcs
 		sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
+		-e 's|\(__SV_PREFIX__:=\).*$$|\1$(PREFIX)}|g' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
 		   $(DESTDIR)$(SV_LIBDIR)/opt/SVC_OPTIONS
 ifneq ($(EXEC_PREFIX),)
