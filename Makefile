@@ -54,7 +54,6 @@ dist_SV_BINS  = \
 	src/fstabinfo \
 	src/mountinfo \
 	src/waitfile
-dist_SV_RUNS  =
 dist_SCRIPTS  =
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
@@ -290,14 +289,12 @@ endif
 	$(LN_S) -f $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysboot/
 	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.default/
 	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.shutdown/
+	$(LN_S) -f $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.single/
 	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(SV_SVCDIR)/.opt
 ifneq ($(PREFIX),)
 ifneq ($(OS),Linux)
 	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(PREFIX)$(SV_SVCDIR)/.opt
 endif
-endif
-ifneq ($(OS),Linux)
-	$(LN_S) -f $(SV_SVCDIR)/sulogin $(DESTDIR)$(SV_SVCDIR)/.single
 endif
 install-dist: $(DISTFILES)
 install-dir :
@@ -307,8 +304,6 @@ install-doc : install-dir
 install-sv-svcs: install-dir
 	cp -r $(dist_SV_SVCS:%=sv/%) $(DESTDIR)$(SV_SVCDIR)
 
-%/RUN: %
-	$(install_SCRIPT) sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
 $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_SV_OPTS): install-sv-svcs
@@ -345,7 +340,7 @@ endif
 	rm -f $(DESTDIR)$(SV_LIBDIR)/bin/* $(DESTDIR)$(SV_LIBDIR)/sbin/* \
 		$(DESTDIR)$(SV_LIBDIR)/sh/* $(DESTDIR)$(SV_LIBDIR)/cache/* \
 		$(DESTDIR)$(SV_SVCDIR)/getty-tty* $(DESTDIR)$(SV_SVCDIR)/.opt \
-		$(DESTDIR)$(SV_SVCDIR)/.s*/*
+		$(DESTDIR)$(SV_SVCDIR)/.*/*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
