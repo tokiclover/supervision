@@ -685,19 +685,6 @@ case "$os" in
 	prefix_default='/usr'
 	rundir="/run"
 	os=Linux
-	for thing in $LINUX_DIST_EXTRA; do
-		append DIST_EXTRA "$thing"
-	done
-	for type in $SERVICES_TYPE; do
-		eval append EXTRA_${type}_SERVICES \$LINUX_${type}_SERVICES
-	done
-	type=
-	for i in $RUNLEVELS_LIST; do
-		eval append EXTRA_${i}_SERVICES \$LINUX_${i}_SERVICES
-	done
-	i=
-	append EXTRA_SERVICE_INSTANCES $LINUX_SERVICE_INSTANCES
-	append EXTRA_OPTIONS_INSTANCES $LINUX_OPTIONS_INSTANCES
 	;;
 	[Gg][Nn][Uu]-k[Ff]ree[Bb][Ss][Dd]*)
 	prefix_default='/usr'
@@ -720,6 +707,20 @@ case "$os" in
 	os=NetBSD
 	;;
 esac
+
+for thing in $(eval $(toupper $os)_DIST_EXTRA); do
+	append DIST_EXTRA "$thing"
+done
+for type in $SERVICES_TYPE; do
+	eval append EXTRA_${type}_SERVICES \$$(toupper $os)_${type}_SERVICES
+done
+type=
+for i in $RUNLEVELS_LIST; do
+	eval append EXTRA_${i}_SERVICES \$$(toupper $os)_${i}_SERVICES
+done
+i=
+eval append EXTRA_SERVICE_INSTANCES \$$(toupper $os)_SERVICE_INSTANCES
+eval append EXTRA_OPTIONS_INSTANCES \$$(toupper $os)_OPTIONS_INSTANCES
 
 cc_default="${build:+${build}-$cc}"
 ld_default="$cc_default"
