@@ -18,14 +18,26 @@ _unused_ char *shell_string_value(char *str)
 		return NULL;
 	char *ptr = str, *end = str+strlen(str)-1;
 
-	if (*ptr == '\'' || *ptr == '\"')
+	switch (*ptr) {
+	case '\'':
+	case '\"':
+	case '\t':
+	case ' ' :
 		ptr++;
-	while (*ptr == ' ')
-		(void)*ptr++;
-	if (*end == '\'' || *end == '\"')
+		break;
+	}
+	while (*ptr == ' ' || *ptr == '\t')
+		ptr++;
+	switch (*end) {
+	case '\'':
+	case '\"':
+	case '\t':
+	case ' ' :
 		*end-- = '\0';
-	for ( ; *end == ' '; *end-- = '\0')
-		;
+		break;
+	}
+	while (*end == ' ' || *end == '\t')
+		*end-- = '\0';
 	if (*ptr != '\0')
 		return ptr;
 	return NULL;
