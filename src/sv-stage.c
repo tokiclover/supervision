@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-stage.c  0.13.0 2016/12/30
+ * @(#)sv-stage.c  0.13.0 2017/01/12
  */
 
 #include <stdio.h>
@@ -33,6 +33,7 @@ int sv_nohang   =  0;
 int sv_parallel =  0;
 int sv_level    = -1;
 int sv_stage    = -1;
+int sv_system = 0;
 pid_t sv_pid  = 0;
 int svc_deps  = 1;
 int svc_quiet = 1;
@@ -567,6 +568,17 @@ int main(int argc, char *argv[])
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
+	setenv("SV_SYSTEM", "", 1);
+#if defined(PREFIX) && !defined(__linux__)
+	setenv("SV_PREFIX", PREFIX);
+#endif
+	if ((ptr = (char*)sv_getconf("SV_SYSTEM")))
+		for (opt = SV_KEYWORD_SUPERVISION; sv_keywords[opt]; opt++)
+			if (strcmp(ptr, sv_keywords[opt]) == 0) {
+				setenv("SV_SYSTEM", ptr, 1);
+				sv_system = opt;
+				break;
+			}
 	setenv("SV_LIBDIR", SV_LIBDIR, 1);
 	setenv("SV_RUNDIR", SV_RUNDIR, 1);
 	setenv("SV_SVCDIR", SV_SVCDIR, 1);

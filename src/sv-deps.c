@@ -15,7 +15,8 @@
 static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need" };
 const char *const sv_keywords[] = {
 	NULL,
-	"timeout",
+	"timeout", "shutdown", "supervision", "docker", "jail", "lxc", "openvz",
+	"prefix", "systemd-nspawn", "uml", "vserver", "xenu",
 	NULL
 };
 
@@ -445,6 +446,18 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 			errno = 0;
 			deps->timeout = (int)strtol(ptr, NULL, 10);
 			if (errno == ERANGE) deps->timeout = 0;
+			continue;
+		}
+		else if (strcmp(type, "keyword") == 0) {
+			if (!(ptr = strtok_r(ptr, " \t", &type)))
+				continue;
+			do {
+				for (t = 1; sv_keywords[t]; t++)
+					if (strcmp(ptr, sv_keywords[t]) == 0) {
+						SV_KEYWORD_SET(deps, t);
+						break;
+					}
+			} while ((ptr = strtok_r(NULL, " \t", &type)));
 			continue;
 		}
 

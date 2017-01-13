@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs.c  0.13.0 2016/01/12
+ * @(#)rs.c  0.13.0 2017/01/12
  */
 
 #include <stdio.h>
@@ -64,6 +64,7 @@ static const char *const environ_whitelist[] = {
 };
 static const char *environ_list[] = {
 	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE", "SV_RUNDIR", "SV_SVCDIR",
+	"SV_SYSTEM", 
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
 
@@ -160,7 +161,7 @@ int svc_cmd(struct svcrun *run)
 {
 	static char *deps[2] = { "--deps", "--nodeps" };
 	static char *type[2] = { "--rs", "--sv" };
-	static const char *svcd[] = { "", NULL };
+	static const char *svcd[] = { NULL, NULL, NULL };
 	static struct stat st_dep = { .st_mtime = 0 };
 	struct stat st_buf;
 	int retval;
@@ -168,20 +169,28 @@ int svc_cmd(struct svcrun *run)
 	size_t len = 0;
 	const char *cmd = run->argv[4];
 	char *path, buf[512];
-#if defined(PREFIX)
-	svcd[1] = PREFIX;
-#endif
 
 	if (!st_dep.st_mtime) {
 		stat(SV_SVCDEPS_FILE, &st_dep);
 		svc_env();
+#if defined(PREFIX) && !defined(__linux__)
+		svcd[1] = PREFIX;
+#endif
 	}
 	run->cmd = -1;
 	run->envp = svc_environ;
-	run->dep = NULL;
+	run->ARGV = run->dep = NULL;
 	run->mark = 0;
+	if (!run->svc->data)
+		run->svc->data = sv_svcdeps_load(run->name);
+	run->dep = run->svc->data;
 
 	if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_START]) == 0) {
+		if (sv_system > SV_KEYWORD_SHUTDOWN && SV_KEYWORD_GET(run->dep, sv_system)) {
+			LOG_WARN("`%s' has `%s' keyword\n", run->name, sv_keywords[sv_system]);
+			return -EPERM;
+		}
+
 		run->mark = SV_SVC_STAT_STAR;
 		if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 			svc_state(run->name, SV_SVC_STAT_PIDS)) {
@@ -191,6 +200,16 @@ int svc_cmd(struct svcrun *run)
 		run->cmd  = SV_SVC_CMD_START;
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STOP]) == 0) {
+		if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_SHUTDOWN)) {
+			LOG_WARN("`%s' has `%s' keyword\n", run->name,
+					sv_keywords[SV_KEYWORD_SHUTDOWN]);
+			return -EPERM;
+		}
+		if (sv_system > SV_KEYWORD_SHUTDOWN && SV_KEYWORD_GET(run->dep, sv_system)) {
+			LOG_WARN("`%s' has `%s' keyword\n", run->name, sv_keywords[sv_system]);
+			return -EPERM;
+		}
+
 		run->mark = SV_SVC_MARK_STAR;
 		if (!(svc_state(run->name, SV_SVC_STAT_STAR) ||
 			  svc_state(run->name, SV_SVC_STAT_PIDS))) {
@@ -259,8 +278,8 @@ int svc_cmd(struct svcrun *run)
 	/* get service path */
 	if (!run->path) {
 		retval = -ENOENT;
-		for (i = 0; i < sizeof(svcd) && svcd[i]; i++) {
-			if (i)
+		for (i = 0; i < sizeof(svcd); i++) {
+			if (svcd[i])
 				snprintf(buf, sizeof(buf), "%s/%s/%s", svcd[i], SV_SVCDIR, run->name);
 			else
 				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
@@ -316,9 +335,6 @@ int svc_cmd(struct svcrun *run)
 		run->ARGV[1] = type[0];
 	run->ARGV[2] = deps[0];
 	run->ARGV[3] = run->path;
-	if (!run->svc->data)
-		run->svc->data = sv_svcdeps_load(run->name);
-	run->dep = run->svc->data;
 
 	/* check service mtime */
 	if (st_buf.st_mtime > st_dep.st_mtime)
@@ -545,6 +561,8 @@ static void svc_env(void)
 	for (j = 0; environ_list[j]; j++)
 		if ((ptr = getenv(environ_list[j])))
 			fprintf(fp, "%s=%s\n", environ_list[j], ptr);
+	fflush(fp);
+	fclose(fp);
 	free(env);
 }
 
@@ -856,6 +874,8 @@ int svc_exec(int argc, const char *argv[]) {
 		return 2;
 	case -ECANCELED:
 		return 4;
+	case -EPERM:
+		return 5;
 	case SVC_WAITPID:
 		run.cld = run.pid;
 		return svc_waitpid(&run, 0);

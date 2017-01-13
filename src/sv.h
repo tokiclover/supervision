@@ -73,6 +73,7 @@ extern int sv_nohang;
 extern int sv_parallel;
 extern int sv_level;
 extern int sv_stage;
+extern int sv_system;
 extern int svc_deps;
 extern int svc_quiet;
 extern const char *progname;
