@@ -588,6 +588,7 @@ LINUX_OPTIONS_INSTANCES="
 	ip6tables
 "
 LINUX_SYSINIT_SERVICES="
+	tmpfiles.dev
 "
 LINUX_SYSBOOT_SERVICES="
 	console

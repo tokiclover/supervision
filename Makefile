@@ -154,8 +154,7 @@ dist_SYSINIT = \
 	devfs \
 	dmesg \
 	kmod-static-nodes \
-	sysfs \
-	tmpfiles.dev
+	sysfs
 dist_SYSBOOT = \
 	$(EXTRA_SYSBOOT_SERVICES) \
 	checkfs \
