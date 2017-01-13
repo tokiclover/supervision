@@ -715,7 +715,7 @@ case "$os" in
 	;;
 esac
 
-for thing in $(eval $(toupper $os)_DIST_EXTRA); do
+for thing in $(eval echo \$$(toupper $os)_DIST_EXTRA); do
 	append DIST_EXTRA "$thing"
 done
 for type in $SERVICES_TYPE; do
@@ -803,7 +803,6 @@ check_cpp_condition "unistd.h" "defined (_XOPEN_REALTIME)" ||
 check_cpp_condition "unistd.h" "defined (_XOPEN_REALTIME_THREADS)" ||
 	DIE "_XOPEN_REALTIME_THREADS is not defined!"
 
-check_CFLAGS -fPIC
 check_CFLAGS -Wall
 check_CFLAGS -Wdisabled-optimization
 check_CFLAGS -Wempty-body
@@ -904,6 +903,7 @@ rundir                     : $rundir
 CFLAGS                     : $CFLAGS
 CPPFLAGS                   : $CPPFLAGS
 LDFLAGS                    : $LDFLAGS
+HAVE_POSIX_ASYNCHRONOUS_IO : ${HAVE_POSIX_ASYNCHRONOUS_IO-no}
 SysVinit (compatibility)   : ${sysvinit-no}
 EXTRA_SERVICE_INSTANCES    : $EXTRA_SERVICE_INSTANCES
 EXTRA_RUNSCRIPT_SERVICES   : $EXTRA_RUNSCRIPT_SERVICES
