@@ -14,13 +14,17 @@
 
 _unused_ char *shell_string_value(char *str)
 {
+	char *ptr = str, *end;
 	if (!str)
 		return NULL;
-	char *ptr = str, *end = str+strlen(str)-1;
+	if      ((end = strrchr(str, '"')))  ;
+	else if ((end = strrchr(str, '\''))) ;
+	else if ((end = strrchr(str, '#')))  ;
+	else      end = str+strlen(str)-1    ;
 
 	switch (*ptr) {
 	case '\'':
-	case '\"':
+	case '"' :
 	case '\t':
 	case ' ' :
 		ptr++;
@@ -30,7 +34,7 @@ _unused_ char *shell_string_value(char *str)
 		ptr++;
 	switch (*end) {
 	case '\'':
-	case '\"':
+	case '"' :
 	case '\t':
 	case ' ' :
 		*end-- = '\0';
