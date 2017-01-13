@@ -35,15 +35,11 @@ add_dep()
 	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
 	shift 2
 	echo "${svc}:${dep}=\"${@}\""
-	[ -n "${SVC_KEYWORD}" ] && echo "${svc}:keyword=\"${SVC_KEYWORD}\""
-	[ -n "${SVC_PROVIDE}" ] && echo "${svc}:provide=\"${SVC_PROVIDE}\""
-	[ -n "${SVC_TIMEOUT}" ] && echo "${svc}:timeout=\"${SVC_TIMEOUT}\""
-	[ -n "${SVC_NOHANG}"  ] && echo "${svc}:nohang=\"${SVC_NOHANG}\""
 }
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	local dep SVC_NOHANG SVC_PROVIDE SVC_KEYWORD SVC_TIMEOUT
+	local dep SVC_KEYWORD SVC_NOHANG SVC_PROVIDE SVC_TIMEOUT
 
 	SVC_NAME="${1}"
 	__svc__="${SV_SVCDIR}/${1}"
@@ -60,6 +56,10 @@ dep_gen()
 	for dep in ${__SV_DEPS_ORDER__}; do
 		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}} >&4
 	done
+	[ -n "${SVC_KEYWORD}" ] && echo "${svc}:keyword=\"${SVC_KEYWORD}\"" >&4
+	[ -n "${SVC_PROVIDE}" ] && echo "${svc}:provide=\"${SVC_PROVIDE}\"" >&4
+	[ -n "${SVC_TIMEOUT}" ] && echo "${svc}:timeout=\"${SVC_TIMEOUT}\"" >&4
+	[ -n "${SVC_NOHANG}"  ] && echo "${svc}:nohang=\"${SVC_NOHANG}\""   >&4
 }
 
 dep_scan()
