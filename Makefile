@@ -83,7 +83,6 @@ dist_SV_SVCS  = \
 	spawn-fcgi.nginx \
 	snmpd \
 	snmptrapd \
-	sulogin \
 	syslog \
 	inetd \
 	httpd \
@@ -287,7 +286,9 @@ ifneq ($(OS),Linux)
 	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(PREFIX)$(SV_SVCDIR)/.opt
 endif
 endif
+ifneq ($(OS),Linux)
 	$(LN_S) -f $(SV_SVCDIR)/sulogin $(DESTDIR)$(SV_SVCDIR)/.single
+#endif
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)

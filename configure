@@ -570,19 +570,18 @@ LINUX_RUNSCRIPT_SERVICES="
 	zramfs
 "
 LINUX_SUPERVISION_SERVICES="
+	acpid
+	cgred
 	docker
+	sulogin
+	udev
+	udev-monitor
 "
 LINUX_SERVICE_INSTANCES="
 	ip6tables:iptables
 "
 LINUX_OPTIONS_INSTANCES="
 	ip6tables
-"
-LINUX_SUPERVISION_SERVICES="
-	acpid
-	cgred
-	udev
-	udev-monitor
 "
 LINUX_SYSINIT_SERVICES="
 "
