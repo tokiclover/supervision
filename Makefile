@@ -128,7 +128,6 @@ dist_RS_SVCS = \
 	devfs \
 	dmesg \
 	hostname \
-	kmod \
 	kmod-static-nodes \
 	libvirt-guests \
 	localfs \
@@ -161,7 +160,6 @@ dist_SYSINIT = \
 	tmpfiles.dev
 dist_SYSBOOT = \
 	$(EXTRA_SYSBOOT_SERVICES) \
-	kmod \
 	console \
 	checkfs \
 	localfs \

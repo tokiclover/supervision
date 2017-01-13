@@ -563,6 +563,7 @@ LINUX_RUNSCRIPT_SERVICES="
 	dmcrypt
 	ipset
 	iptables
+	kmod
 	lvm
 	mdev
 	qemu-binfmt
@@ -588,6 +589,7 @@ LINUX_SYSINIT_SERVICES="
 "
 LINUX_SYSBOOT_SERVICES="
 	dmcrypt
+	kmod 
 	ipset
 	iptables
 	qemu-binfmt
