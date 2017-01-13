@@ -579,6 +579,10 @@ int main(int argc, char *argv[])
 			if (strcmp(ptr, sv_keywords[opt]) == 0) {
 				setenv("SV_SYSTEM", ptr, 1);
 				sv_system = opt;
+#if defined(PREFIX) && !defined(__linux__)
+				if (opt == SV_KEYWORD_PREFIX)
+					setenv("SV_PREFIX", PREFIX, 1);
+#endif
 				break;
 			}
 	if ((ptr = (char*)sv_getconf("SV_PREFIX")))
