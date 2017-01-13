@@ -171,6 +171,7 @@ dist_SYSBOOT = \
 	tmpfiles.setup
 dist_DEFAULT = \
 	$(EXTRA_DEFAULT_SERVICES) \
+	sshd \
 	getty-tty6 getty-tty5 getty-tty4 getty-tty3 getty-tty2 getty-tty1
 dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
