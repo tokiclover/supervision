@@ -565,6 +565,7 @@ LINUX_RUNSCRIPT_SERVICES="
 	iptables
 	lvm
 	mdev
+	qemu-binfmt
 	raid
 	unionfs
 	zramfs
@@ -589,6 +590,7 @@ LINUX_SYSBOOT_SERVICES="
 	dmcrypt
 	ipset
 	iptables
+	qemu-binfmt
 "
 LINUX_DEFAULT_SERVICES="
 "
