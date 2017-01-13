@@ -1,0 +1,48 @@
+#
+# $Header:  /etc/sv/docker/OPTIONS                       Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
+#
+
+pidfile=/run/${SVC_NAME}.pid
+SVC_CMD=/usr/bin/dockerd
+SVC_OPTS="-p ${pidfile} ${SVC_OPTS}"
+SVC_USER=root
+SVC_GROUP=docker
+LOG_MODE=0775
+
+kernel_modules="bridge br_netfilter ip_vs_rr veth vxlan xfrm_algo xfrm_user \
+	ipvlan macvlan aufs btrfs dm-thin-pool overlay zfs"
+
+start_pre()
+{
+	#
+	# XXX: only load for service ./run (not log/run)
+	#
+	if [ -z "${__cmd_dir__}" ]; then
+		modprobe -aq ${kernel_modules}
+	fi
+
+	checkpath -qf -m 0644 -o ${SVC_USER}:${SVC_GROUP} ${pidfile}
+	ulimit -n 1048576
+	ulimit -u 1048576
+	return 0
+}
+start_post()
+{
+	#
+	# XXX: only load for service ./run (not log/run)
+	#
+	if [ -z "${__cmd_dir__}" ]; then
+		modprobe -arq ${kernel_modules}
+	fi
+
+	rm -f ${pidfile}
+}
+log_start_pre()
+{
+	start_pre
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
