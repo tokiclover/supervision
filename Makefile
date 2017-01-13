@@ -207,6 +207,11 @@ dist_DIRS  += \
 	$(SV_SVCDIR)/.default $(SV_SVCDIR)/.shutdown $(SV_SVCDIR)/.single
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
+dist_SVC_SED  =
+ifneq ($(OS),Linux)
+dist_SVC_SED += -e 's|/usr/|$(PREFIX)/|g'
+endif
+
 .PHONY: FORCE all install install-doc install-dist install-all
 
 all: $(SUBDIRS)
@@ -256,20 +261,29 @@ install: install-dir install-dist install-sv-svcs
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
 		   $(DESTDIR)$(SV_LIBDIR)/opt/SVC_OPTIONS
-ifdef RUNIT_INIT_STAGE
+ifneq ($(EXEC_PREFIX),)
+	sed -e 's|/sbin/rs|$(SBINDIR)/rs|g' \
+		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
+endif
+ifneq ($(dist_SVC_SED),)
+	sed $(dist_SVC_SED) \
+		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
+		   $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%/OPTIONS*)
+endif
+ifeq ($(RUNIT_INIT_STAGE),yes)
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 		-i $(DESTDIR)$(SYSCONFDIR)/runit/*
 endif
-ifdef S6_INIT_STAGE
+ifdef ($(S6_INIT_STAGE),yes)
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
 endif
 	for svc in $(dist_SVC_INSTANCES); do \
-		$(LN_S) -f $${svc#*:} $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
+		$(LN_S) -f "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
 	$(LN_S) -f $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysinit/
 	$(LN_S) -f $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysboot/
@@ -283,7 +297,7 @@ endif
 endif
 ifneq ($(OS),Linux)
 	$(LN_S) -f $(SV_SVCDIR)/sulogin $(DESTDIR)$(SV_SVCDIR)/.single
-#endif
+endif
 install-dist: $(DISTFILES)
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
@@ -311,7 +325,7 @@ uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf
 	rm -f $(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/sv-shutdown \
 		$(DESTDIR)$(SBINDIR)/rs
-ifdef SYSVINIT
+ifeq ($(SYSVINIT),yes)
 	rm -f $(DESTDIR)$(SV_LIBDIR)/sbin/initctl
 endif
 	rm -f $(DESTDIR)$(VIMDIR)/syntax/sv.vim
