@@ -844,7 +844,15 @@ check_CP <<EOF || DIE "Caonnot find paths.h header"
 #endif
 int main(void){puts(_PATH_NOLOGIN); return 0;}
 EOF
-_PATH_NOLOGIN=$($TMP_E)
+check_CP <<EOF || DIE "Caonnot find paths.h header"
+#include <stdio.h>
+#include <paths.h>
+#ifndef _PATH_STDPATH
+#define _PATH_STDPATH "/bin:/sbin:/usr/bin:/usr/sbin"
+#endif
+int main(void){puts(_PATH_STDPATH); return 0;}
+EOF
+_PATH_STDPATH=$($TMP_E)
 _PATH_WALL=
 check_CP <<EOF && _PATH_WALL=$($TMP_E)
 #include <stdio.h>
@@ -903,8 +911,10 @@ rundir                     : $rundir
 CFLAGS                     : $CFLAGS
 CPPFLAGS                   : $CPPFLAGS
 LDFLAGS                    : $LDFLAGS
+_PATH_STDPATH              : $_PATH_STDPATH
+_PATH_NOLOGIN              : $_PATH_NOLOGIN
+_PATH_WALL                 : $_PATH_WALL
 HAVE_POSIX_ASYNCHRONOUS_IO : ${HAVE_POSIX_ASYNCHRONOUS_IO-no}
-SysVinit (compatibility)   : ${sysvinit-no}
 EXTRA_SERVICE_INSTANCES    : $EXTRA_SERVICE_INSTANCES
 EXTRA_RUNSCRIPT_SERVICES   : $EXTRA_RUNSCRIPT_SERVICES
 EXTRA_SUPERVISION_SERVICES : $EXTRA_SUPERVISION_SERVICES
@@ -915,6 +925,7 @@ EXTRA_SHUTDOWN_SERVICES    : $EXTRA_SHUTDOWN_SERVICES
 EXTRA_SINGLE_SERVICES      : $EXTRA_SINGLE_SERVICES
 Runit init-stage           : ${runit-no}
 S6    init-stage           : ${s6-no}
+SysVinit (compatibility)   : ${sysvinit-no}
 SUMMARY_EOF
 
 echo "Genrating $CONFIG_MAK"
@@ -980,6 +991,7 @@ DIST_EXTRA=$DIST_EXTRA
 EXTRA_SERVICE_INSTANCES=$EXTRA_SERVICE_INSTANCES
 EXTRA_OPTIONS_INSTANCES=$EXTRA_OPTIONS_INSTANCES
 $(print_extra_services)
+_PATH_STDPATH=$_PATH_STDPATH
 _PATH_NOLOGIN=$_PATH_NOLOGIN
 _PATH_WALL   =$_PATH_WALL
 endif

@@ -17,7 +17,6 @@
 :	${__cmd_args__:="${@}"}
 :	${COLOR:=Yes}
 :	${LOGDIR:=/var/log}
-PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin
 
 [ -n "${__RUNSCRIPT_FUNCTIONS__}" ] ||
 	. "${SV_LIBDIR}"/sh/runscript-functions ||
