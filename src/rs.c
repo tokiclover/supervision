@@ -64,7 +64,7 @@ static const char *const environ_whitelist[] = {
 };
 static const char *environ_list[] = {
 	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE", "SV_RUNDIR", "SV_SVCDIR",
-	"SV_SYSTEM", 
+	"SV_SYSTEM", "SV_PREFIX",
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
 };
 
@@ -175,6 +175,9 @@ int svc_cmd(struct svcrun *run)
 		svc_env();
 #if defined(PREFIX) && !defined(__linux__)
 		svcd[1] = PREFIX;
+		svcd[2] = sv_getconf("SV_PREFIX");
+#else
+		svcd[1] = sv_getconf("SV_PREFIX");
 #endif
 	}
 	run->cmd = -1;

@@ -571,6 +571,8 @@ int main(int argc, char *argv[])
 	setenv("SV_SYSTEM", "", 1);
 #if defined(PREFIX) && !defined(__linux__)
 	setenv("SV_PREFIX", PREFIX);
+#else
+	setenv("SV_PREFIX", "", 1);
 #endif
 	if ((ptr = (char*)sv_getconf("SV_SYSTEM")))
 		for (opt = SV_KEYWORD_SUPERVISION; sv_keywords[opt]; opt++)
@@ -579,6 +581,8 @@ int main(int argc, char *argv[])
 				sv_system = opt;
 				break;
 			}
+	if ((ptr = (char*)sv_getconf("SV_PREFIX")))
+		setenv("SV_PREFIX", ptr, 1);
 	setenv("SV_LIBDIR", SV_LIBDIR, 1);
 	setenv("SV_RUNDIR", SV_RUNDIR, 1);
 	setenv("SV_SVCDIR", SV_SVCDIR, 1);
