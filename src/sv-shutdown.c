@@ -189,7 +189,7 @@ _noreturn_ static void help_message(int status)
 {
 	int i = 0;
 
-	printf("Usage: %s [OPTIONS] [ACTION] (TIME) [MESSAGE]\n", progname);
+	printf("Usage: %s [OPTIONS] (ACTION) (TIME) [MESSAGE]\n", progname);
 	printf("    -6, -%c, --%-16s %s\n", longopts[i].val, longopts[i].name,
 		longopts_help[i]);
 	i++;
@@ -254,8 +254,7 @@ static void sighandler(int sig, siginfo_t *si, void *ctx _unused_)
 #endif
 		break;
 	default:
-		if (sig > 0)
-			WARN("Caught unhandled signal %d ...\n", sig);
+		WARN("Caught unhandled signal %d ...\n", sig);
 	}
 	errno = serrno;
 }
