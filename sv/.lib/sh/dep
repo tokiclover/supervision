@@ -28,6 +28,7 @@ export LC_ALL=C LANG=C
 :	${SV_LIBDIR:=${0%/sh/*}}
 . "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
+. ${SV_SVCDIR}.conf
 SV_DEPDIR="${SV_TMPDIR}/deps"
 
 add_dep()
@@ -66,8 +67,9 @@ dep_scan()
 {
 	local dir svc
 
-	for dir in ${@:-${SV_SVCDIR}}; do
-		cd ${dir}
+	for dir in ${SV_SVCDIR} ${__SV_PREFIX__:+$__SV_PREFIX__$SV_SVCDIR} \
+		${SV_PREFIX:+$SV_SVCDIR$SV_SVCDIR}; do
+		[ -d ${dir} ] && cd ${dir} || continue
 		for svc in *; do
 			dep_gen "${svc}"
 		done
