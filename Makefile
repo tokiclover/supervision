@@ -124,7 +124,6 @@ dist_RS_SVCS = \
 	$(EXTRA_RUNSCRIPT_SERVICES) \
 	checkfs \
 	clock \
-	console \
 	devfs \
 	dmesg \
 	hostname \
@@ -160,7 +159,6 @@ dist_SYSINIT = \
 	tmpfiles.dev
 dist_SYSBOOT = \
 	$(EXTRA_SYSBOOT_SERVICES) \
-	console \
 	checkfs \
 	localfs \
 	loopback \
