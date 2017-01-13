@@ -55,25 +55,21 @@ const char *sv_getconf(const char *env)
 static int sv_conf_load(void)
 {
 	FILE *fp;
-	char *line = NULL, *env, *ptr;
-	size_t count = 0, len, l, num = 32, pos, size = 1024;
+	char *line = NULL, *ptr;
+	size_t count = 0, len, l, num = 16, pos;
 
 	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
 		WARN("Failed to open %s\n", SV_CONFIG_FILE);
 		return -1;
 	}
-
 	SV_CONFIG_ARRAY = err_calloc(num, sizeof(void *));
-	env = err_malloc(size);
 
 	while (sv_getline(fp, &line, &len) > 0) {
 		if (line[0] == '#')
 			continue;
-
 		/* get conf name */
-		ptr = strchr(line, '=');
+		ptr = strchr(line, '=')+1;
 		pos = ptr-line;
-		memcpy(env, line, pos);
 
 		/* get conf value */
 		ptr = shell_string_value(ptr);
@@ -82,26 +78,21 @@ static int sv_conf_load(void)
 
 		/* append conf value if any */
 		l = strlen(ptr);
-		if (l++) {
-			env = err_realloc(env, pos+l);
-			memcpy(env+pos, ptr, l);
+		if (++l) {
+			memmove(line+pos, ptr, l);
+			SV_CONFIG_ARRAY[count++] = err_strdup(line);
 		}
 		else
 			continue;
 
-		/* append conf string to list */
-		SV_CONFIG_ARRAY[count++] = env;
-		env = err_malloc(size);
 		/* expand list if necessary */
 		if (count == num) {
-			num += 32;
+			num += 16;
 			SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*num);
 		}
 	}
 	fclose(fp);
 
-	if (SV_CONFIG_ARRAY[count-1] != env)
-		free(env);
 	SV_CONFIG_ARRAY[count++] = NULL;
 	SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*count);
 
