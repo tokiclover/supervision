@@ -123,7 +123,6 @@ dist_SV_OPTS  = \
 dist_RS_SVCS = \
 	$(EXTRA_RUNSCRIPT_SERVICES) \
 	checkfs \
-	clock \
 	devfs \
 	dmesg \
 	hostname \
