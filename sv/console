@@ -7,6 +7,7 @@
 description="Set up console (font, keymap, encoding)"
 SVC_NEED='localfs'
 SVC_AFTER='miscfs'
+SVC_KEYWORD='docker lxc openvz prefix supervision systemd-nspawn uml vserver xenu'
 
 :	${SV_TTY_NUMBER:=12}
 :	${SV_TTY_UNICODE:=YES}

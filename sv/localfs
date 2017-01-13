@@ -7,6 +7,7 @@
 #
 
 description="Mount ${SVC_NAME%fs} filesystems"
+SVC_KEYWORD="docker jail lxc prefix supervision systemd-nspawn uml vserver"
 
 if [ "${SVC_NAME}" = localfs ]; then
 	SVC_AFTER='kmod lvm device-mapper dmcrypt raid'

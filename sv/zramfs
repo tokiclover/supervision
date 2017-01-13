@@ -11,6 +11,7 @@ description_reset="Reset ZRAM devices"
 
 SVC_BEFORE=miscfs
 SVC_STOPPED_COMMANDS=reset
+SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver xenu"
 
 :	${ZRAM_DEVICE_NUMBER:=4}
 

@@ -8,6 +8,7 @@ description='Wi-Fi Protected Access client and IEEE 802.1X supplicant'
 # support instance for interface
 #
 SVC_BEFORE='dhcp net'
+SVC_KEYWORD="shutdown"
 
 case "${SVC_NAME}" in
 	(*.*)

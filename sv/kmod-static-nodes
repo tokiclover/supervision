@@ -7,6 +7,7 @@
 description="Set up static kernel nodes"
 SVC_AFTER='devfs'
 SVC_BEFORE='dev tmpfiles.dev'
+SVC_KEYWORD='lxc supervision systemd-nspawn'
 
 start()
 {

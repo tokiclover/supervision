@@ -7,6 +7,7 @@
 description="Set up network share zfs volumes"
 SVC_AFTER="localfs networkfs zed"
 SVC_NEED="net zfs"
+SVC_KEYWORD="docker lxc openvz prefix supervision uml vserver"
 
 zfs="$(command -v zfs 2>${NULL})"
 

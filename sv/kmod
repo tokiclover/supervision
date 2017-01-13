@@ -6,6 +6,7 @@
 
 description="kernel modules loader"
 SVC_AFTER="devfs sysfs"
+SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver"
 
 start()
 {
@@ -27,7 +28,8 @@ start()
 	for mod in ${modules} ${kv_modules}; do
 		k_modules="${k_modules} ${mod}"
 	done
-	modprobe -a ${k_modules} >${NULL} 2>&1
+	modprobe -aq ${k_modules}
+	return 0
 }
 
 #

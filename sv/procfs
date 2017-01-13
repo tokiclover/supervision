@@ -10,6 +10,7 @@ description='Set up miscellaneous filesystems'
 :	${SYSFS_OPTS:=nodev,nosuid,noexec}
 
 SVC_NEED='devfs kmod'
+SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver"
 
 mount_binfmt_misc()
 {

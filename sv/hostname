@@ -5,6 +5,7 @@
 #
 
 description="Set up machine hostname"
+SVC_KEYWORD="docker lxc prefix supervision systemd-nspawn"
 
 start()
 {

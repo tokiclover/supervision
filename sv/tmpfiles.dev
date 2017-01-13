@@ -5,6 +5,7 @@
 #
 
 description="Set up tmpfiles.d entries"
+SVC_KEYWORD="prefix vserver"
 
 if [ "${SVC_NAME}" = tmpfiles.dev ]; then
 	SVC_OPTS='--prefix=/dev'

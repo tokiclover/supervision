@@ -9,6 +9,7 @@
 
 description='Set up /sys/MISCELLANEOUS filesystems'
 SVC_COMMANDS=mount_cgroup
+SVC_KEYWORD="docker lxc prefix supervision systemd-nspawn uml vserver"
 
 mount_sys()
 {

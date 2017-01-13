@@ -7,6 +7,7 @@
 
 description="Set up kernel messages level for printing"
 SVC_BEFORE="dev kmod"
+SVC_KEYWORD="docker lxc prefix supervision systemd-nspawn vserver"
 
 start()
 {

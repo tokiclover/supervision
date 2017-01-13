@@ -11,6 +11,7 @@ SVC_NEED='localfs'
 SVC_USE='zramfs'
 SVC_BEFORE='logger'
 SVC_AFTER='clock rootfs sysctl'
+SVC_KEYWORD='prefix supervision timeout'
 
 login_setup()
 {

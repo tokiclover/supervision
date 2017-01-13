@@ -6,6 +6,7 @@
 
 description="Mount root filesystem"
 SVC_NEED='checkfs'
+SVC_KEYWORD="docker jail lxc openvz prefix supervision systemd-nspawn uml vserver"
 
 start()
 {

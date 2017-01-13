@@ -6,6 +6,7 @@
 #
 
 description="Set up swap(file)s"
+SVC_KEYWORD="docker jail lxc openvz prefix supervision systemd-nspawn uml vserver"
 if [ "${SVC_NAME}" = swapfiles ]; then
 	SVC_AFTER='localfs'
 fi

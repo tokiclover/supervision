@@ -5,6 +5,7 @@
 #
 
 description="Set up loopback interface"
+SVC_KEYWORD="docker jail prefix supervison systemd-nspawn uml vserver"
 
 start()
 {

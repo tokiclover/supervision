@@ -7,6 +7,7 @@
 description="Set up and import zpools"
 SVC_BEFORE="checkfs"
 SVC_USE="dmcrypt"
+SVC_KEYWORD="docker lxc openvz supervision prefix uml vserver"
 
 zpool="$(command -v zpool 2>${NULL})"
 :	${ZPOOL_CACHE:=/etc/zfs/zpool.cache}
