@@ -13,6 +13,7 @@
  */
 
 #include <initreq.h>
+#include <sys/param.h>
 #include <fcntl.h>
 #include <unistd.h>
 #ifdef HAVE_CONFIG_H
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 	struct init_request ireq;
 	int fd;
 	int len;
-	char arg[512];
+	char arg[PATH_MAX];
 	mode_t m;
 
 	progname = strrchr(argv[0], '/');

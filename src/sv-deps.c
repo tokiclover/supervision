@@ -10,6 +10,7 @@
  */
 
 #include <dirent.h>
+#include <sys/param.h>
 #include "sv-deps.h"
 
 static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need" };
@@ -160,7 +161,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 static int sv_deptree_file_load(SV_DepTree_T *deptree)
 {
 	int p;
-	char path[256];
+	char path[PATH_MAX];
 	char *line = NULL, *ptr, *tmp, svc[128];
 	FILE *fp;
 	size_t len, pos;
@@ -208,7 +209,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 {
 	SV_String_T *ent;
 	int p;
-	char path[256];
+	char path[PATH_MAX];
 	FILE *fp;
 
 	if (!deptree)
@@ -264,7 +265,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 
 static void sv_runlevel_migrate(void)
 {
-	char op[256], np[256];
+	char op[PATH_MAX], np[PATH_MAX];
 	DIR *nd, *od;
 	int i, ofd, nfd;
 	struct dirent *ent;
@@ -305,7 +306,7 @@ static void sv_runlevel_migrate(void)
 
 SV_StringList_T *sv_svclist_load(char *dir_path)
 {
-	char path[256], *ptr;
+	char path[PATH_MAX], *ptr;
 	DIR *dir;
 	struct dirent *ent;
 	SV_StringList_T *svclist;

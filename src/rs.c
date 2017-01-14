@@ -575,7 +575,7 @@ static void svc_env(void)
 
 static int svc_lock(const char *svc, int lock_fd, int timeout)
 {
-	char f_path[512];
+	char f_path[PATH_MAX];
 	int fd;
 	int w;
 	mode_t m;
@@ -670,7 +670,7 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 static void svc_zap(const char *svc)
 {
 	int i;
-	char path[512];
+	char path[PATH_MAX];
 	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL, SV_TMPDIR_STAR,
 		SV_TMPDIR_WAIT, SV_TMPDIR "/ENVS", SV_TMPDIR "/OPTS", NULL };
 
@@ -683,7 +683,7 @@ static void svc_zap(const char *svc)
 
 int svc_mark(const char *svc, int status, const char *what)
 {
-	char path[512], *ptr;
+	char path[PATH_MAX], *ptr;
 	int fd;
 	mode_t m;
 
@@ -737,7 +737,7 @@ int svc_mark(const char *svc, int status, const char *what)
 
 static int svc_state(const char *svc, int status)
 {
-	char path[512], *ptr = NULL;
+	char path[PATH_MAX], *ptr = NULL;
 
 	if (!svc)
 		return 0;
