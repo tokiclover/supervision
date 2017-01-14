@@ -1,10 +1,10 @@
 #
-# $Header:  /etc/sv/@svc@/OPTIONS                        Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id:  @(#) /etc/sv/@svc@/OPTIONS                                    Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
-#SVC_CONFIGFILE=/etc/NAME.conf
-#SVC_REQ_FILES="/etc/FILE1.conf /etc/FILE2.conf"
+#SVC_CONFIGFILE=/etc/@svc@.conf
+#SVC_REQIRED_FILES="/etc/FILE1.conf /etc/FILE2.conf"
 #SVC_COMMANDS=configtes
 #SVC_STARTED_COMMAND=reload
 #SVC_CMD=/path/to/binary
@@ -13,6 +13,9 @@
 #SVC_USE=logger
 #SVC_NEED=net
 #SVC_BEFORE=httpd
+#SVC_KEYWORD="timeout"
+#SVC_NOHANG="NO"
+#SVC_TIMEOUT="60"
 
 #ENV_DIR=Enable
 #PRE_CMD=
@@ -33,7 +36,7 @@
 #
 #start_post()
 #{
-#	svc_wait "${TIMEOUT:60}" /run/daemon.pid
+#	svc_wait "${SVC_TIMEOUT:60}" /run/daemon.pid
 #}
 
 #
@@ -53,10 +56,6 @@
 #configtest()
 #{
 #	eval ${SVC_CMD} -t -f "${SVC_CONFIGFILE}"
-#}
-#reload()
-#{
-#	svc_sig HUP
 #}
 
 #

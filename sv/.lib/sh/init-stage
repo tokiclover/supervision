@@ -1,9 +1,8 @@
 #!/bin/sh
 #
-# $Header:  /lib/sv/sh/init-stage                        Exp $
-# $Author: (c) 2015-7 tokiclover <tokiclover@gmail.com>  Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 1.7 2017/01/10                               Exp $
+# $Id:  @(#) init-stage    1.7 2017/01/12 21:09:26                    Exp $
+# $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
+# $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 
 :	${name=${0##*/}}
