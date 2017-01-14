@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/inetd/OPTIONS.xinetd                 Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/xinetd/OPTIONS                                    Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 name=xinetd

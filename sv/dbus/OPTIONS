@@ -1,9 +1,9 @@
 #
-# $Header:  /etc/sv/dbus/OPTIONS                         Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/dbus-daemon/OPTIONS                               Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
-SVC_CMD=dbus-daemon
+SVC_CMD=/usr/bin/dbus-daemon
 SVC_OPTS='--system --nofork'
 
 SVC_SOCKET=/var/run/dbus/system_bus_socket

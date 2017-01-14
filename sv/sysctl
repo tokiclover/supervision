@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/sysctl                                  Exp $
-# $License: 2-clause/new/simplified BSD                    Exp $
+# $Id: @(#) /etc/sv/sysctl                                            Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 SVC_BEFORE="miscfs logger"

@@ -1,5 +1,8 @@
 #!/sbin/rs
-# $Id$
+#
+# $Id: @(#) /etc/sv/vmware                                            Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+#
 
 SVC_NEED=localfs
 SVC_USE=net

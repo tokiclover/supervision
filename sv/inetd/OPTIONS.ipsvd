@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/inetd/OPTIONS.ipsvd                  Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/ipsvd/OPTIONS                                     Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 case "${SVC_NAME}" in

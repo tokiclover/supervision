@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/syslog/OPTIONS.syslog-ng             Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/syslog-ng/OPTIONS                                                               Exp $
+# $L$: 2-clause/new/simplified BSD                                                                  Exp $
 #
 
 name=syslog-ng

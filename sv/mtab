@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/mtab                                  Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/mtab                                              Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="Set up /etc/mtab"

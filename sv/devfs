@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/devfs                                 Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/devfs                                             Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Set up /dev/MISCELLANEOUS filesystems'

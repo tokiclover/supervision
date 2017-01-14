@@ -1,4 +1,8 @@
 #!/sbin/rs
+#
+# $Id: @(#) /etc/sv/libvirt-guests                                    Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+#
 
 description="Virtual Machine Management (libvirt) Guests"
 SVC_USE=libvirtd

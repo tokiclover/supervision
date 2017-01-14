@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/syslog/OPTIONS.rsyslog               Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/rsyslog/OPTIONS                                                                 Exp $
+# $L$: 2-clause/new/simplified BSD                                                                  Exp $
 #
 
 description="Rocket-fast system log precessing daemon"

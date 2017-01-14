@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/cups-browsed/OPTIONS                 Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/cups-browsed/OPTIONS                              Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Bonjour broadcasts of shared, remote CUPS printers'

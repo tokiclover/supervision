@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/udev-monitor/OPTIONS                 Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/udev-monitor/OPTIONS                              Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 SVC_CMD=/sbin/udevadm

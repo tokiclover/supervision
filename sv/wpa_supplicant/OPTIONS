@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/wpa_supplicant/OPTIONS               Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/wpa_supplicant/OPTIONS                            Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Wi-Fi Protected Access client and IEEE 802.1X supplicant'

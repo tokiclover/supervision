@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/ipset                                 Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/ipset                                             Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="Set up IPSet rules"

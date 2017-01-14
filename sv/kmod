@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/kmod                                  Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/kmod                                              Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="kernel modules loader"

@@ -1,9 +1,8 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/unionfs                               Exp $
-# $Author: (c) 2012-6 tokiclover <tokiclover@gmail.com>  Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
-# $Version: 0.22.0 2016/07/20 12:33:03                   Exp $
+# $Id: @(#) /etc/sv/unionsfs    0.22.0 2016/07/20                     Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+# $C$: (c) 2012-2016 tokiclover <tokiclover@gmail.com>                Exp $
 #
 
 description="Set up (AUFS|OverlayFS+SquashFS) union filesystems"

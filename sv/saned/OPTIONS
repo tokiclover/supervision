@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/saned/OPTIONS                        Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/saned                                             Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Scanner Access Now Easy daemon'

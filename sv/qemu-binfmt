@@ -1,11 +1,15 @@
 #!/sbin/rs
-
+#
+# $Id: @(#) /etc/sv/qemu-binfmt                                       Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+#
 # enable automatic i386/ARM/M68K/MIPS/SPARC/PPC/s390 program execution by the kernel
-
+#
 # Defaulting to OC should be safe because it comes down to:
 #  - do we trust the interp itself to not be malicious?  yes; we built it.
 #  - do we trust the programs we're running?  ish; same permission as native
 #    binaries apply.  so if user can do bad stuff natively, cross isn't worse.
+#
 : ${QEMU_BINFMT_FLAGS:=OC}
 
 SVC_AFTER=procfs

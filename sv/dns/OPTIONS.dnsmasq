@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/dns/OPTIONS.dnsmasq                  Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/dnsmasq/OPTIONS                                   Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 name=dnsmasq

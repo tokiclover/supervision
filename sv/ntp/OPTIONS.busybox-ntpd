@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/ntp/OPTIONS.busybox-ntpd             Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/busybox-ntpd/OPTIONS                              Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 name=busybox-ntpd
 SVC_CMD=/bin/busybox

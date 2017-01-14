@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/acpid/OPTIONS                        Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/acpid/OPTIONS                                     Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 SVC_OPTS=--foreground

@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/cron/OPTIONS                         Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/cron/OPTIONS                                      Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 #
 # Possible choice: {b,d,f}cron,cronie,vixie-cron

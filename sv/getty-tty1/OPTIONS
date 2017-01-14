@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/getty-tty1/OPTIONS                   Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/getty-tty1/OPTIONS                                Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 TTY="${SVC_NAME#*-}"

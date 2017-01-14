@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/syslog/OPTIONS                       Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/syslog/OPTIONS                                                                  Exp $
+# $L$: 2-clause/new/simplified BSD                                                                  Exp $
 #
 
 SVC_AFTER='miscfs'

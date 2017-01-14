@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/libvirtd/OPTIONS                     Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/libvirtd/OPTIONS                                  Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="Virtual Machine Management daemon (libvirt)"

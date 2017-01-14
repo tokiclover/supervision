@@ -1,6 +1,6 @@
 #
-# $Header: /etc/sv/apache2/OPTIONS                         Exp $
-# $License: 2-clause/new/simplified BSD                    Exp $
+# $Id: @(#) /etc/sv/apache2/OPTIONS                                   Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 # When you install a module it is easy to activate or deactivate the modules

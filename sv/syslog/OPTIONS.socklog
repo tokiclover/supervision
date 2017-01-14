@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/syslog/OPTIONS.socklog               Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/socklog/OPTIONS                                                                 Exp $
+# $L$: 2-clause/new/simplified BSD                                                                  Exp $
 #
 
 name=socklog

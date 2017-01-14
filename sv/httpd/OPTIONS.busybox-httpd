@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/httpd/OPTIONS.busybox-httpd          Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/httpd/OPTIONS.busybox-httpd                       Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 name=httpd

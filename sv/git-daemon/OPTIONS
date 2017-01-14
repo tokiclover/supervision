@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/git-daemon/OPTIONS                   Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/git-daemon/OPTIONS                                Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Simple server for Git repositories'

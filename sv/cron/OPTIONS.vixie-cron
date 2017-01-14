@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/cron/OPTIONS.dcron                   Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/cron/OPTIONS.vxie-cron                            Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Vixie Cron Daemon'

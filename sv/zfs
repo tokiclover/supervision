@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/zfs                                     Exp $
-# $License: 2-clause/new/simplified BSD                    Exp $
+# $Id: @(#) /etc/sv/zfs                                               Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="Set up zpools and zfs volumes"

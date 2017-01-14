@@ -1,9 +1,9 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/checkfs                                 Exp $
-# $License: 2-clause/new/simplified BSD                    Exp $
-# $Copyright: (c) 2015-2016         <tokiclover@gmail.com> Exp $
-# $Copyright: (c) 2007-2008 Roy Marples <roy@marples.name> Exp $
+# $Id: @(#) /etc/sv/checkfs   2017/01/12                              Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+# $C$: Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>      Exp $
+# $C$: Copyright (c) 2007-2008 Roy Marples <roy@marples.name>         Exp $
 #
 
 description='Check filesystems'

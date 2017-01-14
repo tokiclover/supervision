@@ -1,7 +1,7 @@
 #!/sbin/rs
 #
-# $Header: /etc/sv/kmod-static-nodes                     Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/kmod-static-nodes                                 Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="Set up static kernel nodes"

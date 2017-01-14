@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/virtlockd/OPTIONS                    Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/virtlockd/OPTIONS                                 Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description="libvirt virtual machine lock manager"

@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/xdm/OPTIONS                          Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/xdm/OPTIONS                                       Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 # 
 
 # Setup a particular display manager and virtual terminal

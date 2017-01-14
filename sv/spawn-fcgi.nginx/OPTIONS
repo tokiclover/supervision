@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/spawn-fcgi/OPTIONS                   Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/spawn-fcgi/OPTIONS                                          Exp $
+# $L$: 2-clause/new/simplified BSD                                              Exp $
 #
 
 # DO NOT MODIFY THIS FILE DIRECTLY! CREATE A COPY AND MODIFY THAT INSTANCE INSTEAD!

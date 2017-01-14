@@ -1,7 +1,6 @@
 #
-# $Header:  /etc/sv/pcscd/OPTIONS                        Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
-# $Dep(used): WPA - EAP-SIM authentification algorithm   Exp $
+# $Id: @(#) /etc/sv/pcscd                                             Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='PC/SC Smart Card Daemon'

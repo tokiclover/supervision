@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/dhcp/OPTIONS.dhcpd                   Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/dhclient/OPTIONS                                  Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Dynamic Host Configuration Protocol (DHCP) client'

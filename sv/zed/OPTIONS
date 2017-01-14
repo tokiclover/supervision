@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/zed/OPTIONS                          Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/zed/OPTIONS                                       Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='ZFS Event Daemon'

@@ -1,6 +1,6 @@
 #
-# $Header:  /etc/sv/gpm/OPTIONS                          Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id: @(#) /etc/sv/gpm/OPTIONS                                       Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 RC_OPTS=Yes
