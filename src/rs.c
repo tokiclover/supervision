@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <sys/file.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <poll.h>
@@ -166,9 +167,8 @@ int svc_cmd(struct svcrun *run)
 	struct stat st_buf;
 	int retval;
 	int i;
-	size_t len = 0;
-	const char *cmd = run->argv[4];
-	char *path, buf[512];
+	char *cmd = (char*)run->argv[4];
+	char buf[PATH_MAX] = { "" };
 
 	if (!st_dep.st_mtime) {
 		stat(SV_SVCDEPS_FILE, &st_dep);
@@ -180,20 +180,13 @@ int svc_cmd(struct svcrun *run)
 		svcd[1] = sv_getconf("SV_PREFIX");
 #endif
 	}
+	run->ARGV = NULL;
 	run->cmd = -1;
 	run->envp = svc_environ;
-	run->ARGV = run->dep = NULL;
+	run->dep = NULL;
 	run->mark = 0;
-	if (!run->svc->data)
-		run->svc->data = sv_svcdeps_load(run->name);
-	run->dep = run->svc->data;
 
 	if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_START]) == 0) {
-		if (sv_system > SV_KEYWORD_SHUTDOWN && SV_KEYWORD_GET(run->dep, sv_system)) {
-			LOG_WARN("`%s' has `%s' keyword\n", run->name, sv_keywords[sv_system]);
-			return -EPERM;
-		}
-
 		run->mark = SV_SVC_STAT_STAR;
 		if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 			svc_state(run->name, SV_SVC_STAT_PIDS)) {
@@ -203,16 +196,6 @@ int svc_cmd(struct svcrun *run)
 		run->cmd  = SV_SVC_CMD_START;
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STOP]) == 0) {
-		if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_SHUTDOWN)) {
-			LOG_WARN("`%s' has `%s' keyword\n", run->name,
-					sv_keywords[SV_KEYWORD_SHUTDOWN]);
-			return -EPERM;
-		}
-		if (sv_system > SV_KEYWORD_SHUTDOWN && SV_KEYWORD_GET(run->dep, sv_system)) {
-			LOG_WARN("`%s' has `%s' keyword\n", run->name, sv_keywords[sv_system]);
-			return -EPERM;
-		}
-
 		run->mark = SV_SVC_MARK_STAR;
 		if (!(svc_state(run->name, SV_SVC_STAT_STAR) ||
 			  svc_state(run->name, SV_SVC_STAT_PIDS))) {
@@ -275,29 +258,32 @@ int svc_cmd(struct svcrun *run)
 		}
 	}
 
-	run->ARGV = err_calloc(run->argc, sizeof(void*));
-	for (i = 0; i <= run->argc; i++)
-		run->ARGV[i] = run->argv[i];
 	/* get service path */
 	if (!run->path) {
 		retval = -ENOENT;
 		for (i = 0; i < sizeof(svcd); i++) {
 			if (svcd[i])
 				snprintf(buf, sizeof(buf), "%s/%s/%s", svcd[i], SV_SVCDIR, run->name);
-			else
+			else if (!i)
 				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
+			else
+				break;
 			if (!access(buf, F_OK)) {
 				retval = 0;
 				break;
 			}
 		}
-		if (retval == -ENOENT)
+		if (retval)
 			return -ENOENT;
-
-		len = strlen(buf)+1;
-		run->path = memcpy(err_malloc(len), buf, len);
+		run->path = err_strdup(buf);
 	}
-	stat(run->path, &st_buf);
+	if (!run->svc->data)
+		run->svc->data = sv_svcdeps_load(run->name);
+	run->dep = run->svc->data;
+	if (!run->dep) {
+		retval = -ENOENT;
+		goto reterr;
+	}
 
 	/* get service status */
 	switch(run->cmd) {
@@ -307,31 +293,53 @@ int svc_cmd(struct svcrun *run)
 			fprintf(stderr, "%s: runlevel argument is required\n", progname);
 			fprintf(stderr, "Usage: %s -(0|1|3|4|5) %s %s\n", progname,
 					run->name, sv_svc_cmd[run->cmd]);
-			retval = 1;
-			goto reterr;
+			return 1;
 		}
 
-		path = err_malloc(512);
-		snprintf(path, 512, "%s/.%s/%s", SV_SVCDIR, sv_runlevel[sv_stage],
+		snprintf(buf, sizeof(buf), "%s/.%s/%s", SV_SVCDIR, sv_runlevel[sv_stage],
 				run->name);
-		if (!access(path, F_OK)) {
+		if (!access(buf, F_OK)) {
 			if (run->cmd == SV_SVC_CMD_DEL)
-				unlink(path);
-			retval = 0;
-			goto reterr;
+				unlink(buf);
+			return 0;
 		}
 
-		if (symlink(run->path, path)) {
+		if (symlink(run->path, buf)) {
 			ERR("%s: Failed to add service: %s\n", run->name, strerror(errno));
-			retval = 1;
+			return 1;
 		}
 		else
-			retval = 0;
-		goto reterr;
+			return 0;
+		break;
+
+	case SV_SVC_CMD_START:
+		if (sv_system > SV_KEYWORD_SHUTDOWN && SV_KEYWORD_GET(run->dep, sv_system)) {
+			LOG_WARN("`%s' has `%s' keyword\n", run->name, sv_keywords[sv_system]);
+			retval = -EPERM;
+			goto reterr;
+		}
+		break;
+	case SV_SVC_CMD_STOP:
+		if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_SHUTDOWN)) {
+			LOG_WARN("`%s' has `%s' keyword\n", run->name,
+					sv_keywords[SV_KEYWORD_SHUTDOWN]);
+			retval = -EPERM;
+			goto reterr;
+		}
+		if (sv_system > SV_KEYWORD_SHUTDOWN && SV_KEYWORD_GET(run->dep, sv_system)) {
+			LOG_WARN("`%s' has `%s' keyword\n", run->name, sv_keywords[sv_system]);
+			retval = -EPERM;
+			goto reterr;
+		}
 		break;
 	}
 
+	run->ARGV = err_calloc(run->argc, sizeof(void*));
+	for (i = 0; i <= run->argc; i++)
+		run->ARGV[i] = run->argv[i];
+
 	/* get service type */
+	stat(run->path, &st_buf);
 	if (S_ISDIR(st_buf.st_mode))
 		run->ARGV[1] = type[1];
 	else
@@ -347,9 +355,7 @@ int svc_cmd(struct svcrun *run)
 	/* setup dependencies */
 	if (run->cmd == SV_SVC_CMD_START && svc_deps && run->dep) {
 		retval = svc_depend(run);
-		if (retval == -ENOENT)
-			;
-		else if (retval) {
+		if (retval) {
 			LOG_ERR("%s: Failed to set up service dependencies\n", run->name);
 			svc_mark(run->name, SV_SVC_STAT_FAIL, cmd);
 			retval = -ECANCELED;
@@ -364,7 +370,8 @@ int svc_cmd(struct svcrun *run)
 
 	return svc_run(run);
 reterr:
-	free(run->ARGV);
+	if (*buf) free((void*)run->path);
+	if (run->ARGV) free((void*)run->path);
 	return retval;
 }
 
@@ -495,9 +502,6 @@ static int svc_depend(struct svcrun *run)
 	int type, val, retval = 0;
 	int p = 0;
 	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
-
-	if (!run->dep)
-		return -ENOENT;
 
 	/* skip before deps type */
 	for (type = SV_SVCDEPS_USE; type <= SV_SVCDEPS_NEED; type++) {
@@ -914,6 +918,7 @@ static void *thread_worker_handler(void *arg)
 			break;
 		case -ENOENT:
 		case -ECANCELED:
+		case -EPERM:
 			pthread_mutex_lock(&p->mutex);
 			p->count++;
 			p->retval++;
