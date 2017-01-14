@@ -684,9 +684,13 @@ rs:
 	unsetenv("SV_RUNLEVEL");
 
 	/* compatibility with <v0.13.0 */
-	if (argc && strcmp(*argv, "stage") == 0) {
-		argc--, argv++;
-		goto init_stage;
+	if (argc) {
+		if (strcmp(*argv, "stage") == 0) {
+			argc--, argv++;
+			goto init_stage;
+		}
+		else if (strcmp(*argv, "scan") == 0)
+			goto scan;
 	}
 
 	/* handle service command or
