@@ -524,6 +524,7 @@ static void svc_env(void)
 	char *env, *ptr;
 	FILE *fp;
 	int i = 0, j;
+	int fd;
 
 	if (svc_environ)
 		return;
@@ -554,18 +555,17 @@ static void svc_env(void)
 	}
 	svc_environ[i++] = (char *)0;
 
-	if (!access(SV_ENVIRON, F_OK))
+	if ((fd = open(SV_ENVIRON, O_CREAT|O_WRONLY|O_CLOEXEC|O_EXCL, 0644)) < 0)
 		return;
-	if (!(fp = fopen(SV_ENVIRON, "w"))) {
-		ERR("Failed to open %s: %s\n", SV_ENVIRON, strerror(errno));
+	if (flock(fd, LOCK_EX|LOCK_NB) < 0)
 		return;
-	}
+	if (!(fp = fdopen(fd, "w")))
+		return;
 	env = err_malloc(size);
 	for (j = 0; environ_list[j]; j++)
 		if ((ptr = getenv(environ_list[j])))
 			fprintf(fp, "%s=%s\n", environ_list[j], ptr);
 	fflush(fp);
-	fclose(fp);
 	free(env);
 }
 
