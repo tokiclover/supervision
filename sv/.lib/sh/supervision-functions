@@ -358,7 +358,7 @@ env_del()
 
 svc_scan()
 {
-	SVCDEPS_UPDATE=1 ${SV_LIBDIR}/sh/dep "${SVC_NAME}" "${@}"
+	SVCDEPS_UPDATE=1 ${SV_LIBDIR}/sh/depgen "${SVC_NAME}" "${@}"
 }
 
 svc_desc()
