@@ -41,7 +41,7 @@ dist_SH_BINS  = \
 	sv/.lib/sh/runscript \
 	sv/.lib/sh/init-stage \
 	sv/.lib/sh/cgroup-release-agent \
-	sv/.lib/sh/dep
+	sv/.lib/sh/depgen
 dist_SH_SBINS = \
 	sv/.lib/bin/sv-config
 dist_SH_LIBS  = \
