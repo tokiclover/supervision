@@ -841,7 +841,8 @@ void svc_sigsetup(void)
 int svc_exec(int argc, const char *argv[]) {
 	int i = 0, j, retval;
 	struct svcrun run;
-	SV_String_T svc = { NULL, NULL, NULL, NULL };
+	SV_String_T svc;
+	memset(&svc, 0, sizeof(svc));
 
 	run.argc = 8*(argc/8)+8+ (argc%8) > 4 ? 8 : 0;
 	run.argv = err_malloc(run.argc*sizeof(void*));
@@ -1058,7 +1059,7 @@ static void thread_signal_handler(siginfo_t *si)
 		rl = RUNLIST;
 		pthread_mutex_unlock(&RUNLIST_MUTEX);
 
-		for (p = rl; p; p->next) {
+		for (p = rl; p; p = p->next) {
 			pthread_rwlock_rdlock(&p->lock);
 			len = p->len;
 			pthread_rwlock_unlock(&p->lock);
