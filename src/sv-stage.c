@@ -291,7 +291,7 @@ void sv_cleanup(void)
 static void sv_sighandler(int sig)
 {
 	int i = -1, serrno = errno;
-	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGTERM" };
+	static const char *signame[] = { "SIGINT", "SIGQUIT", "SIGTERM" };
 
 	switch (sig) {
 	case SIGINT:

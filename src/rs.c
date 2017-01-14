@@ -773,8 +773,7 @@ static int svc_state(const char *svc, int status)
 static void rs_sighandler(int sig, siginfo_t *si, void *ctx _unused_)
 {
 	int i = -1, serrno = errno;
-	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGKILL",
-		"SIGTERM" };
+	static const char *signame[] = { "SIGINT", "SIGQUIT", "SIGKILL", "SIGTERM" };
 
 	switch (sig) {
 	case SIGALRM:
