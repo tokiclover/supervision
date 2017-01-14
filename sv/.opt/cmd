@@ -12,10 +12,6 @@ if [ -n "${ZSH_VERSION}" ]; then
 	NULLCMD=:
 	setopt NO_GLOB_SUBST SH_WORD_SPLIT
 	disable -r end
-else
-	case "$(set -o 2>/dev/null)" in
-		(*posix*) set -o posix;;
-	esac
 fi
 
 exec 2>&1

@@ -15,10 +15,6 @@ if [ -n "${ZSH_VERSION}" ]; then
 	disable -r end
 elif [ -n "${BASH_VERSION}" ]; then
 	shopt -qs nullglob
-else
-	case "$(set -o 2>/dev/NULL)" in
-		(*posix*) set -o posix;;
-	esac
 fi
 
 SV_CGROUP=0
