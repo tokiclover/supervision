@@ -52,13 +52,13 @@ dep_gen()
 	fi
 	. ${SV_SVCDIR}/.opt/SVC_OPTIONS
 
-	for dep in ${__SV_DEPS_ORDER__}; do
-		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}} >&4
-	done
 	[ -n "${SVC_KEYWORD}" ] && echo "${SVC_NAME}:keyword=\"${SVC_KEYWORD}\"" >&4
 	[ -n "${SVC_PROVIDE}" ] && echo "${SVC_NAME}:provide=\"${SVC_PROVIDE}\"" >&4
 	[ -n "${SVC_TIMEOUT}" ] && echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT}\"" >&4
 	[ -n "${SVC_NOHANG}"  ] && echo "${SVC_NAME}:nohang=\"${SVC_NOHANG}\""   >&4
+	for dep in ${__SV_DEPS_ORDER__}; do
+		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}} >&4
+	done
 }
 
 SVCDEPS_UPDATE=${SVCDEPS_UPDATE:+true}
@@ -67,10 +67,12 @@ SVCLIST=
 svcdeps=${SV_DEPDIR}/svcdeps
 svclist=${SV_DEPDIR}/svclist
 svcdirs="${SV_SVCDIR}"
-[ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" ] &&
+if [ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" ]; then
 	svcdirs="${svcdirs} ${__SV_PREFIX__}${SV_SVCDIR}"
-[ -n "${SV_PREFIX}" -a -d "${SV_PREFIX}" ] &&
+fi
+if [ -n "${SV_PREFIX}" -a -d "${SV_PREFIX}" ]; then
 	svcdirs="${svcdirs} ${SV_PREFIX}${SV_SVCDIR}"
+fi
 
 append=false
 if [ "${#}" = 0 ]; then
