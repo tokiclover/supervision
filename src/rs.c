@@ -672,7 +672,7 @@ static void svc_zap(const char *svc)
 	int i;
 	char path[PATH_MAX];
 	char *dirs[] = { SV_TMPDIR_DOWN, SV_TMPDIR_FAIL, SV_TMPDIR_STAR,
-		SV_TMPDIR_WAIT, SV_TMPDIR "/ENVS", SV_TMPDIR "/OPTS", NULL };
+		SV_TMPDIR_WAIT, SV_TMPDIR "/opts", NULL };
 
 	for (i = 0; dirs[i]; i++) {
 		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
