@@ -30,10 +30,10 @@ trap 'COLUMNS="$(tput cols)"' WINCH
 #
 error()
 {
-	local msg="${*}"
-	PRINT_LEN=$((${#name}+3+${#msg}))
-	local pfx="${name:+${COLOR_MAG}${name}:${COLOR_RST}}"
-	echo -e "${PRINT_EOL}${COLOR_RED}ERROR:${COLOR_RST} ${pfx} ${@}" >&2
+	local message="${*}"
+	PRINT_LEN=$((${#name}+3+${#message}))
+	local prefix="${name:+${COLOR_MAG}${name}:${COLOR_RST}}"
+	printf "${PRINT_EOL}${COLOR_RED}ERROR:${COLOR_RST} ${prefix} ${@}\n" >&2
 }
 
 #
@@ -57,8 +57,8 @@ info()
 		tail="${*}"
 	fi
 	PRINT_LEN=$((${#name}+3+${#tail}+${#head}))
-	local pfx="${name:+${COLOR_YLW}${name}:${COLOR_RST}}"
-	echo -e "${PRINT_EOL}${COLOR_BLU}${head:-*}${COLOR_RST} ${pfx} ${@}"
+	local prefix="${name:+${COLOR_YLW}${name}:${COLOR_RST}}"
+	printf "${PRINT_EOL}${COLOR_BLU}${head:-*}${COLOR_RST} ${prefix} ${@}\n"
 }
 
 #
@@ -66,10 +66,10 @@ info()
 #
 warn()
 {
-	local msg="${*}"
-	PRINT_LEN=$((${#name}+3+${#msg}))
-	local pfx="${name:+${COLOR_RED}${name}:${COLOR_RST}}"
-	echo -e "${PRINT_EOL}${COLOR_YLW}WARN:${COLOR_RST} ${pfx} ${@}"
+	local message="${*}"
+	PRINT_LEN=$((${#name}+3+${#message}))
+	local prefix="${name:+${COLOR_RED}${name}:${COLOR_RST}}"
+	printf "${PRINT_EOL}${COLOR_YLW}WARN:${COLOR_RST} ${prefix} ${@}\n"
 }
 
 #
@@ -77,12 +77,12 @@ warn()
 #
 begin()
 {
-	echo -en "${PRINT_EOL}"
+	printf "${PRINT_EOL}"
 	PRINT_EOL="\n"
-	local msg="${*}"
-	PRINT_LEN=$((${#name}*2+6+${#msg}))
-	local pfx="${name:+${COLOR_MAG}[${COLOR_BLU}${name}${COLOR_MAG}]${COLOR_RST}}"
-	echo -en "${pfx} ${@}"
+	local message="${*}"
+	PRINT_LEN=$((${#name}*2+6+${#message}))
+	local prefix="${name:+${COLOR_MAG}[${COLOR_BLU}${name}${COLOR_MAG}]${COLOR_RST}}"
+	printf "${prefix} ${@}"
 }
 
 #
@@ -204,7 +204,7 @@ get_boot_option()
 			(${1}=*) eval "${cmdline}"; break;;
 		esac
 	done
-	eval echo "\"\$${1}\""
+	eval printf "\"\$${1}\""
 }
 
 #
