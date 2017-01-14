@@ -779,7 +779,7 @@ init-stage or runlevel.
 is ready to use;
 .B sysboot
 can be modified to include services like
-.B {zramfs,zfs,zpool,unionfs,device-mapper,raid}
+.B {zramfs,zfs,zpool,unionfs,device-mapper,dmraid,mdadm}
 and so on; likewise for
 .B default
 runlevel.
@@ -812,13 +812,14 @@ runlevel.
 .RB [\| zpool \|]\ \c
 .RB (LINUX:[\| device-mapper \|]\ \c
 .RB [\| dmcrypt \|]\ \c
+.RB [\| dmraid \|]\ \c
 .RB [\| kmod \|]\ \c
 .RB [\| ipset \|]\ \c
 .RB [\| ip[6]tables \|]\ \c
 .RB [\| lvm \|]\ \c
+.RB [\| mdadm \|]\ \c
 .RB [\| mdev \|]\ \c
 .RB [\| qemu-binfmt \|]\ \c
-.RB [\| raid \|]\ \c
 .RB [\| unionfs \|]\ \c
 .RB [\| zramfs \|])
 .TP

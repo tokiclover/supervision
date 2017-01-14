@@ -1,0 +1,37 @@
+#!/sbin/rs
+#
+# $Header: /etc/sv/dmraid                                  Exp $
+# $Author: (c) 2016 tokiclover <tokiclover@gmail.com>      Exp $
+# $License: 2-clause/new/simplified BSD                    Exp $
+#
+
+description="Set up fake ATA-RAID (dmraid)"
+SVC_BEFORE="kmod"
+
+dmraid="$(command -v dmraid 2>${NULL})"
+
+start_pre()
+{
+	[ -n "${dmraid}" -a -x "${dmraid}" -a -n "${DMRAID_FORMATS}" ]
+}
+
+start()
+{
+	#
+	# Handle Linux fake ATA-RAID
+	#
+	local format retval
+	[ -n "${DMRAID_FORMATS}" ] &&
+	for format in ${DMRAID_FORMATS}; do
+		begin "Bringing up ${format} ATA-RAID"
+		${dmraid} --activate y --ignorelocking --ignoremonitoring ${format}
+		end "${?}"
+		retval=$((${retval}+${?}))
+	done
+
+	return ${retval}
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

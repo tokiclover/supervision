@@ -563,13 +563,14 @@ LINUX_RUNSCRIPT_SERVICES="
 	console
 	device-mapper
 	dmcrypt
+	dmraid
 	ipset
 	iptables
 	kmod
 	lvm
+	mdadm
 	mdev
 	qemu-binfmt
-	raid
 	unionfs
 	zramfs
 "

@@ -10,10 +10,10 @@ description="Mount ${SVC_NAME%fs} filesystems"
 SVC_KEYWORD="docker jail lxc prefix supervision systemd-nspawn uml vserver"
 
 if [ "${SVC_NAME}" = localfs ]; then
-	SVC_AFTER='kmod lvm device-mapper dmcrypt raid'
+	SVC_AFTER='kmod lvm device-mapper dmcrypt dmraid mdadm'
 	SVC_BEFORE='miscfs unionfs'
 	SVC_NEED='checkfs rootfs'
-	SVC_USE='kmod lvm device-mapper dmcrypt raid mtab'
+	SVC_USE='kmod lvm device-mapper dmcrypt dmraid mdadm mtab'
 elif [ "${SVC_NAME}" = networkfs ]; then
 	SVC_USE='dns'
 else
