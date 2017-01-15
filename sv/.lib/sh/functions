@@ -173,10 +173,9 @@ eval_colors()
 	color_ita="${e}3m"
 
 	if [ "${1}" = 256 ]; then
-		local i
-		for i in seq 0 255; do
-			eval color_bg_${i}="'${e}48;5;${i}m'"
-			eval color_fg_${i}="'${e}38;5;${i}m'"
+		for c in seq 0 255; do
+			eval color_bg_${c}="'${e}48;5;${c}m'"
+			eval color_fg_${c}="'${e}38;5;${c}m'"
 		done
 	fi
 }
