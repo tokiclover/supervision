@@ -407,7 +407,7 @@ _noreturn_ static void sv_shutdown(void)
 	char *line = NULL, *ptr = NULL;
 	char *argv[8], arg[8];
 	const char ent[] = "__SV_NAM__";
-	struct timespec ts = { .tv_nsec = 0L };
+	struct timespec ts = { .tv_sec = 0L, .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
 	struct utmpx ut;
 
@@ -462,7 +462,7 @@ shutdown:
 		sv_nologin();
 	if (ti->ti_left < offtime)
 		ts.tv_sec = offtime - ti->ti_left;
-	else {
+	else if (offtime) {
 		for (; ti->ti_left && ti->ti_left > offtime; ti++)
 			;
 		ts.tv_sec = offtime - ti->ti_left;
