@@ -29,6 +29,8 @@
 #include <time.h>
 #include <sys/param.h>
 #include <sys/reboot.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include "error.h"
 #include "helper.h"
 #ifdef HAVE_POSIX_ASYNCHRONOUS_IO
@@ -779,6 +781,8 @@ message:
 	}
 	if (i < 0)
 		ERROR("Failed to fork()", NULL);
+	setsid();
+	(void)setpriority(PRIO_PROCESS, 0, PRIO_MIN);
 	/* enable logging to system log by default */
 	if (shutdown_action != SD_MESSAGE)
 		slog_flag++;
