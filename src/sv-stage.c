@@ -17,6 +17,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef __FreeBSD__
+# include <sys/sysctl.h>
+#endif
 #include "sv.h"
 #include "sv-deps.h"
 
@@ -341,6 +344,57 @@ static void sv_sigsetup(void)
 	sigaction(SIGUSR1, &sa, NULL);
 }
 
+static const char *sv_system_detect(void)
+{
+#ifdef __FreeBSD__
+	int jail;
+	size_t len = sizeof(jail);
+	if (sysctlbyname("security.jail.jailed", &jail, &len, NULL, 0) == 0)
+		if (jail == 1)
+			return sv_keywords[SV_KEYWORD_JAIL];
+#endif
+
+#ifdef __NetBSD__
+	if (!access("/kern/xen/privcmd", F_OK))
+		return sv_keywords[SV_KEYWORD_XEN0];
+	if (!access("/kern/xen", F_OK))
+		return sv_keywords[SV_KEYWORD_XENU];
+#endif
+
+#ifdef __linux__
+	if (!access("/proc/xen", F_OK)) {
+		if (!file_regex("/proc/xen/capabilities", "control_d"))
+			return sv_keywords[SV_KEYWORD_XEN0];
+		return sv_keywords[SV_KEYWORD_XENU];
+	}
+	else if (!file_regex("/proc/cpuinfo", "UML"))
+		return sv_keywords[SV_KEYWORD_UML];
+	else if (!file_regex("/proc/self/status", "(s_context|VxID):[[:space:]]*[1-9]"))
+		return sv_keywords[SV_KEYWORD_VSERVER];
+	else if (!access("/proc/vz/veinfo", F_OK) && access("/proc/vz/version", F_OK))
+		return sv_keywords[SV_KEYWORD_OPENVZ];
+	else if (!file_regex("/proc/self/status", "envID:[[:space:]]*[1-9]"))
+		return sv_keywords[SV_KEYWORD_OPENVZ];
+
+	const char *container[] = {
+		sv_keywords[SV_KEYWORD_DOCKER],
+		sv_keywords[SV_KEYWORD_LXC],
+		sv_keywords[SV_KEYWORD_SYSTEMD_NSPAWN],
+		sv_keywords[SV_KEYWORD_UML],
+		NULL
+	};
+	char buf[32];
+	int i;
+	for (i = 0; container[i]; i++) {
+		snprintf(buf, sizeof(buf), "container=%s", container[i]);
+		if (!file_regex("/proc/1/environ", buf))
+			return container[i];
+	}
+#endif
+
+	return NULL;
+}
+
 static int svc_stage_command(int stage, int argc, const char *argv[])
 {
 	int i, retval;
@@ -575,7 +629,7 @@ int main(int argc, char *argv[])
 #else
 	setenv("SV_PREFIX", "", 1);
 #endif
-	if ((ptr = (char*)sv_getconf("SV_SYSTEM")))
+	if ((ptr = (char*)sv_getconf("SV_SYSTEM"))) {
 		for (opt = SV_KEYWORD_SUPERVISION; sv_keywords[opt]; opt++)
 			if (strcmp(ptr, sv_keywords[opt]) == 0) {
 				setenv("SV_SYSTEM", ptr, 1);
@@ -586,6 +640,9 @@ int main(int argc, char *argv[])
 #endif
 				break;
 			}
+	}
+	else if ((ptr = (char*)sv_system_detect()))
+		setenv("SV_SYSTEM", ptr, 1);
 	if ((ptr = (char*)sv_getconf("SV_PREFIX")))
 		setenv("SV_PREFIX", ptr, 1);
 	setenv("SV_LIBDIR", SV_LIBDIR, 1);
