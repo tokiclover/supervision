@@ -47,6 +47,46 @@ _unused_ char *shell_string_value(char *str)
 	return NULL;
 }
 
+#ifdef __linux__
+_unused_ int file_regex(const char *file, const char *regex)
+{
+	FILE *fp;
+	char *line = NULL, *ptr;
+	size_t len;
+	int retval;
+	regex_t re;
+
+	if (!(fp = fopen(file, "r")))
+		return -EBADF;
+
+	if ((retval = regcomp(&re, regex, REG_EXTENDED | REG_NOSUB))) {
+		line = err_malloc(256);
+		regerror(retval, (const regex_t *)&re, line, 256);
+		ERR("%s: Failed to compile `%s': %s\n", __func__, regex, line);
+		free(line);
+		return -EINVAL;
+	}
+
+	while (sv_getline(fp, &line, &len) > 0) {
+		ptr = line;
+		/* handle null terminated strings */
+		do {
+			if (!regexec(&re, ptr, 0, NULL, 0))
+				goto found;
+			ptr += strlen(ptr)+1;
+			/* find next string */
+			while (*ptr == '\0' && ptr++ < line+len)
+				;
+		} while (ptr < line+len);
+	}
+	retval = 1;
+found:
+	fclose(fp);
+	regfree(&re);
+	return retval;
+}
+#endif /* __linux__ */
+
 _unused_ int file_test(const char *pathname, int mode)
 {
 	static struct stat st_buf;

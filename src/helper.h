@@ -15,11 +15,21 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/termios.h>
+#ifdef __linux__
+# include <regex.h>
+#endif
 #include "error.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef __linux__
+/* look for @regex regular exppression in @file
+ * @return: 0 when found; 1 when not; <= -1/-errno on failure;
+ */
+_unused_ int file_regex(const char *file, const char *regex);
+#endif /* __linux__ */
 
 /*
  * test(1) clone like file test helper
