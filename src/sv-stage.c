@@ -344,13 +344,13 @@ static void sv_sigsetup(void)
 static int svc_stage_command(int stage, int argc, const char *argv[])
 {
 	int i, retval;
-	SV_StringList_T *list = sv_stringlist_new();
+	DEPTREE.list = sv_stringlist_new();
 
 	for (i = 0; sv_init_stage[stage][i]; i++)
-		sv_stringlist_add(list, sv_init_stage[stage][i]);
+		sv_stringlist_add(DEPTREE.list, sv_init_stage[stage][i]);
 
-	retval = svc_execl(list, argc, argv);
-	sv_stringlist_free(&list);
+	retval = svc_execl(DEPTREE.list, argc, argv);
+	sv_stringlist_free(&DEPTREE.list);
 
 	return retval;
 }
@@ -470,6 +470,7 @@ static void svc_stage(const char *cmd)
 				++p;
 		} /* PRIORITY_LEVEL_LOOP */
 		sv_deptree_free(&DEPTREE);
+		sv_stringlist_free(&DEPTREE.list);
 
 		/* break shutdown loop */
 		if (!level)
@@ -651,9 +652,9 @@ rc_help:
 				if (ptr && strcmp(ptr, sv_runlevel[SV_DEFAULT_LEVEL]) == 0) {
 					sv_stage = SV_DEFAULT_LEVEL;
 					DEPTREE.list = sv_svclist_load(NULL);
+					sv_stage = sv_level;
 					svc_stage(sv_svc_cmd[SV_SVC_CMD_STOP]);
 				}
-				sv_stage = sv_level;
 				break;
 			case SV_NOWNETWORK_LEVEL:
 			case SV_SYSBOOT_LEVEL:
