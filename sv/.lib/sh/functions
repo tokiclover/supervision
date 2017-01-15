@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) shfunctions    1.6 2017/01/12 21:09:26                   Exp $
+# $Id:  @(#) shfunctions    2.0 2017/01/14 21:09:26                   Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -31,9 +31,9 @@ trap 'COLUMNS="$(tput cols)"' WINCH
 error()
 {
 	local message="${*}"
-	PRINT_LEN=$((${#name}+3+${#message}))
-	local prefix="${name:+${COLOR_MAG}${name}:${COLOR_RST}}"
-	printf "${PRINT_EOL}${COLOR_RED}ERROR:${COLOR_RST} ${prefix} ${@}\n" >&2
+	__print_len__=$((${#name}+3+${#message}))
+	local prefix="${name:+${color_fg_mag}${name}:${color_rst}}"
+	printf "${__print_eol__}${color_fg_red}ERROR:${color_rst} ${prefix} ${@}\n" >&2
 }
 
 #
@@ -56,9 +56,9 @@ info()
 	else
 		tail="${*}"
 	fi
-	PRINT_LEN=$((${#name}+3+${#tail}+${#head}))
-	local prefix="${name:+${COLOR_YLW}${name}:${COLOR_RST}}"
-	printf "${PRINT_EOL}${COLOR_BLU}${head:-*}${COLOR_RST} ${prefix} ${@}\n"
+	__print_len__=$((${#name}+3+${#tail}+${#head}))
+	local prefix="${name:+${color_fg_ylw}${name}:${color_rst}}"
+	printf "${__print_eol__}${color_fg_blu}${head:-*}${color_rst} ${prefix} ${@}\n"
 }
 
 #
@@ -67,9 +67,9 @@ info()
 warn()
 {
 	local message="${*}"
-	PRINT_LEN=$((${#name}+3+${#message}))
-	local prefix="${name:+${COLOR_RED}${name}:${COLOR_RST}}"
-	printf "${PRINT_EOL}${COLOR_YLW}WARN:${COLOR_RST} ${prefix} ${@}\n"
+	__print_len__=$((${#name}+3+${#message}))
+	local prefix="${name:+${color_fg_red}${name}:${color_rst}}"
+	printf "${__print_eol__}${color_fg_ylw}WARN:${color_rst} ${prefix} ${@}\n"
 }
 
 #
@@ -77,11 +77,11 @@ warn()
 #
 begin()
 {
-	printf "${PRINT_EOL}"
-	PRINT_EOL="\n"
+	printf "${__print_eol__}"
+	__print_eol__="\n"
 	local message="${*}"
-	PRINT_LEN=$((${#name}*2+6+${#message}))
-	local prefix="${name:+${COLOR_MAG}[${COLOR_BLU}${name}${COLOR_MAG}]${COLOR_RST}}"
+	__print_len__=$((${#name}*2+6+${#message}))
+	local prefix="${name:+${color_fg_mag}[${color_fg_blu}${name}${color_fg_mag}]${color_rst}}"
 	printf "${prefix} ${@}"
 }
 
@@ -93,13 +93,13 @@ end()
 	local suffix ret="${1:-0}"
 	shift
 	case "${ret}" in
-		(0) suffix="${COLOR_BLU}(${name}) [${COLOR_GRN}ok${COLOR_BLU}]${COLOR_RST}";;
-		(*) suffix="${COLOR_YLW}(${name}) [${COLOR_RED}no${COLOR_YLW}]${COLOR_RST}";;
+		(0) suffix="${color_fg_blu}(${name}) [${color_fg_grn}ok${color_fg_blu}]${color_rst}";;
+		(*) suffix="${color_fg_ylw}(${name}) [${color_fg_red}no${color_fg_ylw}]${color_rst}";;
 	esac
-	PRINT_LEN=$((${COLUMNS}-${PRINT_LEN}))
-	printf "%*b\n" "${PRINT_LEN}" "${@} ${suffix}"
-	PRINT_EOL=
-	PRINT_LEN=0
+	__print_len__=$((${COLUMNS}-${__print_len__}))
+	printf "%*b\n" "${__print_len__}" "${@} ${suffix}"
+	__print_eol__=
+	__print_len__=0
 	return "${ret}"
 }
 
@@ -157,22 +157,26 @@ SOURCE()
 #
 eval_colors()
 {
-	local ESC FGD BGD color
-	ESC='\e[' FGD='3' BGD='4'
+	local e f b c
+	e='\033[' f='3' b='4'
 
-	for color in 0:BLK 1:RED 2:GRN 3:YLW 4:BLU 5:MAG 6:CYN 7:WHT; do
-		eval COLOR_${color#*:}="'${ESC}${FGD}${color%:*}m'"
-		eval COLOR_BG_${color#*:}="'${ESC}${BGD}${color%:*}m'"
+	for c in 0:blk 1:red 2:grn 3:ylw 4:blu 5:mag 6:cyn 7:wht; do
+		eval color_fg_${c#*:}="'${e}${f}${c%:*}m'"
+		eval color_bg_${c#*:}="'${e}${b}${c%:*}m'"
+		eval color_fg_${c%:*}="'${e}${f}${c%:*}m'"
+		eval color_bg_${c%:*}="'${e}${b}${c%:*}m'"
 	done
-	COLOR_RST="${ESC}0m"
-	COLOR_BLD="${ESC}1m"
-	COLOR_UND="${ESC}4m"
-	COLOR_ITA="${ESC}3m"
+
+	color_rst="${e}0m"
+	color_bld="${e}1m"
+	color_und="${e}4m"
+	color_ita="${e}3m"
+
 	if [ "${1}" = 256 ]; then
 		local i
 		for i in seq 0 255; do
-			eval BG_${i}="'${ESC}48;5;${i}m'"
-			eval FG_${i}="'${ESC}38;5;${i}m'"
+			eval color_bg_${i}="'${e}48;5;${i}m'"
+			eval color_fg_${i}="'${e}38;5;${i}m'"
 		done
 	fi
 }
