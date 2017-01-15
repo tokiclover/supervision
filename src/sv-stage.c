@@ -32,6 +32,8 @@ sigset_t ss_child, ss_full, ss_old;
 static void sv_sighandler(int sig);
 static void sv_sigsetup(void);
 
+static int sv_system_detect(void);
+
 int sv_nohang   =  0;
 int sv_parallel =  0;
 int sv_level    = -1;
@@ -344,55 +346,54 @@ static void sv_sigsetup(void)
 	sigaction(SIGUSR1, &sa, NULL);
 }
 
-static const char *sv_system_detect(void)
+static int sv_system_detect(void)
 {
 #ifdef __FreeBSD__
 	int jail;
 	size_t len = sizeof(jail);
 	if (sysctlbyname("security.jail.jailed", &jail, &len, NULL, 0) == 0)
 		if (jail == 1)
-			return sv_keywords[SV_KEYWORD_JAIL];
+			return SV_KEYWORD_JAIL;
 #endif
 
 #ifdef __NetBSD__
 	if (!access("/kern/xen/privcmd", F_OK))
-		return sv_keywords[SV_KEYWORD_XEN0];
+		return SV_KEYWORD_XEN0;
 	if (!access("/kern/xen", F_OK))
-		return sv_keywords[SV_KEYWORD_XENU];
+		return SV_KEYWORD_XENU;
 #endif
 
 #ifdef __linux__
 	if (!access("/proc/xen", F_OK)) {
 		if (!file_regex("/proc/xen/capabilities", "control_d"))
-			return sv_keywords[SV_KEYWORD_XEN0];
-		return sv_keywords[SV_KEYWORD_XENU];
+			return SV_KEYWORD_XEN0;
+		return SV_KEYWORD_XENU;
 	}
 	else if (!file_regex("/proc/cpuinfo", "UML"))
-		return sv_keywords[SV_KEYWORD_UML];
+		return SV_KEYWORD_UML;
 	else if (!file_regex("/proc/self/status", "(s_context|VxID):[[:space:]]*[1-9]"))
-		return sv_keywords[SV_KEYWORD_VSERVER];
+		return SV_KEYWORD_VSERVER;
 	else if (!access("/proc/vz/veinfo", F_OK) && access("/proc/vz/version", F_OK))
-		return sv_keywords[SV_KEYWORD_OPENVZ];
+		return SV_KEYWORD_OPENVZ;
 	else if (!file_regex("/proc/self/status", "envID:[[:space:]]*[1-9]"))
-		return sv_keywords[SV_KEYWORD_OPENVZ];
+		return SV_KEYWORD_OPENVZ;
 
-	const char *container[] = {
-		sv_keywords[SV_KEYWORD_DOCKER],
-		sv_keywords[SV_KEYWORD_LXC],
-		sv_keywords[SV_KEYWORD_SYSTEMD_NSPAWN],
-		sv_keywords[SV_KEYWORD_UML],
-		NULL
-	};
 	char buf[32];
-	int i;
-	for (i = 0; container[i]; i++) {
-		snprintf(buf, sizeof(buf), "container=%s", container[i]);
+	int *cid = (int []){
+		SV_KEYWORD_DOCKER,
+		SV_KEYWORD_LXC,
+		SV_KEYWORD_SYSTEMD_NSPAWN,
+		SV_KEYWORD_UML,
+		0
+	};
+	do {
+		snprintf(buf, sizeof(buf), "container=%s", sv_keywords[*cid]);
 		if (!file_regex("/proc/1/environ", buf))
-			return container[i];
-	}
+			return *cid;
+	} while (*++cid);
 #endif
 
-	return NULL;
+	return 0;
 }
 
 static int svc_stage_command(int stage, int argc, const char *argv[])
@@ -641,8 +642,10 @@ int main(int argc, char *argv[])
 				break;
 			}
 	}
-	else if ((ptr = (char*)sv_system_detect()))
-		setenv("SV_SYSTEM", ptr, 1);
+	else if ((opt = sv_system_detect())) {
+		sv_system = opt;
+		setenv("SV_SYSTEM", sv_keywords[opt], 1);
+	}
 	if ((ptr = (char*)sv_getconf("SV_PREFIX")))
 		setenv("SV_PREFIX", ptr, 1);
 	setenv("SV_LIBDIR", SV_LIBDIR, 1);
