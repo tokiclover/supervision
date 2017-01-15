@@ -653,6 +653,8 @@ rc_help:
 					DEPTREE.list = sv_svclist_load(NULL);
 					svc_stage(sv_svc_cmd[SV_SVC_CMD_STOP]);
 				}
+				sv_stage = sv_level;
+				break;
 			case SV_NOWNETWORK_LEVEL:
 			case SV_SYSBOOT_LEVEL:
 				sv_stage = SV_SYSBOOT_LEVEL;
