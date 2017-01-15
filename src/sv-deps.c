@@ -17,7 +17,7 @@ static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need" 
 const char *const sv_keywords[] = {
 	NULL,
 	"timeout", "shutdown", "supervision", "docker", "jail", "lxc", "openvz",
-	"prefix", "systemd-nspawn", "uml", "vserver", "xenu",
+	"prefix", "systemd-nspawn", "uml", "vserver", "xen0", "xenu",
 	NULL
 };
 

@@ -53,6 +53,7 @@ enum {
 	SV_KEYWORD_SYSTEMD_NSPAWN,
 	SV_KEYWORD_UML,
 	SV_KEYWORD_VSERVER,
+	SV_KEYWORD_XEN0,
 	SV_KEYWORD_XENU,
 };
 extern const char *const sv_keywords[];
