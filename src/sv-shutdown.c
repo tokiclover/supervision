@@ -303,7 +303,7 @@ static int sv_wall(void)
 		ERR("Failed to open `%s': %s\n", _PATH_WALL, strerror(errno));
 #undef WALL_CMD
 #endif
-	struct utmpx *utxent;
+	struct utmpx *ut;
 	char dev[UT_LINESIZE+8];
 	int fd, rd, rw;
 #ifdef HAVE_POSIX_ASYNCHRONOUS_IO
@@ -321,11 +321,11 @@ static int sv_wall(void)
 	i = 0;
 
 	setutxent();
-	while ((utxent = getutxent())) {
-		if (utxent->ut_type != USER_PROCESS)
+	while ((ut = getutxent())) {
+		if (ut->ut_type != USER_PROCESS)
 			continue;
 
-		snprintf(dev, sizeof(dev), "%s%s", _PATH_DEV, utxent->ut_line);
+		snprintf(dev, sizeof(dev), "%s%s", _PATH_DEV, ut->ut_line);
 		do {
 			fd = open(dev, O_WRONLY|O_APPEND|O_DSYNC|O_NOCTTY, 0664);
 			if (fd > 0)
@@ -409,6 +409,7 @@ _noreturn_ static void sv_shutdown(void)
 	const char ent[] = "__SV_NAM__";
 	struct timespec ts = { .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
+	struct utmpx ut;
 
 	argv[0] = "sv-stage", argv[2] = NULL;
 	if (shutdown_action == SD_REBOOT)
@@ -494,7 +495,6 @@ shutdown:
 		(void)printf("execlp(%s, %s, NULL)\n", *argv, argv[1]);
 	exit(EXIT_SUCCESS);
 #else
-
 	if (slog_flag) {
 	openlog(progname, LOG_PID | LOG_CONS, LOG_AUTH);
 	if (shutdown_action == SD_SINGLE)
@@ -514,6 +514,14 @@ shutdown:
 		unlink(_PATH_NOLOGIN);
 	if (reboot_force)
 		exit(reboot(reboot_action));
+
+	/* write utmp record */
+	memset(&ut, 0, sizeof(ut));
+	strncpy(ut.ut_user, action[ai], sizeof(ut.ut_user));
+	memcpy(ut.ut_id, "~", 2);
+	ut.ut_type = EMPTY;
+	ut.ut_tv.tv_sec = shuttime;
+	(void)pututxline((const struct utmpx*)&ut);
 
 	execvp(*argv, argv);
 	ERR("Failed to execlp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
