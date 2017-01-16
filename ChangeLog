@@ -41,6 +41,7 @@ Removed unnecessary supervision init script for OpenRC;
 
 ADDIDION:
 SUPERVISION SERVICE: docker;
+RUNSCRIPT SERVICE: qemu-binfmt;
 
 0.12.6.4:
 
