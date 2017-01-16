@@ -31,7 +31,7 @@
 #endif
 
 #define VERSION "0.12.0"
-#define REGFREE(var) if(var) { regfree(var); free(var); }
+#define REGFREE(var) if(var) { regfree(var); free(var); var = NULL; }
 #define REGCOMP(var) REGFREE(var); var = comp_regex(optarg)
 
 const char *progname;
@@ -196,14 +196,6 @@ static FILE *mntptr;
 static struct mntent **mnttab;
 static size_t mntcnt = 0, mntnum = 32;
 
-static void endent(void)
-{
-	while (mntcnt)
-		free(mnttab[--mntcnt]);
-	free(mnttab);
-	endmntent(mntptr);
-}
-
 static struct mntent *getent(const char *path)
 {
 	struct mntent *ent;
@@ -214,7 +206,6 @@ static struct mntent *getent(const char *path)
 		if ((mntptr = setmntent(file, "r")) == NULL)
 			ERROR("Failed to open `%s'", file);
 		mnttab = err_calloc(mntnum, sizeof(void*));
-		atexit(endent);
 	}
 	else {
 		for (i = 0; i < mntcnt; i++)
@@ -226,6 +217,7 @@ static struct mntent *getent(const char *path)
 		if (mntcnt == mntnum) {
 			mntnum += 32;
 			mnttab = err_realloc(mnttab, mntnum*sizeof(void*));
+			memset(mnttab, 0, mntnum*sizeof(void*));
 		}
 		mnttab[mntcnt] = err_malloc(sizeof(struct mntent));
 		memcpy(mnttab[mntcnt], ent, sizeof(struct mntent));
