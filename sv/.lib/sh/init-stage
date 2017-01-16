@@ -190,7 +190,6 @@ esac
 pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 init_stage()
 {
-begin "Starting Init-Stage${1}\n"
 if   [ "${1}" = "--svscan" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 	if [ -e "${pidfile}" ]; then
@@ -199,9 +198,12 @@ if   [ "${1}" = "--svscan" ]; then
 	echo $$ >${pidfile}
 	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
 elif [ "${1}" = "--sysinit" ]; then
+	#
+	# XXX: initialize temporary directory
+	#
 	if [ -n "${SV_SYSTEM}" ]; then
-		error "invalid init-stage usage -- SV_SYSTEM='${SV_SYSTEM}'"
-		end 1; exit 1;
+		[ -d "${SV_RUNDIR}" ] || svc_tmpdir
+		return 0
 	fi
 	early_console
 	svc_init
@@ -241,7 +243,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 		(*) ACTION=--shutdown; sv-stage ${ACTION};;
 	esac
 	if [ -n "${SV_SYSTEM}" ]; then
-		end 0; exit 0;
+		return 0
 	fi
 
 	#
@@ -252,11 +254,14 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	fi
 	${SV_LIBDIR}/sbin/shutdown --force ${ACTION} now
 fi
-end "${?}"
 }
 
 case "${1}" in
-	(--[idrs]*) init_stage "${@}";;
+	(--[idrs]*)
+	begin "Starting ${1#--} runlevel\n"
+	init_stage "${@}"
+	end "${?}"
+	;;
 esac
 
 #
