@@ -36,6 +36,12 @@ API CHANGE:
 supervision(5) manual page for details;
 - added SV_RUNLEVEL and SV_{SHUTDOWN,SYSBOOT}_LEVEL environment variables;
 
+REMOVAL:
+Removed unnecessary supervision init script for OpenRC;
+
+ADDIDION:
+SUPERVISION SERVICE: docker;
+
 0.12.6.4:
 
 Tiny fixes all over the place especially the global environment dir;
