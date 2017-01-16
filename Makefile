@@ -211,7 +211,7 @@ ifneq ($(OS),Linux)
 dist_SVC_SED += -e 's|/usr/|$(PREFIX)/|g'
 endif
 
-.PHONY: FORCE all install install-doc install-dist install-all
+.PHONY: FORCE all install install-doc install-dist
 
 all: $(SUBDIRS)
 
@@ -220,7 +220,6 @@ FORCE:
 $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
-install-all: install install-supervision-initd
 install: install-dir install-dist install-sv-svcs
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
@@ -311,15 +310,9 @@ $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
 $(dist_SV_OPTS): install-sv-svcs
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
-install-%-initd:
-	$(MKDIR_P) $(DESTDIR)$(RC_CONFDIR)
-	$(MKDIR_P) $(DESTDIR)$(RC_INITDIR)
-	$(install_SCRIPT) $*.initd $(DESTDIR)$(RC_INITDIR)/$*
-	$(install_DATA)   $*.confd $(DESTDIR)$(RC_CONFDIR)/$*
 
-.PHONY: uninstall uninstall-doc uninstall-dist uninstall-all
+.PHONY: uninstall uninstall-doc uninstall-dist
 
-uninstall-all: uninstall unintsall-supervision-initd
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf
 	rm -f $(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/sv-shutdown \
@@ -347,11 +340,6 @@ endif
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
-uninstall-%-initd:
-	rm -f $(DESTDIR)$(RC_CONFDIR)/$*
-	rm -f $(DESTDIR)$(RC_INITDIR)/$*
-	-rmdir $(DESTDIR)$(RC_CONFDIR)
-	-rmdir $(DESTDIR)$(RC_INITDIR)
 
 .PHONY: clean
 
