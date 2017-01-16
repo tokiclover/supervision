@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
+#include <sys/file.h>
 #include <sys/param.h>
 #include <sys/reboot.h>
 #include <sys/resource.h>
@@ -315,7 +316,6 @@ static int sv_wall(void)
 		sigevb.sigev_notify = SIGEV_SIGNAL;
 		sigevb.sigev_signo  = SIGUSR2;
 		aiocb_array = err_malloc(siz*sizeof(void*));
-		memset(*aiocb_array, 0, siz);
 	}
 #endif
 	i = 0;
@@ -392,7 +392,7 @@ wait_lio:
 		for (i = 0; i < aiocb_len; i++)
 			if (aiocb_array[i]->aio_lio_opcode == LIO_WRITE)
 				break;
-		aio_suspend((const struct aiocb *const*)&aiocb_array[i], aiocb_len-i, NULL);
+		aio_suspend((const struct aiocb *const*)&aiocb_array[i], 1, NULL);
 	}
 	return aiocb_count;
 #else
@@ -462,7 +462,7 @@ shutdown:
 		sv_nologin();
 	if (ti->ti_left < offtime)
 		ts.tv_sec = offtime - ti->ti_left;
-	else if (offtime) {
+	else {
 		for (; ti->ti_left && ti->ti_left > offtime; ti++)
 			;
 		ts.tv_sec = offtime - ti->ti_left;
@@ -533,7 +533,7 @@ shutdown:
 int main(int argc, char *argv[])
 {
 	int i;
-	int this_year;
+	int j;
 	struct tm *lt;
 	time_t now;
 	char *ptr;
@@ -699,16 +699,16 @@ int main(int argc, char *argv[])
 		lt = localtime(&now);
 		switch(strlen(ptr)) {
 		case 10:
-			this_year = lt->tm_year;
+			j = lt->tm_year;
 			lt->tm_year = ATOI(ptr);
 			/* check whether the specfied year is in the nex cnetury.
 			 * allow for one year of error as many people will enter
 			 * n - 1 as the start of the year n.
 			 */
-			if (lt->tm_year < (this_year % 100)-1)
+			if (lt->tm_year < (j % 100)-1)
 				lt->tm_year += 100;
 			/* adjust for the year 2000 and beyond */
-			lt->tm_year += this_year-(this_year % 100);
+			lt->tm_year += j-(j % 100);
 			/* FALLTHROUGH */
 		case  8:
 			lt->tm_mon = ATOI(ptr);
@@ -775,7 +775,6 @@ message:
 	message_len = ptr-message;
 
 #ifdef DEBUG
-	(void)putc('\n', stdout);
 #else
 	if (geteuid()) {
 		errno = EPERM;
@@ -795,6 +794,15 @@ message:
 	if (shutdown_action != SD_MESSAGE)
 		slog_flag++;
 #endif
+	/* setup pidfile */
+	if ((j = open(SD_PIDFILE, O_CREAT|O_WRONLY|O_CLOEXEC, 0644)) < 0)
+		ERROR("Failed to open `%s'", SD_PIDFILE);
+	if (flock(j, LOCK_EX|LOCK_NB) < 0)
+		ERROR("Failed to lock `%s'", SD_PIDFILE);
+	if ((fp = fdopen(j, "w")))
+		fprintf(fp, "%d", i);
+	else
+		ERROR("Failed to fdopen(`%s')", SD_PIDFILE);
 	/* setup signal */
 	sigsetup();
 
