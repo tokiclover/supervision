@@ -21,6 +21,14 @@ start_pre()
 	if [ -z "${__cmd_dir__}" ]; then
 		modprobe -aq ${kernel_modules}
 	fi
+	#
+	# XXX: memory protection should be disabled for PaX kernel
+	#
+	if yesno "${PAX}" && [ -x /sbin/paxctl ]; then
+		/sbin/paxctl -m /usr/bin/containerd
+		/sbin/paxctl -m /usr/bin/containerd-shim
+		/sbin/paxctl -m /usr/bin/runc
+	fi
 
 	checkpath -qf -m 0644 -o ${SVC_USER}:${SVC_GROUP} ${pidfile}
 	ulimit -n 1048576
