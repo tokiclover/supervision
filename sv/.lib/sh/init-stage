@@ -213,7 +213,7 @@ elif [ "${1}" = "--default" ]; then
 	#
 	# Set up CGroup
 	#
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if yesno "${SV_CGROUP}" && [ "${OS_NAME}" = "Linux" ]; then
 		SVC_NAME="${SV_CMD}" cgroup_add_service
 	fi
 	#
@@ -249,7 +249,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	#
 	# CGroup clean up
 	#
-	if  [ "${OS_NAME}" = "Linux" ]; then
+	if yesno "${SV_CGROUP}" && [ "${OS_NAME}" = "Linux" ]; then
 		SVC_NAME="${SV_CMD}" cgroup_remove_service
 	fi
 	${SV_LIBDIR}/sbin/shutdown --force ${ACTION} now
