@@ -274,12 +274,14 @@ endif
 ifeq ($(RUNIT_INIT_STAGE),yes)
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
+		-e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
 		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 		-i $(DESTDIR)$(SYSCONFDIR)/runit/*
 endif
 ifdef ($(S6_INIT_STAGE),yes)
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
+		-e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
 		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
 endif

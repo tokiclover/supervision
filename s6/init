@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# $Header:  /etc/s6/init-stage-1                         Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id:  @(#) /etc/s6/init   0 2017/01/12 21:09:26                     Exp $
+# $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 SV_INIT_STAGE=/lib/sv/sh/init-stage

@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# $Header:  /etc/runit/3                                 Exp $
-# $License: 2-clause/new/simplified BSD                  Exp $
+# $Id:  @(#) /etc/runit/3   0 2017/01/12 21:09:26                     Exp $
+# $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 
 exec >/dev/console 2>&1
