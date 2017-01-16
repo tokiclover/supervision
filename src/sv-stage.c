@@ -381,9 +381,11 @@ static int sv_system_detect(void)
 	char buf[32];
 	int *cid = (int []){
 		SV_KEYWORD_DOCKER,
+		SV_KEYWORD_OPENVZ,
 		SV_KEYWORD_LXC,
 		SV_KEYWORD_SYSTEMD_NSPAWN,
 		SV_KEYWORD_UML,
+		SV_KEYWORD_VSERVER,
 		0
 	};
 	do {
@@ -533,7 +535,7 @@ static void svc_stage(const char *cmd)
 	} /* SHUTDOWN_LOOP */
 
 	/* finish sysinit */
-	if (sv_stage == SV_SYSINIT_LEVEL )
+	if (!sv_system && sv_stage == SV_SYSINIT_LEVEL )
 		svc_stage_command(0, argc, argv);
 
 	svc_runlevel(sv_runlevel[sv_level]);
