@@ -441,7 +441,24 @@ static void svc_stage(const char *cmd)
 	int argc = 8;
 	time_t t;
 
+	switch(sv_level) {
+	case SV_SHUTDOWN_LEVEL:
+		if (!svc_runlevel(NULL)) {
+			ERR("There's nothing to shut down!!!\n", NULL);
+			exit(EXIT_FAILURE);
+		}
+		break;
+	case SV_SYSINIT_LEVEL:
+		if (sv_system) {
+			ERR("Invalid usage -- `%s' runlevel with `%s' subsystem\n",
+					sv_runlevel[sv_level], sv_keywords[sv_system]);
+			exit(EXIT_FAILURE);
+		}
+		break;
+	}
+
 	/* set a few sane environment variables */
+	sv_svcdeps_load(NULL);
 	svc_deps  = 0;
 	svc_quiet = 0;
 	sv_pid    = getpid();
@@ -454,7 +471,7 @@ static void svc_stage(const char *cmd)
 			ERROR("Failed to lock %s", SV_PIDFILE);
 	}
 	else
-		ERROR("Failed to open %s\n", SV_PIDFILE);
+		ERROR("Failed to open %s", SV_PIDFILE);
 	write(r, buf, strlen(buf));
 
 	if (sv_stage == SV_SYSINIT_LEVEL || command == NULL) /* force service command */

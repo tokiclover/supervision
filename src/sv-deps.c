@@ -9,8 +9,12 @@
  * @(#)rs-deps.c  0.13.0 2016/01/02
  */
 
+#include <string.h>
 #include <dirent.h>
 #include <sys/param.h>
+#include <sys/wait.h>
+#include <poll.h>
+#include <unistd.h>
 #include "sv-deps.h"
 
 static const char *const sv_svcdeps_type[] = { "before", "after", "use", "need" };
@@ -370,7 +374,8 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	char cmd[128], *ptr, *svc, *type, *line = NULL;
 	FILE *fp;
 	size_t len, l = 0;
-	int t = 0;
+	int r, t = 0;
+	pid_t p;
 	SV_SvcDeps_T *deps = NULL;
 
 	/* create a new list only when not updating the list */
@@ -388,11 +393,57 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	else
 		SERVICES.svcdeps = sv_svcdeps_new();
 
-	/* initialize SV_RUNDIR if necessary */
+	/* initialize SV_RUNDIR and start _SVSCAN_ if necessary */
 	if (!file_test(SV_TMPDIR_DEPS, 'd')) {
-		snprintf(cmd, ARRAY_SIZE(cmd), "%s -0", SV_INIT_STAGE);
-		if (system(cmd))
-			WARN("Failed to execute %s: %s\n", SV_INIT_STAGE, strerror(errno));
+		if (sv_level == SV_SYSINIT_LEVEL)
+			ptr = (char*)sv_runlevel[sv_level];
+		else
+			ptr = "svscan";
+		snprintf(cmd, ARRAY_SIZE(cmd), "--%s", ptr);
+		if ((p = fork()) > 0) {
+			if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN initialization */
+				do {
+					if (file_test(SV_TMPDIR_DEPS, 'd'))
+						break;
+					poll(NULL, 0, 100); /* milisecond sleep */
+					t++;
+				} while (t < 600);
+				if (t >= 600) {
+					ERR("Timed out waiting for `%s'\n", SV_INIT_STAGE);
+					exit(EXIT_FAILURE);
+				}
+			}
+			else {
+				do {
+					r = waitpid(p, &t, 0);
+					if (r < 0) {
+						if (errno != ECHILD)
+							continue;
+						else
+							ERROR("%s: waitpid()", __func__);
+					}
+				} while (!WIFEXITED(t));
+				if (!file_test(SV_TMPDIR_DEPS, 'd')) {
+					ERR("`%s' failed to setup `%s'\n", SV_INIT_STAGE, SV_TMPDIR);
+					exit(EXIT_FAILURE);
+				}
+			}
+		}
+		else if (p < 0)
+			ERROR("%s: Failed to fork()", __func__);
+		else {
+#define ARG_OFFSET 32
+			if (sv_level != SV_SYSINIT_LEVEL) {
+				setsid();
+				sprintf(cmd+ARG_OFFSET, "--foreground");
+			}
+			else
+				sprintf(cmd+ARG_OFFSET, "");
+			execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd,
+					cmd+ARG_OFFSET, NULL);
+			ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
+		}
+#undef ARG_OFFSET
 	}
 
 	/* get dependency list file */
