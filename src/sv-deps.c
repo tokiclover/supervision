@@ -369,6 +369,41 @@ static int sv_svcdeps_gen(const char *svc)
 	return retval;
 }
 
+#define WAIT_SVSCAN do {                                       \
+	if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN */           \
+		do {                                                   \
+			if (file_test(SV_TMPDIR_DEPS, 'd')) break;         \
+			poll(NULL, 0, 100); /* milisecond sleep */         \
+			t++;                                               \
+		} while (t < 600);                                     \
+		if (t >= 600) {                                        \
+			ERR("Timed out waiting for `%s'\n", SV_INIT_STAGE);\
+			exit(EXIT_FAILURE);                                \
+		}                                                      \
+	} else {                                                   \
+		do { r = waitpid(p, &t, 0);                            \
+			if (r < 0) {                                       \
+				if (errno != ECHILD) continue;                 \
+				else ERROR("%s: waitpid()", __func__);         \
+			}                                                  \
+		} while (!WIFEXITED(t));                               \
+		if (!file_test(SV_TMPDIR_DEPS, 'd'))                   \
+			ERROR("`%s' failed to setup `%s", SV_INIT_STAGE, SV_TMPDIR); \
+	}                                                          \
+	} while (0/*CONSTCOND*/)
+
+#define ARG_OFFSET 32
+#define EXEC_SVSCAN do {                                       \
+	if (sv_level != SV_SYSINIT_LEVEL) {                        \
+		setsid();                                              \
+		sprintf(cmd+ARG_OFFSET, "--foreground");               \
+	}                                                          \
+	else sprintf(cmd+ARG_OFFSET, "--");                        \
+	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd,     \
+			cmd+ARG_OFFSET, NULL);                             \
+	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);           \
+	} while (0/*CONSTCOND*/)
+
 SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 {
 	char cmd[128], *ptr, *svc, *type, *line = NULL;
@@ -401,49 +436,19 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 			ptr = "svscan";
 		snprintf(cmd, ARRAY_SIZE(cmd), "--%s", ptr);
 		if ((p = fork()) > 0) {
-			if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN initialization */
-				do {
-					if (file_test(SV_TMPDIR_DEPS, 'd'))
-						break;
-					poll(NULL, 0, 100); /* milisecond sleep */
-					t++;
-				} while (t < 600);
-				if (t >= 600) {
-					ERR("Timed out waiting for `%s'\n", SV_INIT_STAGE);
-					exit(EXIT_FAILURE);
-				}
-			}
-			else {
-				do {
-					r = waitpid(p, &t, 0);
-					if (r < 0) {
-						if (errno != ECHILD)
-							continue;
-						else
-							ERROR("%s: waitpid()", __func__);
-					}
-				} while (!WIFEXITED(t));
-				if (!file_test(SV_TMPDIR_DEPS, 'd')) {
-					ERR("`%s' failed to setup `%s'\n", SV_INIT_STAGE, SV_TMPDIR);
-					exit(EXIT_FAILURE);
-				}
-			}
+			if (strcmp(progname, "sv-scan"))
+				WAIT_SVSCAN;
+			else
+				EXEC_SVSCAN;
 		}
 		else if (p < 0)
 			ERROR("%s: Failed to fork()", __func__);
 		else {
-#define ARG_OFFSET 32
-			if (sv_level != SV_SYSINIT_LEVEL) {
-				setsid();
-				sprintf(cmd+ARG_OFFSET, "--foreground");
-			}
+			if (strcmp(progname, "sv-scan"))
+				EXEC_SVSCAN;
 			else
-				sprintf(cmd+ARG_OFFSET, "");
-			execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd,
-					cmd+ARG_OFFSET, NULL);
-			ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
+				WAIT_SVSCAN;
 		}
-#undef ARG_OFFSET
 	}
 
 	/* get dependency list file */
@@ -531,6 +536,9 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	atexit(sv_svcdeps_free);
 	return deps;
 }
+#undef EXEC_SVSCAN
+#undef WAIT_SVSCAN
+#undef ARG_OFFSET
 
 static SV_SvcDepsList_T *sv_svcdeps_new(void)
 {
