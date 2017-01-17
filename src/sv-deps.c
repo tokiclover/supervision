@@ -369,7 +369,7 @@ static int sv_svcdeps_gen(const char *svc)
 	return retval;
 }
 
-#define WAIT_SVSCAN do {                                       \
+#define WAIT_SVSCAN                                            \
 	if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN */           \
 		do {                                                   \
 			if (file_test(SV_TMPDIR_DEPS, 'd')) break;         \
@@ -389,20 +389,18 @@ static int sv_svcdeps_gen(const char *svc)
 		} while (!WIFEXITED(t));                               \
 		if (!file_test(SV_TMPDIR_DEPS, 'd'))                   \
 			ERROR("`%s' failed to setup `%s", SV_INIT_STAGE, SV_TMPDIR); \
-	}                                                          \
-	} while (0/*CONSTCOND*/)
+	}
 
 #define ARG_OFFSET 32
-#define EXEC_SVSCAN do {                                       \
+#define EXEC_SVSCAN                                            \
 	if (sv_level != SV_SYSINIT_LEVEL) {                        \
 		setsid();                                              \
 		sprintf(cmd+ARG_OFFSET, "--foreground");               \
 	}                                                          \
-	else sprintf(cmd+ARG_OFFSET, "--");                        \
+	else sprintf(cmd+ARG_OFFSET, "--background");              \
 	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd,     \
 			cmd+ARG_OFFSET, NULL);                             \
-	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);           \
-	} while (0/*CONSTCOND*/)
+	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
 
 SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 {
@@ -435,19 +433,14 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		else
 			ptr = "svscan";
 		snprintf(cmd, ARRAY_SIZE(cmd), "--%s", ptr);
-		if ((p = fork()) > 0) {
-			if (strcmp(progname, "sv-scan"))
-				WAIT_SVSCAN;
-			else
-				EXEC_SVSCAN;
-		}
-		else if (p < 0)
+		if ((p = fork()) < 0)
 			ERROR("%s: Failed to fork()", __func__);
+		if (( p &&  strcmp(progname, "sv-scan")) ||
+		    (!p && !strcmp(progname, "sv-scan"))) {
+			WAIT_SVSCAN;
+		}
 		else {
-			if (strcmp(progname, "sv-scan"))
-				EXEC_SVSCAN;
-			else
-				WAIT_SVSCAN;
+			EXEC_SVSCAN;
 		}
 	}
 
