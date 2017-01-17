@@ -364,20 +364,6 @@ static int sv_system_detect(void)
 #endif
 
 #ifdef __linux__
-	if (!access("/proc/xen", F_OK)) {
-		if (!file_regex("/proc/xen/capabilities", "control_d"))
-			return SV_KEYWORD_XEN0;
-		return SV_KEYWORD_XENU;
-	}
-	else if (!file_regex("/proc/cpuinfo", "UML"))
-		return SV_KEYWORD_UML;
-	else if (!file_regex("/proc/self/status", "(s_context|VxID):[[:space:]]*[1-9]"))
-		return SV_KEYWORD_VSERVER;
-	else if (!access("/proc/vz/veinfo", F_OK) && access("/proc/vz/version", F_OK))
-		return SV_KEYWORD_OPENVZ;
-	else if (!file_regex("/proc/self/status", "envID:[[:space:]]*[1-9]"))
-		return SV_KEYWORD_OPENVZ;
-
 	char buf[32];
 	int *cid = (int []){
 		SV_KEYWORD_DOCKER,
@@ -393,6 +379,20 @@ static int sv_system_detect(void)
 		if (!file_regex("/proc/1/environ", buf))
 			return *cid;
 	} while (*++cid);
+
+	if (!access("/proc/xen", F_OK)) {
+		if (!file_regex("/proc/xen/capabilities", "control_d"))
+			return SV_KEYWORD_XEN0;
+		return SV_KEYWORD_XENU;
+	}
+	else if (!file_regex("/proc/cpuinfo", "UML"))
+		return SV_KEYWORD_UML;
+	else if (!file_regex("/proc/self/status", "(s_context|VxID):[[:space:]]*[1-9]"))
+		return SV_KEYWORD_VSERVER;
+	else if (!access("/proc/vz/veinfo", F_OK) && access("/proc/vz/version", F_OK))
+		return SV_KEYWORD_OPENVZ;
+	else if (!file_regex("/proc/self/status", "envID:[[:space:]]*[1-9]"))
+		return SV_KEYWORD_OPENVZ;
 #endif
 
 	return 0;
