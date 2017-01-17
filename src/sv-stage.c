@@ -28,8 +28,8 @@ extern int svc_exec (int argc, const char *argv[]);
 extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 
 /* signal handleer/setup */
-sigset_t ss_child, ss_full, ss_old;
-static void sv_sighandler(int sig);
+sigset_t ss_child, ss_full, ss_null, ss_old;
+static void sv_sighandler(int sig, siginfo_t *si _unused_, void *ctx _unused_);
 static void sv_sigsetup(void);
 
 static int sv_system_detect(void);
@@ -293,18 +293,17 @@ void sv_cleanup(void)
 		unlink(SV_PIDFILE);
 }
 
-static void sv_sighandler(int sig)
+static void sv_sighandler(int sig, siginfo_t *si _unused_, void *ctx _unused_)
 {
 	int i = -1, serrno = errno;
-	static const char *signame[] = { "SIGINT", "SIGQUIT", "SIGTERM" };
 
 	switch (sig) {
 	case SIGINT:
-		if (i < 0) i = 0;
+		if (i < 0) i = 1;
 	case SIGTERM:
 		if (i < 0) i = 3;
 	case SIGQUIT:
-		if (i < 0) i = 1;
+		if (i < 0) i = 2;
 		ERR("caught %s, aborting\n", signame[i]);
 		kill(0, sig);
 		exit(EXIT_FAILURE);
@@ -329,21 +328,22 @@ static void sv_sigsetup(void)
 {
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
+	int i;
+	int sig[] = { SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGUSR1, 0 };
 
 	sigfillset(&ss_full);
+	sigemptyset(&ss_null);
 	sigemptyset(&ss_old);
 	sigemptyset(&ss_child);
 	sigaddset(&ss_child, SIGCHLD);
-
 	sigprocmask(SIG_SETMASK, &ss_child, &ss_old);
 
 	sa.sa_handler = sv_sighandler;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART;
 	sigemptyset(&sa.sa_mask);
-	sigaction(SIGHUP , &sa, NULL);
-	sigaction(SIGINT , &sa, NULL);
-	sigaction(SIGQUIT, &sa, NULL);
-	sigaction(SIGTERM, &sa, NULL);
-	sigaction(SIGUSR1, &sa, NULL);
+	for (i = 0; sig[i]; i++)
+		if (sigaction(sig[i], &sa, NULL))
+			ERROR("%s: sigaction(%s ...)", __func__, signame[i]);
 }
 
 static int sv_system_detect(void)

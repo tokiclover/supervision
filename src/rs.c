@@ -49,6 +49,8 @@ static pthread_t RUNLIST_SIGHANDLER_TID;
 static sigset_t ss_thread;
 
 const char *progname;
+const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1",
+	"SIGKILL" };
 static const char *applet = "rs";
 
 /* !!! likewise (service command) !!! */
@@ -150,7 +152,7 @@ static void svc_zap(const char *svc);
 static void rs_sighandler(int sig, siginfo_t *si, void *ctx _unused_);
 static void rs_sigsetup(void);
 void svc_sigsetup(void);
-extern sigset_t ss_child, ss_full, ss_old;
+extern sigset_t ss_child, ss_null, ss_full, ss_old;
 
 /*
  * generate a default environment for service
@@ -782,7 +784,6 @@ static int svc_state(const char *svc, int status)
 static void rs_sighandler(int sig, siginfo_t *si, void *ctx _unused_)
 {
 	int i = -1, serrno = errno;
-	static const char *signame[] = { "SIGINT", "SIGQUIT", "SIGKILL", "SIGTERM" };
 
 	switch (sig) {
 	case SIGALRM:
@@ -790,9 +791,9 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx _unused_)
 			if (!RUN->sig)
 				i = 3, RUN->sig = SIGTERM;
 			else if (RUN->sig == SIGTERM)
-				i = 1, RUN->sig = SIGQUIT;
+				i = 2, RUN->sig = SIGQUIT;
 			else
-				i = 2, RUN->sig = SIGKILL;
+				i = 5, RUN->sig = SIGKILL;
 			alarm(RUN->dep->timeout);
 			LOG_WARN("sending %s to process PID=%d (service=%s)!!!\n", signame[i],
 					RUN->cld, RUN->name);
@@ -1002,7 +1003,6 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx _unused_)
 	int i = -1;
 	int serrno = errno;
 	struct runlist *p;
-	static const char signame[][8] = { "SIGINT", "SIGQUIT", "SIGTERM" };
 
 	switch(sig) {
 	case SIGCHLD:
@@ -1015,11 +1015,11 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx _unused_)
 		thread_signal_handler(si);
 		break;
 	case SIGINT:
-		i = 0;
+		i = 1;
 	case SIGTERM:
 		if (i < 0) i = 3;
 	case SIGQUIT:
-		if (i < 0) i = 1;
+		if (i < 0) i = 2;
 		ERR("caught %s, aborting\n", signame[i]);
 
 		pthread_mutex_lock(&RUNLIST_MUTEX);
@@ -1117,14 +1117,13 @@ static void thread_signal_handler(siginfo_t *si)
 }
 _noreturn_ static void *thread_signal_worker(void *arg _unused_)
 {
-	int sig;
-	siginfo_t si;
+	int r;
+	if (pthread_sigmask(SIG_UNBLOCK, &ss_thread, NULL))
+		ERROR("%s:%d: pthread_sigmask", __func__, __LINE__);
 	for (;;) {
-		sig = sigwaitinfo(&ss_thread, &si);
-		if (sig < 0 && errno != EINTR)
-			ERR("%s:%d: sigwaitinfo: %s\n", __func__, __LINE__, strerror(errno));
-		else
-			thread_signal_action(sig, &si, NULL);
+		r = sigsuspend(&ss_null);
+		if (r < 0 && errno != EINTR)
+			ERR("%s:%d: sigsuspend: %s\n", __func__, __LINE__, strerror(errno));
 	}
 }
 

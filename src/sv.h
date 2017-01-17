@@ -77,6 +77,7 @@ extern int sv_system;
 extern int svc_deps;
 extern int svc_quiet;
 extern const char *progname;
+extern const char *signame[];
 
 enum {
 	SV_SHUTDOWN_LEVEL,
