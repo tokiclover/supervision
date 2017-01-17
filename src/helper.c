@@ -154,11 +154,9 @@ _unused_ int get_term_cols(void)
 	return 80;
 }
 
-_unused_ ssize_t sv_getline(FILE *stream, char **buf, size_t *size)
+_unused_ size_t sv_getline(FILE *stream, char **buf, size_t *size)
 {
 	char *ptr;
-	if (!stream)
-		return -EBADF;
 	*size = 0;
 	*buf = err_realloc(*buf, BUFSIZ);
 
@@ -170,16 +168,14 @@ _unused_ ssize_t sv_getline(FILE *stream, char **buf, size_t *size)
 		ptr = *buf+*size-1;
 		if (*ptr == '\n') {
 			*ptr = '\0';
-			goto retline;
+			break;
 		}
 		else if (feof(stream))
-			goto retline;
+			break;
 		else
-			*buf = err_realloc(*buf, *size+1+BUFSIZ);
+			*buf = err_realloc(*buf, *size+BUFSIZ);
 	}
-	goto retline;
 
-retline:
 	*buf = err_realloc(*buf, *size);
 	return *size;
 }
