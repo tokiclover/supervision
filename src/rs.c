@@ -876,9 +876,6 @@ int svc_exec(int argc, const char *argv[]) {
 		run.argv[i++] = argv[j];
 	run.argv[i] = (char *)0;
 	sv_svcdeps_load(NULL);
-	/* clean up on if necessary */
-	if (access(SV_ENVIRON, F_OK))
-		atexit(sv_cleanup);
 
 	retval = svc_cmd(&run);
 	switch(retval) {
