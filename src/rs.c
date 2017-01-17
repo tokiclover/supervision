@@ -834,17 +834,15 @@ static void rs_sigsetup(void)
 void svc_sigsetup(void)
 {
 	struct sigaction sa;
+	int i;
+	int sig[] = { SIGALRM, SIGCHLD, SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGUSR1, 0 };
 	memset(&sa, 0, sizeof(sa));
 
 	sa.sa_handler = SIG_DFL;
 	sigemptyset(&sa.sa_mask);
-	sigaction(SIGALRM, &sa, NULL);
-	sigaction(SIGCHLD, &sa, NULL);
-	sigaction(SIGHUP , &sa, NULL);
-	sigaction(SIGINT , &sa, NULL);
-	sigaction(SIGQUIT, &sa, NULL);
-	sigaction(SIGTERM, &sa, NULL);
-	sigaction(SIGUSR1, &sa, NULL);
+	for (i = 0; sig[i]; i++)
+		if (sigaction(sig[i], &sa, NULL))
+			ERROR("%s:%d: sigaction", __func__, __LINE__);
 	sigprocmask(SIG_SETMASK, &ss_old, NULL);
 }
 
@@ -1117,9 +1115,38 @@ static void thread_signal_handler(siginfo_t *si)
 }
 _noreturn_ static void *thread_signal_worker(void *arg _unused_)
 {
+	int i;
 	int r;
+	int sig[] = { SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
+
+	sa.sa_sigaction = thread_signal_action;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART;
+	sigemptyset(&sa.sa_mask);
+
+	for (i = 0; sig[i]; i++) {
+		do {
+			r = sigaddset(&ss_thread, sig[i]);
+			if (r) {
+				if (errno == EINTR) continue;
+				else ERROR("%s:%d: sigaddset", __func__, __LINE__);
+			}
+		} while (r);
+		do {
+			r = sigaction(sig[i], &sa, NULL);
+			if (r) {
+				if (errno == EINTR) continue;
+				else ERROR("%s:%d: sigaction", __func__, __LINE__);
+			}
+		} while (r);
+	}
+
+	sigprocmask(SIG_BLOCK, &ss_thread, NULL);
 	if (pthread_sigmask(SIG_UNBLOCK, &ss_thread, NULL))
 		ERROR("%s:%d: pthread_sigmask", __func__, __LINE__);
+
 	for (;;) {
 		r = sigsuspend(&ss_null);
 		if (r < 0 && errno != EINTR)
@@ -1140,15 +1167,6 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		return -EINVAL;
 
 	if (!RUNLIST_COUNT) {
-		memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
-		sigaddset(&ss_thread, SIGHUP);
-		sigaddset(&ss_thread, SIGINT);
-		sigaddset(&ss_thread, SIGTERM);
-		sigaddset(&ss_thread, SIGQUIT);
-		sigaddset(&ss_thread, SIGUSR1);
-		/* block unhandled signals */
-		sigprocmask(SIG_BLOCK, &ss_thread, NULL);
-
 		if ((r = pthread_attr_init(&RUNLIST_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
 		if ((r = pthread_cond_init(&RUNLIST_COND, NULL)))
