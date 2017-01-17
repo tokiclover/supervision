@@ -51,7 +51,7 @@ _unused_ char *shell_string_value(char *str)
 _unused_ int file_regex(const char *file, const char *regex)
 {
 	FILE *fp;
-	char *line = NULL, *ptr;
+	char *end, *line = NULL, *ptr;
 	size_t len;
 	int retval;
 	regex_t re;
@@ -69,15 +69,16 @@ _unused_ int file_regex(const char *file, const char *regex)
 
 	while (sv_getline(fp, &line, &len) > 0) {
 		ptr = line;
+		end = line+len;
 		/* handle null terminated strings */
 		do {
 			if (!regexec(&re, ptr, 0, NULL, 0))
 				goto found;
 			ptr += strlen(ptr)+1;
 			/* find next string */
-			while (*ptr == '\0' && ptr++ < line+len)
+			while (*ptr == '\0' && ptr++ < end)
 				;
-		} while (ptr < line+len);
+		} while (ptr < end);
 	}
 	retval = 1;
 found:
