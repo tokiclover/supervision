@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) init-stage    1.7 2017/01/12 21:09:26                    Exp $
+# $Id:  @(#) init-stage    1.8 2017/01/16 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -195,8 +195,13 @@ if   [ "${1}" = "--svscan" ]; then
 	if [ -e "${pidfile}" ]; then
 		kill_svscan
 	fi
+	if [ "${2}" = "--foreground" ]; then
+		ARGS=  PRECMD=exec
+	else
+		ARGS=& PRECMD=
+	fi
 	echo $$ >${pidfile}
-	${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} &
+	${PRECMD} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} ${ARGS}
 elif [ "${1}" = "--sysinit" ]; then
 	#
 	# XXX: initialize temporary directory
@@ -231,7 +236,7 @@ elif [ "${1}" = "--default" ]; then
 	sh -c ". ${SV_LIBDIR}/sh/init-stage; start_stage_2;" &
 
 	echo $$ >${pidfile}
-	exec env - PATH=${PATH} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
+	exec /usr/bin/env - PATH=${PATH} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
 	#
 	# Drop into a rescue shell
 	#
@@ -258,7 +263,7 @@ fi
 
 case "${1}" in
 	(--[idrs]*)
-	begin "Starting ${1#--} runlevel\n"
+	begin "Starting ${1#--}\n"
 	init_stage "${@}"
 	end "${?}"
 	;;
