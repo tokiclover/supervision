@@ -69,10 +69,20 @@ or rather use `${LIBDIR}/sv/sbin/service [OPTIONS] SERVICE COMMAND` for
 SystemV compatibility. *NOTE:* That symlink can be copied to `/sbin` if
 necessary to ease administration and if there is no other SystemV binary
 installed in the system.
+
 Or else, use the magic `--svscan` command line argument to set up `/service/` and
 `svscan`, set `SV_SYSTEM="supervision"` in `/etc/sv.conf` and then use
-`sv-stage default` to start/stop daemons.
+`sv-stage --default` to start/stop daemons.
 This will ensure proper service dependency scheduling.
+
+Added support to containrization solution via keywords usage (docker, LXC, jail,
+systemd-nspawn, prefix, supervision, UML VServer). Either the subsystem will be
+auto detected or use sv.conf to set `SV_SYSTEM="${SUBSYSTEM}"`.
+An option to exec into a supervisor `{damontools[-encore],runit,s6}` is available:
+Just call `sv-stage` as `sv-scan` and voila the supervisor will be executed as
+PID 1; and a child will handle service management. Just setup the container;
+once done, use something like the following for docker:
+`docker run [OPTIONS] --env "container=docker" IMAGE /sbin/sv-scan --default`.
 
 And then... a bit more, new supervision services can be easily added by
 running `${LIBDIR}/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
