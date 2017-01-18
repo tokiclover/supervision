@@ -8,6 +8,7 @@ description="Set up LVM2 devices"
 SVC_AFTER="kmod device-mapper"
 SVC_BEFORE="checkfs"
 SVC_CONFIGFILE="/etc/lvm/lvm.conf"
+SVC_KEYWORD="docker jail openvz prefix systemd-nspawn timeout uml vserver xenu lxc"
 
 lvm="$(command -v lvm 2>${NULL})"
 
