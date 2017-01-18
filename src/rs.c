@@ -824,7 +824,7 @@ static void rs_sigsetup(void)
 	memset(&sa, 0, sizeof(sa));
 
 	sa.sa_sigaction = rs_sighandler;
-	sa.sa_flags = SA_SIGINFO | SA_RESTART;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP | SA_NODEFER;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGALRM, &sa, NULL);
 	sigaction(SIGCHLD, &sa, NULL);
@@ -834,14 +834,14 @@ static void rs_sigsetup(void)
 void svc_sigsetup(void)
 {
 	struct sigaction sa;
-	int i;
-	int sig[] = { SIGALRM, SIGCHLD, SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGUSR1, 0 };
+	int *sig = (int []){ SIGALRM, SIGCHLD, SIGHUP, SIGINT, SIGQUIT, SIGTERM,
+		SIGUSR1, 0 };
 	memset(&sa, 0, sizeof(sa));
 
 	sa.sa_handler = SIG_DFL;
 	sigemptyset(&sa.sa_mask);
-	for (i = 0; sig[i]; i++)
-		if (sigaction(sig[i], &sa, NULL))
+	for ( ; *sig; sig++)
+		if (sigaction(*sig, &sa, NULL))
 			ERROR("%s:%d: sigaction", __func__, __LINE__);
 	sigprocmask(SIG_SETMASK, &ss_old, NULL);
 }
@@ -1115,27 +1115,26 @@ static void thread_signal_handler(siginfo_t *si)
 }
 _noreturn_ static void *thread_signal_worker(void *arg _unused_)
 {
-	int i;
 	int r;
-	int sig[] = { SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };
+	int *sig = (int []){ SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 	memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
 
 	sa.sa_sigaction = thread_signal_action;
-	sa.sa_flags = SA_SIGINFO | SA_RESTART;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP | SA_NODEFER;
 	sigemptyset(&sa.sa_mask);
 
-	for (i = 0; sig[i]; i++) {
+	for ( ; *sig; sig++) {
 		do {
-			r = sigaddset(&ss_thread, sig[i]);
+			r = sigaddset(&ss_thread, *sig);
 			if (r) {
 				if (errno == EINTR) continue;
 				else ERROR("%s:%d: sigaddset", __func__, __LINE__);
 			}
 		} while (r);
 		do {
-			r = sigaction(sig[i], &sa, NULL);
+			r = sigaction(*sig, &sa, NULL);
 			if (r) {
 				if (errno == EINTR) continue;
 				else ERROR("%s:%d: sigaction", __func__, __LINE__);
