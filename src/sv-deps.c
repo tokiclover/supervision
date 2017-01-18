@@ -393,18 +393,15 @@ static int sv_svcdeps_gen(const char *svc)
 
 #define ARG_OFFSET 32
 #define EXEC_SVSCAN                                            \
-	if (sv_level != SV_SYSINIT_LEVEL) {                        \
+	if (sv_level != SV_SYSINIT_LEVEL)                          \
 		setsid();                                              \
-		sprintf(cmd+ARG_OFFSET, "--foreground");               \
-	}                                                          \
-	else sprintf(cmd+ARG_OFFSET, "--background");              \
-	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd,     \
-			cmd+ARG_OFFSET, NULL);                             \
+	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd, arg, NULL); \
 	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
 
 SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 {
 	char cmd[128], *ptr, *svc, *type, *line = NULL;
+	char *arg;
 	FILE *fp;
 	size_t len, l = 0;
 	int r, t = 0;
@@ -428,10 +425,13 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 
 	/* initialize SV_RUNDIR and start _SVSCAN_ if necessary */
 	if (!file_test(SV_TMPDIR_DEPS, 'd')) {
-		if (sv_level == SV_SYSINIT_LEVEL)
+		if (sv_level == SV_SYSINIT_LEVEL) {
+			arg = "--background";
 			ptr = (char*)sv_runlevel[sv_level];
-		else
+		else {
+			arg = "--foreground";
 			ptr = "svscan";
+		}
 		snprintf(cmd, ARRAY_SIZE(cmd), "--%s", ptr);
 		if ((p = fork()) < 0)
 			ERROR("%s: Failed to fork()", __func__);
