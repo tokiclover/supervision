@@ -8,7 +8,7 @@ description="Set up zpools and zfs volumes"
 SVC_AFTER="checkfs"
 SVC_BEFORE="logger"
 SVC_NEED="zpool"
-SVC_KEYWORD="docker lxc openvz supervision prefix uml vserver"
+SVC_KEYWORD="docker lxc openvz supervision prefix systemd-nspawn uml vserver"
 
 if mountinfo -q -t zfs /; then
 	SVC_BEFORE="${SVC_BEFORE} localfs rootfs"

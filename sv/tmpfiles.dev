@@ -5,13 +5,13 @@
 #
 
 description="Set up tmpfiles.d entries"
-SVC_KEYWORD="prefix vserver"
 
 if [ "${SVC_NAME}" = tmpfiles.dev ]; then
 	SVC_OPTS='--prefix=/dev'
 	SVC_USE=devfs
 	SVC_BEFORE=dev
 	SVC_OPTS='--prefix=/dev'
+	SVC_KEYWORD="docker prefix vserver"
 else
 	SVC_OPTS='--exclude-prefix=/dev --remove'
 	SVC_NEED=localfs
