@@ -36,6 +36,7 @@ _unused_ char *shell_string_value(char *str)
 	case '\'':
 	case '"' :
 	case '\t':
+	case '\n':
 	case ' ' :
 		*end-- = '\0';
 		break;
@@ -52,7 +53,7 @@ _unused_ int file_regex(const char *file, const char *regex)
 {
 	FILE *fp;
 	char *end, *line = NULL, *ptr;
-	size_t len;
+	size_t len = 0;
 	int retval;
 	regex_t re;
 
@@ -67,7 +68,7 @@ _unused_ int file_regex(const char *file, const char *regex)
 		return -EINVAL;
 	}
 
-	while (sv_getline(fp, &line, &len) > 0) {
+	while (getline(&line, &len, fp) > 0) {
 		ptr = line;
 		end = line+len;
 		/* handle null terminated strings */
@@ -80,6 +81,7 @@ _unused_ int file_regex(const char *file, const char *regex)
 				;
 		} while (ptr < end);
 	}
+	if (len) free(line);
 	retval = 1;
 found:
 	fclose(fp);
@@ -154,31 +156,39 @@ _unused_ int get_term_cols(void)
 	return 80;
 }
 
-_unused_ size_t sv_getline(FILE *stream, char **buf, size_t *size)
+#ifndef HAVE_GETLINE
+_unused_ ssize_t getline(char **buf, size_t *len, FILE *stream)
 {
-	char *ptr;
-	*size = 0;
-	*buf = err_realloc(*buf, BUFSIZ);
+	int c;
+	char *p;
+	size_t s = *len;
 
-	while (fgets(*buf+*size, BUFSIZ, stream)) {
-		if (**buf == '\n')
-			continue;
+	if (!s) s += BUFSIZ;
+	if (!*buf || !*len)
+		*buf = err_realloc(*buf, s);
+	p = *buf;
+	*len = 0;
 
-		*size += strlen(*buf);
-		ptr = *buf+*size-1;
-		if (*ptr == '\n') {
-			*ptr = '\0';
+	while (!feof(stream) && (c = getc(stream)) != EOF) {
+		if (c == '\n') {
+			if (!*len) /* skip empty line */
+				continue;
 			break;
 		}
-		else if (feof(stream))
-			break;
-		else
-			*buf = err_realloc(*buf, *size+BUFSIZ);
+		*p = (unsigned char)c;
+		p++; ++*len;
+		if (*len >= s) {
+			s += BUFSIZ;
+			*buf = err_realloc(*buf, s);
+			p = *buf+*len;
+		}
 	}
 
-	*buf = err_realloc(*buf, *size);
-	return *size;
+	if (*len) *p = '\0';
+	*buf = err_realloc(*buf, *len);
+	return *len;
 }
+#endif
 
 _unused_ int sv_yesno(const char *str)
 {

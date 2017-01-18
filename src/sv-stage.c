@@ -137,13 +137,13 @@ static char *get_cmdline_entry(const char *ent)
 #ifdef __linux__
 	FILE *fp;
 	char *line = NULL, *ptr, path[] = "/proc/cmdline", *val;
-	size_t len;
+	size_t len = 0;
 
 	if (access(path, F_OK))
 		return NULL;
 	if (!(fp = fopen(path, "r")))
 		return NULL;
-	if (!sv_getline(fp, &line, &len))
+	if (!getline(&line, &len, fp))
 		return NULL;
 
 	len = strlen(ent);

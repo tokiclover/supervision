@@ -56,7 +56,7 @@ static int sv_conf_load(void)
 {
 	FILE *fp;
 	char *line = NULL, *ptr;
-	size_t count = 0, len, l, num = 16, pos;
+	size_t count = 0, len = 0, l, num = 16, pos;
 
 	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
 		WARN("Failed to open %s\n", SV_CONFIG_FILE);
@@ -64,7 +64,7 @@ static int sv_conf_load(void)
 	}
 	SV_CONFIG_ARRAY = err_calloc(num, sizeof(void *));
 
-	while (sv_getline(fp, &line, &len) > 0) {
+	while (getline(&line, &len, fp) > 0) {
 		if (line[0] == '#')
 			continue;
 		/* get conf name */

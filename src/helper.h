@@ -38,7 +38,9 @@ _unused_ int file_regex(const char *file, const char *regex);
  */
 _unused_ int file_test(const char *pathname, int mode);
 
-_unused_ size_t sv_getline(FILE *stream, char **buf, size_t *size);
+#ifndef HAVE_GETLINE
+_unused_ ssize_t getline(char **buf, size_t *len, FILE *stream);
+#endif
 
 /*
  * (WARN: only first to second character are used!)

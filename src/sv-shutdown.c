@@ -422,7 +422,7 @@ _noreturn_ static void sv_shutdown(void)
 	}
 
 	if ((fp = fopen(SV_BACKEND, "r")))
-		while (sv_getline(fp, &line, &len) > 0)
+		while (getline(&line, &len, fp) > 0)
 			if (strncmp(line, ent, sizeof(ent)-1) == 0) {
 				ptr = shell_string_value(line+sizeof(ent));
 				ptr = err_strdup(ptr);

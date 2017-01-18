@@ -168,7 +168,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 	char path[PATH_MAX];
 	char *line = NULL, *ptr, *tmp, svc[128];
 	FILE *fp;
-	size_t len, pos;
+	size_t len = 0, pos;
 
 	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
 	if (access(path, F_OK))
@@ -178,7 +178,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 		return -1;
 	}
 
-	while (sv_getline(fp, &line, &len) > 0) {
+	while (getline(&line, &len, fp) > 0) {
 		ptr = strchr(line, '_');
 		p = atoi(++ptr);
 		ptr = strchr(line, '=');
@@ -204,6 +204,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 			ptr += pos+1;
 		}
 	}
+	if (len) free(line);
 	fclose(fp);
 
 	return 0;
@@ -403,7 +404,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	char cmd[128], *ptr, *svc, *type, *line = NULL;
 	char *arg;
 	FILE *fp;
-	size_t len, l = 0;
+	size_t len = 0, l = 0;
 	int r, t = 0;
 	pid_t p;
 	SV_SvcDeps_T *deps = NULL;
@@ -428,6 +429,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		if (sv_level == SV_SYSINIT_LEVEL) {
 			arg = "--background";
 			ptr = (char*)sv_runlevel[sv_level];
+		}
 		else {
 			arg = "--foreground";
 			ptr = "svscan";
@@ -453,7 +455,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		return NULL;
 	}
 
-	while (sv_getline(fp, &line, &len) > 0) {
+	while (getline(&line, &len, fp) > 0) {
 		if (service) {
 			/* break the loop when updating the list */
 			if (strncmp(line, service, l)) {
@@ -523,6 +525,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		} while ((svc = strtok_r(NULL, " \t", &type)));
 	}
 	fclose(fp);
+	if (len) free(line);
 	if (service)
 		return deps;
 
