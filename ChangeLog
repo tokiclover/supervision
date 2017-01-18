@@ -4,12 +4,22 @@ Header: supervision/ChangeLog, 2015/04/24
 
 WARING: SHORT COMMAND LINE OPTION FOR RUNLEVELS CHANGED DRAMATICALLY FROM v.12.x
 
-Improve signal handling so SIGINT is not blocked anymore;
+Improve signal handling so SIG{INT,QUIT,TERM} are not blocked anymore;
 Improve parallelization of service (to avoid CHILD_MAX hard limit) and improve
-scalabilty to thousends of service in parallel;
+scalabilty to thousends of service in parallel (POSIX threads);
 
 Added support for keywords and timeout per service; so a NOHANG option is now
 available to kill hangged service (see sv.conf for more iformation);
+Keywords can be used to disable services per subsystem (like docker...);
+
+Added support to containrization solution via keywords usage (docker, LXC, jail,
+systemd-nspawn, prefix, supervision, UML VServer). Either the subsystem will be
+auto detected or use sv.conf to set SV_SYSTEM="${SUBSYSTEM}".
+An option to exec into a supervisor {damontools[-encore],runit,s6} is available:
+Just call `sv-stage' as `sv-scan' and voila the supervisor will be executed as
+PID 1; and a child will handle service management. Just setup the container;
+once done, use something like the following for docker:
+`docker run [OPTIONS] --env "container=docker" IMAGE /sbin/sv-scan --default'.
 
 Added abilty to abort an init-stage (used to abort and bring single runlevel
 when checkfs service fails to clean up filesystems;
