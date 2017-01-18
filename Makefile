@@ -210,6 +210,19 @@ dist_SVC_SED  =
 ifneq ($(OS),Linux)
 dist_SVC_SED += -e 's|/usr/|$(PREFIX)/|g'
 endif
+dist_MAN_SED += \
+	-e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' \
+	-e 's|@RUNDIR@|$(RUNDIR)|g' \
+	-e 's|@LIBDIR@|$(LIBDIR)|g' \
+	-e 's|@SBINDIR@|$(SBINDIR)|g' \
+	-e 's|@PREFIX@|$(PREFIX)|g' \
+	-e 's|@_PATH_NOLOGIN@|$(_PATH_NOLOGIN)|g'
+INIT_STAGE_SED = -e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
+	-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
+	-e 's|/etc|$(SYSCONFDIR)|g' \
+	-e 's|/lib|$(LIBDIR)|g' \
+	-e 's|/run/|$(RUNDIR)/|g'
+
 
 .PHONY: FORCE all install install-doc install-dist
 
@@ -243,23 +256,16 @@ install: install-dir install-dist install-sv-svcs
 	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
 	sed -e 's,\(SV_TYPE.*$$\),\1\nSV_LIBDIR=$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/opt/cmd
-	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' -e 's|@RUNDIR@|$(RUNDIR)|g' \
-		rs.8 >$(DESTDIR)$(MANDIR)/man8/rs.8
-	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' -e 's|@RUNDIR@|$(RUNDIR)|g' \
-		sv-stage.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
-	sed -e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' -e 's|@LIBDIR@|$(LIBDIR)|g' \
-		-e 's|@SBINDIR@|$(SBINDIR)|g' -e 's|@RUNDIR@|$(RUNDIR)|g' \
-		-e 's|@PREFIX@|$(PREFIX)|g' \
-		supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
-	sed -e 's|@_PATH_NOLOGIN@|$(_PATH_NOLOGIN)|g' \
-		sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
+	sed $(dist_MAN_SED) rs.8 >$(DESTDIR)$(MANDIR)/man8/rs.8
+	sed $(dist_MAN_SED) sv-stage.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
+	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
+	sed $(dist_MAN_SED) sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|\(_PATH_STDPATH=\).*$$|\1$(_PATH_STDPATH)|g' \
 		-e 's|\(__SV_PREFIX__=\).*$$|\1$(PREFIX)|g' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
+		   $(DESTDIR)$(SYSCONFDIR)/sv.conf \
 		   $(DESTDIR)$(SV_LIBDIR)/opt/SVC_OPTIONS
 ifneq ($(EXEC_PREFIX),)
 	sed -e 's|/sbin/rs|$(SBINDIR)/rs|g' \
@@ -271,18 +277,10 @@ ifneq ($(dist_SVC_SED),)
 		   $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%/OPTIONS*)
 endif
 ifeq ($(RUNIT_INIT_STAGE),yes)
-	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
-		-e 's|/run/|$(RUNDIR)/|g' \
-		-e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
-		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
-		-i $(DESTDIR)$(SYSCONFDIR)/runit/*
+	sed $(INIT_STAGE_SED) -i $(DESTDIR)$(SYSCONFDIR)/runit/*
 endif
 ifdef ($(S6_INIT_STAGE),yes)
-	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
-		-e 's|/run/|$(RUNDIR)/|g' \
-		-e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
-		-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
-		-i $(DESTDIR)$(SYSCONFDIR)/s6/*
+	sed $(INIT_STAGE_SED) -i $(DESTDIR)$(SYSCONFDIR)/s6/*
 endif
 	for svc in $(dist_SVC_INSTANCES); do \
 		$(LN_S) -f "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
@@ -336,7 +334,7 @@ endif
 	rm -f $(DESTDIR)$(SV_LIBDIR)/bin/* $(DESTDIR)$(SV_LIBDIR)/sbin/* \
 		$(DESTDIR)$(SV_LIBDIR)/sh/* $(DESTDIR)$(SV_LIBDIR)/cache/* \
 		$(DESTDIR)$(SV_SVCDIR)/getty-tty* $(DESTDIR)$(SV_SVCDIR)/.opt \
-		$(DESTDIR)$(SV_SVCDIR)/.*/*
+		$(DESTDIR)$(SV_SVCDIR)/.[sd]*/*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
