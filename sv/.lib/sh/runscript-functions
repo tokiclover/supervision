@@ -115,7 +115,7 @@ svc_sig()
 	fi
 
 	if [ -n "${SVC_PIDFILE}" -a -e "${SVC_PIDFILE}" ]; then
-		pkill -${1} -F ${SVC_PIDFILE} -x ${SVC_NAME%%*/}
+		pkill -${1} -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}
 	else
 		error "no pidfile (SVC_PIDFILE) defined"
 		return 1
