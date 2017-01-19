@@ -484,7 +484,7 @@ shutdown:
 		ts.tv_sec = ti->ti_wait;
 	}
 	sv_timewarn(0U);
-	(void)printf("\r\n\aSystem %s time has arrived\a\r\n", action[ai]);
+	(void)printf("\r\n\007System %s time has arrived\007\r\n", action[ai]);
 	if (!access(SD_PIDFILE, F_OK))
 		unlink(SD_PIDFILE);
 
@@ -747,11 +747,11 @@ message:
 		whom = (pw = getpwuid(getuid())) ? pw->pw_name : "???";
 	(void)gethostname(hostname, sizeof(hostname));
 
-	sprintf(message, "\a*** System %s message from %s@%s ***\a\n", action[ai],
+	sprintf(message, "\007*** System %s message from %s@%s ***\007\n", action[ai],
 			whom, hostname);
 	timer_pos = strlen(message);
 	ptr = message+timer_pos;
-	sprintf(ptr, "\a-*- System going down at %8.8s    -*-\a\n\n",
+	sprintf(ptr, "\007-*- System going down at %8.8s    -*-\007\n\n",
 			ctime(&shuttime)+11);
 	timer_pos = strlen(message);
 	ptr = message+timer_pos;
