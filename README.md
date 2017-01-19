@@ -59,8 +59,8 @@ script for OpenRC) would suffice.
 And do not forget to run `${LIBDIR}/sv/sbin/sv-config -S BACKEND` afterwards!
 or `${LIBDIR}/sv/sbin/sv-config -S BACKEND` after installation.
 
-DOCUMENTATION/USAGE
--------------------
+APPLICATION USAGE
+-----------------
 
 The recommanded way to use this package for service management is to use
 `${LIBDIR}/sv/sh/init-stage --(sysinit|default|shutdown)` to start particular stage. And then use
@@ -75,14 +75,25 @@ Or else, use the magic `--svscan` command line argument to set up `/service/` an
 `sv-stage --default` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
-Added support to containrization solution via keywords usage (docker, LXC, jail,
-systemd-nspawn, prefix, supervision, UML VServer). Either the subsystem will be
-auto detected or use sv.conf to set `SV_SYSTEM="${SUBSYSTEM}"`.
+Support for containrization solutions or subsystems is available via _keywords_
+usage (see __KEYWORDS__ subsection in `supervision(5)` and `sv.conf` for more
+information) for docker, LXC, jail, systemd-nspawn, prefix, supervision, UML,
+VServer and XEN.
+Either the subsystem will be auto detected or use sv.conf to set a particular
+subsystem with `SV_SYSTEM="${SUBSYSTEM}"` configuration variable...
+`SV_SYSTEM="supervision"` for daemon supervision only;
+`SV_SYSTEM="prefix"` for an isolated chrooted environment;
+`SV_SYSTEM="docker"` for docker containers et al.
+Services that have the subsystem keyword will not be started in that particular
+subsystem environment.
+
 An option to exec into a supervisor `{damontools[-encore],runit,s6}` is available:
 Just call `sv-stage` as `sv-scan` and voila the supervisor will be executed as
-PID 1; and a child will handle service management. Just setup the container;
-once done, use something like the following for docker:
-`docker run [OPTIONS] --env "container=docker" IMAGE /sbin/sv-scan --default`.
+PID 1; and a child will handle service management. Just setup the container or
+subsystem; once done, use something like the following for docker:
+`docker run [OPTIONS] --env container=docker --tmpfs /run IMAGE /sbin/sv-scan
+--default`.
+__WARNING:__ Do not forget to make the `sv-scan` symbolic link in the image beforehand!
 
 And then... a bit more, new supervision services can be easily added by
 running `${LIBDIR}/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
@@ -94,8 +105,9 @@ for more information.
 REQUIREMENTS
 ------------
 
-Supervision Scripts Framework requires standard GNU coreutils, grep, procps,
-sed and a (POSIX) shell. Optional SysVinit for compatibilty with SysVinit's init;
+Supervision Scripts Framework requires standard _coreutils_, _grep_, _procps_,
+sed and a (POSIX) shell.
+Optional SysVinit for compatibilty with SysVinit's utilities.
 
 CONTRIBUTORS
 ------------
