@@ -625,13 +625,10 @@ int main(int argc, char *argv[])
 		shutdown_action = SD_SINGLE;
 		ai = SD_ACTION_SINGLE;
 	}
-	else {
-		if (shutdown_action < 0) {
-			fprintf(stderr, "Usage: %s -c | -h | -p | -r | -m [time] [message]\n",
-				progname);
-			exit(EXIT_FAILURE);
-		}
-		ai = SD_ACTION_SHUTDOWN;
+	else if (shutdown_action < 0) {
+		fprintf(stderr, "Usage: %s -c | -h | -p | -r | -m [time] [message]\n",
+			progname);
+		exit(EXIT_FAILURE);
 	}
 	argc -= optind, argv += optind;
 
