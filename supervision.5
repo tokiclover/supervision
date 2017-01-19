@@ -248,20 +248,39 @@ and be done with it.
 
 .TP
 .B SUBSYSTEMS
-Added support to containrization solutions via
-.B keywords
-(see
-.B KEYWORDS
-subsection for more information) usage (\fBdocker\fR, \fBLXC\fR, \fBjail\fR,
-\fBsystemd-nspawn\fR, \fBprefix\fR, \fBsupervision\fR, \fBUML\fR, \fBVServer\fR
-and \fBXEN\fR). Either the subsystem will be
-auto detected or use \fI@SYSCONFDIR@/sv.conf\fR to set \fBSV_SYSTEM="${SUBSYSTEM}"\fR.
+Support for containrization solutions or \fBsubsystems\fR is available via
+\fBkeywords\fR usage, see \fBKEYWORDS\fR subsection and \fI@SYSCONFDIR@/sv.conf\fR
+for more information, for
+.B docker,
+.B LXC,
+.B jail,
+.B systemd-nspawn,
+.B prefix,
+.B supervision,
+.B UML,
+.B VServer
+and
+.B XEN.
+Either the subsystem will be
+auto detected or use \fI@SYSCONFDIR@/sv.conf\fR to set a particular subsystem with
+.I SV_SYSTEM="${SUBSYSTEM}"
+configuration variable...
+.I SV_SYSTEM=supervision
+for daemon supervision only;
+.I SV_SYSTEM=prefix
+for an isolated chrooted environment;
+.I SV_SYSTEM=docker
+for docker containers et al.
+Services that have the subsystem keyword will not be started in that particular
+subsystem environment.
+
 An option to exec into a supervisor \fI{damontools[-encore],runit,s6}\fR is available:
 Just call \fIsv-stage\fR as \fIsv-scan\fR and voila the supervisor will be executed as
-PID 1; and a child will handle service management. Just setup the container;
-once done, use something like the following for docker:
-\fBdocker run [OPTIONS] --env "container=docker" IMAGE /sbin/sv-scan --default\fR.
-Do not forget to make the symbolic link in the image beforehand!
+PID 1; and a child will handle service management. Just setup the container or
+subsystem; once done, use something like the following for docker:
+`\fBdocker run [OPTIONS] --env container=docker --tmpfs /run IMAGE /sbin/sv-scan --default\fR'.
+.B WARNING:
+Do not forget to make the \fIsv-scan\fRsymbolic link in the image beforehand!
 
 .SH OPTIONS
 .SS ENVIRONMENT
