@@ -440,8 +440,6 @@ svc_cmd()
 	case "${cmd}" in
 		(down|remove|up)
 		svc_state -a || { error "Inactive service"  ; return 3; };;
-		(*)
-		svc_state -e || { error "Inexistent service"; return 2; };;
 	esac
 
 	begin "service ${cmd}: "
