@@ -551,6 +551,41 @@ is enabled.)
 .RB SUBSYSTEM:\ [\| docker \|]\ [\| lxc \|]\ [\| openvz \|]\ [\| prefix \|]\ [\| supervision \|]\ [\| \.\.\. \|]
 Disable the service in the SUBSYSTEM--see \fI@SYSCONFDIR@/sv.conf\fR for valid
 subsystem keywords.
+
+.SS ANSI COLORS
+.B ANSI
+escape sequences are available with
+.B color_{b,f}g_<ID>
+when \fB<ID>\fR is an integer from 0 to 7 for 8 colors terminal, or 0 to 255
+for 256 colors terminals (a `\fIeval_clors 256\fR' is required beforehand.)
+There are a few aliases for the base colors and attributes mapped to
+\fIcolor_<ALIAS>\fR for the attributes and \fIcolor_{b,f}g_<ALIAS>\fR for colors:
+.I und
+for underline,
+.I rst
+for reset,
+.I bld
+for bold,
+.I ita
+for italic,
+.I blk
+for black,
+.I red,
+for red,
+.I grn
+for green,
+.I ylw
+for yellow,
+.I blu
+for blue,
+.I mag
+for magenta,
+.I cyn
+for cyan,
+and
+.I wht
+for white.
+
 .SH BUILTINS
 .TS
 tab (@);
