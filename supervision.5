@@ -585,6 +585,9 @@ T}
 \fBenv_svc VARS\fR@T{
 Save persistent environment variables
 T}
+\fBsvc_cmd\fR@T{
+Run a supported service command
+T}
 \fBenv_del VARS\fR@T{
 Remove persistent environment variables
 T}
@@ -616,30 +619,7 @@ T}
 Wait for file to appear or disapear--with \fI-E\fR option
 T}
 .TE
-.TP
-.B SUPERVISION
-.TS
-tab (@);
-l lx.
-\fBenv_sv\fR@T{
-Save (global) persistent environment variables
-T}
-\fBsvc_cmd\fR@T{
-Run a supervision service command
-T}
-.TE
-.TP
-.B RUNSCRIPT
-.TS
-tab (@);
-l lx.
-\fBenv_rs\fR@T{
-Save (global) persistent environment variables
-T}
-\fBrs_cmd\fR@T{
-Run a runscript service command
-T}
-.TE
+
 .SH RUNLEVELS
 Superivision is organized in seven distinct runlevels like the classic SystemV
 runlevels but are internaly handled like three init-stage plus system
@@ -887,9 +867,9 @@ runlevel.
 .RB [\| udev \|]\ \c
 .RB [\| udev-monitor \|])
 .TP
-.I .lib/
+.I .opt/
 Symbolic link to
-.B SV_LIBDIR
+.B SV_LIBDIR/opt
 .TP
 .I runit/{1,2,3,ctraltdel}
 init-stage-{1,2,3} files to handle system boot/shutdown and supervisor; and
