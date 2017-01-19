@@ -57,7 +57,6 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
 :	${SVC_DIR=$__svc__}
-	SOURCE ${SRC_OPTS} "${SV_TMPDIR}"/ENVS/${SVC_NAME}
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 
 	#
