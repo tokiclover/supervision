@@ -570,7 +570,7 @@ static void svc_env(void)
 	}
 	svc_environ[i++] = (char *)0;
 
-	if ((fd = open(SV_ENVIRON, O_CREAT|O_WRONLY|O_CLOEXEC|O_EXCL, 0644)) < 0)
+	if ((fd = open(SV_ENVIRON, O_CREAT|O_WRONLY|O_CLOEXEC, 0644)) < 0)
 		return;
 	if (flock(fd, LOCK_EX|LOCK_NB) < 0)
 		return;

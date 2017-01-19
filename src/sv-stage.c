@@ -763,9 +763,6 @@ scan:
 	ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
 
 rs:
-	unsetenv("SV_STAGE");
-	unsetenv("SV_RUNLEVEL");
-
 	/* compatibility with <v0.13.0 */
 	if (argc) {
 		if (strcmp(*argv, "stage") == 0) {
@@ -775,6 +772,9 @@ rs:
 		else if (strcmp(*argv, "scan") == 0)
 			goto scan;
 	}
+
+	unsetenv("SV_STAGE");
+	unsetenv("SV_RUNLEVEL");
 
 	/* handle service command or
 	 * support systemV compatiblity rc command
