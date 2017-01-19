@@ -12,14 +12,24 @@ Added support for keywords and timeout per service; so a NOHANG option is now
 available to kill hangged service (see sv.conf for more iformation);
 Keywords can be used to disable services per subsystem (like docker...);
 
-Added support to containrization solution via keywords usage (docker, LXC, jail,
-systemd-nspawn, prefix, supervision, UML VServer). Either the subsystem will be
-auto detected or use sv.conf to set SV_SYSTEM="${SUBSYSTEM}".
-An option to exec into a supervisor {damontools[-encore],runit,s6} is available:
+Added support for containrization solutions or subsystems via keywords
+usage (see KEYWORDS subsection in supervision(5) and sv.conf for more information)
+for docker, LXC, jail, systemd-nspawn, prefix, supervision, UML, VServer and XEN.
+Either the subsystem will be auto detected or use sv.conf to set a particular
+subsystem with `SV_SYSTEM="${SUBSYSTEM}"' configuration variable...
+`SV_SYSTEM="supervision"' for daemon supervision only;
+`SV_SYSTEM="prefix"' for an isolated chrooted environment;
+`SV_SYSTEM="docker"' for docker containers et al.
+Services that have the subsystem keyword will not be started in that particular
+subsystem environment.
+
+An option to exec into a supervisor `{damontools[-encore],runit,s6}' is available:
 Just call `sv-stage' as `sv-scan' and voila the supervisor will be executed as
-PID 1; and a child will handle service management. Just setup the container;
-once done, use something like the following for docker:
-`docker run [OPTIONS] --env "container=docker" IMAGE /sbin/sv-scan --default'.
+PID 1; and a child will handle service management. Just setup the container or
+subsystem; once done, use something like the following for docker:
+`docker run [OPTIONS] --env container=docker --tmpfs /run IMAGE /sbin/sv-scan
+--default'.
+WARNING: Do not forget to make the `sv-scan' symbolic link in the image beforehand!
 
 Added abilty to abort an init-stage (used to abort and bring single runlevel
 when checkfs service fails to clean up filesystems;
