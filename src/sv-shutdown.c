@@ -134,7 +134,7 @@ static int boot_flag, fsck_flag, slog_flag;
 static int shutdown_action = -1;
 static char hostname[HOST_NAME_MAX+1];
 static char *whom;
-static int ai = SD_ACTION_SINGLE;
+static int ai;
 static const char *action[] = { "shutdown", "single", "halt", "poweroff", "reboot" };
 static const char signame[][8] = { "SIGINT", "SIGTERM", "SIGQUIT", "SIGUSR1",
 	"SIGUSR2", "SIGALRM" };
@@ -607,31 +607,31 @@ int main(int argc, char *argv[])
 			usage_message(SD_ACTION_REBOOT);
 		reboot_action   = RB_AUTOBOOT;
 		shutdown_action = SD_REBOOT;
-		ai = SD_ACTION_REBOOT;
 	}
 	else if (strcmp(progname, action[SD_ACTION_HALT]) == 0) {
 		if (shutdown_action > 0 && ai != SD_ACTION_HALT)
 			usage_message(SD_ACTION_HALT);
 		reboot_action   = RA_HALT;
 		shutdown_action = SD_POWEROFF;
-		ai = SD_ACTION_HALT;
 	}
 	else if (strcmp(progname, action[SD_ACTION_POWEROFF]) == 0) {
 		if (shutdown_action > 0 && ai != SD_ACTION_POWEROFF)
 			usage_message(SD_ACTION_POWEROFF);
 		reboot_action   = RA_POWEROFF;
 		shutdown_action = SD_POWEROFF;
-		ai = SD_ACTION_POWEROFF;
 	}
 	else if (strcmp(progname, action[SD_ACTION_SHUTDOWN]) == 0) {
 		if (shutdown_action < 0)
 		shutdown_action = SD_SINGLE;
 		ai = SD_ACTION_SINGLE;
 	}
-
-	if (shutdown_action < 0) {
-		fprintf(stderr, "Usage: %s -c | -h | -p | -r | -m [time] [message]\n", progname);
-		exit(EXIT_FAILURE);
+	else {
+		if (shutdown_action < 0) {
+			fprintf(stderr, "Usage: %s -c | -h | -p | -r | -m [time] [message]\n",
+				progname);
+			exit(EXIT_FAILURE);
+		}
+		ai = SD_ACTION_SHUTDOWN;
 	}
 	argc -= optind, argv += optind;
 
@@ -771,8 +771,8 @@ message:
 		}
 		*++ptr = '\n';
 		*++ptr = '\0';
+		message_len = ptr-message;
 	}
-	message_len = ptr-message;
 
 #ifdef DEBUG
 #else
