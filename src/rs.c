@@ -180,7 +180,6 @@ int svc_cmd(struct svcrun *run)
 
 	if (!st_dep.st_mtime) {
 		stat(SV_SVCDEPS_FILE, &st_dep);
-		svc_env();
 #if defined(PREFIX) && !defined(__linux__)
 		svcd[1] = PREFIX;
 		svcd[2] = sv_getconf("SV_PREFIX");
@@ -190,7 +189,6 @@ int svc_cmd(struct svcrun *run)
 	}
 	run->ARGV = NULL;
 	run->cmd = -1;
-	run->envp = svc_environ;
 	run->dep = NULL;
 	run->mark = 0;
 
@@ -378,7 +376,8 @@ int svc_cmd(struct svcrun *run)
 
 	if (!svc_quiet)
 		svc_log("[%s] service %s...\n", run->name, cmd);
-
+	if (!svc_environ) svc_env();
+	run->envp = svc_environ;
 	return svc_run(run);
 reterr:
 	if (*buf) free((void*)run->path);
@@ -876,7 +875,9 @@ int svc_exec(int argc, const char *argv[]) {
 	run.argv[i] = (char *)0;
 	sv_svcdeps_load(NULL);
 
+	i = access(SV_PIDFILE, F_OK);
 	retval = svc_cmd(&run);
+	if (i) atexit(sv_cleanup);
 	switch(retval) {
 	case -EBUSY:
 	case -EINVAL:
