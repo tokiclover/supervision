@@ -14,8 +14,7 @@ __FUNCTIONS__=1
 if [ -n "${ZSH_VERSION}" ]; then
 	emulate sh
 	NULLCMD=:
-	setopt NO_GLOB_SUBST
-	setopt SH_WORD_SPLIT
+	setopt NO_GLOB_SUBST SH_WORD_SPLIT
 	disable -r end
 fi
 
@@ -23,7 +22,7 @@ fi
 # Setup a few environment variables beforehand
 #
 :	${COLUMNS:=$(tput cols)}
-trap 'COLUMNS="$(tput cols)"' WINCH
+trap ': COLUMNS="$(tput cols)"' WINCH
 
 #
 # @FUNCTION: Print error message to stderr
@@ -33,7 +32,7 @@ error()
 	local message="${*}"
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_mag}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_red}ERROR:${color_rst} ${prefix} ${@}\n" >&2
+	printf "${__print_eol__}${color_fg_red}ERROR: ${prefix} ${@}\n" >&2
 }
 
 #
@@ -58,7 +57,7 @@ info()
 	fi
 	__print_len__=$((${#name}+3+${#tail}+${#head}))
 	local prefix="${name:+${color_fg_ylw}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_blu}${head:-*}${color_rst} ${prefix} ${@}\n"
+	printf "${__print_eol__}${color_fg_blu}${head:-*} ${prefix} ${@}\n"
 }
 
 #
@@ -69,7 +68,7 @@ warn()
 	local message="${*}"
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_red}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_ylw}WARN:${color_rst} ${prefix} ${@}\n"
+	printf "${__print_eol__}${color_fg_ylw}WARN: ${prefix} ${@}\n"
 }
 
 #
@@ -158,11 +157,11 @@ SOURCE()
 eval_colors()
 {
 	local e f b c
-	e='\033[' f='3' b='4'
+	e='\e[' f='3' b='4'
 
 	for c in 0:blk 1:red 2:grn 3:ylw 4:blu 5:mag 6:cyn 7:wht; do
-		eval color_fg_${c#*:}="'${e}${f}${c%:*}m'"
-		eval color_bg_${c#*:}="'${e}${b}${c%:*}m'"
+		eval color_fg_${c#*:}="'${e}1;${f}${c%:*}m'"
+		eval color_bg_${c#*:}="'${e}1;${b}${c%:*}m'"
 		eval color_fg_${c%:*}="'${e}${f}${c%:*}m'"
 		eval color_bg_${c%:*}="'${e}${b}${c%:*}m'"
 	done
@@ -173,9 +172,10 @@ eval_colors()
 	color_ita="${e}3m"
 
 	if [ "${1}" = 256 ]; then
-		for c in seq 0 255; do
-			eval color_bg_${c}="'${e}48;5;${c}m'"
-			eval color_fg_${c}="'${e}38;5;${c}m'"
+		local i
+		for i in seq 0 255; do
+			eval color_bg_${i}="'${e}48;5;${i}m'"
+			eval color_fg_${i}="'${e}38;5;${i}m'"
 		done
 	fi
 }
