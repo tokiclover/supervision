@@ -1,19 +1,55 @@
 #!/bin/sh
 #
-# $Id:  @(#) init-stage    1.8 2017/01/16 21:09:26                    Exp $
+# $Id:  @(#) init-stage    1.8 2017/01/18 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 
-:	${name=${0##*/}}
-:	${SV_LIBDIR:=${0%/sh/*}}
-. "${0%/*}"/runscript-functions ||
-	{ echo "Required file not found." >&2; exit 1; }
-. ${SV_SVCDIR}/.opt/SVC_BACKEND
+if [ -n "${ZSH_VERSION}" ]; then
+	emulate sh
+	NULLCMD=:
+	setopt NO_GLOB_SUBST SH_WORD_SPLIT
+	disable -r end
+fi
+
+:	${CONSOLE:=/dev/console}
+:	${SV_SHELL:=${SHELL:-/bin/sh}}
+svc_rsh()
+{
+	NULL=/dev/null
+	SULOGIN="$(command -v sulogin)"
+:	${SULOGIN_TTY:=/dev/tty8}
+	if [ "${SV_SHELL##*/}" = "sulogin" ]; then
+		exec ${SV_SHELL} -p /dev/tty8
+	fi
+	[ "${OS_NAME}" = "Linux" -a -x ${SULOGIN} ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
+	exec <${CONSOLE} >${CONSOLE}
+	exec 2>&1
+	exec ${SV_SHELL} -lim
+	for sh in /bin/sh sh "/bin/busybox sh" "busybox sh" ${SHELLS}; do
+		exec ${sh} -lim
+	done
+	echo "No functional shell found!!!" >&2
+}
+
+name="${0##*/}"
+if [ "${name}" = "init-stage" ]; then
+	SV_LIBDIR="${0%/sh/*}"
+else
+	name="init-stage"
+:	${SV_LIBDIR:=/lib/sv}
+fi
+if ! . ${SV_LIBDIR}/sh/runscript-functions; then
+	echo "Required file not found." >&2
+	[ -n "${SV_OPTS}" ] && svc_rsh || exit 1
+fi
+:	${SV_SVCDIR:=/etc/sv}
+. ${SV_LIBDIR}/opt/SVC_BACKEND
 . ${SV_SVCDIR}.conf
 umask 022
 
 SV_CMD="${__SV_CMD__##*/}"
+SVC_NAME="${SV_CMD}"
 
 early_console()
 {
@@ -23,7 +59,6 @@ early_console()
 	if [ -e ${SV_LIBDIR}/cache/unicode ]; then
 		encoding='%G' kbd_args=-u
 	fi
-:	${CONSOLE:=/dev/console}
 	printf "\033${encoding}" >${CONSOLE}
 
 	[ -c ${CONSOLE} ] && args="-C ${CONSOLE}"
@@ -85,20 +120,6 @@ svc_init()
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
 }
 
-svc_rsh()
-{
-:	${SV_SHELL:=${SHELL:-sh}}
-	if [ "${SV_SHELL##*/}" = "sulogin" ]; then
-		exec ${SV_SHELL} -p /dev/tty8
-	fi
-	[ "${OS_NAME}" = "Linux" ] && exec sulogin -p /dev/tty8
-	exec 2>&1
-	exec ${SV_SHELL} -aim
-	exec sh -aim
-	exec busybox sh -aim
-	error "No functional shell found!!!"
-}
-
 svc_tmpdir()
 {
 	rm -fr "${SV_TMPDIR}"
@@ -118,7 +139,7 @@ svc_tmpdir()
 	# Set up CGroup
 	#
 	if yesno ${SV_CGROUP:-YES} && [ -z "${SV_SYSTEM}" ]; then
-		if rs devfs start && rs sysfs start; then
+		if /sbin/rs devfs start && /sbin/rs sysfs start; then
 		cgroup_start_sys
 		case ${?} in
 			(0) SV_CGROUP=Yes;;
@@ -162,23 +183,18 @@ start_stage_2()
 		else
 			args=-ax
 		fi
-		while [ -e ${pidfile} ]; do
+		if [ -e ${pidfile} ]; then
 			pgrep ${args} ${SV_CMD} | while read pid cmd dir args; do
 				if [ x${dir} = x${SV_RUNDIR} ]; then
-					echo "${pid}" >${pidfile}; break 2
+					echo "${pid}" >${pidfile}
+					break
 				fi
 			done
-			sleep 1
-			count=$((\${count}+1))
-			[ ${count} = 100 ] && break
-		done
+		fi
 	fi
 
-	if sv-stage --sysboot; then
-		sv-stage --default
-	else
-		sv-stage --single
-	fi
+	sv-stage --sysboot
+	sv-stage --default || sv-stage --single || svc_rsh
 }
 
 case ${SV_CMD} in
@@ -196,12 +212,13 @@ if   [ "${1}" = "--svscan" ]; then
 		kill_svscan
 	fi
 	if [ "${2}" = "--foreground" ]; then
-		ARGS=  PRECMD=exec
+		ARGS=""  PRECMD="exec"
 	else
-		ARGS=& PRECMD=
+		ARGS="&" PRECMD=""
 	fi
+	trap "rm -f ${pidfile}" SIGINT SIGQUIT SIGTERM
 	echo $$ >${pidfile}
-	${PRECMD} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS} ${ARGS}
+	eval ${PRECMD} ${__SV_CMD__} ${SV_RUNDIR} "${SV_OPTS}" ${ARGS}
 elif [ "${1}" = "--sysinit" ]; then
 	#
 	# XXX: initialize temporary directory
@@ -219,7 +236,7 @@ elif [ "${1}" = "--default" ]; then
 	# Set up CGroup
 	#
 	if yesno "${SV_CGROUP}" && [ "${OS_NAME}" = "Linux" ]; then
-		SVC_NAME="${SV_CMD}" cgroup_add_service
+		cgroup_add_service
 	fi
 	#
 	# Bring up what left and stage-2 assuming `svcscan'
@@ -235,6 +252,7 @@ elif [ "${1}" = "--default" ]; then
 	#
 	sh -c ". ${SV_LIBDIR}/sh/init-stage; start_stage_2;" &
 
+	trap "rm -f ${pidfile}" SIGINT SIGQUIT SIGTERM
 	echo $$ >${pidfile}
 	exec /usr/bin/env - PATH=${PATH} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
 	#
@@ -255,7 +273,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	# CGroup clean up
 	#
 	if yesno "${SV_CGROUP}" && [ "${OS_NAME}" = "Linux" ]; then
-		SVC_NAME="${SV_CMD}" cgroup_remove_service
+		cgroup_remove_service
 	fi
 	${SV_LIBDIR}/sbin/shutdown --force ${ACTION} now
 fi
