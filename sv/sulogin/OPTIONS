@@ -3,8 +3,9 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
+:	${SULOGIN_TTY:=/dev/tty8}
 SVC_CMD=/sbin/sulogin
-SVC_OPTS="-p /dev/tty8"
+SVC_OPTS="-p ${SULOGIN_TTY}"
 PRE_CMD=/usr/bin/setsid
 
 #
