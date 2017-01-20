@@ -1,6 +1,6 @@
 #
-# $Id: @(#) /etc/sv/npcd/OPTIONS                                      Exp $
-# $L$: 2-clause/new/simplified BSD License                            Exp $
+# $Header:  /etc/sv/npcd/OPTIONS                         Exp $
+# $License: 2-clause/new/simplified BSD                  Exp $
 #
 
 SVC_CONFIGFILE=/etc/pnp/npcd.cfg
@@ -17,7 +17,8 @@ start_pre()
 	if [ -L ${spooldir} ]; then
 		spooldir=$(readlink ${spooldir})
 	fi
-	checkpath -qd -m 775 -o nagios:nagios ${spooldir}
+	checkpath -qd -m 775 -o nagios:nagios ${spooldir} /var/tmp/nagios \
+		/var/tmp/nagios/pnp
 }
 reload()
 {
