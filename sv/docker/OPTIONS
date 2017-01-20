@@ -36,7 +36,7 @@ start_pre()
 	ulimit -u 1048576
 	return 0
 }
-start_post()
+stop_post()
 {
 	#
 	# XXX: only load for service ./run (not log/run)
