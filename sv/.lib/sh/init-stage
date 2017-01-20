@@ -8,7 +8,7 @@
 if [ -n "${ZSH_VERSION}" ]; then
 	emulate sh
 	NULLCMD=:
-	setopt NO_GLOB_SUBST SH_WORD_SPLIT
+	setopt SH_WORD_SPLIT
 	disable -r end
 fi
 
