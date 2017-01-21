@@ -243,7 +243,7 @@ help_message()
 	exit "${1:-1}"
 }
 
-BOOT=false CREATE=false REMOVE=false CLEAN=false VERBOSE=false LINENO=false
+BOOT=false CREATE=false REMOVE=false CLEAN=false VERBOSE=false
 EXCLUDE= PREFIX= FILE= DRYRUN=
 # XXX: The harcoding of /usr/lib/ is an explicit choice by upstream
 tmpfiles_dirs='/usr/lib/tmpfiles.d/ /run/tmpfiles.d/ /etc/tmpfiles.d/'
