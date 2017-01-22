@@ -56,7 +56,7 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 # Set up supervision environment
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
-:	${SVC_DIR=$__svc__}
+	SVC_DIR="${__svc__}"
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 
 	#
@@ -69,7 +69,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	fi
 	env_run
 
-:	${SVC_PIDFILE=${SV_TMPDIR}/pids/${SVC_NAME}}
+	SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
 	SOURCE -d ${SV_SVCDIR}/.opt/SVC_BACKEND
 
 	if [ "${__cmd__}" = "run" ]; then
