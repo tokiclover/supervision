@@ -116,7 +116,7 @@ static int svc_stage_command(int stage, int argc, const char *argv[]);
 
 /* simple rc compatible runlevel handler*/
 static void svc_level(void);
-static char *get_cmdline_entry(const char *entry);
+static char *get_cmdline_option(const char *entry);
 
 /* simple helper to set/get runlevel
  * @level: runlevel to set, or NULL to get the current runlevel;
@@ -139,7 +139,7 @@ _noreturn_ static void help_message(int retval)
 	exit(retval);
 }
 
-static char *get_cmdline_entry(const char *ent)
+static char *get_cmdline_option(const char *ent)
 {
 #ifdef __linux__
 	FILE *fp;
@@ -150,7 +150,7 @@ static char *get_cmdline_entry(const char *ent)
 		return NULL;
 	if (!(fp = fopen(path, "r")))
 		return NULL;
-	if (!getline(&line, &len, fp))
+	if (getline(&line, &len, fp) <= 0)
 		return NULL;
 
 	len = strlen(ent);
@@ -223,23 +223,23 @@ static void svc_level(void)
 	char *entry = NULL, *ptr, *ent;
 	int i;
 
-	entry = get_cmdline_entry("softlevel");
+	entry = get_cmdline_option("softlevel");
 
 	/* mark network services as started, so nothing will be started */
 	if ((entry && strcmp(entry, sv_runlevel[SV_NOWNETWORK_LEVEL]) == 0) ||
 		(sv_level == SV_NOWNETWORK_LEVEL)) {
+		sv_level = SV_NOWNETWORK_LEVEL;
 		for (i = 0; i < SERVICES.virt_count; i++)
 			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
 				svc_mark(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR, NULL);
 		svc_mark("net", SV_SVC_STAT_STAR, NULL);
 	}
 	else if ((entry && strcmp(entry, sv_runlevel[SV_SINGLE_LEVEL]) == 0)) {
-	    if (sv_level != SV_SINGLE_LEVEL)
-			sv_level = SV_SINGLE_LEVEL;
+		sv_level = SV_SINGLE_LEVEL;
 	}
 
 	if (entry) free(entry);
-	entry = ent = get_cmdline_entry("noinit");
+	entry = ent = get_cmdline_option("noinit");
 	/* mark no started services as stopped */
 	if (entry) {
 		while ((ptr = strsep(&ent, ",")))
