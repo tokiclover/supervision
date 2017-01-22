@@ -172,9 +172,8 @@ int svc_cmd(struct svcrun *run)
 	char *cmd = (char*)run->argv[4];
 	char buf[PATH_MAX] = { "" };
 	struct tm *lt;
-	char *ptr;
+	char *ptr = buf+sizeof(buf)-32;
 #define MK_STRFTIME(ptr)                              \
-	ptr = buf+sizeof(buf)-32;                         \
 	lt = localtime(&st_buf.st_mtime);                 \
 	strftime(ptr, 32, "%F %T", (const struct tm*)lt);
 
@@ -362,7 +361,7 @@ int svc_cmd(struct svcrun *run)
 				run->name);
 
 	/* setup dependencies */
-	if (run->cmd == SV_SVC_CMD_START && svc_deps && run->dep) {
+	if (run->cmd == SV_SVC_CMD_START && svc_deps) {
 		retval = svc_depend(run);
 		if (retval) {
 			LOG_ERR("%s: Failed to set up service dependencies\n", run->name);
@@ -522,7 +521,7 @@ static int svc_depend(struct svcrun *run)
 		svc_deptree_load(&deptree);
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(deptree.tree[p]))
-				val = svc_execl(deptree.tree[p], run->argc, run->argv);
+				val += svc_execl(deptree.tree[p], run->argc, run->argv);
 				--p;
 		} /* PRIORITY_LEVEL_LOOP */
 		sv_deptree_free(&deptree);
