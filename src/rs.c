@@ -34,6 +34,8 @@ struct runlist {
 	pthread_mutex_t mutex;
 	pthread_rwlock_t lock;
 	pthread_t tid;
+	char __pad[4U*sizeof(int)-((sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+
+				sizeof(pthread_rwlock_t)+12U*sizeof(int)) % sizeof(int))];
 };
 
 extern pid_t sv_pid;
@@ -964,6 +966,9 @@ static void *thread_worker_handler(void *arg)
 			eagain += n;
 			goto waitpid;
 			break;
+		default:
+			LOG_WARN("%s:%d: unhandled return value!!!\n", __func__, __LINE__);
+			continue;
 		}
 
 		if (sv_parallel) {
@@ -979,9 +984,15 @@ static void *thread_worker_handler(void *arg)
 			p->run[n] = tmp;
 			p->len++;
 			p->job++;
-			pthread_rwlock_unlock(&p->lock);
 			n++;
-			if (n < p->siz)
+			/* handle service insertion oddities in deptree */
+			if (n == p->siz && TAILQ_NEXT(svc, entries)) {
+				p->siz += 8U;
+				p->run = err_realloc(p->run, p->siz*(sizeof(void*)));
+				memset(&p->run[n], 0, 8U);
+			}
+			pthread_rwlock_unlock(&p->lock);
+			if (TAILQ_NEXT(svc, entries))
 				tmp = err_malloc(sizeof(struct svcrun));
 		}
 		else {
@@ -1008,6 +1019,15 @@ waitpid:
 	}
 
 retval:
+	/* have to remove job from queue */
+	pthread_mutex_lock(&p->mutex);
+	if (p->count != p->siz) {
+		pthread_mutex_lock(&RUNLIST_MUTEX);
+		if (p->prev) p->prev->next = p->next;
+		if (p->next) p->next->prev = p->prev;
+		pthread_mutex_unlock(&RUNLIST_MUTEX);
+	}
+	pthread_mutex_unlock(&p->mutex);
 	pthread_exit((void*)&p->retval);
 }
 
@@ -1100,17 +1120,14 @@ static void thread_signal_handler(siginfo_t *si)
 				p->count++;
 				p->job--;
 				if (r) p->retval++;
-				if (p->count == p->len)
-					pthread_cond_signal(&p->cond);
 				if (p->count == p->siz) {
 					/* remove job from queue */
 					pthread_mutex_lock(&RUNLIST_MUTEX);
 					if (p->prev) p->prev->next = p->next;
 					if (p->next) p->next->prev = p->prev;
 					pthread_mutex_unlock(&RUNLIST_MUTEX);
-					/* signal that the job is done */
-					pthread_cond_signal(&p->cond);
 				}
+				pthread_cond_signal(&p->cond);
 				pthread_mutex_unlock(&p->mutex);
 
 				return;
@@ -1200,6 +1217,8 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	memset(p, 0, sizeof(struct runlist));
 	if (sv_parallel) {
 		p->siz = sv_stringlist_len(list);
+		r = p->siz % 8U;
+		p->siz += r ? 8U-r : 0;
 		p->run = err_calloc(sizeof(void*), p->siz);
 		memset(p->run, 0, p->siz);
 	}
