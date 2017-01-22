@@ -155,9 +155,9 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 {
 	int p;
 	char path[PATH_MAX];
-	char *line = NULL, *ptr, *tmp, svc[128];
+	char *line = NULL, *ptr, *tmp;
 	FILE *fp;
-	size_t len = 0, pos;
+	size_t len = 0;
 
 	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
 	if (access(path, F_OK))
@@ -168,30 +168,20 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 	}
 
 	while (getline(&line, &len, fp) > 0) {
-		ptr = strchr(line, '_');
-		p = atoi(++ptr);
-		ptr = strchr(line, '=');
-		pos = ++ptr-line;
+		ptr = strchr(line, '_')+1;
+		p = atoi(ptr);
+		ptr = strchr(line, '=')+1;
 
-		/* add service to dependency appropriate priority */
-		ptr = shell_string_value(ptr);
-		if (ptr == NULL)
+		if (!(ptr = shell_string_value(ptr)))
 			continue;
-		if (p >= deptree->size)
-			while (p >= deptree->size)
-				sv_deptree_alloc(deptree);
+		while (p >= deptree->size && deptree->size < SV_DEPTREE_MAX)
+			sv_deptree_alloc(deptree);
+		if (p >= SV_DEPTREE_MAX)
+			p = SV_DEPTREE_MAX-1;
 
 		/* append service list */
-		while (*ptr) {
-			if ((tmp = strchr(ptr, ' ')) == NULL)
-				pos = strlen(ptr);
-			else
-				pos = tmp-ptr;
-			memcpy(svc, ptr, pos);
-			svc[pos] = '\0';
-			sv_stringlist_add(deptree->tree[p], svc);
-			ptr += pos+1;
-		}
+		while ((tmp = strsep(&ptr, " ")))
+			sv_stringlist_add(deptree->tree[p], tmp);
 	}
 	if (len) free(line);
 	fclose(fp);
