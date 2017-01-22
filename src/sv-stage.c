@@ -23,8 +23,11 @@
 #include "sv.h"
 #include "sv-deps.h"
 
+/* execute a service command (low level) */
 extern int svc_cmd(struct svcrun *run);
+/* execute a service command (high level) */
 extern int svc_exec (int argc, const char *argv[]);
+/* the same for a list of service */
 extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 
 /* signal handleer/setup */
