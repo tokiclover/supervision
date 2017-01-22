@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.c  0.13.0 2016/01/02
+ * @(#)rs-deps.c  0.13.0 2017/01/22
  */
 
 #include <string.h>
