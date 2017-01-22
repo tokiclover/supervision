@@ -206,7 +206,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	}
 
 	for (p = 0; p < deptree->size; p++) {
-		fprintf(fp, "dep_%d=\"", p);
+		fprintf(fp, "dep_%04d=\"", p);
 		TAILQ_FOREACH(ent, deptree->tree[p], entries)
 			fprintf(fp, "%s ", ent->str);
 		fseek(fp, -1L, SEEK_CUR);
