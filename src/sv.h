@@ -145,6 +145,10 @@ enum {
 };
 extern const char *const sv_svc_cmd[];
 
+/* update SV_TMPDIR/environ environment file */
+extern off_t ENVIRON_OFF;
+extern int svc_environ_update(off_t off);
+
 #ifdef __cplusplus
 }
 #endif

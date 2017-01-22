@@ -66,9 +66,10 @@ static const char *const environ_whitelist[] = {
 	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID", NULL
 };
 static const char *environ_list[] = {
-	"SVC_DEBUG", "SVC_WAIT", "SV_RUNLEVEL", "SV_STAGE", "SV_RUNDIR", "SV_SVCDIR",
-	"SV_SYSTEM", "SV_PREFIX",
-	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION", NULL
+	"SVC_DEBUG", "SVC_WAIT", "SV_RUNDIR", "SV_SVCDIR",
+	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION",
+	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_STAGE",
+	NULL
 };
 
 static void thread_signal_action(int sig, siginfo_t *si, void *ctx _unused_);
@@ -531,55 +532,63 @@ static int svc_depend(struct svcrun *run)
 	return retval;
 }
 
+off_t ENVIRON_OFF = ARRAY_SIZE(environ_list)-3;
+static long environ_off;
+static int  environ_fd;
+static FILE *environ_fp;
 static void svc_env(void)
 {
-	size_t len = 8, size = 1024;
-	char *env, *ptr;
-	FILE *fp;
+	size_t len = 8;
+	char buf[1024], *ptr;
 	int i = 0, j;
-	int fd;
 
 	if (svc_environ)
 		return;
-	env = err_malloc(size);
 	svc_environ = err_calloc(len, sizeof(void *));
 
 	if (!getenv("COLUMNS")) {
-		sprintf(env, "%d", get_term_cols());
-		setenv("COLUMNS", env, 1);
+		sprintf(buf, "%d", get_term_cols());
+		setenv("COLUMNS", buf, 1);
 	}
-	free(env);
 
 	for (j = 0; environ_whitelist[j]; j++) {
 		ptr = getenv(environ_whitelist[j]);
 		if (ptr) {
-			env = err_malloc(size);
-			snprintf(env, size, "%s=%s", environ_whitelist[j], ptr);
-			svc_environ[i++] = err_realloc(env, strlen(env)+1);
-			if (i == len) {
-				len += 8;
-				svc_environ = err_realloc(svc_environ, len*sizeof(void*));
-			}
+			snprintf(buf, sizeof(buf), "%s=%s", environ_whitelist[j], ptr);
+			svc_environ[i++] = err_strdup(buf);
+		}
+		if (i == len) {
+			len += 8;
+			svc_environ = err_realloc(svc_environ, len*sizeof(void*));
 		}
 	}
-	if (i == len) {
-		len += 8;
-		svc_environ = err_realloc(svc_environ, len*sizeof(void*));
-	}
 	svc_environ[i++] = (char *)0;
+	svc_environ_update(0L);
+}
+int svc_environ_update(off_t off)
+{
+	int j;
+	char *ptr;
 
-	if ((fd = open(SV_ENVIRON, O_CREAT|O_WRONLY|O_CLOEXEC, 0644)) < 0)
-		return;
-	if (flock(fd, LOCK_EX|LOCK_NB) < 0)
-		return;
-	if (!(fp = fdopen(fd, "w")))
-		return;
-	env = err_malloc(size);
-	for (j = 0; environ_list[j]; j++)
+	if (!environ_fd) {
+		if ((environ_fd = open(SV_ENVIRON, O_CREAT|O_WRONLY|O_TRUNC|O_APPEND|O_CLOEXEC, 0644)) < 0)
+			return -1;
+		if (flock(environ_fd, LOCK_EX|LOCK_NB) < 0)
+			return -1;
+	}
+	if (!environ_fp)
+		if (!(environ_fp = fdopen(environ_fd, "w")))
+			return -1;
+	if (off)
+		ftruncate(environ_fd, (off_t)environ_off);
+	for (j = off; environ_list[j]; j++) {
+		if (!off && j == ENVIRON_OFF)
+			environ_off = ftell(environ_fp);
 		if ((ptr = getenv(environ_list[j])))
-			fprintf(fp, "%s=%s\n", environ_list[j], ptr);
-	fflush(fp);
-	free(env);
+			fprintf(environ_fp, "%s=%s\n", environ_list[j], ptr);
+	}
+	fflush(environ_fp);
+	return 0;
 }
 
 static int svc_lock(const char *svc, int lock_fd, int timeout)
