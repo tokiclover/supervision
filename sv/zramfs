@@ -94,7 +94,7 @@ start_pre()
 
 stop()
 {
-	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
+	[ "${SV_RUNLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	local dev type mnt_dir num=0
 	while true; do
 		eval set -- \${ZRAM_DEVICE_${num}}

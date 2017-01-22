@@ -74,7 +74,7 @@ start()
 
 stop()
 {
-	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
+	[ "${SV_RUNLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 
 	local volume retval=0

@@ -326,7 +326,7 @@ start()
 
 stop()
 {
-	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
+	[ "${SV_RUNLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	local retval=0
 	local volume device keyfile options entry ifs="${IFS}"
 
