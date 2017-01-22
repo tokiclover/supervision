@@ -5,7 +5,7 @@
 
 SVC_CMD=/sbin/udevd
 SVC_OPTS=
-SVC_BEFORE='checkfs device-mapper dmcrypt udevadm'
+SVC_BEFORE='checkfs device-mapper dmcrypt udev-monitor'
 SVC_NEED='devfs sysfs'
 SVC_PROVIDE='dev'
 SVC_STARTED_COMMANDS='reload'
