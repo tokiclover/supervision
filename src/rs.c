@@ -823,7 +823,7 @@ static void rs_sigsetup(void)
 	memset(&sa, 0, sizeof(sa));
 
 	sa.sa_sigaction = rs_sighandler;
-	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP | SA_NODEFER;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGALRM, &sa, NULL);
 	sigaction(SIGCHLD, &sa, NULL);
@@ -1123,7 +1123,7 @@ _noreturn_ static void *thread_signal_worker(void *arg _unused_)
 	memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
 
 	sa.sa_sigaction = thread_signal_action;
-	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP | SA_NODEFER;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP;
 	sigemptyset(&sa.sa_mask);
 
 	for ( ; *sig; sig++) {

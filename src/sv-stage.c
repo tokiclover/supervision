@@ -338,8 +338,8 @@ static void sv_sigsetup(void)
 	sigaddset(&ss_child, SIGCHLD);
 	sigprocmask(SIG_SETMASK, &ss_child, &ss_old);
 
-	sa.sa_handler = sv_sighandler;
-	sa.sa_flags = SA_SIGINFO | SA_RESTART;
+	sa.sa_sigaction = sv_sighandler;
+	sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_NOCLDSTOP;
 	sigemptyset(&sa.sa_mask);
 	for (i = 0; sig[i]; i++)
 		if (sigaction(sig[i], &sa, NULL))
