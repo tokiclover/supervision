@@ -193,7 +193,6 @@ start_stage_2()
 		fi
 	fi
 
-	sv-stage --sysboot
 	sv-stage --default || sv-stage --single || svc_rsh
 }
 
