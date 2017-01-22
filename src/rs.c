@@ -509,7 +509,7 @@ static int svc_waitpid(struct svcrun *run, int flags)
 
 static int svc_depend(struct svcrun *run)
 {
-	int type, val, retval = 0;
+	int type, val = 0, retval = 0;
 	int p = 0;
 	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
 
