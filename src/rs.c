@@ -380,8 +380,14 @@ int svc_cmd(struct svcrun *run)
 	run->envp = svc_environ;
 	return svc_run(run);
 reterr:
-	if (*buf) free((void*)run->path);
-	if (run->ARGV) free((void*)run->path);
+	if (*buf) {
+		free((void*)run->path);
+		run->path = NULL;
+	}
+	if (run->ARGV) {
+		free((void*)run->ARGV);
+		run->ARGV = NULL;
+	}
 	return retval;
 }
 
