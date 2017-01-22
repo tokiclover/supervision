@@ -67,19 +67,6 @@ void sv_deptree_free(SV_DepTree_T *deptree)
 
 static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *deptree)
 {
-#define FIND_SVCDEPS(ent, first, last) add = 1;                 \
-	if (ent->data) {                                            \
-		for (p = first; p < last; p++)                          \
-		if (sv_stringlist_fid (deptree->tree[p], ent     )) {   \
-			add = 0; break;                                     \
-		};                                                      \
-	} else {                                                    \
-		for (p = first; p < last; p++)                          \
-		if (sv_stringlist_find(deptree->tree[p], ent->str)) {   \
-			add = 0; break;                                     \
-		};                                                      \
-	}
-
 	char *s = svc->str;
 	SV_SvcDeps_T *d = svc->data;
 	SV_String_T *ent;
@@ -90,23 +77,17 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	 * belongs to this particular init-stage/runlevel */
 	if (type < SV_SVCDEPS_USE && !sv_stringlist_find(deptree->list, s))
 		return -prio;
-	if (d) {
-		if (d->virt) s = d->svc;
-	}
-	else
-		svc->data = d = sv_svcdeps_find(s);
+
+	if (!d) svc->data = d = sv_svcdeps_find(s);
 	/* insert the real service instead of a virtual one */
 	if (!d && (d = sv_virtsvc_find(deptree->list, s)))
-		s = d->svc, svc->data = d;
-	if (!d)
-		return -1;
+		svc->data = d;
+	if (!d) return -1;
+	if (d->virt) s = d->svc;
 
 	if (prio < 0) {
-		if (d->deps[SV_SVCDEPS_AFTER] || d->deps[SV_SVCDEPS_USE] ||
-				d->deps[SV_SVCDEPS_NEED])
-			prio = 0;
-		else if (d->deps[SV_SVCDEPS_BEFORE])
-			prio = 1;
+		if (d->deps[SV_SVCDEPS_BEFORE]) prio = 1;
+		else prio = 0;
 	}
 	pri = prio+1;
 
@@ -119,7 +100,11 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		if (type) {
 			for (t = SV_SVCDEPS_AFTER; t <= SV_SVCDEPS_NEED; t++)
 			TAILQ_FOREACH(ent, d->deps[t], entries) {
-				FIND_SVCDEPS(ent, pri, deptree->size);
+				add = 1;
+				for (p = pri; p < deptree->size; p++)
+					if (sv_stringlist_fid(deptree->tree[p], ent)) {
+						add = 0; break;
+					}
 				if (add)
 					sv_deptree_add(t, pri, ent, deptree);
 			}
@@ -127,7 +112,11 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		else {
 			/* handle before type which incerts dependencies below */
 			TAILQ_FOREACH(ent, d->deps[type], entries) {
-				FIND_SVCDEPS(ent, 0, prio);
+				add = 1;
+				for (p = 0; p < prio; p++)
+					if (sv_stringlist_fid(deptree->tree[p], ent)) {
+						add = 0; break;
+					}
 				/* issue here is to add everything nicely */
 				if (add) {
 					/* prio level should be precisely handled here; so, the
@@ -160,7 +149,6 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	ent = sv_stringlist_add(deptree->tree[prio], s);
 	ent->data = d;
 	return prio;
-#undef FIND_SVCDEPS
 }
 
 static int sv_deptree_file_load(SV_DepTree_T *deptree)
@@ -230,10 +218,11 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	for (p = 0; p < deptree->size; p++) {
 		fprintf(fp, "dep_%d='", p);
 		TAILQ_FOREACH(ent, deptree->tree[p], entries)
-			if (ent)
-				fprintf(fp, "%s ", ent->str);
+			fprintf(fp, "%s ", ent->str);
+		fseek(fp, -1L, SEEK_CUR);
 		fprintf(fp, "'\n");
 	}
+	fflush(fp);
 	fclose(fp);
 
 	return 0;
@@ -577,11 +566,11 @@ static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent)
 	SV_String_T *elm;
 	SV_SvcDeps_T *d, *D = ent->data;
 	TAILQ_FOREACH(elm, list, entries) {
-		if (elm->data)
-			d = elm->data;
-		else
-			continue;
-		if (d->did == D->did)
+		d = elm->data;
+		if (D && d) {
+			if (d->did == D->did) return elm;
+		}
+		else if (!strcmp(ent->str, elm->str))
 			return elm;
 	}
 	return NULL;
