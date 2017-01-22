@@ -529,7 +529,9 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	if (service)
 		return deps;
 
+#ifdef DEBUG
 	atexit(sv_svcdeps_free);
+#endif
 	return deps;
 }
 #undef EXEC_SVSCAN

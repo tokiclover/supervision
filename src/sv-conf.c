@@ -96,7 +96,9 @@ static int sv_conf_load(void)
 	SV_CONFIG_ARRAY[count++] = NULL;
 	SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*count);
 
+#ifdef DEBUG
 	atexit(sv_conf_free);
+#endif
 	return 0;
 }
 
