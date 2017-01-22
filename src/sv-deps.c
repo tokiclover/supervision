@@ -62,6 +62,7 @@ void sv_deptree_free(SV_DepTree_T *deptree)
 	for (i = 0; i < deptree->size; i++)
 		sv_stringlist_free(&deptree->tree[i]);
 	deptree->size = 0;
+	deptree->tree = 0;
 }
 
 static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *deptree)
