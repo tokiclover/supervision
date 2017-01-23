@@ -574,6 +574,7 @@ LINUX_SUPERVISION_SERVICES="
 	acpid
 	cgred
 	docker
+	dmeventd
 	sulogin
 	udev
 	udev-monitor
