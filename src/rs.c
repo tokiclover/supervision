@@ -175,10 +175,13 @@ int svc_cmd(struct svcrun *run)
 	char *cmd = (char*)run->argv[4];
 	char buf[PATH_MAX] = { "" };
 	struct tm *lt;
-	char *ptr = buf+sizeof(buf)-32;
+#define STRFTIME_OFF 32
+	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
 #define MK_STRFTIME(ptr)                              \
+	snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name); \
+	stat(buf, &st_buf);                               \
 	lt = localtime(&st_buf.st_mtime);                 \
-	strftime(ptr, 32, "%F %T", (const struct tm*)lt);
+	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)lt);
 
 	if (!st_dep.st_mtime) {
 		stat(SV_SVCDEPS_FILE, &st_dep);
@@ -231,12 +234,11 @@ int svc_cmd(struct svcrun *run)
 			return 0;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
-			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name);
-			stat(buf, &st_buf);
 			MK_STRFTIME(ptr);
 
 			if ((i = open(buf, O_RDONLY)) > 0) {
-				if (read(i, buf, sizeof(buf)) > 0) {
+				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
+					buf[retval++] = '\0';
 					printf("%-32s: %s: (%s command) failed at %s\n", run->name,
 							cmd, buf, ptr);
 				}
@@ -247,12 +249,11 @@ int svc_cmd(struct svcrun *run)
 			return 16;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
-			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name);
-			stat(buf, &st_buf);
 			MK_STRFTIME(ptr);
 
 			if ((i = open(buf, O_RDONLY)) > 0) {
-				if (read(i, buf, sizeof(buf)) > 0) {
+				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
+					buf[retval++] = '\0';
 					printf("%-32s: %s: waiting (%s command) since %s\n",
 							run->name, cmd, buf, ptr);
 				}
@@ -267,6 +268,7 @@ int svc_cmd(struct svcrun *run)
 			return 3;
 		}
 	}
+#undef STRFTIME_OFF
 #undef MK_STRFTIME
 
 	/* get service path */
