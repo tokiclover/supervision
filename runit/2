@@ -28,7 +28,7 @@ case "${SV_RUNDIR}" in
 	;;
 esac
 
-exec /usr/bin/env - PATH=${PATH} runsvdir ${SV_RUNDIR} ${SV_OPTS}
+exec runsvdir ${SV_RUNDIR} ${SV_OPTS}
 exec 2>&1
 exec ${SHELL:-sh} -aim
 

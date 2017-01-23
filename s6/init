@@ -35,7 +35,7 @@ case "${SV_RUNDIR}" in
 	;;
 esac
 
-exec /sur/bin/env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
+exec s6-svscan ${SV_OPTS} ${SV_RUNDIR}
 exec 2>&1
 exec ${SHELL:-sh} -aim
 
