@@ -119,7 +119,7 @@ libvirtd_vm_stop()
 		# grab all VMs still running
 		vm_ids="$(libvirtd_vm_list "${uri}" "${persist}")"
 		for uuid in ${vm_ids}; do
-			vm_name=$(do_virsh ${uri} vmname ${uuid})
+			vm_name=$(VIRSH ${uri} vmname ${uuid})
 			begin "    ERROR: ${vm_name} forcibly stopped"
 			VIRSH "${uri}" destroy ${uuid} >${NULL} 2>&1
 			end "${?}"
@@ -133,7 +133,7 @@ libvirtd_net_stop()
 
 	if yesno "${LIBVIRT_NET_SHUTDOWN}"; then
 		for uuid in $(libvirtd_net_list ${uri} ${persist}); do
-			net_name=$(do_virsh ${uri} net-name ${uuid})
+			net_name=$(VIRSH ${uri} net-name ${uuid})
 			begin "   Shutting down ${net_name} network"
 
 			if [ "${persist}" = "--persistent" ]; then
