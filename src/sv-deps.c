@@ -353,8 +353,9 @@ static int sv_svcdeps_gen(const char *svc)
 
 #define WAIT_SVSCAN                                            \
 	if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN */           \
+		snprintf(cmd, sizeof(cmd), "%s/svscan.pid", SV_TMPDIR);\
 		do {                                                   \
-			if (file_test(SV_TMPDIR_DEPS, 'd')) break;         \
+			if (!access(cmd, F_OK)) break;                     \
 			poll(NULL, 0, 100); /* milisecond sleep */         \
 			t++;                                               \
 		} while (t < 600);                                     \

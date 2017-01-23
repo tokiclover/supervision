@@ -158,6 +158,7 @@ make_pidfile()
 {
 	trap "rm -f ${pidfile}" SIGINT SIGQUIT SIGTERM
 	echo $$ >${pidfile}
+	ln -sf ${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid
 }
 kill_svscan()
 {
