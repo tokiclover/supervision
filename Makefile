@@ -33,6 +33,7 @@ dist_EXTRA  = \
 	BUGS.md \
 	ChangeLog
 dist_SH_OPTS = \
+	cmd \
 	OPTIONS.in \
 	SVC_OPTIONS \
 	SVC_BACKEND
@@ -148,6 +149,8 @@ dist_RS_SVCS = \
 dist_RS_OPTS = \
 	$(EXTRA_OPTIONS_INSTANCES)
 
+dist_SINGLE = \
+	$(EXTRA_SINGLE_SERVICES)
 dist_SYSINIT = \
 	$(EXTRA_SYSINIT_SERVICES) \
 	devfs \
@@ -182,7 +185,7 @@ dist_BINS_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
 
 ifneq ($(PREFIX),)
 ifneq ($(OS),Linux)
-dist_DIRS += $(EXEC_PREFIX)$(SV_SVCDIR)
+dist_DIRS += $(PREFIX)$(SV_SVCDIR)
 endif
 endif
 
@@ -191,7 +194,7 @@ dist_INIT_STAGE += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
 dist_DIRS    += $(SYSCONFDIR)/runit
 endif
 ifeq ($(S6_INIT_STAGE),yes)
-dist_INIT_STAGE += s6/crash s6/finish s6/init-stage-1
+dist_INIT_STAGE += s6/crash s6/finish s6/init
 dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
@@ -213,6 +216,10 @@ dist_SVC_SED  =
 ifneq ($(OS),Linux)
 dist_SVC_SED += -e 's|/usr/|$(PREFIX)/|g'
 endif
+ifneq ($(EXEC_PREFIX),)
+dist_SVC_SED += 's|/sbin/rs|$(SBINDIR)/rs|g'
+endif
+
 dist_MAN_SED += \
 	-e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' \
 	-e 's|@RUNDIR@|$(RUNDIR)|g' \
@@ -270,10 +277,6 @@ install: install-dir install-dist install-sv-svcs
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
 		   $(DESTDIR)$(SYSCONFDIR)/sv.conf \
 		   $(DESTDIR)$(SV_LIBDIR)/opt/SVC_OPTIONS
-ifneq ($(EXEC_PREFIX),)
-	sed -e 's|/sbin/rs|$(SBINDIR)/rs|g' \
-		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
-endif
 ifneq ($(dist_SVC_SED),)
 	sed $(dist_SVC_SED) \
 		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
@@ -324,7 +327,7 @@ ifneq ($(OS),Linux)
 endif
 endif
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(SV_LIBDIR)/opt/%) $(DESTDIR)$(SV_LIBDIR)/opt/cmd
+	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(SV_LIBDIR)/opt/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
