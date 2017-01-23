@@ -1,15 +1,22 @@
 #!/bin/sh
 
+if [ -n "${ZSH_VERSION}" ]; then
+	emulate sh
+	NULLCMD=:
+	setopt NO_GLOB_SUBST SH_WORD_SPLIT
+	disable -r end
+fi
+
 name="${0##*/}"
 SV_LIBDIR=sv/.lib
 [ -L sv/.lib/bin/checkpath ] || ln -s ../../../src/checkpath sv/.lib/bin
 [ -L sv/.lib/bin/fstabinfo ] || ln -s ../../../src/fstabinfo sv/.lib/bin
 [ -L sv/.lib/bin/mountinfo ] || ln -s ../../../src/mountinfo sv/.lib/bin
-SV_LIBDIR=$SV_LIBDIR source sv/.lib/sh/runscript-functions
+SV_LIBDIR=$SV_LIBDIR . sv/.lib/sh/runscript-functions
 
 if yesno Enable; then
 	eval_colors 256
-	echo -e "$COLOR_BLD${BG_8}$name$COLOR_RST$COLOR_ITA${FG_18}TEST$COLOR_RST"
+	printf "$color_bld${bg_8}$name$color_rst$color_ita${color_fg_18}test$color_rst\n"
 fi
 
 begin "making /tmp/$name.XXXXXX"
@@ -25,4 +32,8 @@ mountinfo -P '^/(tmp|run)$' -T '^(tmpfs|cgroup|sysfs)$'
 mountinfo /tmp || error "/tmp is not mounted" && end "$?" /tmp
 info "/ mount arguments: $(fstabinfo -a /)"
 
+case "$(uname -s)" in
+	[Ll]inux)
 echo BOOT_IMAGE=$(get_boot_option BOOT_IMAGE)
+	;;
+esac
