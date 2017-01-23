@@ -470,6 +470,7 @@ static void svc_stage(const char *cmd)
 	}
 
 	/* set a few sane environment variables */
+	sv_svcdeps_load(NULL);
 	runlevel  = svc_runlevel(NULL);
 	svc_deps  = 0;
 	svc_quiet = 0;
