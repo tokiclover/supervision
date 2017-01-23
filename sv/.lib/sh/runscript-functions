@@ -24,9 +24,6 @@ case "${__SV_PREFIX__}" in
 esac
 PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:${PATH}:/usr/local/bin:/usr/local/sbin
 
-export PATH SV_LIBDIR SV_RUNDIR SV_SVCDIR SV_TMPDIR SV_RUNLEVEL SV_STAGE SV_TYPE \
-	SV_PREFIX SV_SYSBOOT_LEVEL SV_SHUTDOWN_LEVEL SVC_DEPS SVC_DEBUG
-
 [ -n "${__FUNCTIONS__}"              ] || . "${SV_LIBDIR}"/sh/functions
 [ -n "${__SUPERVISIONS_FUNCTIONS__}" ] || . "${SV_LIBDIR}"/sh/supervision-functions
 [ -n "${__CGROUP_FUNCTIONS__}"       ] || . "${SV_LIBDIR}"/sh/cgroup-functions

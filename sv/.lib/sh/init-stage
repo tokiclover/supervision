@@ -257,7 +257,7 @@ elif [ "${1}" = "--default" ]; then
 	sh -c ". ${SV_LIBDIR}/sh/init-stage; start_stage_2;" &
 
 	make_pidfile
-	exec /usr/bin/env - PATH=${PATH} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS}
+	exec ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS:+"${SV_OPTS}"}
 
 	#
 	# Drop into a rescue shell
