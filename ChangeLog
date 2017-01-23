@@ -58,8 +58,8 @@ REMOVAL:
 Removed unnecessary supervision init script for OpenRC;
 
 ADDIDION:
-SUPERVISION SERVICE: docker;
-RUNSCRIPT SERVICE: qemu-binfmt;
+SUPERVISION SERVICE: docker, dmeventd, lvmetad;
+RUNSCRIPT SERVICE: qemu-binfmt, lvm-monitor;
 
 0.12.6.4:
 
