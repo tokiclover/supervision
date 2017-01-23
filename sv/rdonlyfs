@@ -23,9 +23,7 @@ start()
 		end "${?}"
 	done
 
-	if [ "${SV_RUNLEVEL}" = "shutdown" -o "${SV_RUNLEVEL}" = "reboot" ]; then
-		sv-shutdown --force --${SV_RUNLEVEL}
-	fi
+	sv-shutdown --force --${SV_RUNLEVEL}
 }
 
 #
