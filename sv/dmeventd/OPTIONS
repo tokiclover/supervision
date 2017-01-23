@@ -4,9 +4,8 @@
 #
 
 description="device-mapper event daemon"
-pidfile="/run/dmeventd.pid"
 SVC_CMD=/sbin/dmeventd
-SVC_OPTS="-f -l -p ${pidfile}"
+SVC_OPTS="-f -l"
 SVC_AFTER="device-mapper lvm"
 
 #
