@@ -1,0 +1,26 @@
+#!/sbin/rs
+#
+# $Id: @(#) /etc/sv/lvm-monitor                                       Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+#
+
+SVC_NEED="dmeventd lvmetad"
+SVC_KEYWORD="docker jail openvz prefix systemd-nspawn timeout uml vserver xenu lxc"
+SVC_CMD=/sbin/vgchange
+
+start_pre()
+{
+	[ -x ${SVC_CMD} -a -x /sbin/vgs ]
+}
+start()
+{
+	${SVC_CMD} --monitor y --poll -y $(/sbin/vgs --noheadings -o name --rows 2>${NULL})
+}
+stop()
+{
+	${SVC_CMD} --monitor n $(/sbin/vgs --noheadings -o nmae --rows 2>${NULL})
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

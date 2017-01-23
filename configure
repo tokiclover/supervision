@@ -564,6 +564,7 @@ LINUX_RUNSCRIPT_SERVICES="
 	iptables
 	kmod
 	lvm
+	lvm-monitor
 	mdadm
 	mdev
 	qemu-binfmt
