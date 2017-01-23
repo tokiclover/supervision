@@ -78,7 +78,7 @@ start()
 	# XXX: start the service only when appropriate;
 	#      permit other services to start
 	#
-	[ "${SV_RUNLEVEL}" = "${SV_SYSBOOT_LEVEL}" ] || return 0
+	[ "${SV_STAGE}" = "${SV_SYSBOOT_LEVEL}" ] || return 0
 
 	local netfs exclude fs mnt_opts
 
@@ -104,7 +104,7 @@ stop()
 	#
 	# XXX: stop the service only when appropriate
 	#
-	[ "${SV_RUNLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return 1
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return 1
 
 	local i mnt_args mnt_point mnt_fstype=rootfs mountpoints net_fstype
 	mnt_point="/|/dev|/dev/.*|/proc|/proc/.*|/sys|/sys/.*|/run|/usr|/.?bin|/lib.*|/tmp"

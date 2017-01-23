@@ -23,11 +23,11 @@ _forcefsck()
 }
 _reboot()
 {
-	[ "${SV_RUNLEVEL}" = "${SV_SYSBOOT_LEVEL}" ] && ${SV_LIBDIR}/sbin/reboot "${@}"
+	[ "${SV_STAGE}" = "${SV_SYSBOOT_LEVEL}" ] && ${SV_LIBDIR}/sbin/reboot "${@}"
 }
 _shutdown()
 {
-	[ "${SV_RUNLEVEL}" = "${SV_SYSBOOT_LEVEL}" ] && ${SV_LIBDIR}/sbin/shutdown "${@}"
+	[ "${SV_STAGE}" = "${SV_SYSBOOT_LEVEL}" ] && ${SV_LIBDIR}/sbin/shutdown "${@}"
 }
 
 start()
@@ -93,7 +93,7 @@ start()
 
 stop()
 {
-	[ "${SV_RUNLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
+	[ "${SV_STAGE}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	yesno "${CHECKFS_SHUTDOWN}" || return 0
 	start
 }

@@ -94,7 +94,7 @@ vardir_setup()
 
 start()
 {
-	[ "${SV_RUNLEVEL}" = "${SV_SYSBOOT_LEVEL}" ] || return
+	[ "${SV_STAGE}" = "${SV_SYSBOOT_LEVEL}" ] || return
 
 	local fhs_dirs
 	if [ "${OS_NAME}" = Linux ]; then
