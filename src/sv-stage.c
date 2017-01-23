@@ -506,7 +506,8 @@ static void svc_stage(const char *cmd)
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
 		if (sv_stage == SV_SHUTDOWN_LEVEL && !level) {
-			level = ~sv_stage;
+			puts(__func__);
+			level = SV_REBOOT_LEVEL;
 			/* load the started services instead of only SV_{SYSBOOT,DEFAULT}_LEVEL
 			 * to be abe to shutdown everything with sv_stage=SV_SHUTDOWN_LEVEL
 			 */
@@ -514,7 +515,8 @@ static void svc_stage(const char *cmd)
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
 			svc_start = 0;
 		}
-		else if (level == ~SV_SHUTDOWN_LEVEL) {
+		else if (level == SV_REBOOT_LEVEL) {
+			puts(__func__);
 			level = 0;
 			/* close the logfile because rootfs will be mounted read-only */
 			if (!fclose(logfp))
