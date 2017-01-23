@@ -52,14 +52,14 @@ static int logfd, sv_debug;
 
 /* list of service to start/stop before|after a stage */
 static const char *const sv_init_stage[][8] = {
+	{ NULL },
+	{ NULL },
+	{ NULL },
+	{ NULL },
 	{ "clock", "hostname", NULL },
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
+	{ NULL },
+	{ NULL },
+	{ NULL },
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
@@ -412,7 +412,7 @@ static int svc_stage_command(int stage, int argc, const char *argv[])
 {
 	int i, retval;
 
-	if (!sv_init_stage[stage])
+	if (!*sv_init_stage[stage])
 		return -ENOENT;
 
 	DEPTREE.list = sv_stringlist_new();
@@ -599,7 +599,7 @@ static void svc_stage(const char *cmd)
 		sv_deptree_free(&DEPTREE);
 		sv_stringlist_free(&DEPTREE.list);
 
-		if (svc_start && sv_init_stage[sv_stage])
+		if (svc_start && *sv_init_stage[sv_stage])
 			svc_stage_command(sv_stage, 8, argv);
 		/* break shutdown loop */
 		if (!level)
