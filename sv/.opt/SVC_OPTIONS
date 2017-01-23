@@ -34,11 +34,44 @@ fi
 
 env_run()
 {
+	#
+	# migrate to new sub-dirs
+	#
+	if [ ! -d ${SV_TMPDIR}/opts ]; then
+		mkdir -p ${SV_TMPDIR}/opts ${SV_TMPDIR}/envs
+		mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/env
+		for a in ${SV_TMPDIR}/*_OPTIONS; do
+			b="${a##*/}"
+			mv -f ${a} ${SV_TMPDIR}/opts/${b%_*}
+		done
+		unset a b
+	fi
+
+	#
+	# save environment file for supervision
+	#
+	if [ -d "${__svc__}" ]; then
+	:	${SV_TYPE:=sv}
+		while read line; do
+			printf "${line}\n"
+		done <${SV_TMPDIR}/environ >${SV_TMPDIR}/envs/${SVC_NAME}
+	else
+	:	${SV_TYPE:=rs}
+	fi
+
 	SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
+	SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}
 	SOURCE ${SV_TMPDIR}/env
 	SOURCE ${SV_TMPDIR}/environ
-}
 
+	#
+	# Setup a few environment variables beforehand
+	#
+	:	${COLUMNS:=$(tput cols)}
+	if ! [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
+	trap ': COLUMNS="$(tput cols)"' WINCH
+	fi
+}
 
 #
 # Set up runscript environment

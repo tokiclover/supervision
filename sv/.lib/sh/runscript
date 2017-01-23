@@ -59,25 +59,8 @@ case "${1}" in
 esac
 shift
 
-if [ -z "${SV_TYPE}" ]; then
-	[ -d "${1}" ] && SV_TYPE=sv || SV_TYPE=rs
-fi
-
 . ${SV_SVCDIR}/.opt/SVC_OPTIONS ||
 	{ echo "ERROR: Required file not found." >&2; exit 1; }
-
-#
-# migrate to new sub-dirs
-#
-if [ ! -d ${SV_TMPDIR}/opts ]; then
-	mkdir -p ${SV_TMPDIR}/opts
-	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/env
-	for a in ${SV_TMPDIR}/*_OPTIONS; do
-		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/opts/${b%_*}
-	done
-	unset a b
-fi
 
 #
 # Handle command
