@@ -23,13 +23,11 @@ subsystem with `SV_SYSTEM="${SUBSYSTEM}"' configuration variable...
 Services that have the subsystem keyword will not be started in that particular
 subsystem environment.
 
-An option to exec into a supervisor `{damontools[-encore],runit,s6}' is available:
-Just call `sv-stage' as `sv-scan' and voila the supervisor will be executed as
-PID 1; and a child will handle service management. Just setup the container or
-subsystem; once done, use something like the following for docker:
-`docker run [OPTIONS] --env container=docker --tmpfs /run IMAGE /sbin/sv-scan
---default'.
-WARNING: Do not forget to make the `sv-scan' symbolic link in the image beforehand!
+To have the supervisor `({damontools[-encore],runit,s6})' executed as __PID 1__...
+Just setup the container or subsystem; once done, use something like
+the following for docker: `docker run [OPTIONS] --env container=docker --tmpfs /run
+IMAGE /lib/sv/sh/init-stage --default'; and voila! the supervisor will be executed
+as `PID 1' and another process will handle service management to setup the container.
 
 Added abilty to abort an init-stage (used to abort and bring single runlevel
 when checkfs service fails to clean up filesystems;
