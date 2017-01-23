@@ -143,12 +143,6 @@ EOH
 	esac
 	exit $ret
 }
-YESNO(){
-	case "${1-NO}" in
-		[Yy][Ee][Ss]|[Ee][Nn][Aa][Bb][Ll][Ee]|[Tt][Rr][Uu][Ee]|[Oo][Nn]|[1YyEeTtOo]) echo yes;;
-		*) echo no;;
-	esac
-}
 
 c_escape(){
 	printf "$*" | sed 's/["\\]/\\\0/g'
@@ -271,11 +265,13 @@ print_enabled(){
 		enabled $val && printf "%s\n" ${val%%$suffix}
 	done
 }
-
 print_header(){
 	[ "${1%.h}" = "$1" ] &&
 		echo "#include $1" ||
 		echo "#include <$1>"
+}
+print_yesno(){
+	yesno "$1" && printf "yes" || printf "no"
 }
 
 if (eval "var=1; var+=2 2>$NULL; test x\$var = x12 2>$NULL"); then
@@ -588,6 +584,9 @@ LINUX_SERVICE_INSTANCES="
 LINUX_OPTIONS_INSTANCES="
 	ip6tables
 "
+LINUX_SINGLE_SERVICES="
+	sulogin
+"
 LINUX_SYSINIT_SERVICES="
 	tmpfiles.dev
 "
@@ -602,6 +601,7 @@ LINUX_SYSBOOT_SERVICES="
 LINUX_DEFAULT_SERVICES="
 "
 RUNLEVELS_LIST="
+	SINGLE
 	SYSINIT
 	SYSBOOT
 	DEFAULT
@@ -763,7 +763,7 @@ tmpfile TMP_E
 echo -e "$0 $*\n" >&$LOG_FD
 set >&$LOG_FD
 
-prepend_unique DEFINE_CONFIG_H HAVE_CONFIG_H
+prepend_unique HAVE_CONFIG_H HAVE_CONFIG_H
 prepend_unique CPPFLAGS -DHAVE_CONFIG_H
 add_CPPFLAGS -D_DEFAULT_SOURCE
 add_CPPFLAGS -D_XOPEN_SOURCE_EXTENDED
@@ -785,7 +785,7 @@ check_CC <<EOF && add_CPPFLAGS -D_XOPEN_SOURCE=700 || add_CPPFLAGS -D_XOPEN_SOUR
 EOF
 if check_cpp_condition "unistd.h" "_POSIX_ASYNCHRONOUS_IO != -1"; then
 	enable HAVE_POSIX_ASYNCHRONOUS_IO
-	append DEFINE_CONFIG_H HAVE_POSIX_ASYNCHRONOUS_IO
+	append HAVE_CONFIG_H HAVE_POSIX_ASYNCHRONOUS_IO
 fi
 check_cpp_condition "unistd.h" "_POSIX_PRIORITIZED_IO == 200809L" ||
 	DIE "_POSIX_PRIORITIZED_IO != 200809L is not defined!"
@@ -896,7 +896,7 @@ check_builtin "pthread_kill" "signal.h" "pthread_kill((pthread_t)0, 0)" "$PTHREA
 check_builtin "sigwaitinfo" "signal.h" "sigwaitinfo((void*)0, (void*)0)" ||
 	DIE "missing sigwaitinfo system builtin"
 check_builtin "getline" "stdio.h" "getline((char**)0, (size_t*)0, (FILE*)0)" &&
-	append DEFINE_CONFIG_H HAVE_GETLINE
+	append HAVE_CONFIG_H HAVE_GETLINE
 
 
 check_cpp_condition 'unistd.h' 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \
@@ -937,8 +937,11 @@ print_config_h(){
 	for i in sysconfdir libdir rundir prefix exec_prefix; do
 		eval [ x\$$i != x ] && eval printf '"# define %-16s \"%s\"\n"' $(toupper $i) \$$i
 	done
-	for i in $DEFINE_CONFIG_H; do
+	for i in $HAVE_CONFIG_H; do
 		printf "# define %-36s 1\n" $i
+	done
+	for i in $DEFINE_CONFIG_H; do
+		eval printf '"# define %-36s \"%s\"\n"' "$i \"\$$i\""
 	done
 }
 print_extra_services(){
@@ -950,7 +953,7 @@ print_extra_services(){
 	done
 }
  
-cat >$CONFIG_MAK <<CONFIG_MAK_EOF
+cat >$CONFIG_MAK <<-CONFIG_MAK_EOF
 ifndef SUPERVISION_CONFIG_MAK
 SUPERVISION_CONFIG_MAK=1
 PACKAGE=$package
@@ -987,9 +990,9 @@ LD_PATH=$LD_PATH
 LDFLAGS=$LDFLAGS
 PTHREAD_FLAGS=$PTHREAD_FLAGS
 LIBRT_LIBS=$LIBRT_LIBS
-RUNIT_INIT_STAGE=$(YESNO "$runit")
-S6_INIT_STAGE=$(YESNO "$s6")
-SYSVINIT=$(YESNO "$sysvinit")
+RUNIT_INIT_STAGE=$(print_yesno "$runit")
+S6_INIT_STAGE=$(print_yesno "$s6")
+SYSVINIT=$(print_yesno "$sysvinit")
 DIST_EXTRA=$DIST_EXTRA
 EXTRA_SERVICE_INSTANCES=$EXTRA_SERVICE_INSTANCES
 EXTRA_OPTIONS_INSTANCES=$EXTRA_OPTIONS_INSTANCES
@@ -1002,7 +1005,7 @@ CONFIG_MAK_EOF
 
 echo "Generating $CONFIG_H"
 
-cat >$CONFIG_H <<CONFIG_H_EOF
+cat >$CONFIG_H <<-CONFIG_H_EOF
 #ifndef SUPERVISION_CONFIG_H
 # define SUPERVISION_CONFIG_H
 $(print_config_h)
