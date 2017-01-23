@@ -72,7 +72,7 @@ installed in the system.
 
 Or else, use the magic `--svscan` command line argument to set up `/service/` and
 `svscan`, set `SV_SYSTEM="supervision"` in `/etc/sv.conf` and then use
-`sv-stage --default` to start/stop daemons.
+`sv-stage --default [start|stop]` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
 Support for containrization solutions or subsystems is available via _keywords_
@@ -87,13 +87,11 @@ subsystem with `SV_SYSTEM="${SUBSYSTEM}"` configuration variable...
 Services that have the subsystem keyword will not be started in that particular
 subsystem environment.
 
-An option to exec into a supervisor `{damontools[-encore],runit,s6}` is available:
-Just call `sv-stage` as `sv-scan` and voila the supervisor will be executed as
-PID 1; and a child will handle service management. Just setup the container or
-subsystem; once done, use something like the following for docker:
-`docker run [OPTIONS] --env container=docker --tmpfs /run IMAGE /sbin/sv-scan
---default`.
-__WARNING:__ Do not forget to make the `sv-scan` symbolic link in the image beforehand!
+To have the supervisor `({damontools[-encore],runit,s6})` executed as __PID 1__...
+Just setup the container or subsystem; once done, use something like
+the following for docker: `docker run [OPTIONS] --env container=docker --tmpfs /run
+IMAGE /lib/sv/sh/init-stage --default`; and voila! the supervisor will be executed
+as `PID 1` and another process will handle service management to setup the container.
 
 And then... a bit more, new supervision services can be easily added by
 running `${LIBDIR}/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
