@@ -8,6 +8,7 @@ TTY="${SVC_NAME#*-}"
 # XXX: chose a command or first found will be used
 #
 SVC_CMD=
+SVC_TRY=16
 #
 # XXX: safety net
 #
