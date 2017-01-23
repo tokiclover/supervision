@@ -418,8 +418,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		snprintf(cmd, ARRAY_SIZE(cmd), "--%s", ptr);
 		if ((p = fork()) < 0)
 			ERROR("%s: Failed to fork()", __func__);
-		if (( p &&  strcmp(progname, "sv-scan")) ||
-		    (!p && !strcmp(progname, "sv-scan"))) {
+		if (p) {
 			WAIT_SVSCAN;
 		}
 		else {

@@ -734,8 +734,7 @@ int main(int argc, char *argv[])
 		setenv("SVC_DEBUG", off, 1);
 		goto rc;
 	}
-	else if (strcmp(progname, "sv-stage") == 0 ||
-			 strcmp(progname, "sv-scan" ) == 0) {
+	else if (strcmp(progname, "sv-stage") == 0) {
 		if (argc &&   strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0)
 			sv_stage_status();
 		if (argc && !(strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_START]) == 0 ||
