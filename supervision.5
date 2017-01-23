@@ -274,13 +274,11 @@ for docker containers et al.
 Services that have the subsystem keyword will not be started in that particular
 subsystem environment.
 
-An option to exec into a supervisor \fI{damontools[-encore],runit,s6}\fR is available:
-Just call \fIsv-stage\fR as \fIsv-scan\fR and voila the supervisor will be executed as
-PID 1; and a child will handle service management. Just setup the container or
-subsystem; once done, use something like the following for docker:
-`\fBdocker run [OPTIONS] --env container=docker --tmpfs /run IMAGE /sbin/sv-scan --default\fR'.
-.B WARNING:
-Do not forget to make the \fIsv-scan\fRsymbolic link in the image beforehand!
+To have the supervisor \fB({damontools[-encore],runit,s6})\fR executed as \fBPID 1\fR...
+Just setup the container or subsystem; once done, use something like
+the following for docker: `\fBdocker run [OPTIONS] --env container=docker --tmpfs /run
+IMAGE /lib/sv/sh/init-stage --default\fR'; and voila! the supervisor will be executed
+as \fIPID 1\fR and another process will handle service management to setup the container.
 
 .SH OPTIONS
 .SS ENVIRONMENT
