@@ -484,9 +484,9 @@ shutdown:
 		ts.tv_sec = ti->ti_wait;
 	}
 	sv_timewarn(0U);
+	unlink(SD_PIDFILE);
+	unlink(_PATH_NOLOGIN);
 	(void)printf("\r\n\007System %s time has arrived\007\r\n", action[ai]);
-	if (!access(SD_PIDFILE, F_OK))
-		unlink(SD_PIDFILE);
 
 #ifdef DEBUG
 	if (reboot_force)
@@ -510,8 +510,6 @@ shutdown:
 
 	if (reboot_sync)
 		sync();
-	if (!access(_PATH_NOLOGIN, F_OK))
-		unlink(_PATH_NOLOGIN);
 	if (reboot_force)
 		exit(reboot(reboot_action));
 
