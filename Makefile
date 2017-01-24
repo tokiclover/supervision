@@ -282,9 +282,8 @@ ifneq ($(dist_SVC_SED),)
 		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
 		   $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%/OPTIONS*)
 endif
-ifneq ($(dist_INIT_STAGE),)
-	sed $(INIT_STAGE_SED) -i $(dist_INIT_STAGE:%=$(DESTDIR)$(SYSCONFDIR)/%)
-endif
+	sed $(INIT_STAGE_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/init-stage \
+		$(dist_INIT_STAGE:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		$(LN_S) -f "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
