@@ -5,7 +5,7 @@
 #
 
 description="Virtual Machine Management (libvirt) Guests"
-SVC_USE=libvirtd
+SVC_USE="libvirtd"
 SVC_KEYWORD="docker jail openvz prefix systemd-nspawn timeout uml vserver xenu lxc"
 
 #
@@ -16,13 +16,13 @@ SVC_KEYWORD="docker jail openvz prefix systemd-nspawn timeout uml vserver xenu l
 # default to suspending the VM via managedsave
 #
 case "${LIBVIRT_SHUTDOWN}" in
-	managedsave|shutdown|destroy) ;;
-	*) LIBVIRT_SHUTDOWN="managedsave" ;;
+	(managedsave|shutdown|destroy) ;;
+	(*) LIBVIRT_SHUTDOWN="managedsave" ;;
 esac
 #
 # default to 500 seconds
 #
-[ -n ${LIBVIRT_MAXWAIT} ] || LIBVIRT_MAXWAIT=500
+[ -n "${LIBVIRT_MAXWAIT}" ] || LIBVIRT_MAXWAIT=500
 
 gueststatefile="/var/lib/libvirt/libvirt-guests.state"
 netstatefile="/var/lib/libvirt/libvirt-net.state"
@@ -144,16 +144,6 @@ libvirtd_net_stop()
 	fi
 }
 
-start_pre()
-{
-	/etc/qemu/qemu-vlan --br=vnet4 -n4 --dhcp=dnsmasq --vde --start
-	~/bin/ipr -i vnet4 -e wlan0
-	local i
-	for i in 0 1 2 3; do
-		ifconfig vnet4_$i 0.0.0.0 up
-	done
-}
-
 start()
 {
 	local vm_uri vm_uuid vm_name
@@ -190,11 +180,6 @@ start()
 		end "${?}"
 	done <"${gueststatefile}"
 	return 0
-}
-
-start_post()
-{
-	/etc/qemu/qemu-vlan --br=vnet4 -n4 --dhcp=dnsmasq --vde --stop
 }
 
 stop()
