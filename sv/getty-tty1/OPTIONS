@@ -11,8 +11,9 @@ TTY="${SVC_NAME#*-}"
 #
 SVC_CMD=
 SVC_TRY=16
+
 #
-# XXX: safety net
+# XXX: Safety net
 #
 if [ -z "${SVC_CMD}" ]; then
 	for cmd in ${SVC_NAME%-*} agetty mgetty mingetty fbgetty; do
@@ -24,6 +25,7 @@ if [ -z "${SVC_CMD}" ]; then
 	cmd=
 fi
 name="${SVC_CMD##*/}"
+
 
 find_issue()
 {
@@ -65,38 +67,43 @@ rescue_shell()
 	error "No functional shell found!!!"
 }
 
-case "${SVC_CMD}" in
-	(*mgetty)
+_start_pre()
+{
+	local cmd
+	if   [ "${name}" = "mgetty" ]; then
 	find_issue -i
 	SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
 	SVC_OPTS="${TTY} ${TTY_OPTS}"
-	;;
-	(*fbgetty)
+	elif [ "${name}" = "fbgetty" ]; then
 	find_issue -i
 	SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
-	;;
-	(*mingetty)
+	elif [ "${name}" = "mingetty" ]; then
 	SVC_OPTS="${TTY}"
-	;;
-	(*agetty)
+	elif [ "${name}" = "agetty" ]; then
 	getty_options
-	;;
-	(*)
+	else
 	cmd=$(command -v busybox 2>${NULL})
 	if [ "${?}" = 0 ]; then
 		warn "using busybox getty!!!"
 		getty_options
 		SVC_OPTS="getty ${SVC_OPTS}"
 		name=getty SVC_CMD=${cmd}
-		cmd=
 	else
 		error "No suitable getty command found"
 		error "Launching sulogin instead; and"
 		error "do fix this by setting up getty"
 		rescue_shell
 	fi
-	;;
-esac
+	fi # name
+}
+start_pre()
+{
+	if [ "${__cmd__}" = "run" ]; then
+		_start_pre
+	else
+		return 0
+	fi
+}
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
