@@ -5,7 +5,9 @@
 
 TTY="${SVC_NAME#*-}"
 #
-# XXX: chose a command or first found will be used
+# XXX: chose a getty ommand or first found will be used;
+#      or else, make symbolic links with command name prefix
+#      instead of the generic `getty' name.
 #
 SVC_CMD=
 SVC_TRY=16
@@ -13,7 +15,7 @@ SVC_TRY=16
 # XXX: safety net
 #
 if [ -z "${SVC_CMD}" ]; then
-	for cmd in agetty mgetty mingetty fbgetty; do
+	for cmd in ${SVC_NAME%-*} agetty mgetty mingetty fbgetty; do
 		if command -v "${cmd}" >${NULL} 2>&1; then
 			SVC_CMD="${cmd}"
 			break;
@@ -41,9 +43,25 @@ getty_options()
 }
 rescue_shell()
 {
-	exec ${SV_SHELL:-sh} -aim
-	exec sh -aim
-	exec busybox sh -aim
+	if [ "${OS_NAME}" = "Linux" ]; then
+	:	${SULOGIN_TTY:=/dev/tty8}
+		if [ "${SV_SHELL##*/}" = "sulogin" ]; then
+			if [ -x ${SV_SHELL} ]; then
+			exec ${SV_SHELL} -p ${SULOGIN_TTY}
+			else
+			SV_SHELL=
+			fi
+		fi
+		SULOGIN="$(command -v sulogin 2>${NULL})"
+		[ "${?}" = 0 ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
+	fi
+
+	exec <${CONSOLE} >${CONSOLE}
+	exec 2>&1
+	for sh in ${SV_SHELL:-$SHELL} sh bash zsh ksh ${SHELLS}; do
+		sh=$(command -v ${sh} 2>${NULL})
+		[ "${?}" = 0 ] && exec ${sh} -lim
+	done
 	error "No functional shell found!!!"
 }
 
@@ -64,20 +82,18 @@ case "${SVC_CMD}" in
 	getty_options
 	;;
 	(*)
-	if command -v busybox >${NULL} 2>&1; then
+	cmd=$(command -v busybox 2>${NULL})
+	if [ "${?}" = 0 ]; then
+		warn "using busybox getty!!!"
 		getty_options
 		SVC_OPTS="getty ${SVC_OPTS}"
-		name=getty SVC_CMD=busybox
+		name=getty SVC_CMD=${cmd}
+		cmd=
 	else
 		error "No suitable getty command found"
 		error "Launching sulogin instead; and"
 		error "do fix this by setting up getty"
-		if [ "${OS_NAME}" = "Linux" ]; then
-			rs sulogin start || exec sulogin -p /dev/tty8 || rescue_shell
-		else
-			[ "${SV_SHELL##*/}" != "sulogin" ] || SV_SHELL="${SHELL:-sh}"
-			rescue_shell
-		fi
+		rescue_shell
 	fi
 	;;
 esac
