@@ -595,7 +595,7 @@ int svc_environ_update(off_t off)
 		if (!off && j == ENVIRON_OFF)
 			environ_off = ftell(environ_fp);
 		if ((ptr = getenv(environ_list[j])))
-			fprintf(environ_fp, "%s=%s\n", environ_list[j], ptr);
+			fprintf(environ_fp, "%s='%s'\n", environ_list[j], ptr);
 	}
 	fflush(environ_fp);
 	return 0;
