@@ -9,13 +9,8 @@
 if [ -n "${ZSH_VERSION}" ]; then
 	emulate sh
 	NULLCMD=:
-	setopt NO_GLOB_SUBST
-	setopt SH_WORD_SPLIT
+	setopt NO_GLOB_SUBST SH_WORD_SPLIT
 	disable -r end
-else
-	case "$(set -o 2>/dev/null)" in
-		(*posix*) set -o posix;;
-	esac
 fi
 
 name="${0##*/}"
@@ -40,13 +35,13 @@ if test "$E1" != 0 || test "$E2" = 0; then
 		CONFIGURE_EXEC=1
 		shell_exec bash "$0" "$@"
 	fi
-	if test "$CONFIGURE_EXEC" -lt 2; then
-		CONFIGURE_EXEC=2
-		shell_exec ksh "$0" "$@"
-	fi
 	if test "$CONFIGURE_EXEC" -lt 3; then
 		CONFIGURE_EXEC=3
 		shell_exec zsh "$0" "$@"
+	fi
+	if test "$CONFIGURE_EXEC" -lt 2; then
+		CONFIGURE_EXEC=2
+		shell_exec ksh "$0" "$@"
 	fi
 	echo "ERROR: No compatible shell interpreter found" >&2
 	echo "ERROR: Install a POSIX compatible shell like" >&2
@@ -58,7 +53,7 @@ if ! . sv/.lib/sh/functions; then
 	exit 1
 fi
 
-unset CDPATH GREP_OPTIONS >$NULL 2>&1
+unset CDPATH GREP_OPTIONS
 
 export LOG_FD=3 CONFIG_LOG=config.log
 export CONFIG_H=src/config.h CONFIG_MAK=config.mak
