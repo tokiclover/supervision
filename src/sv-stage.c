@@ -498,7 +498,7 @@ static void svc_stage(const char *cmd)
 	t = time(NULL);
 	sv_debug = 1;
 	svc_log("logging: %s command\n", command);
-	svc_log("%s %s runlevel started at %s\n", progname, sv_runlevel[sv_stage],
+	svc_log("%s %s stage started at %s\n", progname, sv_runlevel[sv_stage],
 			ctime(&t));
 
 	/* do this extra loop to be able to stop sysboot with sv_stage=SV_SHUTDOWN_LEVEL;
