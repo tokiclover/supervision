@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) runscript    0.6 2017/01/22 21:09:26                     Exp $
+# $Id:  @(#) runscript    0.6 2017/01/24 21:09:26                     Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -52,6 +52,11 @@ name="${SVC_NAME}"
 __cmd__="${2}"
 __cmd_args__="${@#*$2}"
 __svc__="${1}"
+if [ -d "${__svc__}" ]; then
+:	${SV_TYPE:=sv}
+else
+:	${SV_TYPE:=rs}
+fi
 case "${1}" in
 	(/etc/sv/*)
 :	${SV_SVCDIR:=${1%/*}}
@@ -63,12 +68,43 @@ shift
 	{ echo "ERROR: Required file not found." >&2; exit 1; }
 
 #
-# Handle command
+# Migrate to new sub-dirs (v0.13.0)
 #
-case "${SV_TYPE}" in
-	(rs)  rs_cmd "${@}";;
-	(sv) svc_cmd "${@}";;
-esac
+if [ ! -d ${SV_TMPDIR}/opts ]; then
+	mkdir -p ${SV_TMPDIR}/opts ${SV_TMPDIR}/envs
+	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/env
+
+	for a in ${SV_TMPDIR}/*_OPTIONS; do
+		b="${a##*/}"
+		mv -f ${a} ${SV_TMPDIR}/opts/${b%_*}
+	done
+	for a in ${SV_TMPDIR}/*_ENV; do
+		b="${a##*/}"
+		mv -f ${a} ${SV_TMPDIR}/envs/${b%_*}
+	done
+	unset a b
+fi
+
+#
+# Handle service command
+#
+if   [ "${SV_TYPE}" = "rs" ]; then
+	rs_cmd "${@}"
+elif [ "${SV_TYPE}" = "sv" ]; then
+	#
+	# Save environment file to handle false start failures
+	#
+	if [ "${__cmd__}" = "start" ] && ! svc_state -a; then
+	while read line; do
+		printf "${line}\n"
+	done <${SV_TMPDIR}/environ >${SV_TMPDIR}/envs/${SVC_NAME}
+	fi
+
+	svc_cmd "${@}"
+else
+	error "nothing to do -- invalid usage"
+	exit 1
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
