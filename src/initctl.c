@@ -16,17 +16,8 @@
 #include <sys/param.h>
 #include <fcntl.h>
 #include <unistd.h>
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
 #include "error.h"
 #include "helper.h"
-
-#ifndef LIBDIR
-# define LIBDIR "/lib"
-#endif
-#define INIT_REQ_LEN 384
-#define SV_SHUTDOWN LIBDIR "/sv/sbin/sv-shutdown"
 
 const char *progname;
 
@@ -59,7 +50,7 @@ int main(int argc, char *argv[])
 			ERROR("Failed to read %s", INIT_FIFO);
 		else if (len == 0)
 			continue;
-		else if (len != INIT_REQ_LEN) {
+		else if (len != sizeof(ireq)) {
 			ERR("Invalid %d bytes length.\n", len);
 			continue;
 		}
@@ -68,8 +59,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 		if (ireq.cmd == INIT_CMD_RUNLVL) {
-			snprintf(arg, ARRAY_SIZE(arg), "%s -%d -t%d", SV_SHUTDOWN,
-					ireq.runlevel, ireq.sleeptime);
+			snprintf(arg, sizeof(arg), "sv-shutdown -%d", ireq.runlevel);
 			if (system(arg))
 				ERR("Failed to execute `%s'", arg);
 		}
