@@ -105,6 +105,11 @@ REQUIREMENTS
 
 Supervision Scripts Framework requires standard _coreutils_, _grep_, _procps_,
 sed and a (POSIX) shell.
+POSIX shell compliance is not enforced because it should not be especially when
+using [OpenBSD](http://openbsd.org) version of [ksh](http://www.kornshell.com/),
+see `builtins(8)` manual page for more information. Otherwise, everything was
+tested with [bash](http://tiswww.case.edu/php/chet/bash/bashtop.html) and
+[zsh](http://www.zsh.org/) and work as expected.
 Optional SysVinit for compatibilty with SysVinit's utilities.
 
 CONTRIBUTORS
