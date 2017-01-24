@@ -240,7 +240,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 
 	/* XXX: handle {after,use,need} first */
 	TAILQ_FOREACH(ent, deptree->list, entries)
-		sv_deptree_add(SV_SVCDEPS_AFTER, 0, ent, deptree);
+		sv_deptree_add(SV_SVCDEPS_AFTER, -1, ent, deptree);
 	TAILQ_FOREACH(ent, deptree->list, entries)
 		sv_deptree_add(SV_SVCDEPS_BEFORE, 0, ent, deptree);
 
