@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) init-stage    1.8 2017/01/18 21:09:26                    Exp $
+# $Id:  @(#) init-stage    1.8 2017/01/24 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -17,18 +17,29 @@ fi
 svc_rsh()
 {
 	NULL=/dev/null
-	SULOGIN="$(command -v sulogin)"
-:	${SULOGIN_TTY:=/dev/tty8}
-	if [ "${SV_SHELL##*/}" = "sulogin" ]; then
-		exec ${SV_SHELL} -p /dev/tty8
+	PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+	if [ "${OS_NAME:-$(uname -s)}" = "Linux" ]; then
+	:	${SULOGIN_TTY:=/dev/tty8}
+		if [ "${SV_SHELL##*/}" = "sulogin" ]; then
+			if [ -x ${SV_SHELL} ]; then
+			exec ${SV_SHELL} -p ${SULOGIN_TTY}
+			else
+			SV_SHELL=
+			fi
+		fi
+		SULOGIN="$(command -v sulogin 2>${NULL})"
+		[ "${?}" = 0 ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
 	fi
-	[ "${OS_NAME}" = "Linux" -a -x ${SULOGIN} ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
+
 	exec <${CONSOLE} >${CONSOLE}
 	exec 2>&1
-	exec ${SV_SHELL} -lim
-	for sh in /bin/sh sh "/bin/busybox sh" "busybox sh" ${SHELLS}; do
-		exec ${sh} -lim
+
+	for sh in ${SV_SHELL} sh bash zsh ksh ${SHELLS}; do
+		sh=$(command -v ${sh} 2>${NULL})
+		[ "${?}" = 0 ] && exec ${sh} -lim
 	done
+
 	echo "No functional shell found!!!" >&2
 }
 
