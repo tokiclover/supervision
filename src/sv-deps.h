@@ -28,8 +28,8 @@
 #define SV_SVCOPTS_SET(dep, opt) (dep->options |= (opt))
 
 /* some macro to set/get keyword bit */
-#define SV_KEYWORD_GET(dep, kwd) (dep->keywords  & (1<<(kwd)))
-#define SV_KEYWORD_SET(dep, kwd) (dep->keywords |= (1<<(kwd)))
+#define SV_KEYWORD_GET(dep, kwd) (dep->keyword  & (1<<kwd))
+#define SV_KEYWORD_SET(dep, kwd) (dep->keyword |= (1<<kwd))
 
 #define SV_DEPGEN SV_LIBDIR "/sh/depgen"
 #define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
@@ -65,7 +65,7 @@ typedef struct SV_SvcDeps {
 	char *virt;
 	int timeout;
 	int options;
-	unsigned long int keywords;
+	unsigned long int keyword;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;

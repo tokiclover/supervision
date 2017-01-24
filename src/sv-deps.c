@@ -532,6 +532,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 	elm->did = id++;
 	elm->svc = err_strdup(svc);
 	elm->virt = NULL;
+	elm->keyword = 0;
 	elm->timeout = 0;
 	elm->options = 0;
 
