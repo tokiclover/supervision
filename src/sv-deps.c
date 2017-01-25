@@ -63,6 +63,7 @@ void sv_deptree_free(SV_DepTree_T *deptree)
 		sv_stringlist_free(&deptree->tree[i]);
 	deptree->size = 0;
 	deptree->tree = 0;
+	deptree->prio = 0;
 }
 
 static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *deptree)
@@ -230,6 +231,9 @@ void svc_deptree_load(SV_DepTree_T *deptree)
 void sv_deptree_load(SV_DepTree_T *deptree)
 {
 	SV_String_T *ent;
+	SV_String_T *elm;
+	SV_SvcDeps_T *dep;
+	int pri;
 
 	/* load previous deptree file if any, or initialize a new list */
 	if (sv_deptree_file_load(deptree))
@@ -243,6 +247,42 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 		sv_deptree_add(SV_SVCDEPS_AFTER, -1, ent, deptree);
 	TAILQ_FOREACH(ent, deptree->list, entries)
 		sv_deptree_add(SV_SVCDEPS_BEFORE, 0, ent, deptree);
+
+	for (pri = deptree->size-1; pri > 0; pri--)
+		if (!TAILQ_EMPTY(deptree->tree[pri])) {
+			deptree->prio = pri;
+			break;
+		}
+
+	/* handle SVC_{AFTER,BEFORE}="*" */
+	TAILQ_FOREACH(ent, deptree->list, entries) {
+		if ((dep = ent->data) &&
+			(elm = TAILQ_FIRST(dep->deps[SV_SVCDEPS_AFTER])) &&
+			(*elm->str == '*')) {
+			for (pri = 0; pri < deptree->prio; pri++) {
+				if ((elm = sv_stringlist_fid(deptree->tree[pri], ent))) {
+					sv_stringlist_mov(deptree->tree[pri], deptree->tree[0], elm);
+					break;
+				}
+			}
+		}
+
+		if ((dep = ent->data) &&
+			(elm = TAILQ_FIRST(dep->deps[SV_SVCDEPS_BEFORE])) &&
+			(*elm->str == '*')) {
+			for (pri = deptree->prio; pri > 0; pri--) {
+				if ((elm = sv_stringlist_fid(deptree->tree[pri], ent))) {
+					if (deptree->prio >= deptree->size-1)
+						sv_stringlist_mov(deptree->tree[pri],
+								deptree->tree[deptree->prio], elm);
+					else
+						sv_stringlist_mov(deptree->tree[pri],
+								deptree->tree[++deptree->prio], elm);
+					break;
+				}
+			}
+		}
+	}
 
 	/* save everything to a file */
 	sv_deptree_file_save(deptree);
