@@ -506,7 +506,6 @@ static void svc_stage(const char *cmd)
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
 		if (sv_stage == SV_SHUTDOWN_LEVEL && !level) {
-			puts(__func__);
 			level = SV_REBOOT_LEVEL;
 			/* load the started services instead of only SV_{SYSBOOT,DEFAULT}_LEVEL
 			 * to be abe to shutdown everything with sv_stage=SV_SHUTDOWN_LEVEL
@@ -516,7 +515,6 @@ static void svc_stage(const char *cmd)
 			svc_start = 0;
 		}
 		else if (level == SV_REBOOT_LEVEL) {
-			puts(__func__);
 			level = 0;
 			/* close the logfile because rootfs will be mounted read-only */
 			if (!fclose(logfp))
@@ -538,7 +536,7 @@ static void svc_stage(const char *cmd)
 			sv_level = sv_stage = SV_SYSBOOT_LEVEL;
 			setenv("SV_RUNLEVEL", sv_runlevel[sv_level], 1);
 			setenv("SV_STAGE"   , sv_runlevel[sv_stage], 1);
-		}
+			}
 		}
 		else if (level == SV_DEFAULT_LEVEL) {
 			sv_level = sv_stage = level;
@@ -550,7 +548,7 @@ static void svc_stage(const char *cmd)
 		}
 		else if (sv_stage == SV_SINGLE_LEVEL) {
 			/* stop default runlevel only when service command is NULL */
-			if (!cmd && strcmp(runlevel, sv_runlevel[SV_DEFAULT_LEVEL]) == 0) {
+			if (!cmd && !strcmp(runlevel, sv_runlevel[SV_DEFAULT_LEVEL])) {
 			level = sv_stage;
 			sv_stage = SV_DEFAULT_LEVEL;
 			setenv("SV_STAGE"   , sv_runlevel[sv_stage], 1);
