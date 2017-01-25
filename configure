@@ -843,6 +843,7 @@ check_CP <<EOF || DIE "Caonnot find paths.h header"
 #endif
 int main(void){puts(_PATH_NOLOGIN); return 0;}
 EOF
+_PATH_NOLOGIN=$($TMP_E)
 check_CP <<EOF || DIE "Caonnot find paths.h header"
 #include <stdio.h>
 #include <paths.h>
