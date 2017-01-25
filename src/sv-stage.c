@@ -429,11 +429,15 @@ _noreturn_ static void sv_stage_status(void)
 	const char *argv[8] = { "runscript" };
 	struct svcrun run = { .argc = 8, .argv = argv };
 	SV_String_T *svc;
-	SV_StringList_T *list;
+	SV_StringList_T *list, *l;
 
-	if (sv_stage < 0)
-		sv_level = sv_stage = SV_DEFAULT_LEVEL;
-	list = sv_svclist_load(NULL);
+	if (sv_stage < 0) {
+		list = sv_svclist_load(SV_TMPDIR_STAR);
+		l = sv_svclist_load(SV_TMPDIR_FAIL);
+		sv_stringlist_cat(&list, &l);
+	}
+	else
+		list = sv_svclist_load(NULL);
 	list = sv_stringlist_sort(&list);
 	argv[4] = sv_svc_cmd[SV_SVC_CMD_STATUS];
 	argv[5] = (char *)0;
