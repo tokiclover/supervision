@@ -298,11 +298,10 @@ ifneq ($(OS),Linux)
 	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(PREFIX)$(SV_SVCDIR)/.opt
 endif
 endif
-install-dist: $(DISTFILES)
+install-dist: install-dir $(DISTFILES)
+	$(install_DATA)   $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
-install-doc : install-dir
-	$(install_DATA)   $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 install-sv-svcs: install-dir
 	cp -r $(dist_SV_SVCS:%=sv/%) $(DESTDIR)$(SV_SVCDIR)
 
