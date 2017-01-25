@@ -57,7 +57,7 @@ dep_gen()
 	[ -n "${SVC_TIMEOUT}" ] && echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT}\"" >&4
 	[ -n "${SVC_NOHANG}"  ] && echo "${SVC_NAME}:nohang=\"${SVC_NOHANG}\""   >&4
 	for dep in ${__SV_DEPS_ORDER__}; do
-		eval add_dep "${SVC_NAME}" "${dep}" \${SVC_${dep#*:}} >&4
+		eval add_dep "${SVC_NAME}" "${dep}" \"\$SVC_${dep#*:}\" >&4
 	done
 }
 
