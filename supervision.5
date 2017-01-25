@@ -572,7 +572,19 @@ or
 .B SV_NOHANG
 is enabled.)
 .TP
-.RB SUBSYSTEM:\ [\| docker \|]\ [\| lxc \|]\ [\| openvz \|]\ [\| prefix \|]\ [\| supervision \|]\ [\| \.\.\. \|]
+.B SUBSYSTEM:
+.RB [\| docker \|]
+.RB [\| jail \|]
+.RB [\| lxc \|]
+.RB [\| openvz \|]
+.RB [\| prefix \|]
+.RB [\| supervision \|]
+.RB [\| systemd-nspawn \|]
+.RB [\| uml \|]
+.RB [\| vserver \|]
+.RB [\| xen0 \|]
+.RB [\| xenu \|]
+
 Disable the service in the SUBSYSTEM--see \fI@SYSCONFDIR@/sv.conf\fR for valid
 subsystem keywords.
 
@@ -841,7 +853,7 @@ and so on; likewise for
 .B default
 runlevel.
 .TP
-.B RUNSCRIPT SERVICES (included services)
+.B "RUNSCRIPT SERVICES"
 .RB [\| clock \|]\ \c
 .RB [\| console \|]\ \c
 .RB [\| devfs \|]\ \c
@@ -881,7 +893,7 @@ runlevel.
 .RB [\| unionfs \|]\ \c
 .RB [\| zramfs \|])
 .TP
-.B SUPERVISION SERVICES (included service)
+.B "SUPERVISION SERVICES"
 .RB [\| apache2 \|]\ \c
 .RB [\| atd \|]\ \c
 .RB [\| cron \|]\ \c
