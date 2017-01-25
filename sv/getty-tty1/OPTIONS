@@ -9,8 +9,9 @@ TTY="${SVC_NAME#*-}"
 #      or else, make symbolic links with command name prefix
 #      instead of the generic `getty' name.
 #
-SVC_CMD=
+#SVC_CMD=/sbin/agetty
 SVC_TRY=16
+SVC_AFTER="*"
 
 #
 # XXX: Safety net
