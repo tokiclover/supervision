@@ -537,6 +537,13 @@ T}
 Standard
 .I {after,before,need,use}
 service dependencies is supported.
+.I {after,before}
+support a shell still regular expression to specify a broad range of service;
+e.g.
+.I SVC_AFTER="*"
+or
+.I SVC_BEFORE="*"
+(for \fBgetty\fR or \fIrdonlyfs\fR services.)
 Still, supervision scan model has the major advantage of parallel
 service management making it simple and cheap to implement but
 .I before
