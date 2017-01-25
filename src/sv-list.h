@@ -30,6 +30,7 @@ typedef TAILQ_HEAD(SV_StringList, SV_String) SV_StringList_T;
 /* string list helpers to manage string list using queue(3) */
 extern SV_StringList_T *sv_stringlist_new(void);
 extern SV_StringList_T *sv_stringlist_sort(SV_StringList_T **list);
+extern SV_StringList_T *sv_stringlist_cat(SV_StringList_T **dst, SV_StringList_T **src);
 extern SV_String_T *sv_stringlist_add (SV_StringList_T *list, const char *str);
 extern SV_String_T *sv_stringlist_adu (SV_StringList_T *list, const char *str);
 extern SV_String_T *sv_stringlist_find(SV_StringList_T *list, const char *str);

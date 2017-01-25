@@ -36,6 +36,16 @@ SV_String_T *sv_stringlist_adu(SV_StringList_T *list, const char *str)
 	return sv_stringlist_add(list, str);
 }
 
+SV_StringList_T *sv_stringlist_cat(SV_StringList_T **dst, SV_StringList_T **src)
+{
+	SV_String_T *elm, *ent;
+	TAILQ_FOREACH_SAFE(elm, *src, entries, ent)
+		if (!sv_stringlist_find(*dst, elm->str))
+			sv_stringlist_mov(*src, *dst, elm);
+	sv_stringlist_free(src);
+	return *dst;
+}
+
 int sv_stringlist_del(SV_StringList_T *list, const char *str)
 {
 	SV_String_T *elm = sv_stringlist_find(list, str);
