@@ -126,7 +126,8 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 					if (r < 0)
 						continue;
 					r = sv_deptree_add(SV_SVCDEPS_AFTER, r, ent, deptree);
-					prio = ++r > prio ? r : prio;
+					if (r < SV_DEPTREE_MAX && r > 0)
+						prio = ++r > prio ? r : prio;
 				}
 			}
 		}
