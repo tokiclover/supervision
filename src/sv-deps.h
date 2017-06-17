@@ -63,8 +63,8 @@ typedef struct SV_SvcDeps {
 	unsigned int did;
 	char *svc;
 	char *virt;
-	int timeout;
-	int options;
+	unsigned int timeout;
+	unsigned long int options;
 	unsigned long int keyword;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
