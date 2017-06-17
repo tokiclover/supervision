@@ -570,7 +570,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 {
 	static unsigned int id;
 	SV_SvcDeps_T *elm = err_malloc(sizeof(SV_SvcDeps_T));
-	elm->did = id++;
+	elm->did = ++id;
 	elm->svc = err_strdup(svc);
 	elm->virt = NULL;
 	elm->keyword = 0;
