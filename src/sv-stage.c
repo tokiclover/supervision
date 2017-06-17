@@ -146,7 +146,7 @@ static char *get_cmdline_option(const char *ent)
 {
 #ifdef __linux__
 	FILE *fp;
-	char *line = NULL, *ptr, path[] = "/proc/cmdline", *val;
+	char *line = NULL, *ptr, path[] = "/proc/cmdline", *val = NULL;
 	size_t len = 0;
 
 	if (access(path, F_OK))
