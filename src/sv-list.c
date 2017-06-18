@@ -93,7 +93,7 @@ size_t sv_stringlist_len(SV_StringList_T *list)
 
 int sv_stringlist_mov(SV_StringList_T *src, SV_StringList_T *dst, SV_String_T *ent)
 {
-	if (src == NULL || dst == NULL)
+	if (src == NULL || dst == NULL || ent == NULL)
 		return -EINVAL;
 	TAILQ_REMOVE(src, ent, entries);
 	TAILQ_INSERT_TAIL(dst, ent, entries);
