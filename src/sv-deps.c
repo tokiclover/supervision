@@ -631,15 +631,13 @@ SV_SvcDeps_T *sv_virtsvc_find(SV_StringList_T *svclist, const char *svc)
 			continue;
 		d = SERVICES.virt_svcdeps[i];
 		if (!svclist)
-			return d;
+			break;
 		/* insert any provider included in the init-stage */
 		if (sv_stringlist_find(svclist, d->svc))
-			return d;
+			break;
 	}
 
-	if (d)
-		return d;
-	return NULL;
+	return d;
 }
 
 static void sv_virtsvc_insert(SV_SvcDeps_T *elm)
