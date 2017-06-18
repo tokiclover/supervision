@@ -1219,8 +1219,6 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	memset(p, 0, sizeof(struct runlist));
 	if (sv_parallel) {
 		p->siz = sv_stringlist_len(list);
-		r = p->siz % 8U;
-		p->siz += r ? 8U-r : 0;
 		p->run = err_calloc(sizeof(void*), p->siz);
 		memset(p->run, 0, p->siz);
 	}
