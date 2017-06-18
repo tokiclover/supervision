@@ -869,7 +869,7 @@ int svc_exec(int argc, const char *argv[]) {
 	SV_String_T svc;
 	memset(&svc, 0, sizeof(svc));
 
-	run.argc = 8*(argc/8)+8+ (argc%8) > 4 ? 8 : 0;
+	run.argc = argc+8+8-(argc % 8);
 	run.argv = err_malloc(run.argc*sizeof(void*));
 	run.svc = &svc;
 
@@ -893,9 +893,9 @@ int svc_exec(int argc, const char *argv[]) {
 	run.argv[i] = (char *)0;
 	sv_svcdeps_load(NULL);
 
-	i = access(SV_PIDFILE, F_OK);
 	retval = svc_cmd(&run);
-	if (i) atexit(sv_cleanup);
+	if (access(SV_PIDFILE, F_OK))
+		atexit(sv_cleanup);
 	switch(retval) {
 	case -EBUSY:
 	case -EINVAL:
