@@ -356,7 +356,7 @@ static int sv_wall(void)
 			if (i == siz) {
 				siz += 8;
 				aiocb_array = err_realloc(aiocb_array, siz*sizeof(void*));
-				memset(*aiocb_array+i, 0, siz-i);
+				memset(*aiocb_array+i, 0, (siz-i)*sizeof(void*));
 			}
 			aiocb_array[i] = err_malloc(sizeof(struct aiocb));
 			aiocb_array[i]->aio_offset = 0;
