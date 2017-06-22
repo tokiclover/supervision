@@ -453,6 +453,7 @@ runsvc:
 			/* restore signal mask */
 			sigprocmask(SIG_SETMASK, &ss_old, NULL);
 	}
+	else run->cld = run->pid;
 
 	/* restore previous default signal handling */
 	svc_sigsetup();
@@ -510,6 +511,11 @@ static int svc_waitpid(struct svcrun *run, int flags)
 		svc_mark(run->name, SV_SVC_STAT_FAIL, run->argv[4]);
 	else if (run->mark) {
 		svc_mark(run->name, run->mark, NULL);
+
+		if (strcmp(run->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
+			if (!sv_stringlist_find(DEPTREE.started, run->name))
+				sv_stringlist_cpy(DEPTREE.started, run->svc);
+
 		if (run->dep && run->dep->virt)
 			svc_mark(run->dep->virt, run->mark, NULL);
 	}
@@ -521,7 +527,7 @@ static int svc_depend(struct svcrun *run)
 {
 	int type, val = 0, retval = 0;
 	int p = 0;
-	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
+	SV_DepTree_T deptree = { NULL, NULL, NULL, 0, 0, 0, 1 };
 
 	/* skip before deps type */
 	for (type = SV_SVCDEPS_USE; type <= SV_SVCDEPS_NEED; type++) {
@@ -929,6 +935,10 @@ static void *thread_worker_handler(void *arg)
 		*p->run = tmp, p->len = 1;
 
 	TAILQ_FOREACH(svc, p->list, entries) {
+		if (strcmp(p->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
+			if (sv_stringlist_find(DEPTREE.started, svc->str))
+				continue;
+
 		tmp->name = svc->str;
 		tmp->argc = p->argc;
 		tmp->argv = p->argv;
@@ -1107,16 +1117,10 @@ static void thread_signal_handler(siginfo_t *si)
 			for (i = 0; i < len && p->run[i]; i++) {
 				if (p->run[i]->pid != si->si_pid) continue;
 
-				if (sv_nohang) {
-					if (WIFEXITED(s) && !WEXITSTATUS(s)) r = 0;
-					else r = 1;
-				}
-				else {
-					p->run[i]->status = s;
-					r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
-					if (r == SVC_WAITPID)
-						return;
-				}
+				p->run[i]->status = s;
+				r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
+				if (!sv_nohang && (r == SVC_WAITPID))
+					return;
 
 				pthread_mutex_lock(&p->mutex);
 				p->count++;

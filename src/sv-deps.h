@@ -77,9 +77,14 @@ typedef TAILQ_HEAD(SV_SvcDepsList, SV_SvcDeps) SV_SvcDepsList_T;
 typedef struct SV_DepTree {
 	SV_StringList_T **tree;
 	SV_StringList_T  *list;
+	SV_StringList_T  *started;
 	size_t prio;
 	size_t size;
+	size_t len;
+	int vol;
+	int __pad;
 } SV_DepTree_T;
+extern SV_DepTree_T DEPTREE;
 
 struct SV_Services {
 	SV_StringList_T  *svclist;

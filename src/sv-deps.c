@@ -54,6 +54,8 @@ static void sv_deptree_alloc(SV_DepTree_T *deptree)
 	deptree->tree = err_realloc(deptree->tree, deptree->size*sizeof(void*));
 	for (p = deptree->size-SV_DEPTREE_INC; p < deptree->size; p++)
 		deptree->tree[p] = sv_stringlist_new();
+	if (!deptree->started)
+		deptree->started = sv_stringlist_new();
 }
 
 void sv_deptree_free(SV_DepTree_T *deptree)
@@ -61,6 +63,8 @@ void sv_deptree_free(SV_DepTree_T *deptree)
 	int i;
 	for (i = 0; i < deptree->size; i++)
 		sv_stringlist_free(&deptree->tree[i]);
+	if (deptree->vol)
+		sv_stringlist_free(&deptree->started);
 	deptree->size = 0;
 	deptree->tree = 0;
 	deptree->prio = 0;
@@ -241,6 +245,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 		sv_deptree_alloc(deptree);
 	if (!deptree->list)
 		deptree->list = sv_svclist_load(NULL);
+	deptree->len = sv_stringlist_len(deptree->list);
 	sv_svcdeps_load(NULL);
 
 	/* XXX: handle {after,use,need} first */
