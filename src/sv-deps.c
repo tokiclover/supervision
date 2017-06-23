@@ -139,7 +139,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 
 	/* move up anything found before anything else */
 	for (p = 0; p < prio; p++)
-		if ((ent = sv_stringlist_fid(deptree->tree[p], svc))) {
+		if ((ent = sv_stringlist_find(deptree->tree[p], s))) {
 			if (prio < SV_DEPTREE_MAX) {
 				sv_stringlist_mov(deptree->tree[p], deptree->tree[prio], ent);
 				sv_deptree_add(SV_SVCDEPS_AFTER, prio, svc, deptree);
@@ -148,7 +148,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		}
 	/* add only if necessary */
 	for (p = prio; p < deptree->size; p++)
-		if (sv_stringlist_fid(deptree->tree[p], svc))
+		if (sv_stringlist_find(deptree->tree[p], s))
 			return p;
 	prio = prio > SV_DEPTREE_MAX ? SV_DEPTREE_MAX-1 : prio;
 	ent = sv_stringlist_add(deptree->tree[prio], s);
