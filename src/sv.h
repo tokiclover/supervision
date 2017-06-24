@@ -121,7 +121,6 @@ extern int svc_log(const char *fmt, ...);
 #define LOG_INFO(fmt, ...) svc_log(       "%s: " fmt, applet, __VA_ARGS__)
 
 extern void svc_sigsetup(void);
-extern int svc_mark(const char *svc, int status, const char *what);
 
 enum {
 	SV_SVC_CMD_STOP,

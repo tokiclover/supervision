@@ -112,7 +112,7 @@ static int svc_state(const char *svc, int status);
  * @status: int value [dfrs], see the SV_SVC_(STATE|MARK)_* macros;
  * @return: 0 on success;
  */
-int svc_mark(const char *svc, int status, const char *what);
+int svc_mark(struct svcrun *run, int status, const char *what);
 
 /*
  * lock file for service to start/stop
@@ -370,7 +370,7 @@ int svc_cmd(struct svcrun *run)
 		retval = svc_depend(run);
 		if (retval) {
 			LOG_ERR("%s: Failed to set up service dependencies\n", run->name);
-			svc_mark(run->name, SV_SVC_STAT_FAIL, cmd);
+			svc_mark(run, SV_SVC_STAT_FAIL, cmd);
 			retval = -ECANCELED;
 			goto reterr;
 		}
@@ -504,21 +504,13 @@ static int svc_waitpid(struct svcrun *run, int flags)
 		close(run->lock);
 	run->cld = 0;
 
-	svc_mark(run->name, SV_SVC_MARK_WAIT, NULL);
+	svc_mark(run, SV_SVC_MARK_WAIT, NULL);
 	if (!svc_quiet)
 		svc_end(run->name, run->status);
 	if (run->status)
-		svc_mark(run->name, SV_SVC_STAT_FAIL, run->argv[4]);
-	else if (run->mark) {
-		svc_mark(run->name, run->mark, NULL);
-
-		if (strcmp(run->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
-			if (!sv_stringlist_find(DEPTREE.started, run->name))
-				sv_stringlist_cpy(DEPTREE.started, run->svc);
-
-		if (run->dep && run->dep->virt)
-			svc_mark(run->dep->virt, run->mark, NULL);
-	}
+		svc_mark(run, SV_SVC_STAT_FAIL, run->argv[4]);
+	else if (run->mark)
+		svc_mark(run, run->mark, NULL);
 
 	return run->status;
 }
@@ -527,7 +519,7 @@ static int svc_depend(struct svcrun *run)
 {
 	int type, val = 0, retval = 0;
 	int p = 0;
-	SV_DepTree_T deptree = { NULL, NULL, NULL, 0, 0, 0, 1 };
+	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
 
 	/* skip before deps type */
 	for (type = SV_SVCDEPS_USE; type <= SV_SVCDEPS_NEED; type++) {
@@ -715,14 +707,15 @@ static void svc_zap(const char *svc)
 	}
 }
 
-int svc_mark(const char *svc, int status, const char *what)
+int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
 	int fd;
 	mode_t m;
 
-	if (!svc)
+	if (!run)
 		return -ENOENT;
+	run->dep->status = status;
 
 	switch(status) {
 		case SV_SVC_STAT_FAIL:
@@ -745,12 +738,19 @@ int svc_mark(const char *svc, int status, const char *what)
 			return -EINVAL;
 	}
 
-	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
 	switch (status) {
+		case SV_SVC_STAT_STAR:
+			if (run->dep->virt) {
+				snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
+				m = umask(0);
+				fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
+				umask(m);
+				if (fd > 0) close(fd);
+			}
 		case SV_SVC_STAT_DOWN:
 		case SV_SVC_STAT_FAIL:
-		case SV_SVC_STAT_STAR:
 		case SV_SVC_STAT_WAIT:
+			snprintf(path, sizeof(path), "%s/%s", ptr, run->name);
 			m = umask(0);
 			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 			umask(m);
@@ -761,7 +761,14 @@ int svc_mark(const char *svc, int status, const char *what)
 				return 0;
 			}
 			return -1;
+		case SV_SVC_MARK_STAR:
+			if (run->dep->virt) {
+				snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
+				if (!access(path, F_OK))
+					unlink(path);
+			}
 		default:
+			snprintf(path, sizeof(path), "%s/%s", ptr, run->name);
 			if (!access(path, F_OK))
 				return unlink(path);
 			else
@@ -935,15 +942,18 @@ static void *thread_worker_handler(void *arg)
 		*p->run = tmp, p->len = 1;
 
 	TAILQ_FOREACH(svc, p->list, entries) {
-		if (strcmp(p->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
-			if (sv_stringlist_find(DEPTREE.started, svc->str))
-				continue;
-
 		tmp->name = svc->str;
 		tmp->argc = p->argc;
 		tmp->argv = p->argv;
 		tmp->svc  = svc;
 		tmp->path = NULL;
+		tmp->dep = svc->data;
+
+		if (!tmp->dep)
+			tmp->dep = tmp->svc->data = sv_svcdeps_load(tmp->name);
+		if (strcmp(p->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
+			if (tmp->dep->status == SV_SVC_STAT_STAR)
+				continue;
 
 		r = svc_cmd(tmp);
 		reterr:

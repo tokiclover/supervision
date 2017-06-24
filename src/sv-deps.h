@@ -66,23 +66,20 @@ typedef struct SV_SvcDeps {
 	unsigned int timeout;
 	unsigned long int options;
 	unsigned long int keyword;
+	int status;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;
 	/* align on 16 words */
-	int __pad[4];
+	int __pad[3];
 } SV_SvcDeps_T;
 typedef TAILQ_HEAD(SV_SvcDepsList, SV_SvcDeps) SV_SvcDepsList_T;
 
 typedef struct SV_DepTree {
 	SV_StringList_T **tree;
 	SV_StringList_T  *list;
-	SV_StringList_T  *started;
 	size_t prio;
 	size_t size;
-	size_t len;
-	int vol;
-	int __pad;
 } SV_DepTree_T;
 extern SV_DepTree_T DEPTREE;
 

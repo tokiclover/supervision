@@ -45,7 +45,7 @@ int sv_system = 0;
 pid_t sv_pid  = 0;
 int svc_deps  = 1;
 int svc_quiet = 1;
-SV_DepTree_T DEPTREE = { NULL, NULL, NULL, 0, 0, 0, 0 };
+SV_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
 
 static FILE *logfp;
 static int logfd, sv_debug;
