@@ -127,8 +127,8 @@ Distributed under the 2-clause/new/simplifed BSD License
 
 ---
 
-[1]:https://github.com/apayne/supervision-scripts
-[2]:https://github.com/tokiclover/bar-overlay
+[1]:https://gitlab.com/apayne/supervision-scripts
+[2]:https://gitlab.com/tokiclover/bar-overlay
 [3]:http://cr.yp.to/daemontools.html
 [4]:http://untroubled.org/daemontools-encore/
 [5]:http://smarden.org/runit/
