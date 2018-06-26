@@ -21,6 +21,12 @@
 #include "sv.h"
 #include "sv-deps.h"
 
+#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+\
+			sizeof(pthread_rwlock_t))
+#define OFFSET_T_SIZE(x) \
+	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int)) > 4U*sizeof(int) ? \
+		(x+4U)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) : \
+		4U*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int))
 struct runlist {
 	unsigned int rid;
 	int argc;
@@ -34,9 +40,10 @@ struct runlist {
 	pthread_mutex_t mutex;
 	pthread_rwlock_t lock;
 	pthread_t tid;
-	char __pad[4U*sizeof(int)-((sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+
-				sizeof(pthread_rwlock_t)+12U*sizeof(int)) % sizeof(int))];
+	char __pad[OFFSET_T_SIZE(8U)];
 };
+#undef THREAD8T_SIZE
+#undef OFSET_T_SIZE
 
 extern pid_t sv_pid;
 
