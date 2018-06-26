@@ -42,7 +42,7 @@ struct runlist {
 	pthread_t tid;
 	char __pad[OFFSET_T_SIZE(8U)];
 };
-#undef THREAD8T_SIZE
+#undef THREAD_T_SIZE
 #undef OFSET_T_SIZE
 
 extern pid_t sv_pid;
@@ -718,6 +718,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
 	int fd;
+	int i;
 	mode_t m;
 
 	if (!run)
@@ -770,9 +771,20 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 			return -1;
 		case SV_SVC_MARK_STAR:
 			if (run->dep->virt) {
-				snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
-				if (!access(path, F_OK))
-					unlink(path);
+				/* do not remove virtual service if there is another provider */
+				fd = i = 0;
+				do {
+					if (strcmp(run->dep->virt, SERVICES.virt_svcdeps[i]->virt) == 0 &&
+						svc_state(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR))
+						fd++;
+					i++;
+				} while (i < SERVICES.virt_count);
+
+				if (fd == 1) {
+					snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
+					if (!access(path, F_OK))
+						unlink(path);
+				}
 			}
 		default:
 			snprintf(path, sizeof(path), "%s/%s", ptr, run->name);
