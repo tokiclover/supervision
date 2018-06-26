@@ -394,7 +394,7 @@ static void sv_sigsetup(void)
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 	int i;
-	int sig[] = { SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGUSR1, 0 };
+	int sig[] = { SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGUSR1, SIGUSR2, 0 };
 
 	sigfillset(&ss_full);
 	sigemptyset(&ss_null);
