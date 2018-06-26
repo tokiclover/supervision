@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/file.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -29,6 +30,8 @@ extern int svc_cmd(struct svcrun *run);
 extern int svc_exec (int argc, const char *argv[]);
 /* the same for a list of service */
 extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
+/* mark service status */
+static int svc_mark_simple(char *svc, int status, const char *what);
 
 /* signal handleer/setup */
 sigset_t ss_child, ss_full, ss_null, ss_old;
@@ -121,6 +124,55 @@ static int svc_stage_command(int stage, int argc, const char *argv[]);
 static void svc_level(void);
 static char *get_cmdline_option(const char *entry);
 
+static int svc_mark_simple(char *svc, int status, const char *what)
+{
+	char path[PATH_MAX], *ptr;
+	int fd;
+	mode_t m;
+
+	if (!svc)
+		return -ENOENT;
+
+	switch(status) {
+		case SV_SVC_STAT_FAIL:
+		case SV_SVC_MARK_FAIL:
+			ptr = SV_TMPDIR_FAIL;
+			break;
+		case SV_SVC_STAT_DOWN:
+		case SV_SVC_MARK_DOWN:
+			ptr = SV_TMPDIR_DOWN;
+			break;
+		case SV_SVC_STAT_STAR:
+		case SV_SVC_MARK_STAR:
+			ptr = SV_TMPDIR_STAR;
+			break;
+		case SV_SVC_STAT_WAIT:
+		case SV_SVC_MARK_WAIT:
+			ptr = SV_TMPDIR_WAIT;
+			break;
+		default:
+			return -EINVAL;
+	}
+
+	switch (status) {
+		case SV_SVC_STAT_STAR:
+		case SV_SVC_STAT_DOWN:
+		case SV_SVC_STAT_FAIL:
+		case SV_SVC_STAT_WAIT:
+			snprintf(path, sizeof(path), "%s/%s", ptr, svc);
+			m = umask(0);
+			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
+			umask(m);
+			if (fd > 0) {
+				if (what)
+					write(fd, what, strlen(what)+1);
+				close(fd);
+				return 0;
+			}
+		default:
+			return -1;
+	}
+}
 /* simple helper to set/get runlevel
  * @level: runlevel to set, or NULL to get the current runlevel;
  * @return: current runlevel;
@@ -234,8 +286,8 @@ static void svc_level(void)
 		sv_level = SV_NOWNETWORK_LEVEL;
 		for (i = 0; i < SERVICES.virt_count; i++)
 			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
-				svc_mark(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR, NULL);
-		svc_mark("net", SV_SVC_STAT_STAR, NULL);
+				svc_mark_simple(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR, NULL);
+		svc_mark_simple("net", SV_SVC_STAT_STAR, NULL);
 	}
 	else if ((entry && strcmp(entry, sv_runlevel[SV_SINGLE_LEVEL]) == 0)) {
 		sv_level = SV_SINGLE_LEVEL;
@@ -246,7 +298,7 @@ static void svc_level(void)
 	/* mark no started services as stopped */
 	if (entry) {
 		while ((ptr = strsep(&ent, ",")))
-			svc_mark(ptr, SV_SVC_STAT_STAR, NULL);
+			svc_mark_simple(ptr, SV_SVC_STAT_STAR, NULL);
 		free(entry);
 	}
 }
@@ -464,9 +516,10 @@ static void svc_stage(const char *cmd)
 	const char *runlevel;
 	time_t t;
 
+	runlevel  = svc_runlevel(NULL);
 	switch(sv_level) {
 	case SV_SHUTDOWN_LEVEL:
-		if (!svc_runlevel(NULL)) {
+		if (!runlevel) {
 			ERR("There's nothing to shut down!!!\n", NULL);
 			exit(EXIT_FAILURE);
 		}
@@ -482,7 +535,6 @@ static void svc_stage(const char *cmd)
 
 	/* set a few sane environment variables */
 	sv_svcdeps_load(NULL);
-	runlevel  = svc_runlevel(NULL);
 	svc_deps  = 0;
 	svc_quiet = 0;
 	sv_pid    = getpid();

@@ -112,7 +112,7 @@ static int svc_state(const char *svc, int status);
  * @status: int value [dfrs], see the SV_SVC_(STATE|MARK)_* macros;
  * @return: 0 on success;
  */
-int svc_mark(struct svcrun *run, int status, const char *what);
+static int svc_mark(struct svcrun *run, int status, const char *what);
 
 /*
  * lock file for service to start/stop
@@ -531,7 +531,7 @@ static int svc_depend(struct svcrun *run)
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(deptree.tree[p]))
 				val += svc_execl(deptree.tree[p], run->argc, run->argv);
-				--p;
+			--p;
 		} /* PRIORITY_LEVEL_LOOP */
 		sv_deptree_free(&deptree);
 		if (val > 0 && type == SV_SVCDEPS_NEED)
@@ -707,7 +707,7 @@ static void svc_zap(const char *svc)
 	}
 }
 
-int svc_mark(struct svcrun *run, int status, const char *what)
+static int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
 	int fd;
