@@ -318,6 +318,7 @@ static void sv_sighandler(int sig, siginfo_t *si _unused_, void *ctx _unused_)
 		kill(0, sig);
 		exit(EXIT_FAILURE);
 	case SIGUSR1:
+	case SIGUSR2:
 		fprintf(stderr, "%s: Aborting!\n", progname);
 		/* block child signals */
 		sigprocmask(SIG_SETMASK, &ss_child, NULL);
@@ -325,6 +326,8 @@ static void sv_sighandler(int sig, siginfo_t *si _unused_, void *ctx _unused_)
 		/* kill any worker process we have started */
 		kill(0, SIGTERM);
 
+		if (sig == SIGUSR2)
+			exit(EXIT_SUCCESS);
 		exit(EXIT_FAILURE);
 	default:
 		ERR("caught unknown signal %d\n", sig);
