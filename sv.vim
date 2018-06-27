@@ -1,5 +1,5 @@
 "
-" Language:	Supervision Scripts Framework
+" Language:	Supervision
 " Licence:	Distributed under the same terms as Vim itself and/or 2-clause BSD
 "
 " Syntax highlighting for Supervision Scripts Framework by inheriting sh.vim.

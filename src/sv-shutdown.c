@@ -2,10 +2,10 @@
  * Utility providing an interface {halt,reboot,shutdown,poweroff}
  * per supervision backend.
  *
- * Copyright (c) 2016-2017 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016-2018 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
- * The supervision framework is free software; you can redistribute
+ * Supervision is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *

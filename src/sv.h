@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2016 tokiclover <tokiclover@gmail.com>
+ * Copyright (c) 2016-2018 tokiclover <tokiclover@gmail.com>
  * This file is part of Supervision
  *
- * The supervision framework is free software; you can redistribute
+ * Supervision is free software; you can redistribute
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
@@ -12,7 +12,7 @@
 #ifndef SV_H
 #define SV_H
 
-#define SV_COPYRIGHT "@(#) Copyright (c) 2015, 2016 tokiclover <tokiclover@gmail.com>\n" \
+#define SV_COPYRIGHT "@(#) Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>\n" \
 	"License 2-clause, new, simplified BSD or MIT (at your name choice)\n" \
 	"This is free software: you are free to change and distribute it.\n" \
 	"There is NO WARANTY, to the extend permitted by law.\n"
