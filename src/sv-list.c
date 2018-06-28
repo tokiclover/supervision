@@ -46,7 +46,7 @@ SV_StringList_T *sv_stringlist_cat(SV_StringList_T **dst, SV_StringList_T **src)
 	return *dst;
 }
 
-SV_String_T *sv_stringlist_cpy(SV_StringList_T *list, SV_String_T *svc)
+SV_String_T *sv_stringlist_append(SV_StringList_T *list, SV_String_T *svc)
 {
 	SV_String_T *elm;
 	elm = sv_stringlist_add(list, svc->str);
