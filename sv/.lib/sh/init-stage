@@ -150,12 +150,8 @@ svc_tmpdir()
 	# Set up CGroup
 	#
 	if yesno ${SV_CGROUP:-YES} && [ -z "${SV_SYSTEM}" ]; then
-		if /sbin/rs devfs start && /sbin/rs sysfs start; then
-		cgroup_start_sys
-		case ${?} in
-			(0) SV_CGROUP=Yes;;
-			(*) SV_CGROUP=No ;;
-		esac
+		if rs devfs start && rs sysfs start; then
+		cgroup_start_sys && SV_CGROUP=Yes || SV_CGROUP=No
 		else
 		SV_CGROUP=FALSE
 		fi
@@ -192,7 +188,7 @@ kill_svscan()
 start_stage_2()
 {
 	local args cmd dir pid count
-	svc_wait 10 ${pidfile}
+	svc_wait 30 ${pidfile}
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
 		if [ "${OS_NAME}" = "FreeBSD" ]; then
@@ -201,7 +197,8 @@ start_stage_2()
 			args=-ax
 		fi
 		if [ -e ${pidfile} ]; then
-			pgrep ${args} ${SV_CMD} | while read pid cmd dir args; do
+			pgrep ${args} ${SV_CMD} | \
+			while read pid cmd dir args; do
 				if [ x${dir} = x${SV_RUNDIR} ]; then
 					echo "${pid}" >${pidfile}
 					break
