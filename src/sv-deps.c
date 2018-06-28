@@ -365,7 +365,6 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 			break;
 		default:
 			continue;
-			break;
 		}
 #endif
 		if (ent->d_name[0] != '.')
@@ -512,6 +511,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 			deps->virt = err_strdup(ptr);
 			sv_virtsvc_insert(deps);
 			continue;
+			break;
 		}
 		else if (strcmp(type, "nohang") == 0) {
 			if (sv_yesno(ptr))
@@ -525,7 +525,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 			continue;
 		}
 		else if (strcmp(type, "keyword") == 0) {
-			if (!(ptr = strtok_r(ptr, " \t", &type)))
+			if (!(ptr = strtok_r(ptr, " \t\n", &type)))
 				continue;
 			do {
 				for (t = 1; sv_keywords[t]; t++)
@@ -533,7 +533,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 						SV_KEYWORD_SET(deps, t);
 						break;
 					}
-			} while ((ptr = strtok_r(NULL, " \t", &type)));
+			} while ((ptr = strtok_r(NULL, " \t\n", &type)));
 			continue;
 		}
 
@@ -542,11 +542,11 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		if (t >= SV_SVCDEPS_TYPE)
 			continue;
 		/* append service list */
-		if (!(svc = strtok_r(ptr, " \t", &type)))
+		if (!(svc = strtok_r(ptr, " \t\n", &type)))
 			continue;
 		do {
 			sv_stringlist_add(deps->deps[t], svc);
-		} while ((svc = strtok_r(NULL, " \t", &type)));
+		} while ((svc = strtok_r(NULL, " \t\n", &type)));
 	}
 	fclose(fp);
 	if (len) free(line);
