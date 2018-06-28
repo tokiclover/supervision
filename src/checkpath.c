@@ -219,7 +219,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		}
 	}
 
-	if (uid && gid && (stb.st_uid != uid) || (stb.st_gid != gid)) {
+	if (uid && gid && ((stb.st_uid != uid) || (stb.st_gid != gid))) {
 		if (S_ISLNK(stb.st_mode)) {
 			ERR("Not changing owner for `%s' (symlink)\n", tmp);
 			return -1;
