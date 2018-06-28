@@ -54,17 +54,9 @@ SV_String_T *sv_stringlist_append(SV_StringList_T *list, SV_String_T *svc)
 	return elm;
 }
 
-int sv_stringlist_del(SV_StringList_T *list, const char *str)
+inline int sv_stringlist_del(SV_StringList_T *list, const char *str)
 {
-	SV_String_T *elm = sv_stringlist_find(list, str);
-
-	if (elm) {
-		TAILQ_REMOVE(list, elm, entries);
-		free(elm->str);
-		free(elm);
-		return 0;
-	}
-	return -ENOENT;
+	return sv_stringlist_rem(list, sv_stringlist_find(list, str));
 }
 
 int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
