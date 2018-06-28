@@ -81,10 +81,13 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 
 	if (!d) svc->data = d = sv_svcdeps_find(s);
 	/* insert the real service instead of a virtual one */
-	if (!d && (d = sv_virtsvc_find(deptree->list, s)))
-		svc->data = d;
-	if (!d) return -1;
-	if (d->virt) s = d->svc;
+	if (!d) {
+		if ((d = sv_virtsvc_find(deptree->list, s))) {
+			svc->data = d;
+			s = d->svc;
+		}
+		else return -1;
+	}
 	if (prio < 0) {
 		if (d->deps[SV_SVCDEPS_BEFORE]) prio = 1;
 		else prio = 0;
