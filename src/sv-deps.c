@@ -421,7 +421,7 @@ static int sv_svcdeps_gen(const char *svc)
 #define EXEC_SVSCAN                                            \
 	if (sv_level != SV_SYSINIT_LEVEL)                          \
 		setsid();                                              \
-	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/'), cmd, arg, NULL); \
+	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/')+1, cmd, arg, NULL); \
 	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
 
 SV_SvcDeps_T *sv_svcdeps_load(const char *service)
