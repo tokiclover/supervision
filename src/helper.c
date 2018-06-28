@@ -12,7 +12,7 @@
 #include "error.h"
 #include "helper.h"
 
-_unused_ char *shell_string_value(char *str)
+__attribute__((__unused__)) char *shell_string_value(char *str)
 {
 	char *ptr = str, *end;
 	if (!str)
@@ -49,7 +49,7 @@ _unused_ char *shell_string_value(char *str)
 }
 
 #ifdef __linux__
-_unused_ int file_regex(const char *file, const char *regex)
+__attribute__((__unused__)) int file_regex(const char *file, const char *regex)
 {
 	FILE *fp;
 	char *end, *line = NULL, *ptr;
@@ -90,7 +90,7 @@ found:
 }
 #endif /* __linux__ */
 
-_unused_ int file_test(const char *pathname, int mode)
+__attribute__((__unused__)) int file_test(const char *pathname, int mode)
 {
 	static struct stat st_buf;
 	static char *path;
@@ -142,7 +142,7 @@ _unused_ int file_test(const char *pathname, int mode)
 	}
 }
 
-_unused_ int get_term_cols(void)
+__attribute__((__unused__)) int get_term_cols(void)
 {
 	struct winsize winsz;
 	char *ptr = getenv("COLUMNS");
@@ -157,7 +157,7 @@ _unused_ int get_term_cols(void)
 }
 
 #ifndef HAVE_GETLINE
-_unused_ ssize_t getline(char **buf, size_t *len, FILE *stream)
+__attribute__((__unused__)) ssize_t getline(char **buf, size_t *len, FILE *stream)
 {
 	int c;
 	char *p;
@@ -190,7 +190,7 @@ _unused_ ssize_t getline(char **buf, size_t *len, FILE *stream)
 }
 #endif
 
-_unused_ int sv_yesno(const char *str)
+__attribute__((__unused__)) int sv_yesno(const char *str)
 {
 	if (!str)
 		return 0;

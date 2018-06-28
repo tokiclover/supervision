@@ -81,9 +81,9 @@ static const char *environ_list[] = {
 	NULL
 };
 
-static void thread_signal_action(int sig, siginfo_t *si, void *ctx _unused_);
+static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)));
 static void thread_signal_handler(siginfo_t *si);
-_noreturn_ static void *thread_signal_worker(void *arg _unused_);
+__attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)));
 static void *thread_worker_handler(void *arg);
 static void  thread_worker_cleanup(struct runlist *p);
 
@@ -159,7 +159,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 static void svc_zap(const char *svc);
 
 /* signal handler/setup */
-static void rs_sighandler(int sig, siginfo_t *si, void *ctx _unused_);
+static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)));
 static void rs_sigsetup(void);
 void svc_sigsetup(void);
 extern sigset_t ss_child, ss_null, ss_full, ss_old;
@@ -830,7 +830,7 @@ static int svc_state(const char *svc, int status)
 	return 1;
 }
 
-static void rs_sighandler(int sig, siginfo_t *si, void *ctx _unused_)
+static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 	int i = -1, serrno = errno;
 
@@ -1072,7 +1072,7 @@ retval:
 	pthread_exit((void*)&p->retval);
 }
 
-static void thread_signal_action(int sig, siginfo_t *si, void *ctx _unused_)
+static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 	int i = -1;
 	int serrno = errno;
@@ -1180,7 +1180,7 @@ static void thread_signal_handler(siginfo_t *si)
 		} while (r);
 	}
 }
-_noreturn_ static void *thread_signal_worker(void *arg _unused_)
+__attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)))
 {
 	int r;
 	int *sig = (int []){ SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };

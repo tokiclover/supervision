@@ -35,7 +35,7 @@ static int svc_mark_simple(char *svc, int status, const char *what);
 
 /* signal handleer/setup */
 sigset_t ss_child, ss_full, ss_null, ss_old;
-static void sv_sighandler(int sig, siginfo_t *si _unused_, void *ctx _unused_);
+static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), void *ctx __attribute__((__unused__)));
 static void sv_sigsetup(void);
 
 static int sv_system_detect(void);
@@ -105,7 +105,7 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-_noreturn_ static void help_message(int retval);
+__attribute__((__noreturn__)) static void help_message(int retval);
 
 /*
  * bring system to a named level or stage
@@ -179,7 +179,7 @@ static int svc_mark_simple(char *svc, int status, const char *what)
  */
 static const char *svc_runlevel(const char *level);
 
-_noreturn_ static void help_message(int retval)
+__attribute__((__noreturn__)) static void help_message(int retval)
 {
 	int i;
 
@@ -355,7 +355,7 @@ void sv_cleanup(void)
 		unlink(SV_PIDFILE);
 }
 
-static void sv_sighandler(int sig, siginfo_t *si _unused_, void *ctx _unused_)
+static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), void *ctx __attribute__((__unused__)))
 {
 	int i = -1, serrno = errno;
 
@@ -479,7 +479,7 @@ static int svc_stage_command(int stage, int argc, const char *argv[])
 	return retval;
 }
 
-_noreturn_ static void sv_stage_status(void)
+__attribute__((__noreturn__)) static void sv_stage_status(void)
 {
 	const char *argv[8] = { "runscript" };
 	struct svcrun run = { .argc = 8, .argv = argv };

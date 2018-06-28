@@ -117,8 +117,8 @@ static struct timeinterval {
 #undef H
 #undef M
 
-_noreturn_ static void help_message(int status);
-static void sighandler(int sig, siginfo_t *info, void *ctx _unused_);
+__attribute__((__noreturn__)) static void help_message(int status);
+static void sighandler(int sig, siginfo_t *info, void *ctx __attribute__((__unused__)));
 static int sigsetup(void);
 static int sv_nologin(void);
 static void sv_timewarn(unsigned long int timeleft);
@@ -182,13 +182,13 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-_noreturn_ static void usage_message(unsigned int index)
+__attribute__((__noreturn__)) static void usage_message(unsigned int index)
 {
 	ERR("invalid %s usage -- %s\n", action[SD_ACTION_SHUTDOWN], action[ai]);
 	printf("Usage: %s [-q] [-p] [-n] [time] [message]\n", action[index]);
 	exit(EXIT_FAILURE);
 }
-_noreturn_ static void help_message(int status)
+__attribute__((__noreturn__)) static void help_message(int status)
 {
 	int i = 0;
 
@@ -212,7 +212,7 @@ _noreturn_ static void help_message(int status)
 	exit(status);
 }
 
-static void sighandler(int sig, siginfo_t *si, void *ctx _unused_)
+static void sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 	int i = -1;
 	int serrno = errno;
@@ -400,7 +400,7 @@ wait_lio:
 #endif
 }
 
-_noreturn_ static void sv_shutdown(void)
+__attribute__((__noreturn__)) static void sv_shutdown(void)
 {
 	FILE *fp;
 	size_t len = 0;

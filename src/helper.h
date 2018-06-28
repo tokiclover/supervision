@@ -28,7 +28,7 @@ extern "C" {
 /* look for @regex regular exppression in @file
  * @return: 0 when found; 1 when not; <= -1/-errno on failure;
  */
-_unused_ int file_regex(const char *file, const char *regex);
+__attribute__((__unused__)) int file_regex(const char *file, const char *regex);
 #endif /* __linux__ */
 
 /*
@@ -36,10 +36,10 @@ _unused_ int file_regex(const char *file, const char *regex);
  * @mode char like test (whithout the dash) 'e', 'd', etc;
  * @return bool;
  */
-_unused_ int file_test(const char *pathname, int mode);
+__attribute__((__unused__)) int file_test(const char *pathname, int mode);
 
 #ifndef HAVE_GETLINE
-_unused_ ssize_t getline(char **buf, size_t *len, FILE *stream);
+__attribute__((__unused__)) ssize_t getline(char **buf, size_t *len, FILE *stream);
 #endif
 
 /*
@@ -47,20 +47,20 @@ _unused_ ssize_t getline(char **buf, size_t *len, FILE *stream);
  * simple yes/no helper
  * @return true/false;
  */
-_unused_ int sv_yesno(const char *str);
+__attribute__((__unused__)) int sv_yesno(const char *str);
 
 /*
  * tiny helper to get terminal cols
  * @retrun terminal cols
  */
-_unused_ int get_term_cols(void);
+__attribute__((__unused__)) int get_term_cols(void);
 
 /*
  * get shell string value, removing trailing white spaces and quote
  * @str string;
  * @return string value
  */
-_unused_ char *shell_string_value(char *str);
+__attribute__((__unused__)) char *shell_string_value(char *str);
 
 #ifdef __cplusplus
 }

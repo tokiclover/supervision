@@ -11,7 +11,7 @@
 
 #include "error.h"
 
-_noreturn_ void error(int err, const char *fmt, ...)
+__attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
 {
 	char buf[BUFSIZ];
 	va_list va;

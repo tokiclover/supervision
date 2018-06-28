@@ -12,13 +12,11 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#if __GNUC__ > 2 || defined(__INTEL_COMPILER)
-# define _noreturn_ __attribute__((__noreturn__))
-# define _unused_ __attribute__((__unused__))
-#else
-# define _noreturn_
-# define _unused_
+#if !defined(__GNUC__) || !defined(__INTEL_COMPILER) || !defined(__arm__) || \
+	(defined(__GNUC__) && !(__GNUC__ > 2))
+# define __attribute__(x)
 #endif
+
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -45,13 +43,13 @@ extern "C" {
 #  define DBG(fmt, ...)
 #endif
 
-_noreturn_ void error(int err, const char *fmt, ...);
+__attribute__((__noreturn__)) void error(int err, const char *fmt, ...);
 extern const char *progname;
 
-_unused_ void *err_malloc(size_t size);
-_unused_ void *err_calloc(size_t num, size_t size);
-_unused_ void *err_realloc(void *ptr, size_t size);
-_unused_ char *err_strdup(const char *str);
+__attribute__((__unused__)) void *err_malloc(size_t size);
+__attribute__((__unused__)) void *err_calloc(size_t num, size_t size);
+__attribute__((__unused__)) void *err_realloc(void *ptr, size_t size);
+__attribute__((__unused__)) char *err_strdup(const char *str);
 
 #ifdef __cplusplus
 }
