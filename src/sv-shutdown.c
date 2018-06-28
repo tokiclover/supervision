@@ -421,7 +421,7 @@ _noreturn_ static void sv_shutdown(void)
 		goto shutdown;
 	}
 
-	if ((fp = fopen(SV_BACKEND, "r")))
+	if ((fp = fopen(SV_BACKEND, "r"))) {
 		while (getline(&line, &len, fp) > 0)
 			if (strncmp(line, ent, sizeof(ent)-1) == 0) {
 				ptr = shell_string_value(line+sizeof(ent));
@@ -430,6 +430,7 @@ _noreturn_ static void sv_shutdown(void)
 				fclose(fp);
 				break;
 			}
+	}
 	else {
 		ERR("Failed to open `%s': %s\n", SV_BACKEND, strerror(errno));
 		sighandler(SIGUSR1, NULL, NULL);
