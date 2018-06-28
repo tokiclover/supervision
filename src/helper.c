@@ -54,7 +54,7 @@ __attribute__((__unused__)) int file_regex(const char *file, const char *regex)
 	FILE *fp;
 	char *end, *line = NULL, *ptr;
 	size_t len = 0;
-	int retval;
+	int retval = 0;
 	regex_t re;
 
 	if (!(fp = fopen(file, "r")))
@@ -108,7 +108,7 @@ __attribute__((__unused__)) int file_test(const char *pathname, int mode)
 		memcpy(path, pathname, len+1);
 	}
 
-	if (setup || strcmp(path, pathname) != 0) {
+	if (setup || strcmp(path, pathname)) {
 		memset(&st_buf, 0, sizeof(st_buf));
 		len = strlen(pathname);
 		path = err_realloc(path, len+1);
