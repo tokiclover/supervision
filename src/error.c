@@ -12,6 +12,7 @@
 #include "error.h"
 
 __attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
+	__attribute__((format(printf(2,3))))
 {
 	char buf[BUFSIZ];
 	va_list va;

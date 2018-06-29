@@ -43,7 +43,8 @@ extern "C" {
 #  define DBG(fmt, ...)
 #endif
 
-__attribute__((__noreturn__)) void error(int err, const char *fmt, ...);
+__attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
+	__attribute__((format(printf(2,3))));
 extern const char *progname;
 
 __attribute__((__unused__)) void *err_malloc(size_t size);
