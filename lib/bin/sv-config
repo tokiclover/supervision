@@ -152,8 +152,8 @@ sv_backend()
 	local env
 	for env in __SV_NAM__ ${COMMANDS} ${SIGNALS}; do
 		eval printf \"${env}=\'%s\'\\\n\" \"\${${env}}\"
-	done > "${SV_SVCDIR}"/.opt/SVC_BACKEND
-	end "${?}" SVC_BACKEND
+	done > "${SV_LIBDIR}"/sh/SV_BACKEND
+	end "${?}" SV_BACKEND
 }
 
 if [ -n "${__SV_NAM__}" ]; then

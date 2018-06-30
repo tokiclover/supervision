@@ -41,7 +41,7 @@ softlimit()
 #
 svc_new()
 {
-	local cmd log svc dir
+	local cmd svc dir
 
 	while [ ${#} -ge 1 ]; do
 		case "${1}" in
@@ -58,11 +58,10 @@ svc_new()
 
 	for cmd in finish run ${log:+log/run log/finish}; do
 		[ -x "${dir}/${cmd}" ] && continue
-		[ "${cmd#log/}" != "${cmd}" ] && log=0 || log=
-		ln -s ${log:+../}../.opt/cmd "${dir}/${cmd}"
+		ln -s ${SV_LIBDIR}/sh/cmd "${dir}/${cmd}"
 	done
 	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${svc}|" \
-		${SV_SVCDIR}/.opt/OPTIONS.in >${dir}/OPTIONS
+		${SV_LIBDIR}/sh/SV_OPTIONS.in >${dir}/OPTIONS
 }
 
 svc_down()

@@ -50,7 +50,7 @@ dep_gen()
 	else
 		SVCLIST="${SVCLIST} ${SVC_NAME}"
 	fi
-	. ${SV_SVCDIR}/.opt/SVC_OPTIONS
+	. ${SV_LIBDIR}/sh/SVC_OPTIONS
 
 	[ -n "${SVC_KEYWORD}" ] && echo "${SVC_NAME}:keyword=\"${SVC_KEYWORD}\"" >&4
 	[ -n "${SVC_PROVIDE}" ] && echo "${SVC_NAME}:provide=\"${SVC_PROVIDE}\"" >&4

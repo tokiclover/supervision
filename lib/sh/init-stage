@@ -55,7 +55,7 @@ if ! . ${SV_LIBDIR}/sh/runscript-functions; then
 	[ -n "${SV_OPTS}" ] && svc_rsh || exit 1
 fi
 :	${SV_SVCDIR:=/etc/sv}
-. ${SV_LIBDIR}/opt/SVC_BACKEND
+. ${SV_LIBDIR}/sh/SV_BACKEND
 . ${SV_SVCDIR}.conf
 umask 022
 
@@ -135,7 +135,6 @@ svc_tmpdir()
 {
 	rm -fr "${SV_TMPDIR}"
 	mkdir -p "${SV_TMPDIR}"
-	ln -fs "${SV_LIBDIR}"/opt "${SV_RUNDIR}"/.opt
 	[ -d ${SV_SVCDIR}/.env ] && cp -a ${SV_SVCDIR}/.env ${SV_TMPDIR}
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/deps "${SV_TMPDIR}"/fail \
 		${SV_TMPDIR}/envs ${SV_TMPDIR}/opts \
