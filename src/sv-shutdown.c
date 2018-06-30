@@ -68,7 +68,7 @@ static int aiocb_count;
 #ifndef LIBDIR
 # define LIBDIR "/lib"
 #endif
-#define SV_BACKEND LIBDIR "/sv/opt/SVC_BACKEND"
+#define SV_BACKEND LIBDIR "/sv/sh/SV_BACKEND"
 #define SD_PIDFILE _PATH_VARRUN "sv-shutdown.pid"
 
 #define BOOTFILE "/fastboot"

@@ -77,7 +77,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	env_run
 
 	SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
-	SOURCE -d ${SV_SVCDIR}/.opt/SVC_BACKEND
+	SOURCE -d ${SV_LIBDIR}/sh/SV_BACKEND
 
 	if [ "${__cmd__}" = "run" ]; then
 	yesno "${__environ__}" || SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}

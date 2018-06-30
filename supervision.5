@@ -18,7 +18,7 @@ thus benefit the easy to use the service-management framework for supervision.
 Supervision aims to provide an easy and efficient way to supervision;
 deamontools[-encore], runit and s6 supervisor backends are actually supported.
 (Supervision-)services use, by default, a single \fISV_SVCDIR/sv/\fRSERVICE\fI/OPTIONS\fR
-file and \fI./{finish,run}\fR command files symlinked to \fISV_LIBDIR/opt/cmd\fR.
+file and \fI./{finish,run}\fR command files symlinked to \fISV_LIBDIR/sh/cmd\fR.
 The same goes for the log directory.
 .I Envdir
 variant with a global \fISV_SVCDIR/sv/.env/\fR and local
@@ -284,7 +284,7 @@ as \fIPID 1\fR and another process will handle service management to setup the c
 .SS ENVIRONMENT
 The following environment variables are supported.
 The default environment variables are defined in
-.I SV_LIBDIR/opt/SVC_OPTIONS
+.I SV_LIBDIR/sh/SVC_OPTIONS
 and can be defined in service \fIOPTIONS\fR file(s).
 .TP
 .B SUPERVISION
@@ -503,7 +503,7 @@ T}
 .TE
 
 See
-.I SV_LIBDIR/opt/SVC_OPTIONS
+.I SV_LIBDIR/sh/SVC_OPTIONS
 for the default and
 .I OPTIONS
 file for services like
@@ -759,7 +759,7 @@ to inherit other CGroups, and/or
 to clean up child processes of a \fIgroup\fR or supervised process (in ./finish.)
 
 Global
-.B (@LIBDIR@/opt/SVC_OPTIONS|@SYSCONFDIR@/sv.conf)
+.B (@LIBDIR@/sh/SVC_OPTIONS|@SYSCONFDIR@/sv.conf)
 and Local
 .B (OPTIONS)
 Resource Management Settings is supported e.g.
@@ -941,10 +941,6 @@ runlevel.
 .RB [\| udev \|]\ \c
 .RB [\| udev-monitor \|])
 .TP
-.I .opt/
-Symbolic link to
-.B SV_LIBDIR/opt
-.TP
 .I runit/{1,2,3,ctraltdel}
 init-stage-{1,2,3} files to handle system boot/shutdown and supervisor; and
 C-ALT-DEL signal handler for shutdown and reboot.
@@ -952,16 +948,6 @@ C-ALT-DEL signal handler for shutdown and reboot.
 .I s6/{init,crash,finish}
 Init-stage-{1,2,3} files to handle system boot, reboot and shutdown and
 supervisor crashes.
-.SS SV_SVCDIR/.opt/
-.TP
-.I cmd
-Default sv/SERVICE/{,log/}{finish,run} command file
-.TP
-.I SVC_BACKEND
-Specific supervision (backend) environment
-.TP
-.I SVC_OPTIONS
-Default service (OPTIONS) environment
 .SS @RUNDIR@/sv/ (SV_RUNDIR)
 Default run time '/service/' directory
 .SS @LIBDIR@/sv/\ (SV_LIBDIR)
@@ -1009,6 +995,15 @@ to get SystemV or BSD interface... minor no compatible command line options.
 .B sv-shutdown
 standard aliases for system shutdown (with default action.)
 .SS SV_LIBDIR/sh/
+.TP
+.I SV_BACKEND
+Specific supervision (backend) environment
+.TP
+.I SVC_OPTIONS
+Default service (OPTIONS) environment
+.TP
+.I cmd
+Default sv/SERVICE/{,log/}{finish,run} command file
 .TP
 .I depgen
 Simple script to list dependencies

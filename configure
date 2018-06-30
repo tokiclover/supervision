@@ -567,7 +567,6 @@ LINUX_RUNSCRIPT_SERVICES="
 	zramfs
 "
 LINUX_SUPERVISION_SERVICES="
-	acpid
 	cgred
 	docker
 	dmeventd
@@ -575,6 +574,13 @@ LINUX_SUPERVISION_SERVICES="
 	sulogin
 	udev
 	udev-monitor
+"
+LINUX_SVLOG_SERVICES="
+	acpid
+	cgred
+	docker
+	dmeventd
+	lvmetad
 "
 LINUX_SERVICE_INSTANCES="
 	ip6tables:iptables
@@ -717,7 +723,7 @@ esac
 for thing in $(eval echo \$$(toupper $os)_DIST_EXTRA); do
 	append DIST_EXTRA "$thing"
 done
-for type in $SERVICES_TYPE; do
+for type in $SERVICES_TYPE SVLOG; do
 	eval append EXTRA_${type}_SERVICES \$$(toupper $os)_${type}_SERVICES
 done
 type=

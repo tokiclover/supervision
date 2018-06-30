@@ -32,24 +32,23 @@ dist_EXTRA  = \
 	TODO \
 	BUGS.md \
 	ChangeLog
-dist_SH_OPTS = \
-	cmd \
-	OPTIONS.in \
-	SVC_OPTIONS \
-	SVC_BACKEND
 dist_SH_BINS  = \
-	sv/.lib/sh/tmpfiles \
-	sv/.lib/sh/runscript \
-	sv/.lib/sh/init-stage \
-	sv/.lib/sh/cgroup-release-agent \
-	sv/.lib/sh/depgen
+	lib/sh/cmd \
+	lib/sh/tmpfiles \
+	lib/sh/runscript \
+	lib/sh/init-stage \
+	lib/sh/cgroup-release-agent \
+	lib/sh/depgen
 dist_SV_SBINS = \
-	sv/.lib/bin/sv-config
+	lib/bin/sv-config
 dist_SH_LIBS  = \
-	sv/.lib/sh/cgroup-functions \
-	sv/.lib/sh/functions \
-	sv/.lib/sh/runscript-functions \
-	sv/.lib/sh/supervision-functions
+	lib/sh/SV_OPTIONS.in \
+	lib/sh/SVC_OPTIONS \
+	lib/sh/SV_BACKEND \
+	lib/sh/cgroup-functions \
+	lib/sh/functions \
+	lib/sh/runscript-functions \
+	lib/sh/supervision-functions
 dist_SV_BINS  = \
 	src/checkpath \
 	src/fstabinfo \
@@ -90,6 +89,38 @@ dist_SV_SVCS  = \
 	npcd \
 	ntp \
 	sshd \
+	virtlockd \
+	virtlogd \
+	wpa_supplicant \
+	xdm \
+	zed
+dist_SV_LOGS = \
+	$(EXTRA_SVLOG_SERVICES) \
+	apache2 \
+	cron \
+	cups-browsed \
+	cupsd \
+	dhcp \
+	dhcpd \
+	git-daemon \
+	gpm \
+	hostapd \
+	inetd \
+	libvirtd \
+	mysql \
+	nagios \
+	ntp \
+	postgresql \
+	rrdcached.nagios \
+	rrdcached \
+	rsync-daemon \
+	saned \
+	snmpd \
+	snmptrapd \
+	socklog-inet \
+	socklog-ucspi \
+	socklog-unix \
+	syslog \
 	virtlockd \
 	virtlogd \
 	wpa_supplicant \
@@ -207,7 +238,7 @@ DISTFILES   = \
 	$(dist_INIT_STAGE) $(dist_SV_OPTS)
 dist_DIRS  += \
 	$(SV_LIBDIR)/bin $(SV_LIBDIR)/sbin $(SV_LIBDIR)/sh $(DOCDIR) \
-	$(SV_LIBDIR)/cache $(SV_LIBDIR)/opt $(PREFIX)$(SV_SVCDIR) \
+	$(SV_LIBDIR)/cache $(PREFIX)$(SV_SVCDIR) \
 	$(SV_SVCDIR).conf.d $(SV_SVCDIR)/.sysinit $(SV_SVCDIR)/.sysboot \
 	$(SV_SVCDIR)/.default $(SV_SVCDIR)/.shutdown $(SV_SVCDIR)/.single
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
@@ -255,8 +286,6 @@ install: install-dir install-dist install-sv-svcs
 		$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
 	done
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	$(install_DATA) $(dist_SH_OPTS:%=sv/.opt/%) $(DESTDIR)$(SV_LIBDIR)/opt
-	$(install_SCRIPT) sv/.opt/cmd  $(DESTDIR)$(SV_LIBDIR)/opt
 	$(install_SCRIPT) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
 	$(install_SCRIPT) $(dist_SH_BINS) $(DESTDIR)$(SV_LIBDIR)/sh
 	$(install_DATA)   $(dist_SH_LIBS) $(DESTDIR)$(SV_LIBDIR)/sh
@@ -264,8 +293,8 @@ install: install-dir install-dist install-sv-svcs
 	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
 	-$(install_DATA)  $(dist_RS_SVCS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
 	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
-	sed -e 's,\(SV_TYPE.*$$\),\1\nSV_LIBDIR=$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
-		-i $(DESTDIR)$(SV_LIBDIR)/opt/cmd
+	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
+		-i $(DESTDIR)$(SV_LIBDIR)/sh/cmd
 	sed $(dist_MAN_SED) rs.8 >$(DESTDIR)$(MANDIR)/man8/rs.8
 	sed $(dist_MAN_SED) sv-stage.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
 	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
@@ -276,7 +305,7 @@ install: install-dir install-dist install-sv-svcs
 		-e 's|\(__SV_PREFIX__=\).*$$|\1$(PREFIX)|g' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
 		   $(DESTDIR)$(SYSCONFDIR)/sv.conf \
-		   $(DESTDIR)$(SV_LIBDIR)/opt/SVC_OPTIONS
+		   $(DESTDIR)$(SV_LIBDIR)/sh/SVC_OPTIONS
 ifneq ($(dist_SVC_SED),)
 	sed $(dist_SVC_SED) \
 		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
@@ -292,22 +321,24 @@ endif
 	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.default/
 	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.shutdown/
 	$(LN_S) -f $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.single/
-	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(SV_SVCDIR)/.opt
-ifneq ($(PREFIX),)
-ifneq ($(OS),Linux)
-	$(LN_S) -f $(SV_LIBDIR)/opt $(DESTDIR)$(PREFIX)$(SV_SVCDIR)/.opt
-endif
-endif
 install-dist: install-dir $(DISTFILES)
 	$(install_DATA)   $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
-install-sv-svcs: install-dir
-	cp -r $(dist_SV_SVCS:%=sv/%) $(DESTDIR)$(SV_SVCDIR)
+install-sv-svcs: $(dist_SV_SVCS) $(dist_SV_LOGS)
+$(dist_SV_SVCS): install-dir
+	$(MKDIR_P) $(DESTDIR)$(SV_SVCDIR)/$@
+	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/run
+	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/finish
+	$(install_DATA) sv/$@/OPTIONS $(DESTDIR)$(SV_SVCDIR)/$@/
+$(dist_SV_LOGS): install-dir
+	$(MKDIR_P) $(DESTDIR)$(SV_SVCDIR)/$@/log
+	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/log/run
+	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/log/finish
 
 $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
-$(dist_SV_OPTS): install-sv-svcs
+$(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
 
 .PHONY: uninstall uninstall-doc uninstall-dist
@@ -319,13 +350,7 @@ uninstall: uninstall-doc
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
 		$(DESTDIR)$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/rs.8 \
 		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
-ifneq ($(PREFIX),)
-ifneq ($(OS),Linux)
-	rm -f $(DESTDIR)$(PREFIX)$(SV_SVCDIR)/.opt
-endif
-endif
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
-	rm -f $(dist_SH_OPTS:%=$(DESTDIR)$(SV_LIBDIR)/opt/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
@@ -343,8 +368,7 @@ endif
 		$(dist_SH_BINS:%=$(DESTDIR)$(SV_LIBDIR)/sh/%) \
 		$(dist_SH_LIBS:%=$(DESTDIR)$(SV_LIBDIR)/sh/%) \
 		$(DESTDIR)$(SV_SVCDIR)/getty-tty* \
-		$(DESTDIR)$(SV_SVCDIR)/.[ds]*/* \
-		$(DESTDIR)$(SV_SVCDIR)/.opt
+		$(DESTDIR)$(SV_SVCDIR)/.[ds]*/*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
