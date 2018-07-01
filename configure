@@ -48,7 +48,7 @@ if test "$E1" != 0 || test "$E2" = 0; then
 	echo "ERROR: bash, ksh, zsh, and try again" >&2
 	exit 1
 fi
-if ! . sv/.lib/sh/functions; then
+if ! . lib/sh/functions; then
 	echo "ERROR: Failed to source required file" >&2
 	exit 1
 fi
