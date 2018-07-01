@@ -756,20 +756,12 @@ int main(int argc, char *argv[])
 	setenv("SVC_WAIT", off, 1);
 	setenv("SVC_DEPS", off, 1);
 	setenv("SV_SYSTEM", "", 1);
-#if defined(PREFIX) && !defined(__linux__)
-	setenv("SV_PREFIX", PREFIX);
-#else
 	setenv("SV_PREFIX", "", 1);
-#endif
 	if ((ptr = (char*)sv_getconf("SV_SYSTEM"))) {
 		for (opt = SV_KEYWORD_SUPERVISION; sv_keywords[opt]; opt++)
 			if (strcmp(ptr, sv_keywords[opt]) == 0) {
 				setenv("SV_SYSTEM", ptr, 1);
 				sv_system = opt;
-#if defined(PREFIX) && !defined(__linux__)
-				if (opt == SV_KEYWORD_PREFIX)
-					setenv("SV_PREFIX", PREFIX, 1);
-#endif
 				break;
 			}
 	}
