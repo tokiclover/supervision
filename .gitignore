@@ -1,3 +1,4 @@
+src/config.h
 src/*.o
 src/rs
 src/checkpath

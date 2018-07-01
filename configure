@@ -66,8 +66,8 @@ OPTIONS: [default options in square brackets]
 
 Standard options:
   --help                   print this help message
-  --prefix=PREFIX          install in PREFIX [$prefix]
-  --bindir=DIR             install binaries in DIR [PREFIX/bin]
+  --exec-prefix=PREFIX     install binary in EXEC_PREFIX [$exec_prefix]
+  --prefix=PREFIX          install package in PREFIX [$prefix]
   --datadir=DIR            install data files in DIR [PREFIX/share/$package]
   --docdir=DIR             install documentation in DIR [PREFIX/share/doc/$package]
   --libdir=DIR             install libs in DIR [PREFIX/lib]
@@ -941,11 +941,17 @@ SUMMARY_EOF
 echo "Genrating $CONFIG_MAK"
 
 print_config_h(){
+	local val
 	for i in sysconfdir libdir rundir prefix exec_prefix; do
-		eval [ x\$$i != x ] && eval printf '"# define %-16s \"%s\"\n"' $(toupper $i) \$$i
+		eval val="\$$i"
+		if [ -n "$val" ]; then
+			eval printf '"# define %-16s \"%s\"\n"' $(toupper "$i") "\$$i"
+		else
+			printf '# define %-16s\n' $(toupper "$i")
+		fi
 	done
 	for i in $HAVE_CONFIG_H; do
-		printf "# define %-36s 1\n" $i
+		printf "# define %-36s 1\n" "$i"
 	done
 	for i in $DEFINE_CONFIG_H; do
 		eval printf '"# define %-36s \"%s\"\n"' "$i \"\$$i\""
