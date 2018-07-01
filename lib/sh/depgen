@@ -23,7 +23,6 @@ SV_LIBDIR="${0%/sh/*}"
 export LC_ALL=C LANG=C
 . "${0%/*}"/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
-. ${SV_SVCDIR}.conf
 SV_DEPDIR="${SV_TMPDIR}/deps"
 
 add_dep()
