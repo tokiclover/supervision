@@ -50,7 +50,8 @@ dep_gen()
 	else
 		SVCLIST="${SVCLIST} ${SVC_NAME}"
 	fi
-	. ${SV_LIBDIR}/sh/SVC_OPTIONS
+	. ${SV_LIBDIR}/sh/runscript-functions ||
+		{ echo "Required file not found." >&2; exit 1; }
 
 	[ -n "${SVC_KEYWORD}" ] && echo "${SVC_NAME}:keyword=\"${SVC_KEYWORD}\"" >&4
 	[ -n "${SVC_PROVIDE}" ] && echo "${SVC_NAME}:provide=\"${SVC_PROVIDE}\"" >&4

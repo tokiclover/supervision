@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) cmd    0.2 2017/01/12 21:09:26                                Exp $
+# $Id:  @(#) cmd    0.3 2018/06/30 21:09:26                                Exp $
 # $L$:  2-clause/new/simplified BSD                                        Exp $
 #
 
@@ -40,10 +40,63 @@ __cmd__="${0##*/}"
 __svc__="${head%/$__cmd_dir__}"
 unset head
 SV_TYPE=sv
-:	${SV_LIBDIR:=${SVC_DIR}/../../lib}
+SV_LIBDIR=${SVC_DIR}/../../lib
 
-source "${SV_LIBDIR}"/sh/SVC_OPTIONS ||
+source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
+
+
+SOURCE -d ${SV_LIBDIR}/sh/SV_BACKEND
+
+if [ "${__cmd__}" = "run" ]; then
+	yesno "${__environ__}" || SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}
+	#
+	# Use ENV dir(s) if requested
+	#
+	yesno "${ENV_DIR}" && svc_environ
+
+	#
+	# Set default getty options
+	#
+	case "${SVC_NAME}" in # SVC_NAME=$GETTY_TTY
+	(*getty-tty*)
+:	${PRE_CMD:=${__PRECMD__}}
+	if [ "${__SV_NAM__}" = "runit" ]; then
+	:	${PRE_OPTS:=-P}
+	:	${FIN_CMD:=utmpset}
+	:	${FIN_OPTS:=-w ${SVC_NAME#*-}}
+	fi
+	;;
+	esac # SVC_NAME=$GETTY_TTY
+fi # __cmd__=run
+
+#
+# Set a few specific log env variables
+#
+if [ "${__cmd_dir__}" = "log" ]; then
+:	${SVC_LOGDIR:=${LOGDIR}/${SVC_NAME}}
+:	${SVC_USER:=root}
+:	${SVC_GROUP:=root}
+:	${LOG_MODE:=0755}
+:	${LOG_PROC:=gzip -nq}
+:	${LOG_SIZE:=2048000}
+:	${LOG_STAT:=}
+:	${LOG_PREFIX:=${SVC_NAME}}
+:	${LOG_CMD:=${__LOGCMD__}}
+	#
+	# Set default log options
+	#
+	if [ "${__SV_NAM__}" = "runit" ]; then
+	:	${LOG_ARGS:="p${LOG_PREFIX}\ns${LOG_SIZE}\n!'${LOG_PROC}'"}
+	:	${LOG_OPTS:=-tt ${SVC_LOGDIR}}
+	else
+	:	${LOG_ARGS:="s${LOG_SIZE} !'${LOG_PROC}'"}
+	:	${LOG_OPTS:="T ${LOG_STAT:++^${LOG_STAT} =${SVC_LOGDIR}/status} ${LOG_ARGS}"}
+	fi # __SV_NAM__
+	unset LOG_PROC LOG_PREFIX LOG_STAT LOG_SIZE
+fi # __cmd_dir__=log
+
+
 #
 # Handle [log/]{finish,run} & exec to the command
 #
