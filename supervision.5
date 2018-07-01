@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2017-01-18" "0.13.0" "File Format Manual"
+.TH SUPERVISION 5 "2017-01-18" "0.14.0" "File Format Manual"
 .SH NAME
 supervision \- supervision framework init-system and service-manager
 .SH DESCRIPTION
@@ -17,19 +17,19 @@ thus benefit the easy to use the service-management framework for supervision.
 .SS SUPERVISION
 Supervision aims to provide an easy and efficient way to supervision;
 deamontools[-encore], runit and s6 supervisor backends are actually supported.
-(Supervision-)services use, by default, a single \fISV_SVCDIR/sv/\fRSERVICE\fI/OPTIONS\fR
-file and \fI./{finish,run}\fR command files symlinked to \fISV_LIBDIR/sh/cmd\fR.
+(Supervision-)services use, by default, a single \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
+file and \fI./{finish,run}\fR command files symlinked to \fI@LIBDIR@/sv/sh/cmd\fR.
 The same goes for the log directory.
 .I Envdir
-variant with a global \fISV_SVCDIR/sv/.env/\fR and local
-\fISV_SVCDIR/sv/\fRSERVICE\fI/env/\fR is also supported.
+variant with a global \fI@SYSCONFDIR@/sv/.env/\fR and local
+\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/env/\fR is also supported.
 .SS RUNSCRIPT
 It also support runscript services that can be used
 to finely set up and boot a full system.
 The same environment variables are used, minus that, almost only dependencies
 and extra commands are usable in this context if no daemon is involved.
-(Runscript-)services use a single executable \fISV_SVCDIR/\fRSERVICE file
-with an optional configuration file \fISV_SVCDIR/sv.conf.d/\fRSERVICE
+(Runscript-)services use a single executable \fI@SYSCONFDIR@/\fBSERVICE\fR file
+with an optional configuration file \fI@SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
 which uses the same formating and syntax as improved common
 .B rc
 script file (e.g. OpenRC.) Meaning that, only functions and dependency are
@@ -79,7 +79,7 @@ Some commands, like
 require a runlevel
 `-(0|1|3|4|5)' to get the appropriate result.
 
-Or use \fI@PREFIX@/@SYSCONFDIR@/sv\fR service directory when applicable instead
+Or use \fI$PREFIX/@SYSCONFDIR@/sv\fR service directory when applicable instead
 of only \fI@SYSCONFDIR@/sv\fR service directory.
 
 .TP
@@ -112,12 +112,12 @@ See also
 .I getty
 for an example of multi-providers/instances with
 .I only
-a single symlink and a single \fIsv/\fRSERVICE\fI/OPTIONS\fR
+a single symlink and a single \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
 file.
 .TP
 .B RUNSCRIPT
 Similarly, runscript service instances use a symlink to the service with an extra
-\fIsv.conf.d/\fRINSTANCE configuration file if any.
+\fI@SYSCONFDIR@/sv.conf.d/\fBINSTANCE\fR configuration file if any.
 See
 .I networkfs
 (instance of
@@ -283,19 +283,16 @@ as \fIPID 1\fR and another process will handle service management to setup the c
 .SH OPTIONS
 .SS ENVIRONMENT
 The following environment variables are supported.
-The default environment variables are defined in
-.I SV_LIBDIR/sh/SVC_OPTIONS
-and can be defined in service \fIOPTIONS\fR file(s).
 .TP
 .B SUPERVISION
-Supervision services use \fIsv/\fRSERVICE\fI/OPTIONS\fR
+Supervision services use \fI@SYSCONFDIR@/sv/\fRSERVICE\fI/OPTIONS\fR
 file or provider file(s) to define environment variables if necessary.
 This where the command and command line options are defined alond with
 shell functions for service setup and clean up if necessary.
 .TP
 .B RUNSCRIPT
-Runscript services use \fIsv/\fRSERVICE script to define shell functions and
-a default environment; and  \fIsv.conf.d/\fRSERVICE configuration file to
+Runscript services use \fI@SYSCONFDIR@/sv/\fRSERVICE script to define shell functions and
+a default environment; and  \fI@SYSCONFDIR@/sv.conf.d/\fRSERVICE configuration file to
 define extra services dependencies and other environment variables and service
 options.
 .RE
@@ -376,7 +373,7 @@ T}
 The following environment variables are only relevant for
 .B SUPERVISION
 services; many of which have default sane values (see
-.I SVC_OPTIONS
+.I @SV_LIBDIR@/sh/cmd
 for the default values before overriding any.)
 Unless runscript services is used to start daemons that cannot be kept in the
 foreground, defining the following variables are useless for runscript services.
@@ -462,7 +459,7 @@ A few functions starting with
 prefix are used for internal usage (see \fBBUILTINS\fR);
 and thus are reserved for futur usage;
 use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
-\fIenv_{del,svc,run}\fR shell functions are also reserved for internal usage.
+\fIenv_{del,svc}\fR shell functions are also reserved for internal usage.
 \fI{checkpath,{fstab,mount}info,service,waitfile}\fR have shell functions of the
 same name to bypass shell path look up for efficiency.)
 And then, a few functions name have special meaning; read the following for more
@@ -503,7 +500,7 @@ T}
 .TE
 
 See
-.I SV_LIBDIR/sh/SVC_OPTIONS
+.I @SV_LIBDIR@/sh/cmd
 for the default and
 .I OPTIONS
 file for services like
@@ -759,9 +756,10 @@ to inherit other CGroups, and/or
 to clean up child processes of a \fIgroup\fR or supervised process (in ./finish.)
 
 Global
-.B (@LIBDIR@/sh/SVC_OPTIONS|@SYSCONFDIR@/sv.conf)
+.B @SYSCONFDIR@/sv.conf
 and Local
-.B (OPTIONS)
+.B (@SYSCONFDIR@/SERVICE/OPTIONS files for supervised services
+or @SYSCOnFDIR@/sv.conf.d/SERVICE for runscript services)
 Resource Management Settings is supported e.g.
 .RB CGROUP_CPU='cpu.shares\ 256'.
 Multi-value of a parameter is supported along with sets of multi-parameter-value.
@@ -826,7 +824,7 @@ support: child process (supervisor) will naturally inherit supervision CGroup.
 .SH FILES
 .SS @SBINDIR@
 .TP
-.I rs
+.I @SBINDIR@/rs
 Multi-purpose binary to run either an init-stage or runlevel or service command, e.g.
 `rs --sysboot zramfs add' to add
 .B zramfs
@@ -834,13 +832,13 @@ service to syteme boot runlevel); `rs acpid start' or `rsv-stage --default' to s
 daemons and default services (default runlevel) in multi users mode.
 .SS @SYSCONFDIR@
 .TP
-.I sv.conf
+.I @SYSCONFDIR@/sv.conf
 Supervision global configuration file
 .TP
-.I sv.conf.d/\ (SV_CFGDIR)
+.B SV_CONFDIR: \fI@SYSCONFDIR@/sv.conf.d\fR
 Runscript local configuration files directory
 .TP
-.I sv/\ (SV_SVCDIR)
+.B SV_SVCDIR: \fI@SYSCONFDIR@/sv\fR
 See SV_SVCDIR/.RUNLEVEL for active services.
 Use `rs -(0|1||3|4|5) SERVICE add` to add a particular service to a particular
 init-stage or runlevel.
@@ -941,95 +939,92 @@ runlevel.
 .RB [\| udev \|]\ \c
 .RB [\| udev-monitor \|])
 .TP
-.I runit/{1,2,3,ctraltdel}
+.I @SYSCONFDIR@/runit/{1,2,3,ctraltdel}
 init-stage-{1,2,3} files to handle system boot/shutdown and supervisor; and
 C-ALT-DEL signal handler for shutdown and reboot.
 .TP
-.I s6/{init,crash,finish}
+.I @SYSCONFDIR@/s6/{init,crash,finish}
 Init-stage-{1,2,3} files to handle system boot, reboot and shutdown and
 supervisor crashes.
-.SS @RUNDIR@/sv/ (SV_RUNDIR)
+.SS SV_RUNDIR: @RUNDIR@/sv
 Default run time '/service/' directory
-.SS @LIBDIR@/sv/\ (SV_LIBDIR)
+.SS SV_LIBDIR: \fI@LIBDIR@/sv\fR
 SUPERVISION library directory
-.SS SV_LIBDIR/bin/
+.SS SV_LIBDIR/bin: \fI@LIBDIR@/sv/bin\fR
 .TP
-.I checkpath
+.I @LIBDIR@/sv/bin/checkpath
 Simple and cheap checkpath/mktemp binary
 .TP
-.I fstabinfo
+.I @LIBDIR@/sv/bin/fstabinfo
 Simple and cheap fstab(5) utility
 .TP
-.I mountinfo
+.I @LIBDIR@/sv/bin/mountinfo
 Simple and cheap mountpoints utility
 .TP
-.I waitfile
+.I @LIBDIR@/sv/bin/waitfile
 Simple and cheap wait file utility (alternative to \fIsvc_wait\fR shell function)
 .TP
 .B SYMLINKS\ (backend binary symlinks)
-.RB \| envdir \|\ \c
-.RB \| envuidgid \|\ \c
-.RB \| fghack \|\ \c
-.RB \| pgrphack \|\ \c
-.RB \| setlock \|\ \c
-.RB \| setuidgid \|\ \c
-.RB \| softlimit \|
-.SS SV_LIBDIR/sbin/
+.RB \| @LIBDIR@/sv/bin/envdir \|\ \c
+.RB \| @LIBDIR@/sv/bin/envuidgid \|\ \c
+.RB \| @LIBDIR@/sv/bin/fghack \|\ \c
+.RB \| @LIBDIR@/sv/bin/pgrphack \|\ \c
+.RB \| @LIBDIR@/sv/bin/setlock \|\ \c
+.RB \| @LIBDIR@/sv/bin/setuidgid \|\ \c
+.RB \| @LIBDIR@/sv/bin/softlimit \|
+.SS SV_LIBDIR/sbin: \fI@LIBDIR@/sv/sbin\fR
 .TP
-.I service
+.I @LIBDIR@/sv/sbin/service
 Compatiblity system utility symlink so that `servce SERVICE COMMAND' would work as
 expected. This symlink may copied to
-.I /sbin
-system directory or the add $SV_LIBDIR/bin:$SV_LIBDIR/sbin to PATH environment variable.
+.I @SBINDIR@
+system directory or the add \fI@LIBDIR@/sv/bin:@LIBDIR@/sv/sbin\fR to \fBPATH\fR environment variable.
 .TP
-.I sv-config
-`SV_LIBDIR/sbin/sv-config [--log] SERVICE new' to create a new supervision service;
-and `sv-config -S runit' to set up specific supervision backend (supervision suite).
+.I @LIBDIR@/sv/sbin/sv-config
+`\fI@LIBDIR@/sv/sbin/sv-config [--log] \fBSERVICE\fI new\fR' to create a new supervision service;
+and ``fI@LIBDIR@/sv/sbin/sv-config -S runit\fR' to set up specific supervision backend (supervision suite).
 .TP
-.I sv-shutdown
+.I @LIBDIR@/sv/sbin/sv-shutdown
 Simple utility to handle system halt or reboot. It could be symlinked to
-.B /sbin/{halt,shutdown,reboot}
+.B @SBINDIR@/sbin/{halt,shutdown,reboot}
 to get SystemV or BSD interface... minor no compatible command line options.
 .TP
-.I {halt,poweroff,reboot,shutdown}
+.I @LIBDIR@/sv/sbin/{halt,poweroff,reboot,shutdown}
 .B sv-shutdown
 standard aliases for system shutdown (with default action.)
-.SS SV_LIBDIR/sh/
+.SS SV_LIBDIR/sh: @LIBDIR@/sv/sh
 .TP
-.I SV_BACKEND
+.I @LIBDIR@/sv/sh/SV_BACKEND
 Specific supervision (backend) environment
 .TP
-.I SVC_OPTIONS
-Default service (OPTIONS) environment
-.TP
-.I cmd
+.I @LIBDIR@/sv/sh/cmd
 Default sv/SERVICE/{,log/}{finish,run} command file
 .TP
-.I depgen
+.I @LIBDIR@/sv/sh/depgen
 Simple script to list dependencies
 .TP
-.I cgroup-release-agent
+.I @LIBDIR@/sv/sh/cgroup-release-agent
 CGroup Release Agent script
 .TP
-.I init-stage
+.I @LIBDIR@/sv/sh/init-stage
 Init-stage-{1,2,3} handler for supervision
 .TP
-.I cgroup-functions
+.I @LIBDIR@/sv/sh/cgroup-functions
 CGroup Functions/helper library
 .TP
-.I functions
+.I @LIBDIR@/sv/sh/functions
 Generic Functions/Helpers library
 .TP
-.I runscript
+.I @LIBDIR@/sv/sh/runscript
 Run-script helper utility
 .TP
-.I runscript-functions
+.I @LIBDIR@/sv/sh/runscript-functions
 Run-script Functions/helpers library
 .TP
-.I supervision-functions
+.I @LIBDIR@/sv/sh/supervision-functions
 Supervision Functions/Helpers library
 .TP
-.I tmpfiles
+.I @LIBDIR@/sv/sh/tmpfiles
 Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .SH "SEE ALSO"
 .BR rs (8),

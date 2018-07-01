@@ -64,7 +64,7 @@ case "${1}" in
 esac
 shift
 
-. ${SV_LIBDIR}/sh/SVC_OPTIONS ||
+. ${SV_LIBDIR}/sh/runscript-functions ||
 	{ echo "ERROR: Required file not found." >&2; exit 1; }
 
 #

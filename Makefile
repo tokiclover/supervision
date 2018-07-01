@@ -43,7 +43,6 @@ dist_SV_SBINS = \
 	lib/bin/sv-config
 dist_SH_LIBS  = \
 	lib/sh/SV_OPTIONS.in \
-	lib/sh/SVC_OPTIONS \
 	lib/sh/SV_BACKEND \
 	lib/sh/cgroup-functions \
 	lib/sh/functions \
@@ -304,8 +303,7 @@ install: install-dir install-dist install-sv-svcs
 		-e 's|\(_PATH_STDPATH=\).*$$|\1$(_PATH_STDPATH)|g' \
 		-e 's|\(__SV_PREFIX__=\).*$$|\1$(PREFIX)|g' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
-		   $(DESTDIR)$(SYSCONFDIR)/sv.conf \
-		   $(DESTDIR)$(SV_LIBDIR)/sh/SVC_OPTIONS
+		   $(DESTDIR)$(SYSCONFDIR)/sv.conf
 ifneq ($(dist_SVC_SED),)
 	sed $(dist_SVC_SED) \
 		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
