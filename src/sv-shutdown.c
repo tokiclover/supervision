@@ -71,16 +71,14 @@ static int aiocb_count;
 #define SV_BACKEND LIBDIR "/sv/opt/SVC_BACKEND"
 #define SD_PIDFILE _PATH_VARRUN "sv-shutdown.pid"
 
-#define BOOTFILE "/fastboot"
-#define FSCKFILE "/forcefsck"
-
 #ifdef DEBUG
 # undef  _PATH_NOLOGIN
 # define _PATH_NOLOGIN "./nologin"
-# undef  BOOTFILE
 # define BOOTFILE "./fastboot"
-# undef  FSCKFILE
 # define FSCKFILE "./forcefsck"
+#else
+# define BOOTFILE "/fastboot"
+# define FSCKFILE "/forcefsck"
 #endif
 
 #define SD_POWEROFF 0
@@ -277,7 +275,9 @@ static int sigsetup(void)
 }
 
 #define WRITE_MESSAGE(file)	                                              \
-	do { rw = message_len; do {                                           \
+do {                                                                      \
+	rw = message_len;                                                     \
+	do {                                                                  \
 		rd = write(fd, message, rw);                                      \
 		if (rd < 0) {                                                     \
 			if (errno == EINTR) continue;                                 \
@@ -285,7 +285,9 @@ static int sigsetup(void)
 			break;                                                        \
 		}                                                                 \
 		rw -= rd;                                                         \
-	} while (rw); close(fd); } while (0/*CONSTCOND*/)
+	} while (rw);                                                         \
+	close(fd);                                                            \
+} while (0/*CONSTCOND*/)
 
 static int sv_wall(void)
 {
@@ -372,7 +374,6 @@ static int sv_wall(void)
 		aiocb_array[i]->aio_lio_opcode = LIO_WRITE;
 		if (aio_write(aiocb_array[i])) {
 			WRITE_MESSAGE(dev);
-			close(fd);
 			aiocb_array[i]->aio_fildes = -1;
 			aiocb_array[i]->aio_lio_opcode = LIO_NOP;
 		}
@@ -380,7 +381,6 @@ static int sv_wall(void)
 		i++;
 #else
 		WRITE_MESSAGE(dev);
-		close(fd);
 #endif
 	}
 	endutxent();
@@ -405,19 +405,19 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	FILE *fp;
 	size_t len = 0;
 	char *line = NULL, *ptr = NULL;
-	char *argv[8], arg[8];
+	char *argv[8], arg[32];
 	const char ent[] = "__SV_NAM__";
 	struct timespec ts = { .tv_sec = 0L, .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
 	struct utmpx ut;
 
-	argv[0] = "sv-stage", argv[2] = NULL;
+	argv[0] = "sv-stage", argv[1] = arg, argv[2] = NULL;
 	if (shutdown_action == SD_REBOOT)
-		argv[1] = (char*)action[SD_ACTION_REBOOT];
+		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_REBOOT]);
 	else if (shutdown_action == SD_POWEROFF)
-		argv[1] = (char*)action[SD_ACTION_SHUTDOWN];
+		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SHUTDOWN]);
 	else if (shutdown_action == SD_SINGLE) {
-		argv[1] = (char*)action[SD_ACTION_SINGLE];
+		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SINGLE]);
 		goto shutdown;
 	}
 
@@ -440,12 +440,10 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 		if (strcmp(ptr, "runit") == 0) {
 			snprintf(arg, sizeof(arg), "%d", shutdown_action);
 			argv[0] = "runit-init";
-			argv[1] = arg;
 		}
 		else if (strcmp(ptr, "s6") == 0) {
 			snprintf(arg, sizeof(arg), "-%d", shutdown_action);
 			argv[0] = "s6-svscanctl";
-			argv[1] = arg;
 		}
 		else if (strncmp(ptr, "daemontools", 11) == 0)
 			;
@@ -523,7 +521,7 @@ shutdown:
 	(void)pututxline((const struct utmpx*)&ut);
 
 	execvp(*argv, argv);
-	ERR("Failed to execlp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
+	ERR("Failed to execvp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
 	sighandler(SIGUSR1, NULL, NULL);
 	exit(EXIT_FAILURE);
 #endif
@@ -731,7 +729,7 @@ int main(int argc, char *argv[])
 		if ((shuttime = mktime(lt)) == -1L)
 			goto time_error;
 		if ((offtime = shuttime-now) < 0L) {
-			ERR("The specified time is already past!\n", NULL);
+			ERR("The specified time is already past: `%ld'\n", shuttime);
 			exit(EXIT_FAILURE);
 		}
 		argc--, argv++;
@@ -828,7 +826,7 @@ time_error:
 
 static int sv_nologin(void)
 {
-	int fd, rd, rw;
+	int fd, rd = -1, rw;
 
 	if (!access(_PATH_NOLOGIN, F_OK))
 		unlink(_PATH_NOLOGIN);
