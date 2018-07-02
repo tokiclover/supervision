@@ -12,8 +12,9 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#if !defined(__GNUC__) || !defined(__INTEL_COMPILER) || !defined(__arm__) || \
-	(defined(__GNUC__) && !(__GNUC__ > 2))
+#if (defined(__GNUC__) && (__GNUC__ > 2)) || defined(__INTEL_COMPILER) || defined(__arm__)
+# define HAVE_GNU_STYLE_ATTRIBUTE 1
+#else
 # define __attribute__(x)
 #endif
 
@@ -43,8 +44,8 @@ extern "C" {
 #  define DBG(fmt, ...)
 #endif
 
-__attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
-	__attribute__((format(printf(2,3))));
+__attribute__((format(printf,2,3)))
+__attribute__((__noreturn__)) void error(int err, const char *fmt, ...);
 extern const char *progname;
 
 __attribute__((__unused__)) void *err_malloc(size_t size);
