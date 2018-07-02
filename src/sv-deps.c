@@ -435,15 +435,15 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 
 	/* create a new list only when not updating the list */
 	if (SERVICES.svcdeps) {
-		if (service)
-			deps = sv_svcdeps_find(service);
+		if (service) {
+			if ((deps = sv_svcdeps_find(service)))
+				return deps;
+			if (sv_svcdeps_gen(service))
+				return NULL;
+			l = strlen(service);
+		}
 		else
 			return NULL;
-		if (deps)
-			return deps;
-		if (sv_svcdeps_gen(service))
-			return NULL;
-		l = strlen(service);
 	}
 	else
 		SERVICES.svcdeps = sv_svcdeps_new();
