@@ -207,6 +207,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 		}
 		tmp = file;
 	}
+	else return -1;
 
 	if (mode && (stb.st_mode & 07777) != mode) {
 		if (S_ISLNK(stb.st_mode)) {
