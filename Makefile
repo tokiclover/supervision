@@ -96,36 +96,36 @@ dist_SV_SVCS  = \
 	zed
 dist_SV_LOGS = \
 	$(EXTRA_SVLOG_SERVICES) \
-	apache2 \
-	cron \
-	cups-browsed \
-	cupsd \
-	dhcp \
-	dhcpd \
-	git-daemon \
-	gpm \
-	hostapd \
-	inetd \
-	libvirtd \
-	mysql \
-	nagios \
-	ntp \
-	postgresql \
-	rrdcached.nagios \
-	rrdcached \
-	rsync-daemon \
-	saned \
-	snmpd \
-	snmptrapd \
-	socklog-inet \
-	socklog-ucspi \
-	socklog-unix \
-	syslog \
-	virtlockd \
-	virtlogd \
-	wpa_supplicant \
-	xdm \
-	zed
+	apache2/log \
+	cron/log \
+	cups-browsed/log \
+	cupsd/log \
+	dhcp/log \
+	dhcpd/log \
+	git-daemon/log \
+	gpm/log \
+	hostapd/log \
+	inetd/log \
+	libvirtd/log \
+	mysql/log \
+	nagios/log \
+	ntp/log \
+	postgresql/log \
+	rrdcached.nagios/log \
+	rrdcached/log \
+	rsync-daemon/log \
+	saned/log \
+	snmpd/log \
+	snmptrapd/log \
+	socklog-inet/log \
+	socklog-ucspi/log \
+	socklog-unix/log \
+	syslog/log \
+	virtlockd/log \
+	virtlogd/log \
+	wpa_supplicant/log \
+	xdm/log \
+	zed/log
 dist_SVC_INSTANCES  = \
 	$(EXTRA_SERVICE_INSTANCES) \
 	getty-tty6:getty-tty1 getty-tty5:getty-tty1 getty-tty4:getty-tty1 \
@@ -332,9 +332,9 @@ $(dist_SV_SVCS): install-dir
 	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/finish
 	$(install_DATA) sv/$@/OPTIONS $(DESTDIR)$(SV_SVCDIR)/$@/
 $(dist_SV_LOGS): install-dir
-	$(MKDIR_P) $(DESTDIR)$(SV_SVCDIR)/$@/log
-	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/log/run
-	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/log/finish
+	$(MKDIR_P) $(DESTDIR)$(SV_SVCDIR)/$@
+	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/run
+	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/finish
 
 $(dist_SCRIPTS): FORCE
 	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@

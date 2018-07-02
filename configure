@@ -576,11 +576,11 @@ LINUX_SUPERVISION_SERVICES="
 	udev-monitor
 "
 LINUX_SVLOG_SERVICES="
-	acpid
-	cgred
-	docker
-	dmeventd
-	lvmetad
+	acpid/log
+	cgred/log
+	docker/log
+	dmeventd/log
+	lvmetad/log
 "
 LINUX_SERVICE_INSTANCES="
 	ip6tables:iptables
