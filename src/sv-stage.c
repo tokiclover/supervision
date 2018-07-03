@@ -51,7 +51,7 @@ int svc_quiet = 1;
 SV_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
 
 static FILE *logfp;
-static int logfd, sv_debug;
+static int logfd;
 
 /* list of service to start/stop before|after a stage */
 static const char *const sv_init_stage[][8] = {
@@ -321,18 +321,15 @@ int svc_log(const char *fmt, ...)
 
 
 	/* save logfile if necessary */
-	if (sv_conf_yesno("SV_DEBUG"))
+	if (!logpath && sv_conf_yesno("SV_DEBUG"))
 		logpath = logfile;
 	else
 		logpath = SV_LOGFILE;
-	if (!logfd && sv_debug) {
+	if (!logfd) {
 		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd < 0)
 			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
-		if (logfd > 0) {
-			sv_debug = 1;
-			logfp = fdopen(logfd, "a+");
-		}
+		if (logfd > 0) logfp = fdopen(logfd, "a+");
 	}
 
 	va_start(ap, fmt);
@@ -559,7 +556,6 @@ static void svc_stage(const char *cmd)
 	chdir("/");
 
 	t = time(NULL);
-	sv_debug = 1;
 	svc_log("logging: %s command\n", command);
 	svc_log("%s %s stage started at %s\n", progname, sv_runlevel[sv_stage],
 			ctime(&t));
