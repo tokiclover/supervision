@@ -212,6 +212,9 @@ __attribute__((__noreturn__)) static void help_message(int status)
 
 static void sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
+#ifdef DEBUG
+	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
+#endif
 	int i = -1;
 	int serrno = errno;
 #ifdef HAVE_POSIX_ASYNCHRONOUS_IO
@@ -264,6 +267,9 @@ static int sigsetup(void)
 	struct sigaction act;
 	int sigvalue[] = { SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
 	int i;
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 
 	act.sa_sigaction = sighandler;
 	act.sa_flags = SA_SIGINFO | SA_RESTART;
@@ -291,6 +297,9 @@ do {                                                                      \
 
 static int sv_wall(void)
 {
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 	int i;
 #ifdef _PATH_WALL
 # if defined(__DragonFly__) || defined(__FreeBSD__)
@@ -410,6 +419,9 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	struct timespec ts = { .tv_sec = 0L, .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
 	struct utmpx ut;
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 
 	argv[0] = "sv-stage", argv[1] = arg, argv[2] = NULL;
 	if (shutdown_action == SD_REBOOT)
@@ -827,6 +839,9 @@ time_error:
 static int sv_nologin(void)
 {
 	int fd, rd = -1, rw;
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 
 	if (!access(_PATH_NOLOGIN, F_OK))
 		unlink(_PATH_NOLOGIN);
@@ -839,6 +854,9 @@ static int sv_nologin(void)
 static void sv_timewarn(unsigned long int timeleft)
 {
 	static char *ptr;
+#ifdef DEBUG
+	DBG("%s(%lu)\n", __func__, timeleft);
+#endif
 	if (!ptr) ptr = message+timer_pos;
 
 	/* just in case sv_wall() does not return */

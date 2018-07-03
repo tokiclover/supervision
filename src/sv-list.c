@@ -13,6 +13,9 @@
 
 SV_StringList_T *sv_stringlist_new(void)
 {
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 	SV_StringList_T *list = err_malloc(sizeof(*list));
 	TAILQ_INIT(list);
 	return list;
@@ -20,6 +23,9 @@ SV_StringList_T *sv_stringlist_new(void)
 
 SV_String_T *sv_stringlist_add(SV_StringList_T *list, const char *str)
 {
+#ifdef DEBUG
+	DBG("%s(%p, %s)\n", __func__, list, str);
+#endif
 	SV_String_T *elm = err_malloc(sizeof(SV_String_T));
 	elm->str = err_strdup(str);
 	elm->data = NULL;
@@ -29,16 +35,21 @@ SV_String_T *sv_stringlist_add(SV_StringList_T *list, const char *str)
 
 SV_String_T *sv_stringlist_adu(SV_StringList_T *list, const char *str)
 {
+#ifdef DEBUG
+	DBG("%s(%p, %s)\n", __func__, list, str);
+#endif
 	SV_String_T *elm = sv_stringlist_find(list, str);
 	if (elm)
 		return elm;
-
 	return sv_stringlist_add(list, str);
 }
 
 SV_StringList_T *sv_stringlist_cat(SV_StringList_T **dst, SV_StringList_T **src)
 {
 	SV_String_T *elm, *ent;
+#ifdef DEBUG
+	DBG("%s(%p, %p)\n", __func__, dst, src);
+#endif
 	TAILQ_FOREACH_SAFE(elm, *src, entries, ent)
 		if (!sv_stringlist_find(*dst, elm->str))
 			sv_stringlist_mov(*src, *dst, elm);
@@ -48,6 +59,9 @@ SV_StringList_T *sv_stringlist_cat(SV_StringList_T **dst, SV_StringList_T **src)
 
 SV_String_T *sv_stringlist_append(SV_StringList_T *list, SV_String_T *svc)
 {
+#ifdef DEBUG
+	DBG("%s(%p, %s)\n", __func__, list, svc);
+#endif
 	SV_String_T *elm;
 	elm = sv_stringlist_add(list, svc->str);
 	elm->data = svc->data;
@@ -61,6 +75,9 @@ inline int sv_stringlist_del(SV_StringList_T *list, const char *str)
 
 int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
 {
+#ifdef DEBUG
+	DBG("%s(%p, %p)\n", __func__, list, elm);
+#endif
 	if (elm) {
 		TAILQ_REMOVE(list, elm, entries);
 		free(elm->str);
@@ -73,6 +90,9 @@ int sv_stringlist_rem(SV_StringList_T *list, SV_String_T *elm)
 SV_String_T *sv_stringlist_find(SV_StringList_T *list, const char *str)
 {
 	SV_String_T *elm;
+#ifdef DEBUG
+	DBG("%s(%p, %d)\n", __func__, list, str);
+#endif
 
 	if (list)
 		TAILQ_FOREACH(elm, list, entries)
@@ -85,6 +105,9 @@ size_t sv_stringlist_len(SV_StringList_T *list)
 {
 	SV_String_T *elm;
 	size_t len = 0;
+#ifdef DEBUG
+	DBG("%s(%p)\n", __func__, list);
+#endif
 
 	TAILQ_FOREACH(elm, list, entries)
 		len++;
@@ -93,6 +116,9 @@ size_t sv_stringlist_len(SV_StringList_T *list)
 
 int sv_stringlist_mov(SV_StringList_T *src, SV_StringList_T *dst, SV_String_T *ent)
 {
+#ifdef DEBUG
+	DBG("%s(%p, %p, %p)\n", __func__, src, dst, ent);
+#endif
 	if (src == NULL || dst == NULL || ent == NULL)
 		return -EINVAL;
 	TAILQ_REMOVE(src, ent, entries);
@@ -103,6 +129,9 @@ int sv_stringlist_mov(SV_StringList_T *src, SV_StringList_T *dst, SV_String_T *e
 void sv_stringlist_free(SV_StringList_T **list)
 {
 	SV_String_T *elm;
+#ifdef DEBUG
+	DBG("%s(%p)\n", __func__, list);
+#endif
 
 	if (!list)
 		return;
@@ -117,6 +146,9 @@ void sv_stringlist_free(SV_StringList_T **list)
 
 SV_StringList_T *sv_stringlist_sort(SV_StringList_T **list)
 {
+#ifdef DEBUG
+	DBG("%s(%p)\n", __func__, list);
+#endif
 	SV_StringList_T *old = *list, *new = sv_stringlist_new();
 	SV_String_T *e, *en, *l, *n;
 

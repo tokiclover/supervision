@@ -39,7 +39,7 @@ extern "C" {
 #define ERROR(fmt, ...)  error(errno, "ERROR: %s: " fmt, progname, __VA_ARGS__)
 #define ERR_EXIT ERROR("", NULL)
 #if defined DEBUG
-#  define DBG(fmt, ...) fprintf(stderr, "%s:%s:%d: " fmt, PROGNAME, __FILE__, __LINE__, __VA_ARGS__)
+#  define DBG(fmt, ...) fprintf(stderr, "%s:%s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define DBG(fmt, ...)
 #endif

@@ -28,6 +28,9 @@ int sv_conf_yesno(const char *env) {
 
 const char *sv_getconf(const char *env)
 {
+#ifdef DEBUG
+	DBG("%s(%s)\n", __func__, env);
+#endif
 	if (!SV_CONFIG_ARRAY)
 		if (sv_conf_load())
 			return NULL;
@@ -57,6 +60,10 @@ static int sv_conf_load(void)
 	FILE *fp;
 	char *line = NULL, *ptr;
 	size_t count = 0, len = 0, l, num = 16, pos;
+
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 
 	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
 		WARN("Failed to open %s\n", SV_CONFIG_FILE);
@@ -105,6 +112,9 @@ static int sv_conf_load(void)
 static void sv_conf_free(void)
 {
 	int i = 0;
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 	while (SV_CONFIG_ARRAY[i])
 		free((void *)SV_CONFIG_ARRAY[i++]);
 	free(SV_CONFIG_ARRAY);

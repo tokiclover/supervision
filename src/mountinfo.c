@@ -158,6 +158,9 @@ static void find_mount_point(struct mntargs *args)
 	struct mntoption *opt;
 	uint64_t flags;
 	size_t len, siz;
+#ifdef DEBUG
+	DBG("%s(%p)\n", __func__, args);
+#endif
 
 	if (!(mnt_num = getmntinfo(&mnt_pnts, MNT_NOWAIT)))
 		ERROR("Failed to exec getmntinfo()", NULL);
@@ -201,6 +204,9 @@ static struct mntent *getent(const char *path)
 	struct mntent *ent;
 	const char file[] = "/etc/fstab";
 	int i;
+#ifdef DEBUG
+	DBG("%s(%s)\n", __func__, path);
+#endif
 
 	if (mntcnt == 0) {
 		if ((mntptr = setmntent(file, "r")) == NULL)
@@ -237,6 +243,9 @@ static void find_mount_point(struct mntargs *args)
 	FILE *fp;
 	struct mntent *ent;
 	int netdev;
+#ifdef DEBUG
+	DBG("%s(%p)\n", __func__, args);
+#endif
 
 	if ((fp = fopen(file, "r")) == NULL)
 		ERROR("Failed to open(%s...)", file);
@@ -322,6 +331,9 @@ __attribute__((__noreturn__)) static void help_message(int status)
 
 static regex_t *comp_regex(const char *regex)
 {
+#ifdef DEBUG
+	DBG("%s(%s)\n", __func__, regex);
+#endif
 	regex_t *re = err_malloc(sizeof(regex_t));
 	int rv;
 	char buf[256];

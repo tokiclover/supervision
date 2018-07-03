@@ -108,6 +108,9 @@ __attribute__((__noreturn__)) static void help_message(int status)
 static void endent(void)
 {
 	while (mntcnt)
+#ifdef DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
 		free(mnttab[--mntcnt]);
 	free(mnttab);
 	ENDMNTENT;
@@ -117,6 +120,9 @@ static struct mntent *getent(const char *path)
 {
 	MNTENT *ent;
 	int i;
+#ifdef DEBUG
+	DBG("%s(%s)\n", __func__, path);
+#endif
 
 	if (mntcnt == 0) {
 		mnttab = err_calloc(mntnum, sizeof(void*));
@@ -156,6 +162,9 @@ static int fstab_mount(MNTENT *ent, int flag)
 		"-o", MNT_OPTS(ent),
 		"-t", MNT_TYPE(ent),
 	};
+#ifdef DEBUG
+	DBG("%s(%p, %d)\n", __func__, ent, status);
+#endif
 
 	static int sigsetup = 1;
 	static struct sigaction sa_sigint, sa_sigquit;
