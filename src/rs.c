@@ -21,12 +21,11 @@
 #include "sv.h"
 #include "sv-deps.h"
 
-#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+\
-			sizeof(pthread_rwlock_t))
-#define OFFSET_T_SIZE(x) \
+#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
+#define OFFSET_T_SIZE(x)                                                               \
 	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int)) > 4U*sizeof(int) ? \
-		(x+4U)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) : \
-		4U*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int))
+	(x+4U)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) :                 \
+	4U*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int))
 struct runlist {
 	unsigned int rid;
 	int argc;
@@ -184,10 +183,10 @@ int svc_cmd(struct svcrun *run)
 	struct tm *lt;
 #define STRFTIME_OFF 32
 	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
-#define MK_STRFTIME(ptr)                              \
+#define MK_STRFTIME(ptr)                                            \
 	snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name); \
-	stat(buf, &st_buf);                               \
-	lt = localtime(&st_buf.st_mtime);                 \
+	stat(buf, &st_buf);                                             \
+	lt = localtime(&st_buf.st_mtime);                               \
 	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)lt);
 
 	if (!st_dep.st_mtime) {
@@ -1223,8 +1222,11 @@ __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attr
 
 int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 {
-#define HANDLE_ERROR(func) \
-	do { ERR("%s:%d: " #func "\n", __func__, __LINE__); goto retval; } while(0)
+#define HANDLE_ERROR(func)                             \
+	do {                                               \
+		ERR("%s:%d: " #func "\n", __func__, __LINE__); \
+		goto retval;                                   \
+	} while(0)
 	int r;
 	struct runlist *p;
 
