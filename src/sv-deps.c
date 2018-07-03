@@ -426,33 +426,33 @@ static int sv_svcdeps_gen(const char *svc)
 	return retval;
 }
 
-#define WAIT_SVSCAN                                            \
-	if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN */           \
-		snprintf(cmd, sizeof(cmd), "%s/svscan.pid", SV_TMPDIR);\
-		do {                                                   \
-			if (!access(cmd, F_OK)) break;                     \
-			poll(NULL, 0, 100); /* milisecond sleep */         \
-			t++;                                               \
-		} while (t < 600);                                     \
-		if (t >= 600) {                                        \
-			ERR("Timed out waiting for `%s'\n", SV_INIT_STAGE);\
-			exit(EXIT_FAILURE);                                \
-		}                                                      \
-	} else {                                                   \
-		do { r = waitpid(p, &t, 0);                            \
-			if (r < 0) {                                       \
-				if (errno != ECHILD) continue;                 \
-				else ERROR("%s: waitpid()", __func__);         \
-			}                                                  \
-		} while (!WIFEXITED(t));                               \
-		if (!file_test(SV_TMPDIR_DEPS, 'd'))                   \
+#define WAIT_SVSCAN                                                      \
+	if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN */                     \
+		snprintf(cmd, sizeof(cmd), "%s/svscan.pid", SV_TMPDIR);          \
+		do {                                                             \
+			if (!access(cmd, F_OK)) break;                               \
+			poll(NULL, 0, 100); /* milisecond sleep */                   \
+			t++;                                                         \
+		} while (t < 600);                                               \
+		if (t >= 600) {                                                  \
+			ERR("Timed out waiting for `%s'\n", SV_INIT_STAGE);          \
+			exit(EXIT_FAILURE);                                          \
+		}                                                                \
+	} else {                                                             \
+		do { r = waitpid(p, &t, 0);                                      \
+			if (r < 0) {                                                 \
+				if (errno != ECHILD) continue;                           \
+				else ERROR("%s: waitpid()", __func__);                   \
+			}                                                            \
+		} while (!WIFEXITED(t));                                         \
+		if (!file_test(SV_TMPDIR_DEPS, 'd'))                             \
 			ERROR("`%s' failed to setup `%s", SV_INIT_STAGE, SV_TMPDIR); \
 	}
 
 #define ARG_OFFSET 32
-#define EXEC_SVSCAN                                            \
-	if (sv_level != SV_SYSINIT_LEVEL)                          \
-		setsid();                                              \
+#define EXEC_SVSCAN                                                      \
+	if (sv_level != SV_SYSINIT_LEVEL)                                    \
+		setsid();                                                        \
 	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/')+1, cmd, arg, NULL); \
 	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
 
