@@ -158,7 +158,7 @@ static void find_mount_point(struct mntargs *args)
 	struct mntoption *opt;
 	uint64_t flags;
 	size_t len, siz;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, args);
 #endif
 
@@ -204,7 +204,7 @@ static struct mntent *getent(const char *path)
 	struct mntent *ent;
 	const char file[] = "/etc/fstab";
 	int i;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, path);
 #endif
 
@@ -243,7 +243,7 @@ static void find_mount_point(struct mntargs *args)
 	FILE *fp;
 	struct mntent *ent;
 	int netdev;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, args);
 #endif
 
@@ -331,7 +331,7 @@ __attribute__((__noreturn__)) static void help_message(int status)
 
 static regex_t *comp_regex(const char *regex)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, regex);
 #endif
 	regex_t *re = err_malloc(sizeof(regex_t));

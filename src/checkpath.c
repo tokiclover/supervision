@@ -100,7 +100,7 @@ static int checkpath(char *file, char *tmpdir, uid_t uid, gid_t gid, mode_t mode
 	struct dirent *ent;
 	static mode_t m = 0;
 	struct stat stb, std;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s, %ds, %u, %u, %o, %d)\n", __func__, file, tmpdir, uid, gid, mode, type);
 #endif
 

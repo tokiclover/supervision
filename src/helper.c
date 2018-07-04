@@ -15,7 +15,7 @@
 __attribute__((__unused__)) char *shell_string_value(char *str)
 {
 	char *ptr = str, *end;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, str);
 #endif
 	if (!str)
@@ -59,7 +59,7 @@ __attribute__((__unused__)) int file_regex(const char *file, const char *regex)
 	size_t len = 0;
 	int retval = 0;
 	regex_t re;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s, %s)\n", __func__, file, regex);
 #endif
 
@@ -105,7 +105,7 @@ __attribute__((__unused__)) int file_test(const char *pathname, int mode)
 			   W = S_IWUSR | S_IWGRP | S_IWOTH,
 			   X = S_IXUSR | S_IXGRP | S_IXOTH;
 	size_t len;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s, %d)\n", __func__, pathname, mode);
 #endif
 
@@ -156,7 +156,7 @@ __attribute__((__unused__)) int get_term_cols(void)
 	struct winsize winsz;
 	char *ptr = getenv("COLUMNS");
 	int col;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -174,7 +174,7 @@ __attribute__((__unused__)) ssize_t getline(char **buf, size_t *len, FILE *strea
 	int c;
 	char *p;
 	size_t s = *len;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p, %p, %p)\n", __func__, *buf, len, stream);
 #endif
 
@@ -207,7 +207,7 @@ __attribute__((__unused__)) ssize_t getline(char **buf, size_t *len, FILE *strea
 
 __attribute__((__unused__)) int sv_yesno(const char *str)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, str);
 #endif
 	if (!str)

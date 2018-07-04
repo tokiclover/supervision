@@ -71,7 +71,7 @@ static int aiocb_count;
 #define SV_BACKEND LIBDIR "/sv/sh/SV_BACKEND"
 #define SD_PIDFILE _PATH_VARRUN "sv-shutdown.pid"
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 # undef  _PATH_NOLOGIN
 # define _PATH_NOLOGIN "./nologin"
 # define BOOTFILE "./fastboot"
@@ -212,7 +212,7 @@ __attribute__((__noreturn__)) static void help_message(int status)
 
 static void sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 	int i = -1;
@@ -267,7 +267,7 @@ static int sigsetup(void)
 	struct sigaction act;
 	int sigvalue[] = { SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
 	int i;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -297,7 +297,7 @@ do {                                                                      \
 
 static int sv_wall(void)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 	int i;
@@ -419,7 +419,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	struct timespec ts = { .tv_sec = 0L, .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
 	struct utmpx ut;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -499,7 +499,7 @@ shutdown:
 	unlink(_PATH_NOLOGIN);
 	(void)printf("\r\n\007System %s time has arrived\007\r\n", action[ai]);
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	if (reboot_force)
 		(void)printf("reboot(%X)\n", reboot_action);
 	else
@@ -780,7 +780,7 @@ message:
 		message_len = ptr-message;
 	}
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 #else
 	if (geteuid()) {
 		errno = EPERM;
@@ -839,7 +839,7 @@ time_error:
 static int sv_nologin(void)
 {
 	int fd, rd = -1, rw;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -854,7 +854,7 @@ static int sv_nologin(void)
 static void sv_timewarn(unsigned long int timeleft)
 {
 	static char *ptr;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%lu)\n", __func__, timeleft);
 #endif
 	if (!ptr) ptr = message+timer_pos;

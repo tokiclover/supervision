@@ -49,7 +49,7 @@ static void sv_runlevel_migrate(void);
 static void sv_deptree_alloc(SV_DepTree_T *deptree)
 {
 	int p;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 
@@ -62,7 +62,7 @@ static void sv_deptree_alloc(SV_DepTree_T *deptree)
 void sv_deptree_free(SV_DepTree_T *deptree)
 {
 	int i;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 	for (i = 0; i < deptree->size; i++)
@@ -80,7 +80,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	int add, pri;
 	int p, t, r;
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(type=%d, prio=%d, svc=%s, deptree=%p)\n", __func__, type, prio, svc->str, deptree);
 #endif
 
@@ -101,7 +101,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		else prio = 0;
 	}
 	pri = prio+1;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("t=%-4d p=%-4d d=%p svc=%-32s s=%-16s v=%-16s\n", type, prio, d,
 			svc->str, s, d->virt);
 #endif
@@ -155,7 +155,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 				sv_stringlist_mov(deptree->tree[p], deptree->tree[prio], ent);
 				sv_deptree_add(SV_SVCDEPS_AFTER, prio, svc, deptree);
 			}
-#ifdef DEBUG
+#ifdef SV_DEBUG
 			DBG("move : p=%-4d s=%-16s\n", prio, s);
 #endif
 			return prio;
@@ -163,7 +163,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	/* add only if necessary */
 	for (p = prio; p < deptree->size; p++)
 		if (sv_stringlist_find(deptree->tree[p], s)) {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 			DBG("found: p=%-4d s=%-16s\n", p, s);
 #endif
 			return p;
@@ -171,7 +171,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	prio = prio > SV_DEPTREE_MAX ? SV_DEPTREE_MAX-1 : prio;
 	ent = sv_stringlist_add(deptree->tree[prio], s);
 	ent->data = d;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 			DBG("add  : p=%-4d s=%-16s d=%p\n", prio, s, d);
 #endif
 	return prio;
@@ -185,7 +185,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 	FILE *fp;
 	size_t len = 0;
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 
@@ -226,7 +226,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	char path[PATH_MAX];
 	FILE *fp;
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 
@@ -257,7 +257,7 @@ void svc_deptree_load(SV_DepTree_T *deptree)
 {
 	SV_String_T *ent;
 	sv_deptree_alloc(deptree);
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 	TAILQ_FOREACH(ent, deptree->list, entries)
@@ -271,7 +271,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 	SV_SvcDeps_T *dep;
 	int pri;
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 
@@ -332,7 +332,7 @@ static void sv_runlevel_migrate(void)
 	DIR *nd, *od;
 	int i, ofd, nfd;
 	struct dirent *ent;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -376,7 +376,7 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 	DIR *dir;
 	struct dirent *ent;
 	SV_StringList_T *svclist;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, dir_path);
 #endif
 
@@ -419,7 +419,7 @@ static int sv_svcdeps_gen(const char *svc)
 {
 	int retval;
 	char cmd[1024], *ptr;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, svc);
 #endif
 
@@ -475,7 +475,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	int r, t = 0;
 	pid_t p;
 	SV_SvcDeps_T *deps = NULL;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, service);
 #endif
 
@@ -599,7 +599,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	if (service)
 		return deps;
 
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	atexit(sv_svcdeps_free);
 #endif
 	return deps;
@@ -610,7 +610,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 
 static SV_SvcDepsList_T *sv_svcdeps_new(void)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 	SV_SvcDepsList_T *list = err_malloc(sizeof(SV_SvcDepsList_T));
@@ -620,7 +620,7 @@ static SV_SvcDepsList_T *sv_svcdeps_new(void)
 
 static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, svc);
 #endif
 	static unsigned int id;
@@ -641,7 +641,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 
 static SV_SvcDeps_T *sv_svcdeps_adu(const char *svc)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, svc);
 #endif
 	SV_SvcDeps_T *elm = sv_svcdeps_find(svc);
@@ -653,7 +653,7 @@ static SV_SvcDeps_T *sv_svcdeps_adu(const char *svc)
 
 static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p, %p)\n", __func__, list, ent);
 #endif
 	SV_String_T *elm;
@@ -672,7 +672,7 @@ static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent)
 static SV_SvcDeps_T *sv_svcdeps_find(const char *svc)
 {
 	SV_SvcDeps_T *elm;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, svc);
 #endif
 
@@ -686,7 +686,7 @@ SV_SvcDeps_T *sv_virtsvc_find(SV_StringList_T *svclist, const char *svc)
 {
 	int i;
 	SV_SvcDeps_T *d = NULL;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p, %s)\n", __func__, svclist, svc);
 #endif
 
@@ -710,7 +710,7 @@ SV_SvcDeps_T *sv_virtsvc_find(SV_StringList_T *svclist, const char *svc)
 static void sv_virtsvc_insert(SV_SvcDeps_T *elm)
 {
 	static size_t num;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, elm);
 #endif
 
@@ -727,7 +727,7 @@ static void sv_svcdeps_free(void)
 {
 	int i;
 	SV_SvcDeps_T *elm;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 

@@ -239,7 +239,7 @@ static const char *svc_runlevel(const char *level)
 	static char buf[16], path[] = SV_TMPDIR "/softlevel";
 	const char *retval;
 	int fd, flags = O_NONBLOCK|O_CREAT, len;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, level);
 #endif
 
@@ -280,7 +280,7 @@ static void svc_level(void)
 {
 	char *entry = NULL, *ptr, *ent;
 	int i;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -312,7 +312,7 @@ static void svc_level(void)
 int svc_end(const char *svc, int status)
 {
 	static char ok[] = "ok", no[] = "no", *m;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s, %d)\n", __func__, svc, status);
 #endif
 	if (status)
@@ -327,7 +327,7 @@ int svc_log(const char *fmt, ...)
 	static char logfile[] = "/var/log/sv.log", *logpath;
 	int retval = 0;
 	va_list ap;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s()\n", __func__);
 #endif
 
@@ -358,7 +358,7 @@ int svc_log(const char *fmt, ...)
 
 void sv_cleanup(void)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 	if (!access(SV_ENVIRON, F_OK))
@@ -370,7 +370,7 @@ void sv_cleanup(void)
 static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), void *ctx __attribute__((__unused__)))
 {
 	int i = -1, serrno = errno;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 
@@ -406,7 +406,7 @@ static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), vo
 
 static void sv_sigsetup(void)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 	struct sigaction sa;
@@ -431,7 +431,7 @@ static void sv_sigsetup(void)
 
 static int sv_system_detect(void)
 {
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 #ifdef __FreeBSD__
@@ -487,7 +487,7 @@ static int sv_system_detect(void)
 static int svc_stage_command(int stage, int argc, const char *argv[])
 {
 	int i, retval;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%d, %d, %p)\n", __func__, stage, argc, argv);
 #endif
 
@@ -509,7 +509,7 @@ __attribute__((__noreturn__)) static void sv_stage_status(void)
 	struct svcrun run = { .argc = 8, .argv = argv };
 	SV_String_T *svc;
 	SV_StringList_T *list, *l;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -542,7 +542,7 @@ static void svc_stage(const char *cmd)
 	int level = 0;
 	const char *runlevel;
 	time_t t;
-#ifdef DEBUG
+#ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, cmd);
 #endif
 
