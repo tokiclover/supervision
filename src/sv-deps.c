@@ -101,6 +101,10 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 		else prio = 0;
 	}
 	pri = prio+1;
+#ifdef DEBUG
+	DBG("t=%-4d p=%-4d d=%p svc=%-32s s=%-16s v=%-16s\n", type, prio, d,
+			svc->str, s, d->virt);
+#endif
 
 	/* expand the list when needed */
 	if (pri > deptree->size && deptree->size < SV_DEPTREE_MAX)
@@ -151,15 +155,25 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 				sv_stringlist_mov(deptree->tree[p], deptree->tree[prio], ent);
 				sv_deptree_add(SV_SVCDEPS_AFTER, prio, svc, deptree);
 			}
+#ifdef DEBUG
+			DBG("move : p=%-4d s=%-16s\n", prio, s);
+#endif
 			return prio;
 		}
 	/* add only if necessary */
 	for (p = prio; p < deptree->size; p++)
-		if (sv_stringlist_find(deptree->tree[p], s))
+		if (sv_stringlist_find(deptree->tree[p], s)) {
+#ifdef DEBUG
+			DBG("found: p=%-4d s=%-16s\n", p, s);
+#endif
 			return p;
+		}
 	prio = prio > SV_DEPTREE_MAX ? SV_DEPTREE_MAX-1 : prio;
 	ent = sv_stringlist_add(deptree->tree[prio], s);
 	ent->data = d;
+#ifdef DEBUG
+			DBG("add  : p=%-4d s=%-16s d=%p\n", prio, s, d);
+#endif
 	return prio;
 }
 
@@ -270,9 +284,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 
 	/* XXX: handle {after,use,need} first */
 	TAILQ_FOREACH(ent, deptree->list, entries)
-		sv_deptree_add(SV_SVCDEPS_AFTER, -1, ent, deptree);
-	TAILQ_FOREACH(ent, deptree->list, entries)
-		sv_deptree_add(SV_SVCDEPS_BEFORE, 0, ent, deptree);
+		sv_deptree_add(SV_SVCDEPS_USE, -1, ent, deptree);
 
 	for (pri = deptree->size-1; pri > 0; pri--)
 		if (!TAILQ_EMPTY(deptree->tree[pri])) {
