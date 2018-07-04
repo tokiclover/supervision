@@ -81,7 +81,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	int p, t, r;
 
 #ifdef DEBUG
-	DBG("%s(type=%d, prio=%d, svc=%s, deptree=%p)\n", __func__, type, prio, svc, deptree);
+	DBG("%s(type=%d, prio=%d, svc=%s, deptree=%p)\n", __func__, type, prio, svc->str, deptree);
 #endif
 
 	/* add service to list if and only if, either a service is {use,need}ed or
@@ -321,7 +321,7 @@ static void sv_runlevel_migrate(void)
 	int i, ofd, nfd;
 	struct dirent *ent;
 #ifdef DEBUG
-	DBG("%s(%void)\n", __func__);
+	DBG("%s(void)\n", __func__);
 #endif
 
 	switch (sv_stage) {
