@@ -77,15 +77,13 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	/* add service to list if and only if, either a service is {use,need}ed or
 	 * belongs to this particular init-stage/runlevel */
 	if (type < SV_SVCDEPS_USE && !sv_stringlist_find(deptree->list, s))
-		return -prio;
+		return -1;
 
 	if (!d) svc->data = d = sv_svcdeps_find(s);
 	/* insert the real service instead of a virtual one */
 	if (!d) {
-		if ((d = sv_virtsvc_find(deptree->list, s))) {
-			svc->data = d;
+		if ((d = sv_virtsvc_find(deptree->list, s)))
 			s = d->svc;
-		}
 		else return -1;
 	}
 	if (prio < 0) {
