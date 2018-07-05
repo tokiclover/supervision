@@ -276,7 +276,7 @@ static int sigsetup(void)
 	sigemptyset(&act.sa_mask);
 	for (i = 0; sigvalue[i]; i++)
 		if (sigaction(sigvalue[i], &act, NULL) < 0)
-			ERROR("sigaction(%s, ...): %s\n", signame[i]);
+			ERROR("sigaction(%s, ...)\n", signame[i]);
 	return 0;
 }
 
@@ -788,7 +788,8 @@ message:
 		ERROR("superuser privilege required to proceed", NULL);
 	}
 	/* support setuid to a special group */
-	setuid(geteuid());
+	if (setuid(geteuid()))
+		ERROR("failed to setuid(geteuid())", NULL);
 	if ((i = fork()) > 0) {
 		fprintf(stderr, "%s [pid=%d]\n", progname, i);
 		exit(EXIT_SUCCESS);
