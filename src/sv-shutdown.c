@@ -459,8 +459,10 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 		}
 		else if (strncmp(ptr, "daemontools", 11) == 0)
 			;
-		else
+		else {
 			ERR("Invalid supervision backend -- %s\n", ptr);
+			sighandler(SIGUSR1, NULL, NULL);
+		}
 		free(ptr);
 	}
 	else {
@@ -780,8 +782,7 @@ message:
 		message_len = ptr-message;
 	}
 
-#ifdef SV_DEBUG
-#else
+#if !defined(SV_DEBUG)
 	if (geteuid()) {
 		errno = EPERM;
 		ERROR("superuser privilege required to proceed", NULL);
