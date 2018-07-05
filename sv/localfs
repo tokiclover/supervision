@@ -135,7 +135,8 @@ stop()
 		mnt_args=-T
 	fi
 
-	for i in $(mountinfo -P "^(${mnt_point})$" ${mnt_args} "^(${mnt_fstype})$"); do
+	for i in $(mountinfo --reverse --mpoint-skip-regex "^(${mnt_point})$" \
+		${mnt_args} "^(${mnt_fstype})$"); do
 		mount_command ${i}
 	done
 }
