@@ -282,22 +282,20 @@ int main(int argc, char *argv[])
 					retval++;
 				}
 			}
-			if (task & FSTAB_ARGS)
+			else if (task & FSTAB_ARGS)
 				printf("-t %s -o %s %s %s\n", MNT_TYPE(ent), MNT_OPTS(ent),
 						MNT_NODE(ent), MNT_FILE(ent));
 			else {
 				if (task & FSTAB_NODE)
 					printf("%s", MNT_NODE(ent));
-				if (argv[optind][0] == '*') {
-					printf(" %s\n", ent->mnt_dir);
-					continue;
-				}
 				if (task & FSTAB_FSYS)
 					printf(" %s", MNT_TYPE(ent));
 				if (task & FSTAB_OPTS)
 					printf(" %s", MNT_OPTS(ent));
 				printf("\n");
 			}
+			if (argv[optind][0] == '*')
+				continue;
 		}
 		else {
 			if (argv[optind][0] == '*')
