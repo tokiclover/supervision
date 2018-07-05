@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include "error.h"
 #include "helper.h"
+#include "config.h"
 
 const char *progname;
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 	struct init_request ireq;
 	int fd;
 	int len;
-	char arg[PATH_MAX];
+	char arg[] = EXEC_PREFIX "/sbin/sv-shutdown -0";
 	mode_t m;
 
 	progname = strrchr(argv[0], '/');
@@ -59,7 +60,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 		if (ireq.cmd == INIT_CMD_RUNLVL) {
-			snprintf(arg, sizeof(arg), "sv-shutdown -%d", ireq.runlevel);
+			sprintf(arg+strlen(arg)-1, "%c", ireq.runlevel);
 			if (system(arg))
 				ERR("Failed to execute `%s'", arg);
 		}
