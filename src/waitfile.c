@@ -64,11 +64,11 @@ static void help_message(int status)
 	exit(status);
 }
 
-static int waitfile(const char *file, int timeout, int flags)
+static int waitfile(const char *file, long unsigned int timeout, int flags)
 {
 	int i, j, r;
 	int e = flags & FILE_EXIST, m = flags & FILE_MESG;
-	int msec = WAIT_MSEC, nsec, ssec = 10;
+	long unsigned int msec = WAIT_MSEC, nsec, ssec = 10;
 
 	if (timeout < ssec) {
 		nsec = timeout;
@@ -101,7 +101,7 @@ static int waitfile(const char *file, int timeout, int flags)
 int main(int argc, char *argv[])
 {
 	int flags = 0, opt;
-	long timeout;
+	long unsigned int timeout;
 
 	progname = strrchr(argv[0], '/');
 	if (progname == NULL)
@@ -129,17 +129,16 @@ int main(int argc, char *argv[])
 	argc -= optind, argv += optind;
 
 	if (argc < 2) {
-		fprintf(stderr, "%s: Insufficient number of arguments\n", progname);
+		ERR("Insufficient number of arguments -- `%d' (two required)\n", argc);
 		fprintf(stderr, "usage: %s [-E] TIMEOUT FILENAME\n", progname);
 		exit(EXIT_FAILURE);
 	}
 
-	timeout = strtol(*argv, NULL, 10);
+	timeout = strtoul(*argv, NULL, 10);
 	if (errno == ERANGE) {
-		fprintf(stderr, "%s: Invalid agument -- %s\n", progname, strerror(errno));
+		ERR("Invalid agument -- `%s'\n", *argv);
 		exit(EXIT_FAILURE);
 	}
-	argv++;
 
-	return waitfile(*argv, (int)timeout, flags);
+	return waitfile(*++argv, timeout, flags);
 }
