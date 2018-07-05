@@ -273,7 +273,7 @@ static void find_mount_point(struct mntargs *args)
 
 #endif
 
-static const char *shortopts = "bD:d:fO:o:P:p:T:t:mNnhqv";
+static const char *shortopts = "bD:d:fO:o:P:p:rT:t:mNnhqv";
 static const struct option longopts[] = {
 	{ "device-skip-regex",  1, NULL, 'D' },
 	{ "options-skip-regex", 1, NULL, 'O' },
@@ -289,6 +289,7 @@ static const struct option longopts[] = {
 	{ "netdev",   0, NULL, 'n' },
 	{ "nonetdev", 0, NULL, 'N' },
 	{ "quiet",    0, NULL, 'q' },
+	{ "reverse",  0, NULL, 'r' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
@@ -308,6 +309,7 @@ static const char *longopts_help[] = {
 	"Network device",
 	"Nonetwork device",
 	"Enable quiet mode",
+	"Print in reverse order",
 	"Print help massage",
 	"Print version string",
 	NULL
@@ -353,6 +355,7 @@ int main(int argc, char *argv[])
 	struct mntargs args;
 	int retval = 0;
 	int quiet = 1;
+	int reverse = 0;
 	SV_String_T *s;
 
 	progname = strrchr(argv[0], '/');
@@ -406,6 +409,9 @@ int main(int argc, char *argv[])
 		case 'q':
 			quiet = 0;
 			break;
+		case 'r':
+			reverse = 1;
+			break;
 		case 'v':
 			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
@@ -427,6 +433,14 @@ int main(int argc, char *argv[])
 	mount_list = sv_stringlist_new();
 	find_mount_point(&args);
 
+	if (reverse)
+	TAILQ_FOREACH_REVERSE(s, mount_list, SV_StringList, entries) {
+		if (retval)
+			retval--;
+		if (quiet)
+			puts(s->str);
+	}
+	else
 	TAILQ_FOREACH(s, mount_list, entries) {
 		if (retval)
 			retval--;
