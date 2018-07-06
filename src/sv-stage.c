@@ -507,6 +507,7 @@ static void svc_stage(const char *cmd)
 	const char *command = cmd;
 	const char *argv[8] = { "runscript" };
 	char buf[128];
+	char b[32];
 	int p, r;
 	int svc_start = 1;
 	int level = 0;
@@ -556,9 +557,9 @@ static void svc_stage(const char *cmd)
 	chdir("/");
 
 	t = time(NULL);
+	ctime_r(&t, b);
 	svc_log("logging: %s command\n", command);
-	svc_log("%s %s stage started at %s\n", progname, sv_runlevel[sv_stage],
-			ctime(&t));
+	svc_log("%s %s stage started at %s\n", progname, sv_runlevel[sv_stage], b);
 
 	/* do this extra loop to be able to stop sysboot with sv_stage=SV_SHUTDOWN_LEVEL;
 	 * so that, {local,network}fs services etc. can be safely stopped
@@ -629,8 +630,9 @@ static void svc_stage(const char *cmd)
 		argv[4] = command;
 
 		t = time(NULL);
+		ctime_r(&t, b);
 		svc_log( "\n\t%s runlevel (%s command) at %s\n", sv_runlevel[sv_level],
-				command, ctime(&t));
+				command, b);
 
 		sv_deptree_load(&DEPTREE);
 		if (svc_start)
@@ -640,7 +642,8 @@ static void svc_stage(const char *cmd)
 		while (p >= 0 && p < DEPTREE.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(DEPTREE.tree[p])) {
 				t = time(NULL);
-				svc_log("\n\tpriority-level-%d started at %s\n", p,	ctime(&t));
+				ctime_r(&t, b);
+				svc_log("\n\tpriority-level-%d started at %s\n", p,	b);
 				r = svc_execl(DEPTREE.tree[p], 8, argv);
 				/* enable dependency tracking only if needed */
 				if (r)
@@ -665,8 +668,8 @@ static void svc_stage(const char *cmd)
 
 	svc_runlevel(sv_runlevel[sv_level]);
 	t = time(NULL);
-	svc_log("\n%s %s runlevel stopped at %s\n", progname, sv_runlevel[sv_stage],
-			ctime(&t));
+	ctime_r(&t, b);
+	svc_log("\n%s %s runlevel stopped at %s\n", progname, sv_runlevel[sv_stage], b);
 	atexit(sv_cleanup);
 }
 
