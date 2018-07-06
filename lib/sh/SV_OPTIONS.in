@@ -5,7 +5,7 @@
 
 #SVC_CONFIGFILE=/etc/@svc@.conf
 #SVC_REQIRED_FILES="/etc/FILE1.conf /etc/FILE2.conf"
-#SVC_COMMANDS=configtes
+#SVC_COMMANDS=configtest
 #SVC_STARTED_COMMAND=reload
 #SVC_CMD=/path/to/binary
 #SVC_OPTS="-f -c ${SVC_CONFIGFILE}"
@@ -55,6 +55,10 @@
 
 #configtest()
 #{
+#
+# Check SVC_CONFIG and SVC_REQUIRED_FILES
+# 	svc_config
+#
 #	eval ${SVC_CMD} -t -f "${SVC_CONFIGFILE}"
 #}
 
