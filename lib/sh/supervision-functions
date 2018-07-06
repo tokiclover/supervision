@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) supervision-functions    4.4 2017/01/12 21:09:26         Exp $
+# $Id:  @(#) supervision-functions    4.5 2018/07/06 21:09:26         Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -155,8 +155,12 @@ svc_reload()
 	if command -v reload >${NULL} 2>&1; then
 		reload
 	elif [ "${SV_TYPE}" = "rs" ]; then
+		if [ -n "${SVC_CMD}"]; then
+		svc_sig HUP
+		else
 		error "invalid command -- no reload command definition found"
 		return 1
+		fi
 	elif [ -n "${__SIGRELD__}" ]; then
 		eval ${__SVCCMD__} ${__SIGRELD__} "${SV_RUNDIR}/${SVC_NAME}"
 	elif [ -n "${__SIGRHUP__}" ]; then
