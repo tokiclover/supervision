@@ -171,8 +171,8 @@ svc_mark()
 {
 	case "${1}" in
 		(-f|--fail*) printf "${__cmd__:-$2}" >"${SV_TMPDIR}/fail/${SVC_NAME}";;
-		(-d|--down*) printf "" >"${SV_TMPDIR}/down/${SVC_NAME}";;
-		(-s|--star*) printf "" >"${SV_TMPDIR}/star/${SVC_NAME}";;
+		(-d|--down*) printf "$(date)" >"${SV_TMPDIR}/down/${SVC_NAME}";;
+		(-s|--star*) printf "$(date)" >"${SV_TMPDIR}/star/${SVC_NAME}";;
 		(-u|--up*)   rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
 		(-S|--stop*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
 	esac
