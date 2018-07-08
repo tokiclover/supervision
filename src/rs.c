@@ -715,35 +715,16 @@ static void svc_zap(const char *svc)
 	}
 }
 
-#define WRITE_MESSAGE                                                        \
-	do {                                                                     \
-		i = 0;                                                               \
-		l = strlen(b);                                                       \
-		do {                                                                 \
-			i = write(fd, b, l);                                             \
-			if (i < 0) {                                                     \
-				if (errno == EINTR) continue;                                \
-				ERR("Failed to write fo `%s': %s\n", ptr, strerror(errno));  \
-				break;                                                       \
-			}                                                                \
-			l -= i;                                                          \
-		} while(l);                                                          \
-	} while(0/*CONST COND*/)
-
 static int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
-	char b[32] = " ";
-	time_t t;
 	int fd;
-	int i, l;
+	int i;
 	mode_t m;
 
 	if (!run)
 		return -ENOENT;
 	run->dep->status = status;
-	t = time(NULL);
-	ctime_r(&t, b+1);
 
 	switch(status) {
 		case SV_SVC_STAT_FAIL:
@@ -773,10 +754,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 				m = umask(0);
 				fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 				umask(m);
-				if (fd > 0) {
-					WRITE_MESSAGE;
-					close(fd);
-				}
+				if (fd > 0) close(fd);
 			}
 		case SV_SVC_STAT_DOWN:
 		case SV_SVC_STAT_FAIL:
@@ -786,20 +764,8 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 			umask(m);
 			if (fd > 0) {
-				if (what) {
-					i = 0;
-					l = strlen(what);
-					do {
-						i = write(fd, what, l);
-						if (i < 0) {
-							if (errno == EINTR) continue;
-							ERR("Failed to write to `%s': %s\n", ptr, strerror(errno));
-							break;
-						}
-						l -= i;
-					} while(l);
-				}
-				WRITE_MESSAGE;
+				if (what)
+					write(fd, what, strlen(what)+1);
 				close(fd);
 				return 0;
 			}
@@ -829,7 +795,6 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 				return 0;
 	}
 }
-#undef WRITE_MESSAGE
 
 static int svc_state(const char *svc, int status)
 {
