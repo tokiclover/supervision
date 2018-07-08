@@ -760,11 +760,27 @@ static void svc_zap(const char *svc)
 	}
 }
 
+#define WRITE_MESSAGE(message)                                               \
+	do {                                                                     \
+		l = strlen(message)+1;                                               \
+		do {                                                                 \
+			r = write(fd, message, l);                                       \
+			if (i < 0) {                                                     \
+				if (errno == EINTR) continue;                                \
+				ERR("Failed to write fo `%s': %s\n", ptr, strerror(errno));  \
+				break;                                                       \
+			}                                                                \
+			l -= r;                                                          \
+		} while(l);                                                          \
+	} while(0/*CONST COND*/)
+
 static int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
+	char *message = what;
 	int fd;
 	int i;
+	ssize_t l, r;
 	mode_t m;
 
 #ifdef SV_DEBUG
@@ -774,6 +790,8 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 	if (!run)
 		return -ENOENT;
 	run->dep->status = status;
+	if (!message)
+		message = run->argv[4];
 
 	switch(status) {
 		case SV_SVC_STAT_FAIL:
@@ -813,8 +831,8 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 			umask(m);
 			if (fd > 0) {
-				if (what)
-					write(fd, what, strlen(what)+1);
+				if (message)
+					WRITE_MESSAGE(message);
 				close(fd);
 				return 0;
 			}
@@ -845,6 +863,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 				return 0;
 	}
 }
+#undef WRITE_MESSAGE
 
 static int svc_state(const char *svc, int status)
 {
@@ -858,6 +877,9 @@ static int svc_state(const char *svc, int status)
 		return 0;
 
 	switch(status) {
+		case SV_SVC_STAT_ACTIVE:
+			ptr = SV_RUNDIR;
+			break;
 		case SV_SVC_STAT_FAIL:
 		case SV_SVC_MARK_FAIL:
 			ptr = SV_TMPDIR_FAIL;
