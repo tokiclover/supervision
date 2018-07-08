@@ -82,12 +82,6 @@ svc_start()
 	local val
 
 	svc_state -p && return 0
-	#
-	# this is done internaly (rs) already
-	#
-	if yesno "${SVC_WAIT:-1}"; then
-	svc_wait -E ${SV_WAIT_PIDFILE:-5} || eval ${__ERR_BUSY__}
-	fi
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
@@ -122,12 +116,6 @@ svc_stop()
 	local val
 
 	svc_state -p || return 0
-	#
-	# this is done internaly (rs) already
-	#
-	if yesno "${SVC_WAIT:-1}"; then
-	svc_wait -E ${SV_WAIT_PIDFILE:-5} || eval ${__ERR_BUSY__}
-	fi
 
 	if ! svc_command stop_pre; then
 		return 2
@@ -182,6 +170,7 @@ svc_mark()
 		(-s|--star*) printf "$(date)" >"${SV_TMPDIR}/star/${SVC_NAME}";;
 		(-u|--up*)   rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
 		(-S|--stop*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
+		(-w|--wait*) rm -f "${SV_TMPDIR}/wait/${SVC_NAME}";;
 	esac
 }
 
@@ -193,6 +182,7 @@ svc_state()
 		(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 		(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 		(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
+		(-w|--wait*) [ -e "${SV_TMPDIR}/wait/${SVC_NAME}" ];;
 		(-p|--pid*)  [ -e "${SVC_PIDFILE}" ];;
 	esac
 }
@@ -449,6 +439,23 @@ svc_cmd()
 		svc_state -a || { error "Inactive service"  ; return 3; };;
 	esac
 
+	#
+	# this is done internaly (rs) already
+	#
+	if yesno "${SVC_WAIT:-1}"; then
+		if ! svc_wait -E ${SV_WAIT_PIDFILE:-5}; then
+			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
+			return 1
+		fi
+		trap "rm -f ${SV_TMPDIR}/wait/${SVC_NAME}" INT QUIT TERM
+		if svc_state -w; then
+			error "service is busy -- retry later"
+			return 1
+		else
+			svc_mark -w
+		fi
+	fi
+
 	begin "service ${cmd}: "
 	eval ${pfx}${cmd} ${opt}
 	end "${?}"
@@ -486,11 +493,12 @@ svc_run()
 	#
 	# XXX: workaround for false start failure
 	#
-	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
+	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
 	if [ -n "${SVC_PROVIDE}" ]; then
-		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
-		echo >${virtual}
+		virt=${SV_TMPDIR}/star/${SVC_PROVIDE}
 	fi
+	trap "rm -f ${real} ${virt}" INT QUIT TERM
+	[ -n "${virt}" ] && echo "${SVC_NAME}" >${virt}
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}
 
