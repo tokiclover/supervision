@@ -75,7 +75,7 @@ static const char *const environ_whitelist[] = {
 	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID", NULL
 };
 static const char *environ_list[] = {
-	"COLUMNS", "SVC_DEBUG", "SVC_WAIT", "SV_RUNDIR", "SV_SVCDIR",
+	"COLUMNS", "SVC_DEBUG", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION",
 	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_STAGE",
 	NULL

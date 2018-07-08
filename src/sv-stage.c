@@ -752,7 +752,7 @@ int main(int argc, char *argv[])
 	argc -= optind, argv += optind;
 
 	/* set this to avoid double waiting for a lockfile for supervision */
-	setenv("SVC_WAIT", off, 1);
+	setenv("__SVC_WAIT__", off, 1);
 	setenv("SVC_DEPS", off, 1);
 	setenv("SV_SYSTEM", "", 1);
 	setenv("SV_PREFIX", "", 1);
