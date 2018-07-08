@@ -854,6 +854,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 			}
 			return -1;
 		case SV_SVC_MARK_STAR:
+			svc_mark(run, SV_SVC_MARK_FAIL, NULL);
 			if (run->dep->virt) {
 				/* do not remove virtual service if there is another provider */
 				fd = i = 0;
