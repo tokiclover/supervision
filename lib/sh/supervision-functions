@@ -504,7 +504,7 @@ svc_run()
 
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
 	svc_state -f
-	rm -f ${SVC_PIDFILE} ${virtual} ${real}
+	rm -f ${SVC_PIDFILE} ${virt} ${real}
 }
 
 svc_finish()
@@ -512,9 +512,9 @@ svc_finish()
 	#
 	# XXX: workaround for false start failure
 	#
-	local virtual real=${SV_TMPDIR}/star/${SVC_NAME}
+	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
 	if [ -n "${SVC_PROVIDE}" ]; then
-		virtual=${SV_TMPDIR}/star/${SVC_PROVIDE}
+		virt=${SV_TMPDIR}/star/${SVC_PROVIDE}
 	fi
 	rm -f ${SVC_PIDFILE} ${virtual} ${real}
 
