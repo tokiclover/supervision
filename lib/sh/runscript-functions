@@ -19,7 +19,6 @@ NETWORKFS='afs ceph cifs coda davfs fuse fuse.sshfs gfs glusterfs lustre ncpfs n
 NULL='/dev/null'
 
 __SV_DEPS_ORDER__='need:NEED use:USE before:BEFORE after:AFTER'
-__ERR_BUSY__='{ end 1 busy; return 16; };'
 __SV_PREFIX__=/usr
 
 _PATH_STDPATH=/bin:/sbin:/usr/bin:/usr/sbin
