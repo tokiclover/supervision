@@ -92,7 +92,7 @@ svc_start()
 	#
 	if svc_state -f; then
 		val=1
-	elif svc_wait ${SV_WAIT_PIDFILE:-5} ${SVC_PIDFILE}; then
+	elif svc_wait ${SV_TIMEOUT_PIDFILE:-5} ${SVC_PIDFILE}; then
 		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}; then
 			val=0
 		else
@@ -439,7 +439,7 @@ svc_cmd()
 	# this is done internaly (rs) already
 	#
 	if yesno "${__SVC_WAIT__:-1}"; then
-		if ! svc_wait -E ${SV_WAIT_PIDFILE:-5}; then
+		if ! svc_wait -E ${SV_TIMEOUT_PIDFILE:-5}; then
 			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
 			return 1
 		fi
