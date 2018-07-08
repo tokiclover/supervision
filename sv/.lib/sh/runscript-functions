@@ -127,7 +127,7 @@ svc_wait()
 		(-[E]) opt="${1}"; shift;;
 	esac
 	limit="${1:-60}"
-	file=${2:-${SV_TMPDIR}/down/${SVC_NAME}}
+	file=${2:-${SV_TMPDIR}/wait/${SVC_NAME}}
 
 	while [ ${val} -le ${limit} ]; do
 		val=$((${val}+1))
