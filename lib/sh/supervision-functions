@@ -164,6 +164,7 @@ svc_reload()
 
 svc_mark()
 {
+	yesno "${__SVC_WAIT__}" && return 0
 	case "${1}" in
 		(-f|--fail*) printf "${__cmd__:-$2}" >"${SV_TMPDIR}/fail/${SVC_NAME}";;
 		(-d|--down*) printf "$(date)" >"${SV_TMPDIR}/down/${SVC_NAME}";;
