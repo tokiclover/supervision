@@ -202,7 +202,6 @@ fi
 # Set up runscript environment
 #
 if   [ "${SV_TYPE}" = "rs" ]; then
-
 	SOURCE "${SV_CONFDIR}"/${SVC_NAME}
 	if [ "${name}" != "${SVC_NAME}" ]; then
 	SOURCE "${SV_CONFDIR}"/${name}
@@ -224,6 +223,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	else
 	SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	fi
+	SOURCE -d ${SV_LIBDIR}/sh/SV_BACKEND
 fi # SV_TYPE=sv
 
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
