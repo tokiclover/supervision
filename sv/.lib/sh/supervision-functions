@@ -67,7 +67,7 @@ svc_new()
 
 svc_down()
 {
-	echo "" >${SV_RUNDIR}/${SVC_NAME}/down
+	echo "$(date)" >${SV_RUNDIR}/${SVC_NAME}/down
 	eval ${__SVCCMD__} ${__SIGSTOP__} ${SV_RUNDIR}/${SVC_NAME} &&
 	svc_mark -d
 }
@@ -104,7 +104,11 @@ svc_start()
 	if [ "${val}" = 0 ]; then
 		svc_command start_post || val=2
 	fi
-	[ "${val}" = 0 ] && svc_mark -s || svc_mark -f
+	if [ "${val}" = 0 ]; then
+		svc_mark -s
+	else
+		svc_mark -f
+	fi
 	return ${val}
 }
 
@@ -401,7 +405,7 @@ svc_commands()
 		eval ${cmd} "${@}"
 		end ${?}
 	else
-		error "${cmd} command not defined."
+		error "\'${cmd}' command definition is not defined."
 		return 3
 	fi
 }
