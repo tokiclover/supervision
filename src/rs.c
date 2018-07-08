@@ -407,6 +407,7 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
+	int l, r;
 #ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, run);
 #endif
@@ -440,12 +441,23 @@ runsvc:
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
-	/* run a chid process to exec to the service; failure mean _exit(VALUE)! */
+	/* lock the lock file before any command */
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		_exit(ETIMEDOUT);
 	}
-	write(run->lock, run->argv[4], strlen(run->argv[4])+1);
+	/* write the service command to the lock file */
+	l = strlen(run->argv[4])+1;
+	do {
+		r = write(run->lock, run->argv[4], l);
+		if (r < 0)
+			if (errno != EINTR) {
+				LOG_ERR("Failed to write service command to `%s/%s': %s\n",
+					SV_TMPDIR_WAIT, run->name, strerror(errno));
+				break;
+			}
+		l -= r;
+	} while (l);
 
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_stage == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
