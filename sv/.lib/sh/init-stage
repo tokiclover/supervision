@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) init-stage    1.8 2017/01/24 21:09:26                    Exp $
+# $Id:  @(#) init-stage    1.8 2018/07/07 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -163,8 +163,8 @@ svc_tmpdir()
 
 make_pidfile()
 {
-	trap "rm -f ${pidfile}" SIGINT SIGQUIT SIGTERM
-	echo $$ >${pidfile}
+	trap "rm -f ${SV_TMPDIR}/${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid" INT QUIT TERM
+	echo $$ >${SV_TMPDIR}/${SV_CMD}.pid
 	ln -sf ${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid
 }
 kill_svscan()
@@ -216,12 +216,11 @@ case ${SV_CMD} in
 	;;
 esac
 
-pidfile="${SV_TMPDIR}/${SV_CMD}.pid"
 init_stage()
 {
 if   [ "${1}" = "--svscan" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
-	if [ -e "${pidfile}" ]; then
+	if [ -e "${SV_TMPDIR}/${SV_CMD}.pid" ]; then
 		kill_svscan
 	fi
 	if [ "${2}" = "--foreground" ]; then
@@ -254,9 +253,9 @@ elif [ "${1}" = "--default" ]; then
 	# Bring up what left and stage-2 assuming `svcscan'
 	# is ready when the following pidfile is present
 	#
-	if [ -e "${pidfile}" ]; then
+	if [ -e "${SV_TMPDIR}/${SV_CMD}.pid" ]; then
 		kill_svscan
-		rm ${pidfile}
+		rm ${SV_TMPDIR}/${SV_CMD}.pid
 	fi
 	#
 	# XXX: This hackery is necessary to get the real pid;
