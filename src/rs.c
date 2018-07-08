@@ -124,7 +124,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what);
  * lock file for service to start/stop
  * @svc: service name;
  * @lock_fd: SVC_LOCK to lock, lock_fd >= 0 to unlock;
- * @timeout: timeout to use to poll the lockfile (SVC_WAIT_SECS);
+ * @timeout: timeout to use to poll the lockfile (SVC_TIMEOUT_SECS);
  * @return: fd >= 0 on success; negative (usually -errno) on failure;
  */
 static int svc_lock(const char *svc, int lock_fd, int timeout);
@@ -137,9 +137,9 @@ static int svc_lock(const char *svc, int lock_fd, int timeout);
  * @return: 0 on success (lockfile available);
  */
 static int svc_wait(const char *svc, int timeout, int lock_fd);
-#define SVC_WAIT_SECS 60    /* default delay */
-#define SVC_WAIT_MSEC 1000  /* interval for displaying warning */
-#define SVC_WAIT_POLL 100   /* poll interval */
+#define SVC_TIMEOUT_SECS 60    /* default delay */
+#define SVC_TIMEOUT_MSEC 1000  /* interval for displaying warning */
+#define SVC_TIMEOUT_POLL 100   /* poll interval */
 
 /*
  * execute a service with the appended arguments
@@ -414,7 +414,7 @@ static int svc_run(struct svcrun *run)
 	if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_TIMEOUT))
 		run->dep->timeout = -1;
 	else if (!run->dep->timeout)
-		run->dep->timeout = SVC_WAIT_SECS;
+		run->dep->timeout = SVC_TIMEOUT_SECS;
 	run->status = -1;
 	run->sig = 0;
 
@@ -441,7 +441,7 @@ runsvc:
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
 	/* run a chid process to exec to the service; failure mean _exit(VALUE)! */
-	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_WAIT_SECS)) < 0) {
+	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		_exit(ETIMEDOUT);
 	}
@@ -696,7 +696,7 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 {
 	int i, j;
 	int err;
-	int msec = SVC_WAIT_MSEC, nsec, ssec = 10;
+	int msec = SVC_TIMEOUT_MSEC, nsec, ssec = 10;
 #ifdef SV_DEBUG
 	DBG("%s(%s, %d, %d)\n", __func__, svc, timeout, lock_fd);
 #endif
@@ -709,7 +709,7 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 	nsec = nsec ? nsec : ssec;
 
 	for (i = 0; i < timeout; ) {
-		for (j = SVC_WAIT_POLL; j <= msec; j += SVC_WAIT_POLL) {
+		for (j = SVC_TIMEOUT_POLL; j <= msec; j += SVC_TIMEOUT_POLL) {
 			if (svc_state(svc, SV_SVC_STAT_WAIT) < 1)
 				return 0;
 			/* add some insurence for failed services */
@@ -720,7 +720,7 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 				errno = err;
 			}
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
-			if (poll(0, 0, SVC_WAIT_POLL) < 0)
+			if (poll(0, 0, SVC_TIMEOUT_POLL) < 0)
 				return -1;
 		}
 		if (!(++i % ssec))
