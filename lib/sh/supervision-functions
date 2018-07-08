@@ -132,7 +132,7 @@ svc_stop()
 svc_restart()
 {
 	svc_stop
-	svc_remove
+	cp -HPpru ${__svc__} ${SV_RUNDIR}
 	svc_start
 }
 
