@@ -59,6 +59,7 @@ extern "C" {
 /* status command to issue to svc_{mark,state} when the STAT querry the status
  * and MARK command remove the status; so the command is only valid with svc_mark
  */
+#define SV_SVC_STAT_ACTIVE 'a'
 #define SV_SVC_STAT_FAIL 'f'
 #define SV_SVC_MARK_FAIL 'F'
 #define SV_SVC_STAT_DOWN 'd'
