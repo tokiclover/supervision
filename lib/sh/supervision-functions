@@ -167,7 +167,8 @@ svc_mark()
 		(-d|--down*) printf "" >"${SV_TMPDIR}/down/${SVC_NAME}";;
 		(-s|--star*) printf "" >"${SV_TMPDIR}/star/${SVC_NAME}";;
 		(-u|--up*)   rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
-		(-S|--stop*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
+		(-S|--stop*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}" \
+			               "${SV_TMPDIR}/fail/${SVC_NAME}";;
 		(-w|--wait*) rm -f "${SV_TMPDIR}/wait/${SVC_NAME}";;
 	esac
 }
