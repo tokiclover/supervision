@@ -183,11 +183,12 @@ int svc_cmd(struct svcrun *run)
 	struct tm *lt;
 #define STRFTIME_OFF 32
 	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
-#define MK_STRFTIME(ptr)                                            \
-	snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_FAIL, run->name); \
+#define MK_STRFTIME(tmpdir) do {                                    \
+	snprintf(buf, sizeof(buf), "%s/%s", tmpdir, run->name);         \
 	stat(buf, &st_buf);                                             \
 	lt = localtime(&st_buf.st_mtime);                               \
-	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)lt);
+	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)lt);     \
+} while (0/*CONST COND*/)
 
 #ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, run);
@@ -235,46 +236,58 @@ int svc_cmd(struct svcrun *run)
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0) {
 		if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
-			printf("%-32s: %s: down\n", run->name, cmd);
+			MK_STRFTIME(SV_TMPDIR_DOWN);
+
+			printf("%-32s: down at %s\n", run->name, ptr);
 			return 8;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
-			svc_state(run->name, SV_SVC_STAT_PIDS)) {
-			printf("%-32s: %s: started\n", run->name, cmd);
+			     svc_state(run->name, SV_SVC_STAT_PIDS)) {
+			if (svc_state(run->name, SV_SVC_STAT_STAR))
+				MK_STRFTIME(SV_TMPDIR_STAR);
+			else
+				MK_STRFTIME(SV_TMPDIR_PIDS);
+
+			printf("%-32s: started at %s\n", run->name, ptr);
 			return 0;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
-			MK_STRFTIME(ptr);
+			MK_STRFTIME(SV_TMPDIR_FAIL);
 
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-32s: %s: (%s command) failed at %s\n", run->name,
-							cmd, buf, ptr);
+					printf("%-32s: %s command failed at %s\n", run->name, buf, ptr);
 				}
 				close(i);
 			}
 			else
-				printf("%-32s: %s: failed at %s\n", run->name, cmd, ptr);
+				printf("%-32s: failed at %s\n", run->name, ptr);
 			return 16;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
-			MK_STRFTIME(ptr);
+			MK_STRFTIME(SV_TMPDIR_WAIT);
 
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-32s: %s: waiting (%s command) since %s\n",
-							run->name, cmd, buf, ptr);
+					printf("%-32s: waiting %s command since %s\n",
+							run->name, buf, ptr);
 				}
 				close(i);
 			}
 			else
-				printf("%-32s: %s: waiting since %s\n", run->name, cmd, ptr);
+				printf("%-32s: waiting since %s\n", run->name, ptr);
+			return 32;
+		}
+		else if (svc_state(run->name, SV_SVC_STAT_ACTIVE)) {
+			MK_STRFTIME(SV_TMPDIR);
+
+			printf("%-32s: active since %s\n", run->name, ptr);
 			return 32;
 		}
 		else {
-			printf("%-32s: %s: stopped\n", run->name, cmd);
+			printf("%-32s: stopped\n", run->name, cmd);
 			return 3;
 		}
 	}
