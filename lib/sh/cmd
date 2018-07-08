@@ -46,8 +46,6 @@ source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 
 
-SOURCE -d ${SV_LIBDIR}/sh/SV_BACKEND
-
 if [ "${__cmd__}" = "run" ]; then
 	yesno "${__environ__}" || SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}
 	#
