@@ -389,22 +389,22 @@ svc_command()
 #
 svc_commands()
 {
-	local cmd=${1} started=false
+	local cmd="${1}" started=false
 
 	svc_state -s || svc_state -p && started=true
 
 	if     isin ${cmd} ${SVC_STARTED_COMMANDS}; then
 		if ! ${started}; then
-			error "cannot execute ${cmd} -- service not started"
+			error "cannot execute \`${cmd}' command -- service is stopped"
 			return 2
 		fi
 	elif   isin ${cmd} ${SVC_STOPPED_COMMANDS}; then
 		if ${started}; then
-			error "cannot execute ${cmd} -- service is started"
+			error "cannot execute \'${cmd}' command -- service is started"
 			return 2
 		fi
 	elif ! isin ${cmd} ${SVC_COMMANDS}; then
-		error "cannot execute ${cmd} -- no command found"
+		error "cannot execute \'${cmd}' command -- no command definition found"
 		return 1
 	fi
 
