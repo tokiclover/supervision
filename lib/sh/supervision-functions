@@ -495,7 +495,7 @@ svc_run()
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virt=${SV_TMPDIR}/star/${SVC_PROVIDE}
 	fi
-	trap "rm -f ${real} ${virt}" INT QUIT TERM
+	trap "rm -f ${SVC_PIDFILE} ${real} ${virt}" INT QUIT TERM
 	[ -n "${virt}" ] && echo "${SVC_NAME}" >${virt}
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}
