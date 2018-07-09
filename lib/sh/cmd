@@ -46,7 +46,7 @@ source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 
 
-if [ "${__cmd__}" = "run" ]; then
+if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
 	yesno "${__environ__}" || SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}
 	#
 	# Use ENV dir(s) if requested
