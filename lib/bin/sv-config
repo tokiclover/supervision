@@ -93,7 +93,8 @@ sv_backend()
 	elif [ "${__SV_NAM__}" = "runit" ]; then
 		BIN=chpst COMMANDS="${COMMANDS} __PRECMD__ __SCANCMD__"
 		PREFIX='' SIGNALS="${SIGNALS} __SIGRELD__"
-		__SIGWTUP__='-w ${SVC_TIMEOUT_UP:-10} up' __SIGWDWN__='-w ${SVC_TIMEOUT_DOWN:-10} down'
+		__SIGWTUP__='-w ${SVC_TIMEOUT_UP:-${SV_TIMMEOUT_UP:-10}} up'
+		__SIGWDWN__='-w ${SVC_TIMEOUT_DOWN:-${SV_TIMMEOUT_DOWN:-30}} down'
 		__SCANCMD__='pkill -CONT -F \${SV_TMPDIR}/runsvdir.pid'
 		__SIGSTRT__=up __SIGSTOP__=down __SIGSONCE__=once __SIGPAUSE__=pause
 		__SIGCONT__=cont __SIGHUP__=hup __SIGALRM__=alarm __SIGINT__=interrupt

@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) supervision-functions    4.5 2018/07/06 21:09:26         Exp $
+# $Id:  @(#) supervision-functions    4.5 2018/07/08 21:09:26         Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -91,7 +91,7 @@ svc_start()
 	#
 	if svc_state -f; then
 		:;
-	elif svc_wait ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_PIDFILE:-10}} ${SVC_PIDFILE}; then
+	elif svc_wait ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
 		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}; then
 			if svc_command start_post; then
 				svc_mark -s
@@ -116,7 +116,7 @@ svc_stop()
 		return 2
 	fi
 	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"; then
-		if svc_wait -E ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_PIDFILE:-10}} ${SVC_PIDFILE}; then
+		if svc_wait -E ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-30}} ${SVC_PIDFILE}; then
 			if svc_command stop_post; then
 				svc_mark -S
 				val=0
@@ -495,7 +495,7 @@ svc_run()
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virt=${SV_TMPDIR}/star/${SVC_PROVIDE}
 	fi
-	trap "rm -f ${SVC_PIDFILE} ${real} ${virt}" INT QUIT TERM
+	trap "rm -f ${real} ${virt}" INT QUIT TERM
 	[ -n "${virt}" ] && echo "${SVC_NAME}" >${virt}
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}

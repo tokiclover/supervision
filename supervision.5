@@ -445,10 +445,10 @@ T}
 Default service log directory (default to \fI${LOGDIR}/${SVC_NAME}\fR)
 T}
 \fBSVC_TIMEOUT_DOWN\fR@T{
-Delay to wait the command to be down (default 10 seconds)
+Delay to wait the command to be down (default to \fBSV_TIMEOUT_DOWN=30\fR seconds, see \fI@SYSCONFDIR@/sv.conf\fR)
 T}
 \fBSVC_TIMEOUT_UP\fR@T{
-Delay to wait the command to be up (default 10 seconds)
+Delay to wait the command to be up (default to \fBSV_TIMEOUT_UP=10\fR seconds, see \fI@SYSCONFDIR@/sv.conf\fR)
 T}
 .TE
 .SS FUNCTIONS
