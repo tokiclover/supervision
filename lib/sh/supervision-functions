@@ -79,54 +79,53 @@ svc_up()
 
 svc_start()
 {
-	local val
+	local val=1
 
 	svc_state -p && return 0
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
-	eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
+	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"; then
 	#
-	# XXX: wait five seconds
+	# XXX: wait pidfile
 	#
 	if svc_state -f; then
-		val=1
-	elif svc_wait ${SV_TIMEOUT_PIDFILE:-5} ${SVC_PIDFILE}; then
+		:;
+	elif svc_wait ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_PIDFILE:-10}} ${SVC_PIDFILE}; then
 		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}; then
-			val=0
-		else
-			val=1
+			if svc_command start_post; then
+				svc_mark -s
+				val=0
+			else
+				svc_mark -f
+				val=2
+			fi
 		fi
-	else
-		val=1
 	fi
-	if [ "${val}" = 0 ]; then
-		svc_command start_post || val=2
-	fi
-	if [ "${val}" = 0 ]; then
-		svc_mark -s
-	else
-		svc_mark -f
-	fi
-	return ${val}
+	fi # __SVCCMD__
+	return "${val}"
 }
 
 svc_stop()
 {
-	local val
+	local val=1
 
 	svc_state -p || return 0
 
 	if ! svc_command stop_pre; then
 		return 2
 	fi
-	eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"
-	if [ "${?}" = 0 ]; then
-		svc_mark -S
-		return 0
-	else
-		return 1
+	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"; then
+		if svc_wait -E ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_PIDFILE:-10}} ${SVC_PIDFILE}; then
+			if svc_command stop_post; then
+				svc_mark -S
+				val=0
+			else
+				val=2
+			fi
+		fi
 	fi
+	return "${val}"
 }
 
 svc_restart()
