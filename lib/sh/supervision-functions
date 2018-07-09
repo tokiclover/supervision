@@ -246,6 +246,10 @@ svc_remove()
 svc_stop_post()
 {
 	#
+	# Handle run return values
+	#
+	if [ "${__ret__}" = "0" ]; then
+	#
 	# Set up CGroup
 	#
 	if [ "${OS_NAME}" = "Linux" ]; then
@@ -254,25 +258,18 @@ svc_stop_post()
 		fi
 	fi
 
-	#
-	# Handle run return values
-	#
-	case "${__cmd_args__}" in
-		(0*)
-		svc_command stop_post
-		;;
-		(*)
+		return 0
+	else
 		:	${SVC_TRY:=${SV_TRY:-3}}
 		__SVC_TRY__=$((${SVC_TRY}+1))
 		env_svc __SVC_TRY__
 		if [ ${__SVC_TRY__:-0} -ge ${SVC_TRY} ]; then
-			error "Maximum number of starting attempts reached."
 			svc_remove
 			svc_mark -f
+			error "Maximum number of starting attempts reached."
 		fi
-		;;
-	esac
-	rm -f ${SVC_PIDFILE} ${SV_TMPDIR}/star/${SVC_NAME}
+		return 1
+	fi
 }
 
 #
@@ -511,6 +508,10 @@ svc_run()
 
 svc_finish()
 {
+	local __ret__="${1}"
+	shift
+	svc_stop_post "${@}"
+
 	#
 	# XXX: workaround for false start failure
 	#
@@ -520,7 +521,6 @@ svc_finish()
 	fi
 	rm -f ${SVC_PIDFILE} ${virt} ${real}
 
-	svc_stop_post
 	[ -n "${FIN_CMD}" ] || return 0
 	eval exec ${FIN_CMD} ${FIN_OPTS}
 }
