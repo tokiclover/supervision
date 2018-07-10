@@ -775,10 +775,10 @@ static void svc_zap(const char *svc)
 
 #define WRITE_MESSAGE(message)                                               \
 	do {                                                                     \
-		l = strlen(message)+1;                                               \
+		l = strlen(message);                                                 \
 		do {                                                                 \
 			r = write(fd, message, l);                                       \
-			if (i < 0) {                                                     \
+			if (r < 0) {                                                     \
 				if (errno == EINTR) continue;                                \
 				ERR("Failed to write fo `%s': %s\n", ptr, strerror(errno));  \
 				break;                                                       \
