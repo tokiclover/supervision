@@ -178,13 +178,13 @@ svc_mark()
 svc_state()
 {
 	case "${1}" in
-		(-e|--exist) [ -e "${__svc__}" ];;
+		(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
 		(-a|--acti*) [ -e "${SV_RUNDIR}/${SVC_NAME}" ];;
 		(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
 		(-s|--star*) [ -e "${SV_TMPDIR}/star/${SVC_NAME}" ];;
 		(-d|--down*) [ -e "${SV_TMPDIR}/down/${SVC_NAME}" ];;
 		(-w|--wait*) [ -e "${SV_TMPDIR}/wait/${SVC_NAME}" ];;
-		(-p|--pid*)  [ -e "${SVC_PIDFILE}" ];;
+		(-p|--pid*)  [ -e "${SV_TMPDIR}/pids/${SVC_NAME}" ];;
 	esac
 }
 
