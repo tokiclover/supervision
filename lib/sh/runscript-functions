@@ -186,6 +186,12 @@ stop()
 
 fi #__RUNSCRIPT_FUNCTIONS__
 
+#
+# Set debug options
+#
+if yesno "${SVC_DEBUG}"; then
+	set -x
+fi
 
 #
 # Use RC config file if requested
