@@ -612,7 +612,7 @@ static void svc_env(void)
 	for (j = 0; environ_whitelist[j]; j++) {
 		ptr = getenv(environ_whitelist[j]);
 		if (ptr) {
-			snprintf(buf, sizeof(buf), "%s=%s", environ_whitelist[j], ptr);
+			snprintf(buf, sizeof(buf), "%s='%s'", environ_whitelist[j], ptr);
 			svc_environ[i++] = err_strdup(buf);
 		}
 		if (i == len) {
