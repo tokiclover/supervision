@@ -24,7 +24,7 @@
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
 #define OFFSET_T_SIZE(x)                                                               \
 	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int)) > 4U*sizeof(int) ? \
-	(x+4U)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) :                 \
+	(x+4U)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int)) : \
 	4U*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int))
 struct runlist {
 	unsigned int rid;
