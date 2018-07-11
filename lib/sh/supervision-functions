@@ -488,15 +488,28 @@ svc_run()
 	svc_start_pre || return
 	[ "${__SVC_DEPEND__}" = 0 ] || svc_depend || return
 
+	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
+	#
+	# this is done internaly (rs) already
+	#
+	if yesno "${__SVC_WAIT__:-1}"; then
 	#
 	# XXX: workaround for false start failure
 	#
-	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virt=${SV_TMPDIR}/star/${SVC_PROVIDE}
+		if [ -f ${virt} ]; then
+			grep -w -q "${SVC_NAME}" <${virt} && virt=
+		fi
+		if [ -n "${virt}" ]; then
+			echo "${SVC_NAME}" >>${virt}
+			if [ "$(wc -l <${virt})" -ge 2 ]; then
+				virt=
+			fi
+		fi
 	fi
+	fi # __SVC_WAIT__
 	trap "rm -f ${real} ${virt}" INT QUIT TERM
-	[ -n "${virt}" ] && echo "${SVC_NAME}" >${virt}
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}
 
@@ -512,12 +525,23 @@ svc_finish()
 	svc_stop_post "${@}"
 
 	#
+	# this is done internaly (rs) already
+	#
+	if yesno "${__SVC_WAIT__:-1}"; then
+	#
 	# XXX: workaround for false start failure
 	#
 	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
 	if [ -n "${SVC_PROVIDE}" ]; then
 		virt=${SV_TMPDIR}/star/${SVC_PROVIDE}
+		if [ -f ${virt} ]; then
+			if [ "$(wc -l <${virt})" -ge 2 ]; then
+				sed "/^${SVC_NAME}$/d" -i ${virt}
+				virt=
+			fi
+		fi
 	fi
+	fi # __SVC_WAIT__
 	rm -f ${SVC_PIDFILE} ${virt} ${real}
 
 	[ -n "${FIN_CMD}" ] || return 0
