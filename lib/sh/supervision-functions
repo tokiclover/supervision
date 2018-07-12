@@ -490,10 +490,6 @@ svc_run()
 
 	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
 	#
-	# this is done internaly (rs) already
-	#
-	if yesno "${__SVC_WAIT__:-1}"; then
-	#
 	# XXX: workaround for false start failure
 	#
 	if [ -n "${SVC_PROVIDE}" ]; then
@@ -508,7 +504,6 @@ svc_run()
 			fi
 		fi
 	fi
-	fi # __SVC_WAIT__
 	trap "rm -f ${real} ${virt}" INT QUIT TERM
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}
@@ -525,10 +520,6 @@ svc_finish()
 	svc_stop_post "${@}"
 
 	#
-	# this is done internaly (rs) already
-	#
-	if yesno "${__SVC_WAIT__:-1}"; then
-	#
 	# XXX: workaround for false start failure
 	#
 	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
@@ -541,7 +532,6 @@ svc_finish()
 			fi
 		fi
 	fi
-	fi # __SVC_WAIT__
 	rm -f ${SVC_PIDFILE} ${virt} ${real}
 
 	[ -n "${FIN_CMD}" ] || return 0
