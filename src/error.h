@@ -38,7 +38,7 @@ extern "C" {
 #define WARN(fmt, ...) fprintf(stderr, "WARN: %s: " fmt, progname, __VA_ARGS__)
 #define ERROR(fmt, ...)  error(errno, "ERROR: %s: " fmt, progname, __VA_ARGS__)
 #define ERR_EXIT ERROR("", NULL)
-#if defined DEBUG
+#if defined SV_DEBUG
 #  define DBG(fmt, ...) fprintf(stderr, "%s:%s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define DBG(fmt, ...)
