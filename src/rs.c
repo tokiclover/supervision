@@ -238,7 +238,9 @@ int svc_cmd(struct svcrun *run)
 		if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
 			MK_STRFTIME(SV_TMPDIR_DOWN);
 
-			printf("%-32s: down at %s\n", run->name, ptr);
+			printf("%-32s: %sdown%s at %s\n", run->name,
+					print_color(COLOR_MAG, COLOR_FG),
+					print_color(COLOR_BLK, COLOR_RST), ptr);
 			return 8;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
@@ -248,7 +250,9 @@ int svc_cmd(struct svcrun *run)
 			else
 				MK_STRFTIME(SV_TMPDIR_PIDS);
 
-			printf("%-32s: started at %s\n", run->name, ptr);
+			printf("%-32s: %sstarted%s at %s\n", run->name,
+					print_color(COLOR_GRN, COLOR_FG),
+					print_color(COLOR_BLK, COLOR_RST), ptr);
 			return 0;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
@@ -257,12 +261,18 @@ int svc_cmd(struct svcrun *run)
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-32s: %s command failed at %s\n", run->name, buf, ptr);
+					printf("%-32s: %s%s%s command %sfailed%s at %s\n",
+							run->name, print_color(COLOR_RED, COLOR_FG),
+							buf, print_color(COLOR_BLK, COLOR_RST),
+							print_color(COLOR_RED, COLOR_FG),
+							print_color(COLOR_RST, COLOR_RST),ptr);
 				}
 				close(i);
 			}
 			else
-				printf("%-32s: failed at %s\n", run->name, ptr);
+				printf("%-32s: %sfailed%s at %s\n", run->name,
+						print_color(COLOR_RED, COLOR_FG),
+						print_color(COLOR_BLK, COLOR_RST), ptr);
 			return 16;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
@@ -271,23 +281,30 @@ int svc_cmd(struct svcrun *run)
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-32s: waiting %s command since %s\n",
-							run->name, buf, ptr);
+					printf("%-32s: waiting %s%s%s command since %s\n",
+							run->name, print_color(COLOR_YLW, COLOR_FG),
+							buf, print_color(COLOR_BLK, COLOR_RST), ptr);
 				}
 				close(i);
 			}
 			else
-				printf("%-32s: waiting since %s\n", run->name, ptr);
+				printf("%-32s: %smwaiting%s since %s\n", run->name,
+						print_color(COLOR_YLW, COLOR_FG),
+						print_color(COLOR_BLK, COLOR_RST), ptr);
 			return 32;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_ACTIVE)) {
 			MK_STRFTIME(SV_TMPDIR);
 
-			printf("%-32s: active since %s\n", run->name, ptr);
+			printf("%-32s: %sactive%s since %s\n", run->name,
+					print_color(COLOR_MAG, COLOR_FG),
+					print_color(COLOR_BLK, COLOR_RST), ptr);
 			return 32;
 		}
 		else {
-			printf("%-32s: stopped\n", run->name, cmd);
+			printf("%-32s: %sstopped%s\n", run->name,
+					print_color(COLOR_BLU, COLOR_FG),
+					print_color(COLOR_BLK, COLOR_RST));
 			return 3;
 		}
 	}
