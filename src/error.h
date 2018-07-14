@@ -69,18 +69,18 @@ enum {
 #define COLOR_WHT COLOR_WHT
 };
 
-#define ERR(fmt, ...) fprintf(stderr, "%sERROR%s: %s: " fmt, \
+#define ERR(fmt, ...) fprintf(stderr, "%s: %serror%s: "    fmt, progname, \
 		print_color(COLOR_RED, COLOR_FG), \
-		print_color(COLOR_RST, COLOR_RST), progname, __VA_ARGS__)
-#define WARN(fmt, ...) fprintf(stderr, "%sWARN%s: %s: " fmt, \
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
+#define WARN(fmt, ...) fprintf(stderr, "%s: %swarning%s: " fmt, progname, \
 		print_color(COLOR_YLW, COLOR_FG), \
-		print_color(COLOR_RST, COLOR_RST), progname, __VA_ARGS__)
-#define ERROR(fmt, ...)  error(errno, "%sERROR%s: %s: " fmt, \
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
+#define ERROR(fmt, ...)  error(errno, "%s: %serror%s: "   fmt, progname, \
 		print_color(COLOR_RED, COLOR_FG), \
-		print_color(COLOR_RST, COLOR_RST), progname, __VA_ARGS__)
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
 #define ERR_EXIT ERROR("", NULL)
 #if defined SV_DEBUG
-#  define DBG(fmt, ...) fprintf(stderr, "%s:%s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
+#  define DBG(fmt, ...) fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define DBG(fmt, ...)
 #endif

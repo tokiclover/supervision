@@ -117,9 +117,9 @@ extern int svc_end(const char *svc, int status);
 
 /* simple function to help debug (vfprintf(3) clone) */
 extern int svc_log(const char *fmt, ...);
-#define LOG_ERR(fmt, ...)  svc_log("ERROR: %s: " fmt, applet, __VA_ARGS__)
-#define LOG_WARN(fmt, ...) svc_log( "WARN: %s: " fmt, applet, __VA_ARGS__)
-#define LOG_INFO(fmt, ...) svc_log(       "%s: " fmt, applet, __VA_ARGS__)
+#define LOG_ERR(fmt, ...)  svc_log("%s: error: "  fmt, applet, __VA_ARGS__)
+#define LOG_WARN(fmt, ...) svc_log("%s: warnng: " fmt, applet, __VA_ARGS__)
+#define LOG_INFO(fmt, ...) svc_log(       "%s: "  fmt, applet, __VA_ARGS__)
 
 extern void svc_sigsetup(void);
 

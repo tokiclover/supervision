@@ -28,8 +28,8 @@
 
 const char *progname;
 
-#define ERR(fmt, ...) fprintf(stderr, "ERROR: %s: " fmt, progname, __VA_ARGS__)
-#define WARN(fmt, ...) fprintf(stderr, "WARN: %s: " fmt, progname, __VA_ARGS__)
+#define ERR(fmt, ...)  fprintf(stderr, "%s: error: "   fmt, progname, __VA_ARGS__)
+#define WARN(fmt, ...) fprintf(stderr, "%s: warning: " fmt, progname, __VA_ARGS__)
 
 enum {
 	FILE_EXIST = 0x01,
