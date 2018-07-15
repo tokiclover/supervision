@@ -101,6 +101,7 @@ sv_backend()
 		__SIGQUIT__=quit __SIGUSR1__=1 __SIGUSR2__=2 __SIGTERM__=term
 		__SIGKILL__=kill __SIGEXIT__=exit __SIGRELD__=reload
 		__SV_CMD__=runsvdir __SVCCMD__=sv __CHKCMD__='sv check'
+		__SVCENV__='SVDIR=\${SV_RUNDIR}'
 		__STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
 	elif [ "${__SV_NAM__}" = "s6" ]; then
 		BIN='' PREFIX=s6- __SIGWTUP__='-wU -T${SVC_TIMEOUT_UP:-10000}' __SIGWDWN__='-wD -T${SVC_TIMEOUT_DOWN:-10000}'
@@ -150,7 +151,7 @@ sv_backend()
 	done
 	end "${?}" Symlinks
 	local env
-	for env in __SV_NAM__ ${COMMANDS} ${SIGNALS}; do
+	for env in __SV_NAM__ __SVCENV__ ${COMMANDS} ${SIGNALS}; do
 		eval printf \"${env}=\'%s\'\\\n\" \"\${${env}}\"
 	done > "${SV_LIBDIR}"/sh/SV_BACKEND
 	end "${?}" SV_BACKEND
