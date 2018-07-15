@@ -150,7 +150,7 @@ sv_backend()
 	done
 	end "${?}" Symlinks
 	local env
-	for env in __SV_NAM__ ${COMMANDS} ${SIGNALS}; do
+	for env in __SV_NAM__ __SVCENV__ ${COMMANDS} ${SIGNALS}; do
 		eval printf \"${env}=\'%s\'\\\n\" \"\${${env}}\"
 	done > "${SV_LIBDIR}"/sh/SV_BACKEND
 	end "${?}" SV_BACKEND
