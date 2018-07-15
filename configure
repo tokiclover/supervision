@@ -563,6 +563,7 @@ LINUX_RUNSCRIPT_SERVICES="
 	mdadm
 	mdev
 	qemu-binfmt
+	qemu-vlan.vnet0
 	unionfs
 	zramfs
 "
@@ -584,9 +585,11 @@ LINUX_SVLOG_SERVICES="
 "
 LINUX_SERVICE_INSTANCES="
 	ip6tables:iptables
+	qemu-vlan.vnet4:qemu-vlan.vnet0
 "
 LINUX_OPTIONS_INSTANCES="
 	ip6tables
+	qemu-vlan.vnet4
 "
 LINUX_SINGLE_SERVICES="
 	sulogin

@@ -1,0 +1,11 @@
+#
+# $Id: /etc/sv.conf.d/qemu-vlan.vnet4, 2016/06/06           Exp $
+# 
+
+QEMU_VLAN_DHCP="dnsmasq"
+QEMU_VLAN_VDE="true"
+QEMU_VLAN_NUM="4"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -1,0 +1,443 @@
+#!/bin/sh 
+# $Id: @(#) /etc/sv/qemu-vlan                             Exp $
+# $A$: (c) 2016-2018 tokiclover <tokiclover@gmail.com>    Exp $
+# $L$: MIT (or 2-clause/new/simplified BSD)               Exp $
+# $V$: 0.2.0 2018/07/08 21:09:26                          Exp $
+#
+
+description="QEMU Virtual Local Network"
+SVC_BEFORE="libvirt-guests libvirtd"
+SVC_COMMANDS="hwaddr"
+
+#
+# set sane default
+#
+:	${QEMU_VLAN_NUM:=4}
+yesno "${QEMU_VLAN_VDE}" && QEMU_VLAN_VDE=true || QEMU_VLAN_VDE=false
+yesno "${QEMU_VLAN_VIF}" && QEMU_VLAN_VIF=true || QEMU_VLAN_VIF=false
+if [ -f ${SVC_CONFIGFILE} ]; then
+	write_config=false
+else
+	write_config=true
+fi
+br="${name#*.}"
+cf="${SVC_CONFIGFILE}"
+dhcp="${QEMU_VLAN_DHCP}"
+if="${QEMU_VLAN_IF}"
+num="${QEMU_VLAN_NUM}"
+vde="${QEMU_VLAN_VDE}"
+vif="${QEMU_VLAN_VIF}"
+user=${SVC_USER:=root}
+group=${SVC_GROUP:=qemu}
+:	${SVC_CONFIGFILE:=/etc/qemu/${br}/${br}.conf}
+
+make_config()
+{
+	mkdir -p ${cf%/*} || return
+	cat <<EOF_CONFIG >${cf}
+###### Virtual LAN Configuration #####
+#
+# Set extra options for dnsmasq when used as DHCP and DNS server
+#DNMASQ_ARGS="--dhcp-hostfile=/etc/qemu/${br}/dhcp.host"
+#
+# Set extra options for ISC dhcpd when used as DHCP server
+#DHCPD_ARGS="-q"
+#
+# Set extra options for vde_switch when using VDE switches
+#VDE_SWITCH_ARGS="--numports=64"
+#
+###### Virtual LAN Configuration #####
+#
+# The following settings are automatically generated, so modify with care.
+# Unless a static address is used for a bridged virtual network, nothing
+# should be changed but duplicate hardware address!
+#
+EOF_CONFIG
+}
+iptables_dnat()
+{
+	[ -n "${2}" ] || return
+	${1} -A PREROUTING  -t nat -p "${proto}" -d "${2}" --dport "${port}" -j DNAT \
+		--to-destination "${address}"
+}
+iptables_snat()
+{
+	[ -n "${2}" ] || return
+	${1} -A POSTROUTING -t nat -p "${proto}" -s "${address}" -j SNAT \
+		--to-source "${2}:${port}"
+}
+iptables_table()
+{
+	local address inet ipt broadcast netmask rule table="${1}" v
+	[ ${#} -ge 2 ] && shift || return
+
+	for cmd in iptables ip6tables; do
+		eval "${cmd}=$(command -v ${cmd} 2>/dev/null)"
+		if [ $? != 0 ]; then
+			error "\`${cmd}' command not found"
+			return 1
+		fi
+	done
+
+	for rule in "${@}"; do
+		set ${rule/\// }
+		rule="${1}" v="${2}"
+		case "${v}" in
+			(6) ipt=${ip6tables}  ;;
+			(*) ipt=${iptables} v=;;
+		esac
+		set ${rule//,/ }
+		if [ ${#} != 4 ]; then
+			error "insufficient arguments -- ${@} (4 required)"
+			continue
+		fi
+		local iface="${1}" proto="${2}" port="$3" address="$4"
+
+		get_address "${if}ace" "${v}"
+		if [ -n "${v}" ]; then
+			iptables_${table} ${ip6tables} "${ipnet6}"
+		else
+			iptables_${table} ${iptables}  "${ipnet}"
+		fi
+	done
+}
+iptables_rules()
+{
+	[ -n "$PREROUTING_RULES"  ] && iptables_table "dnat" $PREROUTING_RULES
+	[ -n "$POSTROUTING_RULES" ] && iptables_table "snat" $POSTROUTING_RULES
+}
+
+get_address()
+{
+	if [ -n "$(${ip} link show "${if}" | ${sed} -n '/RUNNING/p')" ]; then
+		eval set -- $(${ifconfig} ${if} | ${sed} -n "/inet${2} /p")
+		while [ ${#} -gt 0 ]; do
+			eval "${1}=${2}"
+			shift 2
+		done
+	fi
+}
+save_config()
+{
+	${write_config} && printf  "$*\n" >>${cf}
+}
+
+make_dhcpd_server()
+{
+	local lf fc
+	lf=${cf%/*}/dhcpd.lease
+	fc=${cf%/*}/dhcpd.conf
+
+	make_dhcpd_conf
+	[ -e ${lf} ] || printf '' >$lf
+
+	DHCPD_OPTS="-cf ${fc} -lf ${lf} -pf /var/run/${br}.dhcpd.pid -user dhcp -group dhcp"
+	eval dhcpd "${dhcp}_OPTS" "$DHCPD_ARGS" "${br}"
+}
+make_dhcpd_conf()
+{
+	[ -e ${fc} ] && return
+	mkdir -p ${lf%/*}
+	cat <<EOF >${fc}
+###### VNET DHCP Configuration #####
+
+allow unknown-clients;
+default-lease-time 7200; 
+max-lease-time 72000;
+
+subnet ${p}.0 netmask ${netmask} {
+	range ${p}.128 $p.254;
+	option broadcast-address ${br}oadcast;
+	option domain-name-servers ${address};
+	option domain-name localdomain;
+	default-lease-time 7200;
+	max-lease-time 72000;
+	option netbios-name-servers ${address};
+	option routers ${address};
+}
+host ${br} {
+	hardware ethernet ${ether};
+	fixed-address ${gateway};
+	option domain-name-servers 0.0.0.0;
+	option domain-name "";
+	option routers 0.0.0.0;
+}
+####### VNET DHCP Configuration #######
+EOF
+}
+make_dnsmasq_server()
+{
+	local df fc lf hf hs
+	lf=${cf%/*}/dhcp.lease
+	fc=${cf%/*}/dhcp.conf
+	hf=${cf%/*}/dhcp.host
+	hs=${fc%/*}/hosts
+	df=${fc%/*}/dnsmasq.conf
+	make_dnsmasq_conf
+
+	DNSMASQ_OPTS="--conf-file=${df} --pid-file=/var/run/${br}.dnsmasq.pid"
+	eval ${dnsmasq} "$DNSMASQ_OPTS" "$DNSMASQ_ARGS"
+}
+make_dnsmasq_conf()
+{
+	[ -e ${df} ] && return
+	mkdir -p ${cf%/*}
+
+	[ -e ${fc} ] ||
+	cat <<EOF >${fc}
+###### VNET DHCP Configuration #####
+# DHCP options for dnsmasq, modify with care
+
+option:router,0.0.0.0
+option:domain-name,localdomain
+
+###### VNET DHCP Configuration #####
+EOF
+
+	cat <<EOF >${df}
+###### VNET dnsmasq Configuration #####
+# DHCP options for dnsmasq, modify with care; see dnsmasq(8)
+
+bind-dynamic
+strict-order
+except-interface=lo
+addn-hosts=${hs}
+dhcp-no-override
+dhcp-authoritative
+dhcp-leasefile=${lf}
+dhcp-optsfile=${fc}
+dhcp-hostsfile=$hf
+dhcp-range=${p}.32,$p.254,${netmask},${br}oadcast,48h
+dhcp-optsfile=${fc}
+#domain-needed
+interface=${br}
+listen-address=${gateway}
+user=dhcp
+group=dhcp
+
+###### VNET dnsmasq Configuration #####
+EOF
+
+	[ -e ${hf} ] || printf '' >${hf}
+	[ -e ${hs} ] || printf '' >${hs}
+}
+
+#
+# create mac (hardware) adress using QEMU's registered OUI (52:54:00)
+#
+make_hwaddr()
+{
+	local a b c i
+	if [ -z "${hwaddr}" ]; then
+		hwaddr="$(printf "${br}_${1}_$$}\n" | ${md5sum})"
+	fi
+	shift
+	[ -n "${cut}" ] || cut=$(command -v cut 2>/dev/null)
+
+	a="$(printf "${hwaddr}" | ${cut} -b1,2)"
+	b="$(printf "${hwaddr}" | ${cut} -b3,4)"
+	c="$(printf "${hwaddr}" | ${cut} -b5,6)"
+	hwaddr="${hwaddr#$a$b$c}"
+	printf "52:54:00:$b:$a:$c"
+}
+hwaddr()
+{
+	${vde} && num="$((${num}*32))" || num=$((${num}*8))
+	local i=0 f=${cf%/*}/ether.conf
+	write_config=true
+	cat <<EOF >>$f
+##### Hardwre MAC Address #####
+# to be used with qemu -device virtio-net,mac=MAC
+#
+$(eval '
+	while [ ${i} -lt ${num} ]; do
+		echo ether_${i}=$(make_hwaddr ${br}_${i}_ether_$$);
+		i=$((${i}+1));
+	done
+')
+#
+##### Hardwre MAC Address #####
+EOF
+}
+make_bridge()
+{
+	${ip} link add name ${br} type bridge forward_delay 0 ||
+		die "Failed to add \`${br}' bridge device"
+	#
+	# setup mac address for persistent networking
+	#
+:	${ether:=$(make_hwaddr ${br})}
+	${ip} link set dev ${br} address ${ether}
+	# 
+	# bring up the bridge inet
+	#
+:	${netmask:=255.255.255.0}
+	if [ -n "${if}" ]; then
+		get_address "${if}"
+		n="10$n" p=192.168
+	:	${address:=${inet:-${p}.$n.2}}
+ 	:	${gateway:=${p}.0.1}
+	:	${broadcast:=${p}.0.255}
+		case "${dhcp}" in
+			(*dhc*)
+			${dhcp} ${br}
+			sleep 2
+			get_address "${br}"
+			;;
+			(*)
+			${ifconfig} ${br} broadcast ${broadcast} ${address}/24 up
+			${ip} route add table default ${gateway} dev ${br}
+			;;
+		esac
+
+		#
+		# bridge to hardware interface
+		#
+		${ip} link set dev ${if} down
+		${ifconfig} ${if} up promisc 0.0.0.0/24
+		${ip} link set dev ${if} master ${br} ||
+			die "Failed to add ${if} to ${br} bridge"
+	else
+		p="172.16.1$n"
+	:	${address:=${p}.2}
+	:	${gateway:=${p}.1}
+	:	${broadcast:=${p}.255}
+		#
+		# virtual privalte network
+		#
+		${ip} addr add ${gateway}/24 broadcast ${broadcast} dev ${br}
+		${ip} link set dev ${br} up
+
+		case "${dhcp}" in
+			(*dhcpd)
+			make_dhcpd_server
+			;;
+			(*dnsmasq)
+			make_dnsmasq_server
+			;;	
+		esac
+	fi
+	save_config "netmask=${netmask}\ngateway=${gateway}\nbroadcast=${broadcast}\nether=${ether}\n"
+}
+
+stop_pre()
+{
+	${vde} && vde_switch=vde_switch || vde_switch=
+	for cmd in ifconfig ip md5sum sed ${dhcp} ${vde_switch}; do
+		eval "${cmd}=$(command -v ${cmd} 2>/dev/null)"
+		[ "${?}" = 0 ] || die "${cmd} required command not found"
+	done
+}
+start_pre()
+{
+	if [ -z "${br}" -o -z "${num}" ]; then
+		error "QEMUE_VLAN_NUM=4 [QEMUE_VLAN_DHCP=dnsmasq] and [QEMUE_VLAN_VDE=true]"
+		error "should be defined in \`${SV_CONFDIR}/${SVC_NAME}'"
+		return 1
+	fi
+	if ${write_config}; then
+		if ! make_config; then
+			error "Failed to make \`${cf}' configuration file"
+			return 2
+		fi
+	else
+		SOURCE -d ${SVC_CONFIGFILE}
+	fi
+
+	if ! grep -qsw tun /proc/modules; then
+		/sbin/modprobe tun
+		/bin/chgrp kvm /dev/net/tun
+	fi
+
+	stop_pre
+	#
+	# support br<N>, vmnet<N> vnet<N>... names
+	#
+	n="$(printf "${br}" | ${sed} -nre 's/.*([0-9].?)/\1/p')"
+	if [ -z "${n}" ]; then
+		error "invalid virtual interface name -- \`${br}'"
+		return 3
+	fi
+}
+
+start()
+{
+	${vif} && [ -d /sys/devices/virtual/net/${tap} ] && return 0
+	#
+	# create the bridge between ${if} and the tap device
+	#
+	${ip} link set "${br}" up >/dev/null 2>&1 || make_bridge
+
+	local address i=0 tap_opts 
+	if [ -n "${if}" -o -n "$(${ip} link show dev ${br} | ${sed} -n '/PROMISC/p')" ]; then
+		tap_opts='promisc on'
+	fi
+
+	while [ ${i} -lt ${num} ]; do
+		${vif} || tap="${br}_${i}"
+		#
+		# bring up the tap interface
+		#
+		${ip} tuntap add dev "${tap}" mode tap user "${user}" group "${group}" ||
+			die "Failed to create ${tap} device"
+
+		${ip} link set dev "${tap}" ${tap_opts} master "${br}" up ||
+			die "Failed to bridge ${tap} to ${br}"
+
+		#
+		# use a vde switch if enabled
+		#
+		if ${vde}; then
+			eval ether="\$vde_switch_ether_${i}"
+			if [ -z "${ether}" ]; then
+		:	${write_config:=true}
+		:	${ether:=$(make_hwaddr ${tap})}
+			save_config "vde_switch_ether_${i}=${ether}"
+			fi
+			${vde_switch} ${VDE_SWITCH_ARGS} --mode 660 --tap "${tap}" \
+				--sock /var/run/${tap}.vde_switch -g "${group}" --daemon \
+				--pidfile /var/run/${tap}.vde_switch.pid --macaddr "${ether}" ||
+				die "Failed to connect ${tap} interface to VDE switch"
+		fi
+
+		i=$((${i}+1))
+		write_config=
+	done
+}
+stop()
+{
+	local i=0 ppidfile
+	while [ ${i} -lt ${num} ]; do
+		${vif} || tap="${br}_${i}"
+		#
+		# remove vde switch
+		#
+		pidfile=/var/run/${tap}.vde_switch.pid
+		if ${vde} && [ -e ${pidfile} ]; then
+			pkill -TERM -x "vde_switch" -F ${pidfile}
+		fi
+
+		${ip} link set dev "${tap}" down
+		${ip} link del dev "${tap}"
+		i=$((${i}+1))
+	done
+	${vif} && return 0
+
+	# 
+	# Delete the bridge
+	#
+	${ip} link set dev "${br}" down
+	${ip} link del dev "${br}"
+	pidfile=/var/run/${br}.${dhcp}.pid
+	if [ -n "${dhcp}" -a -e ${pidfile} ]; then
+		pkill -TERM -x "${dhcp}" -F ${pidfile}
+	fi
+	if [ -n "${if}" ]; then
+		${ip} link set dev "${if}" down promisc off
+		${ifconfig} "${if}" up 0.0.0.0/24
+	fi
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#
