@@ -68,7 +68,7 @@ static int aiocb_count;
 #ifndef LIBDIR
 # define LIBDIR "/lib"
 #endif
-#define SV_BACKEND LIBDIR "/sv/sh/SV_BACKEND"
+#define SV_CONFIG LIBDIR "/sv/sh/SV_CONFIG"
 #define SD_PIDFILE _PATH_VARRUN "sv-shutdown.pid"
 
 #ifdef SV_DEBUG
@@ -433,7 +433,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 		goto shutdown;
 	}
 
-	if ((fp = fopen(SV_BACKEND, "r"))) {
+	if ((fp = fopen(SV_CONFIG, "r"))) {
 		while (getline(&line, &len, fp) > 0)
 			if (strncmp(line, ent, sizeof(ent)-1) == 0) {
 				ptr = shell_string_value(line+sizeof(ent));
@@ -444,7 +444,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 			}
 	}
 	else {
-		ERR("Failed to open `%s': %s\n", SV_BACKEND, strerror(errno));
+		ERR("Failed to open `%s': %s\n", SV_CONFIG, strerror(errno));
 		sighandler(SIGUSR1, NULL, NULL);
 	}
 
