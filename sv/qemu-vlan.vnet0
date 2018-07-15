@@ -21,6 +21,7 @@ else
 	write_config=true
 fi
 br="${name#*.}"
+:	${SVC_CONFIGFILE:=/etc/qemu/${br}/${br}.conf}
 cf="${SVC_CONFIGFILE}"
 dhcp="${QEMU_VLAN_DHCP}"
 if="${QEMU_VLAN_IF}"
@@ -29,7 +30,6 @@ vde="${QEMU_VLAN_VDE}"
 vif="${QEMU_VLAN_VIF}"
 user=${SVC_USER:=root}
 group=${SVC_GROUP:=qemu}
-:	${SVC_CONFIGFILE:=/etc/qemu/${br}/${br}.conf}
 
 make_config()
 {
@@ -171,8 +171,8 @@ make_dnsmasq_server()
 	lf=${cf%/*}/dhcp.lease
 	fc=${cf%/*}/dhcp.conf
 	hf=${cf%/*}/dhcp.host
-	hs=${fc%/*}/hosts
-	df=${fc%/*}/dnsmasq.conf
+	hs=${cf%/*}/hosts
+	df=${cf%/*}/dnsmasq.conf
 	make_dnsmasq_conf
 
 	DNSMASQ_OPTS="--conf-file=${df} --pid-file=/var/run/${br}.dnsmasq.pid"
