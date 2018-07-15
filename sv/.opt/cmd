@@ -41,6 +41,7 @@ __svc__="${head%/$__cmd_dir__}"
 unset head
 SV_TYPE=sv
 
+trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" EXIT INT TERM QUIT
 source "${SVC_DIR}"/../.opt/SVC_OPTIONS ||
 	{ echo "Required file not found." >&2; exit 1; }
 #
