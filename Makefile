@@ -36,7 +36,7 @@ dist_SH_OPTS = \
 	cmd \
 	OPTIONS.in \
 	SVC_OPTIONS \
-	SVC_BACKEND
+	SVC_CONFIG
 dist_SH_BINS  = \
 	sv/.lib/sh/tmpfiles \
 	sv/.lib/sh/runscript \

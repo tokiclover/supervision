@@ -55,7 +55,7 @@ if ! . ${SV_LIBDIR}/sh/runscript-functions; then
 	[ -n "${SV_OPTS}" ] && svc_rsh || exit 1
 fi
 :	${SV_SVCDIR:=/etc/sv}
-. ${SV_LIBDIR}/opt/SVC_BACKEND
+. ${SV_LIBDIR}/opt/SVC_CONFIG
 . ${SV_SVCDIR}.conf
 umask 022
 
