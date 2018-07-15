@@ -7,6 +7,7 @@
 :	${SV_LIBDIR:=/lib/sv}
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/sv}
+:	${SV_CONFDIR:=${SV_SVCDIR}.conf.d}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${name:=${SVC_NAME}}
 :	${__cmd__:=${0##*/}}
