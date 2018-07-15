@@ -1,4 +1,5 @@
 __SV_NAM__='runit'
+__SVCENV__='SVDIR=\${SV_RUNDIR}'
 __SV_CMD__='/bin/runsvdir'
 __SVCCMD__='/bin/sv'
 __CHKCMD__='/bin/sv check'
