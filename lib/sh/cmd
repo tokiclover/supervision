@@ -42,6 +42,7 @@ unset head
 SV_TYPE=sv
 SV_LIBDIR=${SVC_DIR}/../../lib
 
+trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" EXIT INT TERM QUIT
 source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "Required file not found." >&2; exit 1; }
 
