@@ -135,7 +135,7 @@ dist_SVC_INSTANCES  = \
 	spawn-fcgi.lighttpd:spawn-fcgi.nginx \
 	swapfiles:swaps \
 	networkfs:localfs \
-	dhcp.wlan0:dhcp wpa_supplicant.wlan0:wpa_supplicant \
+	wpa_supplicant.wlan0:wpa_supplicant \
 	socklog-inet:syslog socklog-ucspi:syslog socklog-unix:syslog
 dist_SV_OPTS  = \
 	dns/OPTIONS.dnsmasq \
