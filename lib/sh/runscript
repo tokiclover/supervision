@@ -42,7 +42,7 @@ while true; do
 	shift
 done
 if ! [ ${#} -ge 2 ]; then
-	echo "ERROR: Insufficient number of arguments" >&2
+	echo "${0##*/}: error: Insufficient number of arguments" >&2
 	exit 1
 fi
 
@@ -65,7 +65,7 @@ esac
 shift
 
 . ${SV_LIBDIR}/sh/runscript-functions ||
-	{ echo "ERROR: Required file not found." >&2; exit 1; }
+	{ echo "${0##*/}: error: Required file not found." >&2; exit 1; }
 
 #
 # Migrate to new sub-dirs (v0.13.0)
