@@ -744,7 +744,6 @@ static void svc_zap(const char *svc)
 static int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
-	char *message = what;
 	int fd;
 	int i;
 	ssize_t l, r;
@@ -753,8 +752,6 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 	if (!run)
 		return -ENOENT;
 	run->dep->status = status;
-	if (!message)
-		message = run->argv[4];
 
 	switch(status) {
 		case SV_SVC_STAT_FAIL:
@@ -794,8 +791,8 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
 			umask(m);
 			if (fd > 0) {
-				if (message)
-					WRITE_MESSAGE(message);
+				if (what)
+					WRITE_MESSAGE(what);
 				close(fd);
 				return 0;
 			}
