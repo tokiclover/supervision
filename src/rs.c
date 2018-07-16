@@ -328,7 +328,7 @@ int svc_cmd(struct svcrun *run)
 			return 1;
 		}
 
-		snprintf(buf, sizeof(buf), "%s/.%s/%s", SV_SVCDIR, sv_runlevel[sv_stage],
+		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR, sv_runlevel[sv_stage],
 				run->name);
 		if (!access(buf, F_OK)) {
 			if (run->cmd == SV_SVC_CMD_DEL)
