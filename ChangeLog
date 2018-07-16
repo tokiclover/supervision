@@ -1,5 +1,21 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.13.1:
+
+Stabilisation release: there are fixes alll over the place, a few are
+important and many are minors.
+
+Important fixes:
+- remove virtual service from dependency tree;
+- remove failure and environment service state file before `start' command;
+- `zap' command remove service pidfile;
+- set up `__cmd__=finish' for supervision;
+- added a (shell) `trap' for service state files;
+- `fstabinfo' output any request;
+- use standard GNU style `__attribute__';
+- remove faulty `SV_PREFIX' from `sv-stage';
+- and minor fixes, see `git log' for more;
+
 0.13.0:
 
 WARING: SHORT COMMAND LINE OPTION FOR RUNLEVELS CHANGED DRAMATICALLY FROM v.12.x
