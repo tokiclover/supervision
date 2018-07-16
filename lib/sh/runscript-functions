@@ -73,13 +73,13 @@ rs_status()
 svc_add()
 {
 	[ -n "${SV_STAGE}" ] || return
-	svc_state -e && ln -fns ${__svc__} ${SV_SVCDIR}/.${SV_STAGE}
+	svc_state -e && ln -fns ${__svc__} ${SV_SVCDIR}.init.d/${SV_STAGE}
 }
 
 svc_del()
 {
 	[ -n "${SV_STAGE}" ] || return
-	rm -fr ${SV_SVCDIR}/.${SV_STAGE}/${SVC_NAME}
+	rm -fr ${SV_SVCDIR}.init.d/${SV_STAGE}/${SVC_NAME}
 }
 svc_zap()
 {
