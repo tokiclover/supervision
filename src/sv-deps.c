@@ -328,7 +328,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 
 static void sv_runlevel_migrate(void)
 {
-	char op[PATH_MAX], np[PATH_MAX];
+	char op[128], np[128];
 	DIR *nd, *od;
 	int i, ofd, nfd;
 	struct dirent *ent;
@@ -347,11 +347,15 @@ static void sv_runlevel_migrate(void)
 		i = 3; break;
 	default: return; }
 
-	snprintf(op, ARRAY_SIZE(op), "%s/.stage-%d", SV_SVCDIR, i);
-	if (access(op, F_OK))
+	snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, i);
+	snprintf(np, sizeof(np), "%s/.%s"      , SV_SVCDIR, sv_runlevel[sv_stage]);
+	if (file_test(np, 'd'))
+		memmove(op, np, sizeof(np));
+	else if (!file_test(op, 'd'))
 		return;
 	od = opendir(op);
-	snprintf(np, ARRAY_SIZE(np), "%s/.%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+	snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+	puts(np);
 	nd = opendir(np);
 	if (!od || !nd)
 		return;
@@ -388,7 +392,7 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 	else {
 		ptr = path;
 		sv_runlevel_migrate();
-		snprintf(path, ARRAY_SIZE(path), "%s/.%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+		snprintf(path, sizeof(path), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[sv_stage]);
 	}
 	if ((dir = opendir(ptr)) == NULL) {
 		ERR("Failed to open `%s' directory: %s\n", ptr, strerror(errno));
