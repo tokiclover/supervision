@@ -86,6 +86,7 @@ svc_start()
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
+	rm -f ${SV_TMPDIR}/fail/${SVC_NAME}
 	eval ${__SVCENV__} ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"
 	#
 	# XXX: wait five seconds
