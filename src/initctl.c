@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)initctl.c  0.12.6.4 2016/12/28
+ * @(#)initctl.c  0.14.0 2018/07/28
  */
 
 #include <initreq.h>
