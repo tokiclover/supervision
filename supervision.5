@@ -835,10 +835,13 @@ daemons and default services (default runlevel) in multi users mode.
 .I @SYSCONFDIR@/sv.conf
 Supervision global configuration file
 .TP
-.B SV_CONFDIR: \fI@SYSCONFDIR@/sv.conf.d\fR
+.B \fI@SYSCONFDIR@/sv.conf.d\fR (\fBSV_CONFDIR\fR)
 Runscript local configuration files directory
 .TP
-.B SV_SVCDIR: \fI@SYSCONFDIR@/sv\fR
+.B \fI@SYSCONFDIR@/sv.init.d\fR
+Runlevel directory
+.TP
+.B \fI@SYSCONFDIR@/sv\fR (\fBSV_SVCDIR\fR)
 See SV_SVCDIR/.RUNLEVEL for active services.
 Use `rs -(0|1||3|4|5) SERVICE add` to add a particular service to a particular
 init-stage or runlevel.
