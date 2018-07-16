@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)error.c  0.13.0 2016/12/28
+ * @(#)error.c  0.14.0 2018/07/18
  */
 
 #include "error.h"
