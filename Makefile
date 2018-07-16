@@ -235,11 +235,11 @@ endif
 
 DISTFILES   = \
 	$(dist_INIT_STAGE) $(dist_SV_OPTS)
+dist_RUNLEVEL_DIRS = sysinit sysboot default shutdown single
 dist_DIRS  += \
 	$(SV_LIBDIR)/bin $(SV_LIBDIR)/sbin $(SV_LIBDIR)/sh $(DOCDIR) \
 	$(SV_LIBDIR)/cache $(PREFIX)$(SV_SVCDIR) \
-	$(SV_SVCDIR).conf.d $(SV_SVCDIR)/.sysinit $(SV_SVCDIR)/.sysboot \
-	$(SV_SVCDIR)/.default $(SV_SVCDIR)/.shutdown $(SV_SVCDIR)/.single
+	$(SV_SVCDIR).conf.d $(dist_RUNLEVEL_DIRS:%=$(SV_SVCDIR).init.d/%)
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
 dist_SVC_SED  =
@@ -314,11 +314,11 @@ endif
 	for svc in $(dist_SVC_INSTANCES); do \
 		$(LN_S) -f "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
-	$(LN_S) -f $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysinit/
-	$(LN_S) -f $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.sysboot/
-	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.default/
-	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.shutdown/
-	$(LN_S) -f $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR)/.single/
+	$(LN_S) -f $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysinit/
+	$(LN_S) -f $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysboot/
+	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/default/
+	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/shutdown/
+	$(LN_S) -f $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/single/
 install-dist: install-dir $(DISTFILES)
 	$(install_DATA)   $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 install-dir :
@@ -356,7 +356,7 @@ uninstall: uninstall-doc
 	       $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%) \
 	       $(dist_RS_OPTS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%)
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
-		$(DESTDIR)$(SV_LIBDIR)/cache
+		$(DESTDIR)$(SV_LIBDIR)/cache $(DESTDIR)$(SV_SVCDIR).init.d
 	rm -f $(dist_BINS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
 		$(dist_RS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SHUTDOWN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
@@ -365,8 +365,7 @@ uninstall: uninstall-doc
 		$(dist_RS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SH_BINS:%=$(DESTDIR)$(SV_LIBDIR)/sh/%) \
 		$(dist_SH_LIBS:%=$(DESTDIR)$(SV_LIBDIR)/sh/%) \
-		$(DESTDIR)$(SV_SVCDIR)/getty-tty* \
-		$(DESTDIR)$(SV_SVCDIR)/.[ds]*/*
+		$(DESTDIR)$(SV_SVCDIR)/getty-tty*
 	-rmdir $(dist_DIRS:%=$(DESTDIR)%)
 uninstall-doc:
 	rm -f $(dist_EXTRA:%=$(DESTDIR)$(DOCDIR)/%)
