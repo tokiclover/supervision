@@ -521,7 +521,6 @@ static void svc_stage(const char *cmd)
 			ERR("There's nothing to shut down!!!\n", NULL);
 			exit(EXIT_FAILURE);
 		}
-		break;
 	case SV_SYSINIT_LEVEL:
 		if (sv_system) {
 			ERR("Invalid usage -- `%s' runlevel with `%s' subsystem\n",
