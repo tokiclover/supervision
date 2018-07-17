@@ -280,21 +280,6 @@ static int sigsetup(void)
 	return 0;
 }
 
-#define WRITE_MESSAGE(file)	                                              \
-do {                                                                      \
-	rw = message_len;                                                     \
-	do {                                                                  \
-		rd = write(fd, message, rw);                                      \
-		if (rd < 0) {                                                     \
-			if (errno == EINTR) continue;                                 \
-			ERR("Failed to write to `%s': %s\n", file, strerror(errno));  \
-			break;                                                        \
-		}                                                                 \
-		rw -= rd;                                                         \
-	} while (rw);                                                         \
-	close(fd);                                                            \
-} while (0/*CONSTCOND*/)
-
 static int sv_wall(void)
 {
 #ifdef SV_DEBUG
@@ -317,7 +302,7 @@ static int sv_wall(void)
 #endif
 	struct utmpx *ut;
 	char dev[UT_LINESIZE+8];
-	int fd, rd, rw;
+	int fd, rw;
 #ifdef HAVE_POSIX_ASYNCHRONOUS_IO
 	static struct aiocb **aiocb_array;
 	static struct sigevent sigevb;
@@ -382,14 +367,14 @@ static int sv_wall(void)
 		aiocb_array[i]->aio_fildes = fd;
 		aiocb_array[i]->aio_lio_opcode = LIO_WRITE;
 		if (aio_write(aiocb_array[i])) {
-			WRITE_MESSAGE(dev);
+			err_write(fd, message, dev);
 			aiocb_array[i]->aio_fildes = -1;
 			aiocb_array[i]->aio_lio_opcode = LIO_NOP;
 		}
 		else aiocb_count++;
 		i++;
 #else
-		WRITE_MESSAGE(dev);
+		err_write(fd, message, dev);
 #endif
 	}
 	endutxent();
@@ -840,7 +825,7 @@ time_error:
 
 static int sv_nologin(void)
 {
-	int fd, rd = -1, rw;
+	int fd;
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
@@ -848,10 +833,8 @@ static int sv_nologin(void)
 	if (!access(_PATH_NOLOGIN, F_OK))
 		unlink(_PATH_NOLOGIN);
 	if ((fd = open(_PATH_NOLOGIN, O_WRONLY|O_CREAT|O_TRUNC, 0664)) > 0)
-		WRITE_MESSAGE(_PATH_NOLOGIN);
-	return rd;
+		return err_write(fd, message, _PATH_NOLOGIN);
 }
-#undef WRITE_MESSAGE
 
 static void sv_timewarn(unsigned long int timeleft)
 {
