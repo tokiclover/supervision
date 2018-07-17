@@ -496,7 +496,7 @@ runsvc:
 		close(run->lock);
 
 	/* supervise the service */
-	if (sv_nohang || SV_SVCOPTS_GET(run->dep, SV_SVCOPTS_NOHANG)) {
+	if (run->dep->timeout > 0) {
 		/* block signal before fork() */
 		sigprocmask(SIG_SETMASK, &ss_full, NULL);
 
@@ -1264,7 +1264,7 @@ static void thread_signal_handler(siginfo_t *si)
 
 				p->run[i]->status = s;
 				r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
-				if (!sv_nohang && (r == SVC_WAITPID))
+				if (!p->run[i]->dep->timeout && (r == SVC_WAITPID))
 					return;
 
 				pthread_mutex_lock(&p->mutex);

@@ -40,7 +40,6 @@ static void sv_sigsetup(void);
 
 static int sv_system_detect(void);
 
-int sv_nohang   =  0;
 int sv_parallel =  0;
 int sv_level    = -1;
 int sv_stage    = -1;
@@ -806,7 +805,6 @@ int main(int argc, char *argv[])
 	setenv("SV_VERSION", SV_VERSION, 1);
 	setenv("SV_SYSBOOT_LEVEL" , sv_runlevel[SV_SYSBOOT_LEVEL] , 1);
 	setenv("SV_SHUTDOWN_LEVEL", sv_runlevel[SV_SHUTDOWN_LEVEL], 1);
-	sv_nohang = sv_conf_yesno("SV_NOHANG");
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	sv_sigsetup();
 

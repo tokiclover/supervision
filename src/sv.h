@@ -70,7 +70,6 @@ extern "C" {
 #define SV_SVC_STAT_WAIT 'w'
 #define SV_SVC_MARK_WAIT 'W'
 
-extern int sv_nohang;
 extern int sv_parallel;
 extern int sv_level;
 extern int sv_stage;

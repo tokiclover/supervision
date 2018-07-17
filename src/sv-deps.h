@@ -23,7 +23,6 @@
 #define SV_SVCDEPS_NEED   3
 
 /* some macro to set/get service options */
-#define SV_SVCOPTS_NOHANG 0x01
 #define SV_SVCOPTS_GET(dep, opt) (dep->options  & (opt))
 #define SV_SVCOPTS_SET(dep, opt) (dep->options |= (opt))
 

@@ -34,7 +34,7 @@ syn keyword svVars LOGDIR LOG_ARGS LOG_STAT LOG_COMP LOG_PREFIX LOG_SIZE SVC_COM
 syn keyword svVars LOG_PRE_CMD LOG_PRE_OPTS SVC_REQUIRED_FILES SVC_TIMEOUT_DOWN SVC_TIMEOUT_UP
 syn keyword svVars COLOR LOGDIR SVC_STARTED_COMMANDS SVC_STOPPED_COMMANDS
 syn keyword svVars description __cmd__ __cmd_dir__ __cmd_args__ name
-syn keyword svVars SVC_KEYWORD SVC_NOHANG SVC_TIMEOUT SVC_TRY
+syn keyword svVars SVC_KEYWORD SVC_TIMEOUT SVC_TRY
 
 syn cluster shCommandSubList add=svKwd
 

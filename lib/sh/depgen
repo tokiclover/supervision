@@ -34,7 +34,7 @@ add_dep()
 dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	local dep SVC_KEYWORD SVC_NOHANG SVC_PROVIDE SVC_TIMEOUT
+	local dep SVC_KEYWORD SVC_PROVIDE SVC_TIMEOUT
 
 	if   [ -d "${__svc__}" ]; then
 		SV_TYPE=sv
@@ -54,8 +54,8 @@ dep_gen()
 
 	[ -n "${SVC_KEYWORD}" ] && echo "${SVC_NAME}:keyword=\"${SVC_KEYWORD}\"" >&4
 	[ -n "${SVC_PROVIDE}" ] && echo "${SVC_NAME}:provide=\"${SVC_PROVIDE}\"" >&4
-	[ -n "${SVC_TIMEOUT}" ] && echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT}\"" >&4
-	[ -n "${SVC_NOHANG}"  ] && echo "${SVC_NAME}:nohang=\"${SVC_NOHANG}\""   >&4
+	[ -n "${SVC_TIMEOUT}" ] || [ -n  "${SV_TIMEOUT}" ] && \
+		echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT:-${SV_TIMEOUT}}\"" >&4
 	for dep in ${__SV_DEPS_ORDER__}; do
 		eval add_dep "${SVC_NAME}" "${dep}" \"\$SVC_${dep#*:}\" >&4
 	done

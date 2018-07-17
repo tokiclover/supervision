@@ -563,11 +563,6 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 			continue;
 			break;
 		}
-		else if (strcmp(type, "nohang") == 0) {
-			if (sv_yesno(ptr))
-				SV_SVCOPTS_SET(deps, SV_SVCOPTS_NOHANG);
-			continue;
-		}
 		else if (strcmp(type, "timeout") == 0) {
 			errno = 0;
 			deps->timeout = (int)strtol(ptr, NULL, 10);

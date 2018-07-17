@@ -562,12 +562,15 @@ environment variables.
 
 .SS KEYWORDS
 .TP
-.IR timeout
-Disable timeout when supervising \fI{start,stop}\fR command (relevent only when
-.B SVC_NOHANG
+.B timeout
+Disable timeout for \fI{start,stop}\fR command (relevent only when
+.B SVC_TIMEOUT
 or
-.B SV_NOHANG
-is enabled.)
+.B SV_TIMEOUT
+is set to an unsigned or postive integer.)
+.TP
+.RB shutdown
+Disable the service in \fI{reboot,shutdown}\fR runlevels
 .TP
 .B SUBSYSTEM:
 .RB [\| docker \|]
