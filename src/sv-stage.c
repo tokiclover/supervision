@@ -72,17 +72,17 @@ const char *const sv_runlevel[] = { "shutdown", "single", "nonetwork",
 const char *progname;
 static const char *applet;
 
-static const char *shortopts = "0123456DNSbghprsqv";
+static const char *shortopts = "0123456DdNSblhprsqv";
 static const struct option longopts[] = {
 	{ "shutdown", 0, NULL, 'p' },
 	{ "single",   0, NULL, 's' },
 	{ "nonetwork",0, NULL, 'N' },
-	{ "default",  0, NULL, 'd' },
+	{ "default",  0, NULL, 'l' },
 	{ "sysinit",  0, NULL, 'S' },
 	{ "sysboot",  0, NULL, 'b' },
 	{ "reboot",   0, NULL, 'r' },
 	{ "nodeps",   0, NULL, 'D' },
-	{ "debug",    0, NULL, 'g' },
+	{ "debug",    0, NULL, 'd' },
 	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
@@ -726,7 +726,7 @@ int main(int argc, char *argv[])
 				svc_deps = 0;
 				setenv("SVC_DEPS", off, 1);
 				break;
-			case 'g':
+			case 'd':
 				setenv("SVC_DEBUG", on, 1);
 				break;
 			case '4':
@@ -749,7 +749,7 @@ int main(int argc, char *argv[])
 				sv_stage = SV_SINGLE_LEVEL;
 				break;
 			case '3':
-			case 'd':
+			case 'l':
 				sv_level = SV_DEFAULT_LEVEL;
 				sv_stage = SV_DEFAULT_LEVEL;
 				break;
