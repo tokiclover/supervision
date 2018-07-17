@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) runscript-functions    1.5 2018/06/30 21:09:26           Exp $
+# $Id:  @(#) runscript-functions    1.6 2018/01/16 21:09:26           Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -79,6 +79,9 @@ svc_add()
 }
 SVC_DEBUG()
 {
+	if ${SVC_SYSLOG}; then
+		logger "${name}: debug: ${@}"
+	fi
 	if ${SVC_DEBUG}; then
 		printf "${__print_eol__}${name}: debug: ${@}" >&2
 	fi
@@ -259,8 +262,24 @@ fi
 #
 # Set debug options
 #
-yesno "${SVC_TRACE}" && set -x
-yesno "${SVC_DEBUG:-$SV_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
+if yesno "${SVC_TRACE}"; then
+	set -x
+fi
+if yesno "${SVC_DEBUG:-$SV_DEBUG}"; then
+	SVC_DEBUG=true
+else
+	SVC_DEBUG=false
+fi
+if yesno "${SVC_SYSLOG:-${SV_SYSLOG}}"; then
+	SVC_SYSLOG=true
+else
+	SVC_SYSLOG=false
+fi
+if yesno "${SVC_SYSLOG_INFO:-${SV_SYSLOG_INFO}}"; then
+	SVC_SYSLOG_INFO=true
+else
+	SVC_SYSLOG_INFO=false
+fi
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
