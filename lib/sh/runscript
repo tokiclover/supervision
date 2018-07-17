@@ -21,7 +21,7 @@ help_message() {
    COMMAND: add|del|desc|remove|reload|restart|start|stop|status|zap|cgroup_remove_service
    OPTIONS: [OPTIONS] SERVICE COMMAND [ARGUMENTS]
      -D, --nodeps     Disable dependencies1
-     -g, --debug      Enable debug mode
+     -d, --debug      Enable debug mode
      -r, --rs         Select runscript backend
      -s, --sv         Select supervision backend
      -h, --help       Print help and exit
@@ -32,10 +32,10 @@ ${1+exit ${1}}
 while true; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
-		(-d|--deps)  SVC_DEPS=1 ;;
+		(-p|--deps)  SVC_DEPS=1 ;;
 		(-r|--rs) SV_TYPE="rs" ;;
 		(-s|--sv) SV_TYPE="sv" ;;
-		(-g|--debug) set -x ;;
+		(-d|--debug) set -x ;;
 		(-h|--help) help_message 0 ;;
 		(*) break ;;
 	esac
