@@ -73,7 +73,7 @@ const char *const sv_runlevel[] = { "shutdown", "single", "nonetwork",
 const char *progname;
 static const char *applet;
 
-static const char *shortopts = "0123456DdNSblhprsqv";
+static const char *shortopts = "0123456DdNSbdhlprsqvx";
 static const struct option longopts[] = {
 	{ "shutdown", 0, NULL, 'p' },
 	{ "single",   0, NULL, 's' },
@@ -84,6 +84,7 @@ static const struct option longopts[] = {
 	{ "reboot",   0, NULL, 'r' },
 	{ "nodeps",   0, NULL, 'D' },
 	{ "debug",    0, NULL, 'd' },
+	{ "trace",    0, NULL, 'x' },
 	{ "quiet",    0, NULL, 'q' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
@@ -99,6 +100,7 @@ static const char *longopts_help[] = {
 	"Select reboot      run level",
 	"Disable dependencies",
 	"Enable debug mode",
+	"Enable shell trace",
 	"Enable quiet mode",
 	"Show help and exit",
 	"Show version and exit",
@@ -699,6 +701,9 @@ int main(int argc, char *argv[])
 			case 'd':
 				setenv("SVC_DEBUG", on, 1);
 				break;
+			case 'x':
+				setenv("SVC_TRACE", on, 1);
+				break;
 			case '4':
 			case 'S':
 				sv_level = SV_SYSINIT_LEVEL;
@@ -794,6 +799,7 @@ int main(int argc, char *argv[])
 
 stage:
 		setenv("SVC_DEBUG", off, 1);
+		setenv("SVC_TRACE", off, 1);
 		if (sv_stage >= 0) {
 			svc_stage(*argv);
 			exit(EXIT_SUCCESS);
