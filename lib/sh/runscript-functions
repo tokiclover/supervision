@@ -65,6 +65,7 @@ waitfile()
 rs_status()
 {
 	local msg
+	SVC_DEBUG "rs_status" "${@}"
 	svc_state -s && msg=started || msg=stopped
 	echo -n ${msg}
 	[ "${msg}" = "started" ]
@@ -72,23 +73,35 @@ rs_status()
 
 svc_add()
 {
+	SVC_DEBUG "svc_add" "${@}"
 	[ -n "${SV_STAGE}" ] || return
 	svc_state -e && ln -fns ${__svc__} ${SV_SVCDIR}.init.d/${SV_STAGE}
 }
-
+SVC_DEBUG()
+{
+	local func="${1}"
+	shift
+	if ${SVC_DEBUG}; then
+		printf "${__print_eol__}function=${func}(${@})\n"
+	fi
+	return 0
+}
 svc_del()
 {
+	SVC_DEBUG "svc_del" "${@}"
 	[ -n "${SV_STAGE}" ] || return
 	rm -fr ${SV_SVCDIR}.init.d/${SV_STAGE}/${SVC_NAME}
 }
 svc_zap()
 {
+	SVC_DEBUG "svc_zap" "${@}"
 	rm -f ${SV_TMPDIR}/*/${SVC_NAME}
 }
 
 rs_cmd()
 {
 	local ARGS='"${@}"' cmd="${1}" val
+	SVC_DEBUG "rs_cmd" "${@}"
 
 	case "${cmd}" in
 		(start|stop)
@@ -108,6 +121,7 @@ rs_cmd()
 	begin "service ${__cmd__}: "
 	for cmd in ${cmd}; do
 		command -v ${cmd} >${NULL} 2>&1 || continue
+		SVC_DEBUG "${cmd}" ${ARGS}
 		eval ${cmd} ${ARGS}
 		case ${?} in
 			(0) ;;
@@ -119,6 +133,7 @@ rs_cmd()
 
 svc_sig()
 {
+	SVC_DEBUG "svc_sig" "${@}"
 	if [ -z "${1}" ]; then
 		error "insufficient/invalid argument"
 		return 1
@@ -135,6 +150,7 @@ svc_sig()
 svc_wait()
 {
 	local file limit opt val=0
+	SVC_DEBUG "svc_wait" "${@}"
 
 	case "${1}" in
 		(-[E]) opt="${1}"; shift;;
@@ -190,9 +206,8 @@ fi #__RUNSCRIPT_FUNCTIONS__
 #
 # Set debug options
 #
-if yesno "${SVC_DEBUG}"; then
-	set -x
-fi
+yesno "${SVC_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
+yesno "${SVC_TRACE}" && set -x
 
 #
 # Use RC config file if requested
@@ -246,9 +261,8 @@ fi
 #
 # Set debug options
 #
-if yesno "${SVC_DEBUG}"; then
-	set -x
-fi
+yesno "${SVC_TRACE}" && set -x
+yesno "${SVC_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
