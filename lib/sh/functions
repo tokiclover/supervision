@@ -42,16 +42,10 @@ die()
 #
 info()
 {
-	local head tail
-	if [ ${#} -gt 2 ]; then
-		head="${1}"
-		tail="${2}"
-	else
-		tail="${*}"
-	fi
-	__print_len__=$((${#name}+3+${#tail}+${#head}))
+	local message="${*}"
+	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_ylw}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_blu}${head:-*} ${prefix} ${@}\n"
+	printf "${__print_eol__}${color_fg_blu}info: ${prefix} ${@}\n"
 }
 
 #
@@ -62,7 +56,7 @@ warn()
 	local message="${*}"
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_red}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_ylw}warning: ${prefix} ${@}\n"
+	printf "${__print_eol__}${color_fg_ylw}warning: ${prefix} ${@}\n" >&2
 }
 
 #
