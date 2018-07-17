@@ -82,7 +82,7 @@ SVC_DEBUG()
 	local func="${1}"
 	shift
 	if ${SVC_DEBUG}; then
-		printf "${__print_eol__}function=${func}(${@})\n"
+		printf "${__print_eol__}${name}: debug: function=${func}(${@})" >&2
 	fi
 	return 0
 }
