@@ -438,6 +438,7 @@ reterr:
 static int svc_run(struct svcrun *run)
 {
 	int l, r;
+	off_t o = 0;
 #ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, run);
 #endif
@@ -477,15 +478,16 @@ runsvc:
 		_exit(ETIMEDOUT);
 	}
 	/* write the service command to the lock file */
-	l = strlen(run->argv[4])+1;
+	l = strlen(run->argv[4]);
 	do {
-		r = write(run->lock, run->argv[4], l);
+		r = write(run->lock, run->argv[4]+o, l);
 		if (r < 0)
 			if (errno != EINTR) {
 				LOG_ERR("Failed to write service command to `%s/%s': %s\n",
 					SV_TMPDIR_WAIT, run->name, strerror(errno));
 				break;
 			}
+		o += r;
 		l -= r;
 	} while (l);
 
@@ -790,26 +792,11 @@ static void svc_zap(const char *svc)
 	}
 }
 
-#define WRITE_MESSAGE(message)                                               \
-	do {                                                                     \
-		l = strlen(message);                                                 \
-		do {                                                                 \
-			r = write(fd, message, l);                                       \
-			if (r < 0) {                                                     \
-				if (errno == EINTR) continue;                                \
-				ERR("Failed to write fo `%s': %s\n", ptr, strerror(errno));  \
-				break;                                                       \
-			}                                                                \
-			l -= r;                                                          \
-		} while(l);                                                          \
-	} while(0/*CONST COND*/)
-
 static int svc_mark(struct svcrun *run, int status, const char *what)
 {
 	char path[PATH_MAX], *ptr;
 	int fd;
 	int i;
-	ssize_t l, r;
 	mode_t m;
 
 #ifdef SV_DEBUG
@@ -859,7 +846,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 			umask(m);
 			if (fd > 0) {
 				if (what)
-					WRITE_MESSAGE(what);
+					(void)err_write(fd, (const char*)what, (const char*)ptr);
 				close(fd);
 				return 0;
 			}
@@ -890,7 +877,6 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 				return 0;
 	}
 }
-#undef WRITE_MESSAGE
 
 static int svc_state(const char *svc, int status)
 {

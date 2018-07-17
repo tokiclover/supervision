@@ -165,7 +165,7 @@ static int svc_mark_simple(char *svc, int status, const char *what)
 			umask(m);
 			if (fd > 0) {
 				if (what)
-					write(fd, what, strlen(what)+1);
+					(void)err_write(fd, (const char*)what, (const char*)path);
 				close(fd);
 				return 0;
 			}
@@ -256,10 +256,8 @@ static const char *svc_runlevel(const char *level)
 
 	if (level) {
 		len = strlen(level);
-		if (write(fd, level, len) < len) {
-			WARN("Failed to write to `%s': %s\n", path, strerror(errno));
+		if (err_write(fd, (const char*)level, (const char*)path))
 			retval = NULL;
-		}
 		else
 			retval = level;
 	}
@@ -578,7 +576,7 @@ static void svc_stage(const char *cmd)
 	}
 	else
 		ERROR("Failed to open %s", SV_PIDFILE);
-	write(r, buf, strlen(buf));
+	(void)err_write(r, (const char*)buf, SV_PIDFILE);
 
 	if (sv_stage == SV_SYSINIT_LEVEL || command == NULL) /* force service command */
 		command = sv_svc_cmd[SV_SVC_CMD_START];
