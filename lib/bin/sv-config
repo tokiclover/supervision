@@ -60,7 +60,8 @@ __SV_NAM__= ARGS=
 while [ ${#} -gt 0 ]; do
 	case "${1}" in
 		(-D|--node*) SVC_DEPS=0 ;;
-		(-d|--debug) set -x;;
+		(-d|--debug) SVC_DEBUG=1;;
+		(-x|--trace) set -x ;;
 		(-S|--set)
 			if [ -z "${2}" ]; then
 				error "-S|--set require an argument"
