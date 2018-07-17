@@ -94,6 +94,7 @@ __attribute__((__unused__)) void *err_malloc(size_t size);
 __attribute__((__unused__)) void *err_calloc(size_t num, size_t size);
 __attribute__((__unused__)) void *err_realloc(void *ptr, size_t size);
 __attribute__((__unused__)) char *err_strdup(const char *str);
+__attribute__((__unused__)) ssize_t err_write(int fd, const char *what, const char *path);
 
 #ifdef __cplusplus
 }

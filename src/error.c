@@ -201,3 +201,20 @@ char *err_strdup(const char* str)
 	ERR_EXIT;
 }
 
+__attribute__((__unused__)) inline ssize_t err_write(int fd, const char *what, const char *path)
+{
+	ssize_t l, r;
+	off_t o = 0;
+	l = strlen(what);
+	do {
+		r = write(fd, what+o, l);
+		if (r < 0) {
+			if (errno == EINTR) continue;
+			ERR("Failed to write fo `%s': %s\n", path, strerror(errno));
+			return r;
+		}
+		o += (off_t)r;
+		l -= r;
+	} while(l);
+	return 0;
+}
