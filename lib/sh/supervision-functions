@@ -42,7 +42,7 @@ softlimit()
 svc_new()
 {
 	local cmd svc dir
-	SVC_DEBUG "svc_new" "${@}"
+	SVC_DEBUG "function=svc_new( ${@} )"
 
 	while [ ${#} -ge 1 ]; do
 		case "${1}" in
@@ -67,14 +67,14 @@ svc_new()
 
 svc_down()
 {
-	SVC_DEBUG "svc_down" "${@}"
+	SVC_DEBUG "function=svc_down( ${@} )"
 	echo "" >${SV_RUNDIR}/${SVC_NAME}/down
 	eval ${__SVCCMD__} ${__SIGSTOP__} ${SV_RUNDIR}/${SVC_NAME} &&
 	svc_mark -d
 }
 svc_up()
 {
-	SVC_DEBUG "svc_up" "${@}"
+	SVC_DEBUG "function=svc_up( ${@} )"
 	rm -f ${SV_RUNDIR}/${SVC_NAME}/down
 	eval ${__SVCCMD__} ${__SIGSTRT__} ${SV_RUNDIR}/${SVC_NAME} &&
 	svc_mark -u
@@ -83,7 +83,7 @@ svc_up()
 svc_start()
 {
 	local val=1
-	SVC_DEBUG "svc_start" "${@}"
+	SVC_DEBUG "function=svc_start( ${@} )"
 
 	svc_state -p && return 0
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
@@ -114,7 +114,7 @@ svc_start()
 svc_stop()
 {
 	local val=1
-	SVC_DEBUG "svc_stop" "${@}"
+	SVC_DEBUG "function=svc_stop( ${@} )"
 
 	svc_state -p || return 0
 
@@ -136,7 +136,7 @@ svc_stop()
 
 svc_restart()
 {
-	SVC_DEBUG "svc_restart" "${@}"
+	SVC_DEBUG "function=svc_restart( ${@} )"
 	svc_stop
 	svc_remove
 	svc_start
@@ -144,14 +144,14 @@ svc_restart()
 
 svc_status()
 {
-	SVC_DEBUG "svc_status" "${@}"
+	SVC_DEBUG "function=svc_status( ${@} )"
 	svc_state -p && eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}" ||
 		{ echo -n stopped; return 1; }
 }
 
 svc_reload()
 {
-	SVC_DEBUG "svc_reload" "${@}"
+	SVC_DEBUG "function=svc_reload( ${@} )"
 	if command -v reload >${NULL} 2>&1; then
 		reload
 	elif [ "${SV_TYPE}" = "rs" ]; then
@@ -172,7 +172,7 @@ svc_reload()
 
 svc_mark()
 {
-	SVC_DEBUG "svc_mark" "${@}"
+	SVC_DEBUG "function=svc_mark( ${@} )"
 	yesno "${__SVC_WAIT__}" && return 0
 	case "${1}" in
 		(-f|--fail*) printf "${__cmd__:-$2}" >"${SV_TMPDIR}/fail/${SVC_NAME}";;
@@ -187,7 +187,7 @@ svc_mark()
 
 svc_state()
 {
-	SVC_DEBUG "svc_state" "${@}"
+	SVC_DEBUG "function=svc_state( ${@} )"
 	case "${1}" in
 		(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
 		(-a|--acti*) [ -e "${SV_RUNDIR}/${SVC_NAME}" ];;
@@ -205,7 +205,7 @@ svc_state()
 svc_config()
 {
 	local file
-	SVC_DEBUG "svc_config" "${@}"
+	SVC_DEBUG "function=svc_config( ${@} )"
 	for file in ${SVC_CONFIGFILE} ${SVC_REQUIRED_FILES}; do
 		if [ ! -f "${file}" ]; then
 			error "\`${file}' required file not found"
@@ -217,7 +217,7 @@ svc_start_pre()
 {
 	local SVC_FAILURE val=0
 	SVC_FAILURE='{ svc_remove; svc_mark -f; return ${val}; }'
-	SVC_DEBUG "svc_add" "${@}"
+	SVC_DEBUG "function=svc_add( ${@} )"
 
 	if [ "${SVC_CMD#/}" = "${SVC_CMD}" ]; then
 		SVC_CMD=$(command -v ${SVC_CMD:-${SVC_NAME}} 2>${NULL})
@@ -248,7 +248,7 @@ svc_start_pre()
 }
 svc_remove()
 {
-	SVC_DEBUG "svc_remove" "${@}"
+	SVC_DEBUG "function=svc_remove( ${@} )"
 	rm -fr "${SV_RUNDIR}/${SVC_NAME}"
 	svc_zap
 }
@@ -258,7 +258,7 @@ svc_remove()
 #
 svc_stop_post()
 {
-	SVC_DEBUG "svc_stop_post" "${@}"
+	SVC_DEBUG "function=svc_stop_post( ${@} )"
 	#
 	# Handle run return values
 	#
@@ -292,7 +292,7 @@ svc_stop_post()
 svc_depend()
 {
 	local dep
-	SVC_DEBUG "svc_depend" "${@}"
+	SVC_DEBUG "function=svc_depend( ${@} )"
 	if [ "${1}" = "stop" ]; then
 		return 0
 	else
@@ -320,14 +320,14 @@ svc_depend()
 
 svc_need()
 {
-	SVC_DEBUG "svc_need" "${@}"
+	SVC_DEBUG "function=svc_need( ${@} )"
 	[ -n "${SVC_NEDD}" ] || return 0
 	svc_use "${1:-start}" "${2:-${SVC_NEED}}"
 }
 svc_use()
 {
 	local ret svc
-	SVC_DEBUG "svc_use" "${@}"
+	SVC_DEBUG "function=svc_use( ${@} )"
 	for svc in ${2:-${SVC_USE}}; do
 		service -q "${svc}" "${1:-start}"
 		ret=$((${ret}+${?}))
@@ -341,7 +341,7 @@ svc_use()
 svc_env()
 {
 	local opt env
-	SVC_DEBUG "svc_env" "${@}"
+	SVC_DEBUG "function=svc_env( ${@} )"
 	case "${1}" in
 		(opts/${SVC_NAME}|env) opt="${1}"; shift;;
 		(*) opt="opts/${SVC_NAME}";;
@@ -352,18 +352,18 @@ svc_env()
 }
 env_svc()
 {
-	SVC_DEBUG "env_svc" "${@}"
+	SVC_DEBUG "function=env_svc( ${@} )"
 	[ -n "${*}" ] && svc_env "opts/${SVC_NAME}" "${@}"
 }
 ENV_SVC()
 {
-	SVC_DEBUG "ENV_SVC" "${@}"
+	SVC_DEBUG "function=ENV_SVC( ${@} )"
 	[ -n "${*}" ] && svc_env "env" "${@}"
 }
 env_del()
 {
 	local opt env
-	SVC_DEBUG "env_del" "${@}"
+	SVC_DEBUG "function=env_del( ${@} )"
 	case "${1}" in
 		(opts/${SVC_NAME}|env) opt="${1}"; shift;;
 		(*) opt="opts/${SVC_NAME}";;
@@ -375,14 +375,14 @@ env_del()
 
 svc_scan()
 {
-	SVC_DEBUG "svc_scan" "${@}"
+	SVC_DEBUG "function=svc_scan( ${@} )"
 	SVCDEPS_UPDATE=1 ${SV_LIBDIR}/sh/depgen "${SVC_NAME}" "${@}"
 }
 
 svc_desc()
 {
 	local desc
-	SVC_DEBUG "svc_desc" "${@}"
+	SVC_DEBUG "function=svc_desc( ${@} )"
 	eval desc=\"\${description${1:+_$1}}\"
 	if [ -n "${desc}" ]; then
 		info ${1:+${1}:} "${desc}"
@@ -393,7 +393,7 @@ svc_desc()
 
 svc_command()
 {
-	SVC_DEBUG "svc_command" "${@}"
+	SVC_DEBUG "function=svc_command( ${@} )"
 	if command -v ${1} >${NULL} 2>&1 && ! eval ${1}; then
 		error "Failed to execute ${1} shell function"
 		return 1
@@ -407,7 +407,7 @@ svc_command()
 svc_commands()
 {
 	local cmd="${1}" started=false
-	SVC_DEBUG "svc_commands" "${@}"
+	SVC_DEBUG "function=svc_commands( ${@} )"
 
 	svc_state -s || svc_state -p && started=true
 
@@ -440,7 +440,7 @@ svc_commands()
 svc_cmd()
 {
 	local arg cmd opt pfx=svc_
-	SVC_DEBUG "svc_cmd" "${@}"
+	SVC_DEBUG "function=svc_cmd( ${@} )"
 	for arg; do
 		case "${1}" in
 			(add|del|desc|down|remove|up|zap)  cmd="${1}" ;;
@@ -489,7 +489,7 @@ svc_cmd()
 svc_environ()
 {
 	local dir file
-	SVC_DEBUG "svc_environ" "${@}"
+	SVC_DEBUG "function=svc_environ( ${@} )"
 
 	for dir in ../.env env; do
 		[ -d ${dir} ] && ENV_CMD="${ENV_CMD} envdir ${dir}"
@@ -509,7 +509,7 @@ svc_environ()
 
 svc_run()
 {
-	SVC_DEBUG "svc_run" "${@}"
+	SVC_DEBUG "function=svc_run( ${@} )"
 	if [ ${#} -ge 1 ]; then
 		svc_cmd "${@}"
 		return
@@ -545,7 +545,7 @@ svc_run()
 svc_finish()
 {
 	local __ret__="${1}"
-	SVC_DEBUG "svc_finish" "${@}"
+	SVC_DEBUG "function=svc_finish( ${@} )"
 	shift
 	svc_stop_post "${@}"
 
@@ -570,7 +570,7 @@ svc_finish()
 
 svc_log_run()
 {
-	SVC_DEBUG "svc_log_run" "${@}"
+	SVC_DEBUG "function=svc_log_run( ${@} )"
 	checkpath -q -d ${LOG_MODE:+-m} ${LOG_MODE} \
 		${SVC_USER:+-o} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} ${SVC_LOGDIR}
 	svc_command log_start_pre
@@ -582,7 +582,7 @@ svc_log_run()
 
 svc_log_finish()
 {
-	SVC_DEBUG "svc_log_finish" "${@}"
+	SVC_DEBUG "function=svc_log_finish( ${@} )"
 	svc_command log_stop_post
 	[ -n "${LOG_FIN_CMD}" ] || return 0
 	exec ${LOG_FIN_CMD} ${LOG_FIN_OPTS}
