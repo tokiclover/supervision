@@ -332,7 +332,7 @@ int svc_log(const char *fmt, ...)
 
 
 	/* save logfile if necessary */
-	if (!logpath && sv_conf_yesno("SV_DEBUG"))
+	if (!logpath && sv_conf_yesno("SV_LOGGER"))
 		logpath = logfile;
 	else
 		logpath = SV_LOGFILE;
