@@ -442,7 +442,7 @@ svc_cmd()
 	# this is done internaly (rs) already
 	#
 	if yesno "${__SVC_WAIT__:-1}"; then
-		if ! svc_wait -E ${SV_TIMEOUT_PIDFILE:-5}; then
+		if ! svc_wait -E 60; then
 			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
 			return 1
 		fi
