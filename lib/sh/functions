@@ -1,12 +1,14 @@
 #
-# $Id:  @(#) shfunctions    2.0 2018/07/14 21:09:26                   Exp $
+# $Id:  @(#) shfunctions    2.1 2018/07/16 21:09:26                   Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 
 if [ -z "${__FUNCTIONS__}" ]; then
 __FUNCTIONS__=1
-:	${NULL:=/dev/null}
+
+NULL=/dev/null
+[ -x /usr/bin/logger ] && __SVC_LOGGER__=true || __SVC_LOGGER__=false
 
 #
 # ZSH compatibility
@@ -19,11 +21,23 @@ if [ -n "${ZSH_VERSION}" ]; then
 fi
 
 #
+# @FUNCTION: Print message to system logger(1)
+logger()
+{
+	if ${__SVC_LOGGER__}; then
+		/usr/bin/logger "${@}"
+	fi
+}
+
+#
 # @FUNCTION: Print error message to stderr
 #
 error()
 {
 	local message="${*}"
+	if ${SVC_SYSLOG}; then
+		logger "${name}: error: ${@}"
+	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_mag}${name}:${color_rst}}"
 	printf "${__print_eol__}${color_fg_red}error: ${prefix} ${@}\n" >&2
@@ -43,6 +57,9 @@ die()
 info()
 {
 	local message="${*}"
+	if ${SVC_SYSLOG_INFO}; then
+		logger "${name}: info: ${@}"
+	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_ylw}${name}:${color_rst}}"
 	printf "${__print_eol__}${color_fg_blu}info: ${prefix} ${@}\n"
@@ -54,6 +71,9 @@ info()
 warn()
 {
 	local message="${*}"
+	if ${SVC_SYSLOG}; then
+		logger "${name}: warning: ${@}"
+	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_red}${name}:${color_rst}}"
 	printf "${__print_eol__}${color_fg_ylw}warning: ${prefix} ${@}\n" >&2
@@ -64,6 +84,9 @@ warn()
 #
 begin()
 {
+	if ${SVC_SYSLOG__INFO}; then
+		logger "${name}: notice: ${@}"
+	fi
 	printf "${__print_eol__}"
 	__print_eol__="\n"
 	local message="${*}"
@@ -79,6 +102,9 @@ end()
 {
 	local suffix ret="${1:-0}"
 	shift
+	if ${SVC_SYSLOG__INFO}; then
+		logger "${name}: notice: ${@}"
+	fi
 	case "${ret}" in
 		(0) suffix="${color_fg_blu}(${name}) [${color_fg_grn}ok${color_fg_blu}]${color_rst}";;
 		(*) suffix="${color_fg_ylw}(${name}) [${color_fg_red}no${color_fg_ylw}]${color_rst}";;
