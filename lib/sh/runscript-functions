@@ -260,7 +260,7 @@ fi
 # Set debug options
 #
 yesno "${SVC_TRACE}" && set -x
-yesno "${SVC_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
+yesno "${SVC_DEBUG:-$SV_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
