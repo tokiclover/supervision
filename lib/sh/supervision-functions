@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) supervision-functions    4.5 2018/07/08 21:09:26         Exp $
+# $Id:  @(#) supervision-functions    4.5 2018/07/18 21:09:26         Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -33,36 +33,6 @@ setuidgid()
 softlimit()
 {
 	${SV_LIBDIR}/bin/softlimit "${@}"
-}
-
-#
-# @FUNCTION: Create (supervision) service
-# @ARG: [SVC_NAME]
-#
-svc_new()
-{
-	local cmd svc dir
-	SVC_DEBUG "function=svc_new( ${@} )"
-
-	while [ ${#} -ge 1 ]; do
-		case "${1}" in
-			(-l|--log)   log=0;;
-			(*)   shift; break;;
-		esac
-		shift
-	done
-:	${svc:=${1:-${SVC_NAME}}}
-:	${dir:=${SV_SVCDIR}/${svc}}
-
-	[ -e "${dir}"  ] && return 0
-	mkdir -p "${dir}${log:+/log}"
-
-	for cmd in finish run ${log:+log/run log/finish}; do
-		[ -x "${dir}/${cmd}" ] && continue
-		ln -s ${SV_LIBDIR}/sh/cmd "${dir}/${cmd}"
-	done
-	[ -f ${dir}/OPTIONS ] || sed -e "s|@svc@|${svc}|" \
-		${SV_LIBDIR}/sh/SV_OPTIONS.in >${dir}/OPTIONS
 }
 
 svc_down()

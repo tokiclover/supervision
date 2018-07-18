@@ -245,7 +245,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	else
 	SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	fi
-	SOURCE -d ${SV_LIBDIR}/sh/SV_CONFIG
+	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
 fi # SV_TYPE=sv
 
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}

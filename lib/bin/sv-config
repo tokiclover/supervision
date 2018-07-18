@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) sv-config    1.4 2017/01/22 21:09:26                     Exp $
+# $Id:  @(#) sv-config    1.5 2018/07/18 21:09:26                     Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -24,31 +24,58 @@ help_message()
 {
 	cat <<-EOH
  Usage: sp [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
-   COMMAND: [add|del|new|remove|reload|start|stop|status|scan|zap]
-   COMMAND: (CGroup) cgroup_remove_service
-   OPTIONS: new SERVICE [-l]
+   COMMAND: ([OPTIONS] SERVICE COMMAND) | (--config ARG)
+   OPTIONS: new SERVICE [-l|--log]
      -D, --nodeps     Disable dependencies
      -l, --log        Add log directory
-   OPTIONS: -S daemontools[-encore]|runit|s6
-     -S, --set ARG    Set up backend
-     -d, --debug      Enable debug
+   OPTIONS: --config daemontools[-encore]|runit|s6
+     -c, --config ARG Set up configuration
+     -d, --debug      Enable service debug
+     -x, --trace      Enable shell trace
      -h, --help       Print help
 EOH
 ${1+exit ${1}}
 }
 
-sv_cmd()
+new()
 {
-	local cmd svc="${1}"
+	local cmd
+
+	while [ ${#} -ge 1 ]; do
+		case "${1}" in
+			(-l|--log)   log=0;;
+			(*)   shift; break;;
+		esac
+		shift
+	done
+:	${SVC_NAM:=${1}}
+:	${__svc__:=${SV_SVCDIR}/${SVC_NAME}}
+
+	[ -e "${__svc__}"  ] && return 0
+	mkdir -p "${__svc__}${log:+/log}"
+
+	for cmd in finish run ${log:+log/run log/finish}; do
+		[ -x "${__svc__}/${cmd}" ] && continue
+		ln -s ${SV_LIBDIR}/sh/cmd "${__svc__}/${cmd}"
+	done
+	if [ ! -f ${__svc__}/OPTIONS ]; then
+		sed -e "s|@svc@|${SVC_NAME}|" ${SV_LIBDIR}/sh/SV-OPTIONS.in >${__svc__}/OPTIONS
+	fi
+}
+
+cmd()
+{
+	local cmd
+	SVC_NAME="${1}"
 	if [ ${#} -lt 2 ]; then
 		error "Insufficient number of arguments\n"
 		help_message 2
 	fi
 	case "${2}" in
-		(new) cmd=svc_cmd SVC_NAME="${svc}";;
-		(*) cmd="${SV_SVCDIR}/${svc}/run"  ;;
+		(new) cmd=new ;;
+		(*) cmd=rs ;;
 	esac
-	eval ${cmd} ${2} ${ARGS}
+	${cmd} "${@}" ${ARGS}
 }
 
 if [ ${#} -lt 1 ]; then
@@ -57,26 +84,26 @@ if [ ${#} -lt 1 ]; then
 fi
 __SV_NAM__= ARGS=
 
-while [ ${#} -gt 0 ]; do
-	case "${1}" in
+for arg; do
+	case "${arg}" in
 		(-D|--node*) SVC_DEPS=0 ;;
 		(-d|--debug) SVC_DEBUG=1;;
 		(-x|--trace) set -x ;;
-		(-S|--set)
+		(-c|--config)
 			if [ -z "${2}" ]; then
-				error "-S|--set require an argument"
+				error "-c|--config require an argument"
 				exit 1
 			fi
 			__SV_NAM__="${2}"; shift 2; break;;
-		(-l|--log) ARGS="${ARGS} ${1}";;
+		(-l|--log) ARGS="${ARGS} ${arg}";;
 		(-h|--help) help_message 0;;
-		(-*) error "illegal option -- ${@}"; exit 1;;
+		(-*) error "illegal option -- \`${arg}'"; exit 1;;
 		(*) break ;;
 	esac
 	shift
 done
 
-sv_backend()
+config()
 {
 	local CMD_LINKS COMMANDS PREFIX SIGNALS
 
@@ -111,7 +138,7 @@ sv_backend()
 		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok
 		__STACMD__=s6-svsat __LOGCMD__=s6-log
 	else
-		die "Invalid supervision backend"
+		die "Invalid supervision name"
 	fi
 
 :	${__SIGSTRT__:=-u}
@@ -144,7 +171,7 @@ sv_backend()
 		fi
 	done
 
-	begin "Setting up ${__SV_NAM__} supervision backend..."
+	begin "Setting up ${__SV_NAM__} supervision configuration..."
 	local cmd
 	for cmd in ${CMD_LINKS}; do
 		ln -f -s $(command -v ${PREFIX}${BIN:-${cmd%:*}} 2>${NULL}) \
@@ -154,14 +181,14 @@ sv_backend()
 	local env
 	for env in __SV_NAM__ __SVCENV__ ${COMMANDS} ${SIGNALS}; do
 		eval printf \"${env}=\'%s\'\\\n\" \"\${${env}}\"
-	done > "${SV_LIBDIR}"/sh/SV_CONFIG
-	end "${?}" SV_CONFIG
+	done > "${SV_LIBDIR}"/sh/SV-CONFIG
+	end "${?}" SV-CONFIG
 }
 
 if [ -n "${__SV_NAM__}" ]; then
-	sv_backend
+	config
 else
-	sv_cmd "${@}"
+	cmd "${@}"
 fi
 
 #

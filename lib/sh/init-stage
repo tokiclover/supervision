@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) init-stage    1.8 2018/07/07 21:09:26                    Exp $
+# $Id:  @(#) init-stage    1.8 2018/07/18 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -55,7 +55,7 @@ if ! . ${SV_LIBDIR}/sh/runscript-functions; then
 	[ -n "${SV_OPTS}" ] && svc_rsh || exit 1
 fi
 :	${SV_SVCDIR:=/etc/sv}
-. ${SV_LIBDIR}/sh/SV_CONFIG
+. ${SV_LIBDIR}/sh/SV-CONFIG
 . ${SV_SVCDIR}.conf
 umask 022
 

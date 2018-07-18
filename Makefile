@@ -42,8 +42,8 @@ dist_SH_BINS  = \
 dist_SV_SBINS = \
 	lib/bin/sv-config
 dist_SH_LIBS  = \
-	lib/sh/SV_OPTIONS.in \
-	lib/sh/SV_CONFIG \
+	lib/sh/SV-OPTIONS.in \
+	lib/sh/SV-CONFIG \
 	lib/sh/cgroup-functions \
 	lib/sh/functions \
 	lib/sh/runscript-functions \

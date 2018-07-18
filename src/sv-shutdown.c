@@ -68,7 +68,7 @@ static int aiocb_count;
 #ifndef LIBDIR
 # define LIBDIR "/lib"
 #endif
-#define SV_CONFIG LIBDIR "/sv/sh/SV_CONFIG"
+#define SV_CONFIG LIBDIR "/sv/sh/SV-CONFIG"
 #define SD_PIDFILE _PATH_VARRUN "sv-shutdown.pid"
 
 #ifdef SV_DEBUG

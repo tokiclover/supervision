@@ -21,7 +21,7 @@ or
 to get a fully supervised init-system and service-manager. Otherwise, only
 runscript would work out of the box if not. A supported supervision suite
 can be configured to work with this utility by running
-`\fI@LIBDIR@/sv/sbin/sv-config -s \fBSUPERVISOR\fR'.
+`\fI@LIBDIR@/sv/sbin/sv-config --config \fBSUPERVISOR\fR'.
 And then, the recommended way to use this package is to use the included
 `\fI@LIBDIR@/sv/sh/init-stage\fR' handler from `\fI@SYSCONFDIR@/runit/{1,2,3}\fR' for
 example. Although, using

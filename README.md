@@ -56,8 +56,8 @@ INSTALLATION
 `make DESTDIR=/tmp install-all` or use only `install` (without supervision init
 script for OpenRC) would suffice.
 
-And do not forget to run `${LIBDIR}/sv/sbin/sv-config -S BACKEND` afterwards!
-or `${LIBDIR}/sv/sbin/sv-config -S BACKEND` after installation.
+And do not forget to run `${LIBDIR}/sv/sbin/sv-config --config ARG` afterwards!
+or `${LIBDIR}/sv/sbin/sv-config --config ARG` after installation.
 
 APPLICATION USAGE
 -----------------
