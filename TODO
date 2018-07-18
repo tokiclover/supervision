@@ -14,3 +14,5 @@
       to `/etc/sv.init.d/RUNLEVEL';
 * [x] log message to syslog(3) (add a new `SV_SYSLOG' and `SV_SYSLOG_INFO' for
       info level message);
+* [ ] add PID to lock file along with the service command;
+*
