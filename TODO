@@ -8,7 +8,7 @@
 * [x] improve sv-shutdown compatibilty to SystemV or BSD shutdown/halt utilities;
 * [ ] set up niceness to daemons;
 * [x] add debugging code to runscript (added `SVC_DEBUG' shell function);
-* [ ] add support to `/etc/sv.conf.local.d' configuration for any service type;
+* [x] add support to `/etc/sv.conf.local.d' configuration for any service type;
 * [ ] migrate ./{run,finish} to new `/lib/sv/sh/cmd' location;
 * [ ] migrate old (v2) init stage directory from `/etc/sv/.RUNLEVEL'
       to `/etc/sv.init.d/RUNLEVEL';
