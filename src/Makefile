@@ -7,6 +7,7 @@ dist_HDRS := error.h helper.h
 
 .SECONDEXPANSION:
 checkpath_SRCS := checkpath.c error.c
+sv-config_SRCS := sv-config.c error.c
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
 fstabinfo_SRCS := fstabinfo.c error.c
@@ -19,7 +20,7 @@ rs_CFLAGS  = $(PTHREAD_FLAGS)
 rs_LDFLAGS = $(PTHREAD_FLAGS)
 
 HDRRS      = $(dist_HDRS) $(rs_HDRS)
-simple_BINS := checkpath fstabinfo mountinfo sv-shutdown waitfile
+simple_BINS := checkpath fstabinfo mountinfo sv-config sv-shutdown waitfile
 dist_BINS  = $(simple_BINS) rs
 
 ifeq (SYSVINIT,yes)
@@ -40,6 +41,7 @@ rs: $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(rs_HDRS)
 checkpath: $(checkpath_SRCS:%.c=%.o) error.h
 fstabinfo: $(fstabinfo_SRCS:%.c=%.o) error.h
 mountinfo: $(mountinfo_SRCS:%.c=%.o) sv-list.h
+sv-config: $(sv-config_SRCS:%.c=%.o) error.h
 sv-shutdown: $(sv-shutdown_SRCS:%.c=%.o) error.h
 $(simple_BINS): $$@.o $($$@_SRCS:%.c=%.o)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)

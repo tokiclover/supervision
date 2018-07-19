@@ -40,7 +40,7 @@ dist_SH_BINS  = \
 	lib/sh/cgroup-release-agent \
 	lib/sh/depgen
 dist_SV_SBINS = \
-	lib/bin/sv-config
+	src/sv-config
 dist_SH_LIBS  = \
 	lib/sh/SV-OPTIONS.in \
 	lib/sh/SV-CONFIG \

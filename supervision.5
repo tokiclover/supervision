@@ -992,7 +992,7 @@ system directory or the add \fI@LIBDIR@/sv/bin:@LIBDIR@/sv/sbin\fR to \fBPATH\fR
 .TP
 .I @LIBDIR@/sv/sbin/sv-config
 `\fI@LIBDIR@/sv/sbin/sv-config [--log] \fBSERVICE\fI new\fR' to create a new supervision service;
-and ``fI@LIBDIR@/sv/sbin/sv-config --config runit\fR' to set up specific supervision backend (supervision suite).
+and ``fI@LIBDIR@/sv/sbin/sv-config --config runit\fR' to set up supervisor
 .TP
 .I @LIBDIR@/sv/sbin/sv-shutdown
 Simple utility to handle system halt or reboot. It could be symlinked to
@@ -1005,7 +1005,7 @@ standard aliases for system shutdown (with default action.)
 .SS SV_LIBDIR/sh: @LIBDIR@/sv/sh
 .TP
 .I @LIBDIR@/sv/sh/SV-CONFIG
-Specific supervision environment file
+Specific supervision environment configuration file
 .TP
 .I @LIBDIR@/sv/sh/cmd
 Default sv/SERVICE/{,log/}{finish,run} command file
