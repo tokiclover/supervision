@@ -8,11 +8,11 @@ if [ -n "${ZSH_VERSION}" ]; then
 fi
 
 name="${0##*/}"
-SV_LIBDIR=sv/.lib
-[ -L sv/.lib/bin/checkpath ] || ln -s ../../../src/checkpath sv/.lib/bin
-[ -L sv/.lib/bin/fstabinfo ] || ln -s ../../../src/fstabinfo sv/.lib/bin
-[ -L sv/.lib/bin/mountinfo ] || ln -s ../../../src/mountinfo sv/.lib/bin
-SV_LIBDIR=$SV_LIBDIR . sv/.lib/sh/runscript-functions
+SV_LIBDIR=lib
+[ -L lib/bin/checkpath ] || ln -s ../src/checkpath $SV_LIBDIR/bin
+[ -L lib/bin/fstabinfo ] || ln -s ../src/fstabinfo $SV_LIBDIR/bin
+[ -L lib/bin/mountinfo ] || ln -s ../src/mountinfo $SV_LIBDIR/bin
+SV_LIBDIR=$SV_LIBDIR . $SV_LIBDIR/sh/runscript-functions
 
 if yesno Enable; then
 	eval_colors 256

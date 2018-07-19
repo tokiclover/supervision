@@ -1,7 +1,7 @@
 #!/bin/sh
 
-ln -fs ../../../src/rs sv/.lib/sbin/service
-sv/.lib/sbin/service sysfs status
+ln -fs src/rs lib/sbin/service
+lib/sbin/service sysfs status
 sv/sysfs start
 sv/atd/run status
 
