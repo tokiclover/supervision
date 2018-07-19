@@ -43,6 +43,7 @@ Local, per service, configuration is done with
 files. See
 .B OPTIONS
 sub-section for more information.
+Any service type support a local configuration file in \fI@SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR as well.
 .SH "SERVICE COMMANDS"
 Standard LSB
 .I {start,stop,status}
@@ -766,6 +767,7 @@ Global
 and Local
 .B (@SYSCONFDIR@/SERVICE/OPTIONS files for supervised services
 or @SYSCOnFDIR@/sv.conf.d/SERVICE for runscript services)
+or @SYSCOnFDIR@/sv.conf.local.d/SERVICE for any service type)
 Resource Management Settings is supported e.g.
 .RB CGROUP_CPU='cpu.shares\ 256'.
 Multi-value of a parameter is supported along with sets of multi-parameter-value.
@@ -842,7 +844,10 @@ daemons and default services (default runlevel) in multi users mode.
 Supervision global configuration file
 .TP
 .B \fI@SYSCONFDIR@/sv.conf.d\fR (\fBSV_CONFDIR\fR)
-Runscript local configuration files directory
+Runscript configuration files directory
+.TP
+.B \fI@SYSCONFDIR@/sv.conf.local.d\fR (\fBSV_CONFLOCAL\fR)
+Local configuration files directory for any service type
 .TP
 .B \fI@SYSCONFDIR@/sv.init.d\fR
 Runlevel directory

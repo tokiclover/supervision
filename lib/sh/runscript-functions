@@ -8,6 +8,7 @@
 :	${SV_SVCDIR:=/etc/sv}
 :	${SV_RUNDIR:=/run/sv}
 :	${SV_CONFDIR:=${SV_SVCDIR}.conf.d}
+:	${SV_CONFLOCAL:=${SV_SVCDIR}.conf.local.d}
 :	${SV_TMPDIR:=${SV_RUNDIR}/.tmp}
 :	${name:=${SVC_NAME}}
 :	${__cmd__:=${0##*/}}
@@ -248,6 +249,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
 fi # SV_TYPE=sv
 
+SOURCE ${SV_CONFLOCAL}/${SVC_NAME}
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
 SOURCE ${SV_TMPDIR}/env
 SOURCE ${SV_TMPDIR}/environ && __environ__=1 || __environ__=0

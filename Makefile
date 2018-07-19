@@ -238,7 +238,7 @@ DISTFILES   = \
 dist_RUNLEVEL_DIRS = sysinit sysboot default shutdown single
 dist_DIRS  += \
 	$(SV_LIBDIR)/bin $(SV_LIBDIR)/sbin $(SV_LIBDIR)/sh $(DOCDIR) \
-	$(SV_LIBDIR)/cache $(PREFIX)$(SV_SVCDIR) \
+	$(SV_LIBDIR)/cache $(PREFIX)$(SV_SVCDIR) $(SV_SVCDIR).conf.local.d \
 	$(SV_SVCDIR).conf.d $(dist_RUNLEVEL_DIRS:%=$(SV_SVCDIR).init.d/%)
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
