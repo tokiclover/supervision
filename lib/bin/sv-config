@@ -25,7 +25,7 @@ help_message()
 	cat <<-EOH
  Usage: sp [OPTIONS] [SERVICE COMAND] [ARGUMENTS]
    COMMAND: ([OPTIONS] SERVICE COMMAND) | (--config ARG)
-   OPTIONS: new SERVICE [-l|--log]
+   OPTIONS: [-l|--log] SERVICE new
      -D, --nodeps     Disable dependencies
      -l, --log        Add log directory
    OPTIONS: --config daemontools[-encore]|runit|s6
@@ -37,7 +37,7 @@ EOH
 ${1+exit ${1}}
 }
 
-new()
+newsvc()
 {
 	local cmd
 
@@ -63,7 +63,7 @@ new()
 	fi
 }
 
-cmd()
+svccmd()
 {
 	local cmd
 	SVC_NAME="${1}"
@@ -103,7 +103,7 @@ for arg; do
 	shift
 done
 
-config()
+svconfig()
 {
 	local CMD_LINKS COMMANDS PREFIX SIGNALS
 
@@ -132,9 +132,12 @@ config()
 		__SVCENV__='SVDIR=\${SV_RUNDIR}'
 		__STACMD__=sv __PRECMD__=chpst __LOGCMD__=svlogd
 	elif [ "${__SV_NAM__}" = "s6" ]; then
-		BIN='' PREFIX=s6- __SIGWTUP__='-wU -T${SVC_TIMEOUT_UP:-10000}' __SIGWDWN__='-wD -T${SVC_TIMEOUT_DOWN:-10000}'
+		BIN='' PREFIX=s6-
+		__SIGWTUP__='-wU -T${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10000}}'
+		__SIGWDWN__='-wD -T${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-30000}}'
 		__SIGQUIT__=-q __SIGUSR1__=-1 __SIGUSR2__=-2
-		COMMANDS="${COMMANDS} __SCANCMD__" __SCANCMD__='s6-svscanctl -an \${SV_RUNDIR}'
+		COMMANDS="${COMMANDS} __SCANCMD__"
+		__SCANCMD__='s6-svscanctl -an \${SV_RUNDIR}'
 		__SV_CMD__=s6-svscan __SVCCMD__=s6-svc __CHKCMD__=s6-svok
 		__STACMD__=s6-svsat __LOGCMD__=s6-log
 	else
@@ -186,9 +189,9 @@ config()
 }
 
 if [ -n "${__SV_NAM__}" ]; then
-	config
+	svconfig
 else
-	cmd "${@}"
+	svccmd "${@}"
 fi
 
 #
