@@ -355,7 +355,6 @@ static void sv_runlevel_migrate(void)
 		return;
 	od = opendir(op);
 	snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[sv_stage]);
-	puts(np);
 	nd = opendir(np);
 	if (!od || !nd)
 		return;
