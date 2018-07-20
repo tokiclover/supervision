@@ -7,7 +7,7 @@ dist_HDRS := error.h helper.h
 
 .SECONDEXPANSION:
 checkpath_SRCS := checkpath.c error.c
-sv-config_SRCS := sv-config.c error.c
+sv-config_SRCS := sv-config.c error.c file-test.c
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
 fstabinfo_SRCS := fstabinfo.c error.c

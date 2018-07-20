@@ -916,7 +916,19 @@ check_cpp_condition 'unistd.h' 'defined(__linux__) || (defined(__FreeBSD_kernel_
 	defined(__GLIBC__)) || defined(__GNU__)' &&
 	RUNDIR=/run || RUNDIR=/var/run
 
+echo "generating src/file-test.c"
+awk 'BEGIN { ft = 0 }
+	/^}$/{ if (ft) { print $0; ft = 0; exit 0; } }
+	/.*/{ if (ft) { print $0; } }
+	/^__attribute__.* int file_test.*$/{
+		ft = 1;
+		print "#include <sys/stat.h>\n#include <sys/types.h>";
+		print "#include <dirent.h>\n#include <unistd.h>";
+		print "#include \"error.h\"\n";
+		print $0;
+	}' src/helper.c >src/file-test.c
 echo
+
 cat <<-SUMMARY_EOF
 Summary:
 package                    : $package

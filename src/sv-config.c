@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <paths.h>
@@ -26,17 +27,29 @@
 #define VERSION "0.14.0"
 #define SV_SVCDIR SYSCONFDIR "/sv"
 #define SV_LIBDIR LIBDIR "/sv"
+#define SV_RUNDIR RUNDIR "/sv"
 #define SV_CONFIG SV_LIBDIR "/sh/SV-CONFIG"
+
+__attribute__((__unused__)) int file_test(const char *pathname, int mode);
 
 const char *progname;
 
-static const char *shortopts = "Dc:dhlvx";
+#define SV_SYSINIT_LEVEL 2
+#define SV_SYSBOOT_LEVEL 3
+#define SV_DEFAULT_LEVEL 1
+#define SV_SHUTDOWN_LEVEL 0
+static const char *const sv_runlevel[] = {
+	"shutdown", "default", "sysinit", "sysboot", NULL
+};
+
+static const char *shortopts = "Dc:dhluvx";
 static const struct option longopts[] = {
 	{ "nodeps",   0, NULL, 'D' },
 	{ "log",      0, NULL, 'l' },
 	{ "debug",    0, NULL, 'd' },
 	{ "trace",    0, NULL, 'x' },
 	{ "config",   0, NULL, 'c' },
+	{ "update",   0, NULL, 'u' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
@@ -47,6 +60,7 @@ static const char *longopts_help[] = {
 	"Enable debug mode",
 	"Enable shell trace",
 	"Configure supervision",
+	"Update supervision",
 	"Print help message",
 	"Print version string",
 	NULL
@@ -56,6 +70,7 @@ static char SVENT[64] = "runit|s6|daemontools|daemontools-encore";
 static char *svent;
 static int log;
 static size_t len;
+static char const*const cmd[2] = { "run", "finish" };
 
 struct envent {
 	char *var;
@@ -234,6 +249,133 @@ static int svconfig(void)
 	return EXIT_SUCCESS;
 }
 
+static int svupdate(void)
+{
+	char op[512], np[512];
+	char const*const dir[2] = { SV_SVCDIR, SV_RUNDIR };
+	DIR *nd, *od;
+	int i, j, k, ofd, nfd;
+	struct dirent *ent;
+#ifdef SV_DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
+
+	/* move v0.1[23].0 run level dirs to new v0.14.0 location */
+	for (j = 0; sv_runlevel[j]; j++) {
+		switch (j) {
+		case SV_SYSINIT_LEVEL : i = 0; break;
+		case SV_SYSBOOT_LEVEL : i = 1; break;
+		case SV_DEFAULT_LEVEL : i = 2; break;
+		case SV_SHUTDOWN_LEVEL: i = 3; break;
+		default: return EXIT_SUCCESS;
+		}
+
+		snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, i);
+		snprintf(np, sizeof(np), "%s/.%s"      , SV_SVCDIR, sv_runlevel[j]);
+		if (file_test(np, 'd'))
+			memmove(op, np, sizeof(np));
+		else if (!file_test(op, 'd'))
+			return EXIT_SUCCESS;
+		if (!(od = opendir(op)))
+			ERROR("Failed to opendir `%s'", op);
+		snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[j]);
+		if (!(nd = opendir(np)))
+			ERROR("Failed to opendir `%s'", np);
+		if ((ofd = dirfd(od)) < 0)
+			ERROR("failed to `dirfd(%s)'", op);
+		if ((nfd = dirfd(nd)) < 0)
+			ERROR("Failed to `dirfd(%s)'", np);
+
+		while ((ent = readdir(od))) {
+			if (*ent->d_name == '.') continue;
+			renameat(ofd, ent->d_name, nfd, ent->d_name);
+		}
+		(void)closedir(od);
+		(void)closedir(nd);
+		(void)rmdir(op);
+	}
+	/* update ./{run,finish} symlinks to v0.14.0 */
+	snprintf(np, sizeof(np), "%s/sh/cmd", SV_LIBDIR);
+	for (j = 0; j < 2; j++) {
+		if (!(od = opendir(dir[j])))
+			ERROR("Failed to `opendir(%s)'", dir[j]);
+		if ((ofd = dirfd(od)) < 0)
+			ERROR("failed to `dirfd(%s)'", dir[j]);
+
+		while ((ent = readdir(od))) {
+			if (*ent->d_name == '.') continue;
+			/* handle only supervision service */
+#ifdef _DIRENT_HAVE_D_TYPE
+			if (ent->d_type != DT_DIR) continue;
+#else
+			snprintf(op, sizeof(op), "%s/%s", dir[j], ent->d_name);
+			if (!file_test(np, 'd')) continue;
+#endif
+			snprintf(op, sizeof(op), "%s", ent->d_name);
+			len = strlen(op);
+
+			for (k = 0; k < 2; k++) {
+				for (i = 0; i < 2; i++) {
+					snprintf(op+len, sizeof(op)-len, "/%s", cmd[i]);
+					(void)unlinkat(ofd, op, 0);
+					if (symlinkat(np, ofd, op))
+						ERR("Failed to make `%s/%s' symlink", dir[j], op);
+				}
+				/* handle log dir */
+				if (k) break;
+				snprintf(op, sizeof(op), "%s/log", ent->d_name);
+				if (faccessat(ofd, op, F_OK, 0)) break;
+				len = strlen(op);
+			}
+		}
+		(void)closedir(od);
+	}
+
+	/* update SERVICE_{ENV,OPTIONS} to v0.13.0 format */
+	snprintf(np, sizeof(np), "%s/.tmp", SV_RUNDIR);
+	if (!(nd = opendir(np)))
+		ERROR("Failed to `opendir(%s)'", np);
+	if ((nfd = dirfd(nd)) < 0)
+		ERROR("Failed to `dirfd(%s)'", np);
+	if (!faccessat(nfd, "SV_OPTIONS", F_OK, 0))
+		if (renameat(nfd, "SV_OPTIONS", nfd, "env"))
+			ERR("Failed to `rename(.., %s,.., %s)'", "SV_OPTIONS", "env");
+	if (!mkdirat(nfd, "envs", 0755) && errno != EEXIST)
+		ERROR("Failed to `mkdirat(.., %s,..)'", "envs");
+	if (!mkdirat(nfd, "opts", 0755) && errno != EEXIST)
+		ERROR("Failed to `mkdirat(.., %s,..)'", "opts");
+
+	while ((ent = readdir(nd))) {
+		if (*ent->d_name == '.') continue;
+#ifdef _DIRENT_HAVE_D_TYPE
+		if (ent->d_type != DT_REG) continue;
+#else
+		snprintf(op, sizeof(op), "%s/.tmp/%s", SV_RUNDIR, ent->d_name);
+		if (!file_test(op, 'f')) continue;
+#endif
+		len = strlen(ent->d_name);
+
+		if ((*(ent->d_name+len-4U) == '_') && !strcmp(ent->d_name+len-4u, "_ENV")) {
+			snprintf(op, sizeof(op), "%s/%s", "envs", ent->d_name);
+			*(op+5U+len-4U) = '\0';
+			if (renameat(nfd, ent->d_name, nfd, op))
+				ERR("Failed to `renameat(.., %s,.., %s)'", ent->d_name, op);
+			continue;
+		}
+
+		if ((*(ent->d_name+len-8U) == '_') && !strcmp(ent->d_name+len-8u, "_OPTIONS")) {
+			snprintf(op, sizeof(op), "%s/%s", "opts", ent->d_name);
+			*(op+5U+len-8U) = '\0';
+			if (renameat(nfd, ent->d_name, nfd, op))
+				ERR("Failed to `renameat(.., %s,.., %s)'", ent->d_name, op);
+		}
+	}
+	(void)closedir(nd);
+
+	return EXIT_SUCCESS;
+}
+
+
 static void help_message(int status)
 {
 	int i = 0;
@@ -258,7 +400,6 @@ static int newsvc(const char *svc)
 	struct stat st;
 	char *pt;
 	char buf[BUFSIZ];
-	char *cmd[2] = { "run", "finish" };
 #ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, svc);
 #endif
@@ -384,6 +525,8 @@ int main(int argc, char *argv[])
 				help_message(EXIT_FAILURE);
 			}
 			break;
+		case 'u':
+			return svupdate();
 		case 'h':
 			help_message(EXIT_SUCCESS);
 		case 'v':
