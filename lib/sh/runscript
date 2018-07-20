@@ -70,24 +70,6 @@ shift
 	{ echo "${0##*/}: error: Required file not found." >&2; exit 1; }
 
 #
-# Migrate to new sub-dirs (v0.13.0)
-#
-if [ ! -d ${SV_TMPDIR}/opts ]; then
-	mkdir -p ${SV_TMPDIR}/opts ${SV_TMPDIR}/envs
-	mv -f ${SV_TMPDIR}/SV_OPTIONS ${SV_TMPDIR}/env
-
-	for a in ${SV_TMPDIR}/*_OPTIONS; do
-		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/opts/${b%_*}
-	done
-	for a in ${SV_TMPDIR}/*_ENV; do
-		b="${a##*/}"
-		mv -f ${a} ${SV_TMPDIR}/envs/${b%_*}
-	done
-	unset a b
-fi
-
-#
 # Handle service command
 #
 if   [ "${SV_TYPE}" = "rs" ]; then
