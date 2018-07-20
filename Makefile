@@ -277,12 +277,12 @@ install: install-dir install-dist install-sv-svcs
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
 	$(install_SCRIPT) src/sv-shutdown $(DESTDIR)$(SBINDIR)
-	$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
+	$(LN_S) $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
 	for s in $(dist_RS_SYMLINKS); do \
-		$(LN_S) -f $(SBINDIR)/rs $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
+		$(LN_S) $(SBINDIR)/rs $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
 	done
 	for s in $(dist_SHUTDOWN_SYMLINKS); do \
-		$(LN_S) -f $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
+		$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
 	done
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_SCRIPT) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
@@ -312,15 +312,15 @@ endif
 	sed $(INIT_STAGE_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/init-stage \
 		$(dist_INIT_STAGE:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	for svc in $(dist_SVC_INSTANCES); do \
-		$(LN_S) -f "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
+		$(LN_S) "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
-	$(LN_S) -f $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysinit/
-	$(LN_S) -f $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysboot/
-	$(LN_S) -f $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/default/
-	$(LN_S) -f $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/shutdown/
-	$(LN_S) -f $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/single/
+	$(LN_S) $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysinit/
+	$(LN_S) $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysboot/
+	$(LN_S) $(dist_DEFAULT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/default/
+	$(LN_S) $(dist_SHUTDOWN:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/shutdown/
+	$(LN_S) $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/single/
 install-dist: install-dir $(DISTFILES)
-	$(install_DATA)   $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
+	$(install_DATA) $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
 install-sv-svcs: $(dist_SV_SVCS) $(dist_SV_LOGS)
