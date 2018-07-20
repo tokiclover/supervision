@@ -178,7 +178,8 @@ dist_RS_SVCS = \
 	zpool
 dist_RS_OPTS = \
 	$(EXTRA_OPTIONS_INSTANCES)
-
+dist_CONFIG_LOCAL = \
+	$(EXTRA_CONFIG_LOCAL)
 dist_SINGLE = \
 	$(EXTRA_SINGLE_SERVICES)
 dist_SYSINIT = \
@@ -321,6 +322,7 @@ endif
 	$(LN_S) $(dist_SINGLE:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/single/
 install-dist: install-dir $(DISTFILES)
 	$(install_DATA) $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
+	$(install_DATA) $(dist_CONFIG_LOCAL:%=sv.conf.local.d/%) $(DESTDIR)$(SV_SVCDIR).conf.local.d
 install-dir :
 	$(MKDIR_P) $(DISTDIRS:%=$(DESTDIR)%)
 install-sv-svcs: $(dist_SV_SVCS) $(dist_SV_LOGS)
@@ -349,6 +351,7 @@ uninstall: uninstall-doc
 		$(DESTDIR)$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/rs.8 \
 		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
+	rm -f $(dist_CONFIG_LOCAL:%=$(SV_SVCDIR).conf.local.d/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
