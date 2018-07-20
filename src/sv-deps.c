@@ -328,49 +328,29 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 
 static void sv_runlevel_migrate(void)
 {
-	char op[128], np[128];
-	DIR *nd, *od;
-	int i, ofd, nfd;
-	struct dirent *ent;
+	char b[128];
+	int i;
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
 	switch (sv_stage) {
-	case SV_SYSINIT_LEVEL:
-		i = 0; break;
-	case SV_SYSBOOT_LEVEL:
-		i = 1; break;
-	case SV_DEFAULT_LEVEL:
-		i = 2; break;
-	case SV_SHUTDOWN_LEVEL:
-		i = 3; break;
-	default: return; }
-
-	snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, i);
-	snprintf(np, sizeof(np), "%s/.%s"      , SV_SVCDIR, sv_runlevel[sv_stage]);
-	if (file_test(np, 'd'))
-		memmove(op, np, sizeof(np));
-	else if (!file_test(op, 'd'))
-		return;
-	od = opendir(op);
-	snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[sv_stage]);
-	nd = opendir(np);
-	if (!od || !nd)
-		return;
-	ofd = dirfd(od);
-	nfd = dirfd(nd);
-	if (ofd < 0 || nfd < 0)
-		return;
-
-	while ((ent = readdir(od))) {
-		if (*ent->d_name == '.')
-			continue;
-		renameat(ofd, ent->d_name, nfd, ent->d_name);
+	case SV_SYSINIT_LEVEL : i = 0; break;
+	case SV_SYSBOOT_LEVEL : i = 1; break;
+	case SV_DEFAULT_LEVEL : i = 2; break;
+	case SV_SHUTDOWN_LEVEL: i = 3; break;
+	default: return;
 	}
-	closedir(od);
-	closedir(nd);
-	rmdir(op);
+
+	snprintf(b, sizeof(b), "%s/.stage-%d", SV_SVCDIR, i);
+	if ((i = access(b, F_OK))) {
+		snprintf(b, sizeof(b), "%s/.%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+		i = access(b, F_OK);
+	}
+	if (!i) {
+		snprintf(b,  sizeof(b), "%s/sbin/sv-config --update", SV_LIBDIR);
+		if (system(b)) ERROR("Failed to execute `%s'", b);
+	}
 }
 
 SV_StringList_T *sv_svclist_load(char *dir_path)
