@@ -39,7 +39,7 @@ const char *progname;
 #define SV_DEFAULT_LEVEL 1
 #define SV_SHUTDOWN_LEVEL 0
 static const char *const sv_runlevel[] = {
-	"shutdown", "default", "sysinit", "sysboot", NULL
+	"sysinit", "sysboot", "default", "shutdown", "single", NULL
 };
 
 static const char *shortopts = "Dc:dhluvx";
@@ -262,15 +262,7 @@ static int svupdate(void)
 
 	/* move v0.1[23].0 run level dirs to new v0.14.0 location */
 	for (j = 0; sv_runlevel[j]; j++) {
-		switch (j) {
-		case SV_SYSINIT_LEVEL : i = 0; break;
-		case SV_SYSBOOT_LEVEL : i = 1; break;
-		case SV_DEFAULT_LEVEL : i = 2; break;
-		case SV_SHUTDOWN_LEVEL: i = 3; break;
-		default: return EXIT_SUCCESS;
-		}
-
-		snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, i);
+		snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, j);
 		snprintf(np, sizeof(np), "%s/.%s"      , SV_SVCDIR, sv_runlevel[j]);
 		if (file_test(np, 'd'))
 			memmove(op, np, sizeof(np));
