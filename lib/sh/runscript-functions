@@ -155,23 +155,26 @@ svc_wait()
 	SVC_DEBUG "function=svc_wait( ${@} )"
 
 	case "${1}" in
-		(-[E]) shift;;
+		(-E) shift;;
+		(*) o= ;;
 	esac
 	t="${1:-60}"
 	x=${2:-${SV_TMPDIR}/wait/${SVC_NAME}}
+	if ! yesno "${__SVC_WAIT__:-1}" && [ -z "${2}" ]; then
+		return 0
+	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
 
 	while [ ${v} -le ${t} ]; do
 		v=$((${v}+${i}))
 		if waitfile ${o} ${i} ${x}; then
-			trap "rm -f ${x}" EXIT INT QUIT TERM
-			if svc_state -w; then
-				error "service is busy -- retry later"
-				return 1
-			else
-				if [ -z "${2}" ]; then
-					echo "pid=$$:command=${__cmd__}" >${x}
+			if [ -z "${2}" -o -n "${o}" ]; then
+				if svc_state -w; then
+					error "service is busy -- retry later"
+					return 1
 				fi
+				echo "pid=$$:command=${__cmd__}" >${x}
+				trap "rm -f ${x}" EXIT INT QUIT TERM
 			fi
 			return 0
 		fi
