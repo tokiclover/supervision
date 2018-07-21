@@ -84,7 +84,7 @@ warn()
 #
 begin()
 {
-	if ${SVC_SYSLOG__INFO}; then
+	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${@}"
 	fi
 	printf "${__print_eol__}"
@@ -102,7 +102,7 @@ end()
 {
 	local suffix ret="${1:-0}"
 	shift
-	if ${SVC_SYSLOG__INFO}; then
+	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${@}"
 	fi
 	case "${ret}" in
