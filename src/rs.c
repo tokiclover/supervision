@@ -281,7 +281,7 @@ int svc_cmd(struct svcrun *run)
 			if ((i = open(buf, O_RDONLY)) > 0) {
 				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-16s waiting %s%s%s command since %s\n",
+					printf("%-16s waiting %s%s%s since %s\n",
 							run->name, print_color(COLOR_YLW, COLOR_FG),
 							buf, print_color(COLOR_BLK, COLOR_RST), ptr);
 				}
@@ -437,8 +437,9 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
-	int l, r;
-	off_t o = 0;
+	int len, val;
+	off_t off = 0;
+	char buf[128];
 #ifdef SV_DEBUG
 	DBG("%s(%p)\n", __func__, run);
 #endif
@@ -475,20 +476,6 @@ runsvc:
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		_exit(ETIMEDOUT);
 	}
-	/* write the service command to the lock file */
-	l = strlen(run->argv[4]);
-	do {
-		r = write(run->lock, run->argv[4]+o, l);
-		if (r < 0)
-			if (errno != EINTR) {
-				LOG_ERR("Failed to write service command to `%s/%s': %s\n",
-					SV_TMPDIR_WAIT, run->name, strerror(errno));
-				break;
-			}
-		o += r;
-		l -= r;
-	} while (l);
-
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_stage == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
 		close(run->lock);
@@ -498,9 +485,9 @@ runsvc:
 		/* block signal before fork() */
 		sigprocmask(SIG_SETMASK, &ss_full, NULL);
 
-		if ((run->cld = fork()) > 0)
+		if ((run->cld = fork()) > 0) /* parent */
 			goto supervise;
-		else if (run->cld < 0) {
+		else if (run->cld < 0) { /* child */
 			ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__,
 					strerror(errno));
 			_exit(errno);
@@ -510,6 +497,20 @@ runsvc:
 			sigprocmask(SIG_SETMASK, &ss_old, NULL);
 	}
 	else run->cld = run->pid;
+
+	/* write the service command and the pid to the lock file */
+	snprintf(buf, sizeof(buf), "pid=%d:command=%s", getpid(), run->argv[4]);
+	len = strlen(buf);
+	do {
+		val = write(run->lock, buf+off, len);
+		if (val < 0)
+			if (errno != EINTR) {
+				LOG_ERR("Failed to write service command to `%s/%s': %s\n",
+					SV_TMPDIR_WAIT, run->name, strerror(errno));
+				break;
+			}
+		off += val; len -= val;
+	} while (len);
 
 	/* restore previous default signal handling */
 	svc_sigsetup();
