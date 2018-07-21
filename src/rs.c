@@ -445,8 +445,6 @@ static int svc_run(struct svcrun *run)
 
 	if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_TIMEOUT))
 		run->dep->timeout = -1;
-	else if (!run->dep->timeout)
-		run->dep->timeout = SVC_TIMEOUT_SECS;
 	run->status = -1;
 	run->sig = 0;
 
