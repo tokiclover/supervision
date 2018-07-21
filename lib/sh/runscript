@@ -50,11 +50,11 @@ fi
 
 :	${SV_LIBDIR:=${0%/sh/*}}
 :	${SVC_NAME:=${1##*/}}
-name="${SVC_NAME}"
-__cmd__="${2}"
-__cmd_args__="${@#*$2}"
-__svc__="${1}"
-__av0__="${0}"
+readonly name="${SVC_NAME}"
+readonly __cmd__="${2}"
+readonly __cmd_args__="${@#*$2}"
+readonly __svc__="${1}"
+readonly __av0__="${0}"
 if [ -d "${__svc__}" ]; then
 :	${SV_TYPE:=sv}
 else
@@ -66,6 +66,7 @@ case "${1}" in
 	;;
 esac
 shift
+readonly SVC_NAME SV_TYPE
 
 . ${SV_LIBDIR}/sh/runscript-functions ||
 	{ echo "${0##*/}: error: Required file not found." >&2; exit 1; }

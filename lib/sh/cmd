@@ -21,8 +21,8 @@ case "${0}" in
 	(*)  __av0__="${PWD}/${0#./}"
 	     __av0__="${__av0__%/*}";;
 esac
-:	${SVC_DIR=${__av0__%/log}}
-:	${SVC_NAME=${SVC_DIR##*/}}
+readonly SVC_DIR="${__av0__%/log}"
+readonly SVC_NAME="${SVC_DIR##*/}"
 case "${SVC_DIR}" in
 	(*/etc/*)
 :	${SV_SVCDIR=${SVC_DIR%/*}}
@@ -36,9 +36,9 @@ case "${__av0__}" in
 	(*/log) __cmd_dir__=log;;
 	(*)     __cmd_dir__="" ;;
 esac
-__cmd__="${0##*/}"
-__svc__="${__av0__%/$__cmd_dir__}"
-SV_TYPE=sv
+readonly __cmd__="${0##*/}"
+readonly __svc__="${__av0__%/$__cmd_dir__}"
+readonly SV_TYPE=sv
 SV_LIBDIR=${SVC_DIR}/../../lib
 
 trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" EXIT INT TERM QUIT

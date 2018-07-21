@@ -29,6 +29,8 @@ case "${__SV_PREFIX__}" in
 	(/*) PATH=${_PATH_STDPATH}:${__SV_PREFIX__}/bin:${__SV_PREFIX__}/sbin ;;
 esac
 PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:${PATH}:/usr/local/bin:/usr/local/sbin
+readonly LOGDIR SV_CONFDIR SV_CONFLOCAL NULL
+readonly __SV_DEPS_ORDER__ __SV_PREFIX__ _PATH_STDPATH
 
 
 
@@ -247,8 +249,8 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 # Set up supervision environment
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
-	SVC_DIR="${__svc__}"
-	SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
+:	${SVC_DIR:=${__svc__}}
+	readonly SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
 	SOURCE ${SRC_OPTS} "${SVC_DIR}"/OPTIONS
 
 	#
@@ -260,6 +262,11 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	SOURCE "${SVC_DIR}"/OPTIONS.${name}
 	fi
 	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
+	readonly __SV_NAM__ __SVCENV__ __SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ \
+			__LOGCMD__ __PRECMD__ __SCANCMD__ __SIGSTRT__ __SIGSTOP__ __SIGSONCE__ \
+			__SIGPAUSE__ __SIGCONT__ __SIGHUP__ __SIGALRM__ __SIGINT__ __SIGTERM__ \
+			__SIGKILL__ __SIGEXIT__ __SIGQUIT__ __SIGUSR1__ __SIGUSR2__ __SIGWTUP__ \
+			__SIGWDWN__ __SIGRELD__
 fi # SV_TYPE=sv
 
 SOURCE ${SV_CONFLOCAL}/${SVC_NAME}
@@ -295,6 +302,7 @@ if yesno "${SVC_SYSLOG_INFO:-${SV_SYSLOG_INFO}}"; then
 else
 	SVC_SYSLOG_INFO=false
 fi
+readonly SVC_DEBUG SVC_SYSLOG SVC_SYSLOG_INFO
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:

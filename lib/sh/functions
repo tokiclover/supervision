@@ -7,7 +7,7 @@
 if [ -z "${__FUNCTIONS__}" ]; then
 __FUNCTIONS__=1
 
-NULL=/dev/null
+:	${NULL:=/dev/null}
 [ -x /usr/bin/logger ] && __SVC_LOGGER__=true || __SVC_LOGGER__=false
 
 #
