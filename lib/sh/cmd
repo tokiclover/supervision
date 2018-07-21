@@ -45,6 +45,7 @@ SV_LIBDIR=${SVC_DIR}/../../lib
 trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" EXIT INT TERM QUIT
 source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "${__cmd__}: error: Required file not found." >&2; exit 1; }
+:	${SVC_CMD:=${SVC_NAME}}
 
 
 if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
