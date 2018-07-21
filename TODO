@@ -6,7 +6,7 @@
   [x] (partly) done with runlevels command support (`sv-stage RUNLEVEL');
 * [x] optimize parallel start/stop by using threads/pthread.h (*not easy*);
 * [x] improve sv-shutdown compatibilty to SystemV or BSD shutdown/halt utilities;
-* [ ] set up niceness to daemons;
+* [x] set up niceness to daemons;
 * [x] add debugging code to runscript (added `SVC_DEBUG' shell function);
 * [x] add support to `/etc/sv.conf.local.d' configuration for any service type;
 * [x] migrate ./{run,finish} to new `/lib/sv/sh/cmd' location;
