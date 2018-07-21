@@ -184,7 +184,7 @@ svc_config()
 		fi
 	done
 
-	if [ -n "${SVC_NICE}" -a "${SVC_NICE}" -ge -19 -a "${SVC_NICE}" -le 20 ]; then
+	if [ -n "${SVC_NICE}" ] && [ "${SVC_NICE}" -ge -19 -a "${SVC_NICE}" -le 20 ]; then
 		x="$(command -v nice 2>${NULL})"
 		[ -n "${x}" -a -x "${x}" ] || return 0
 		if [ -z "${PRE_CMD}" ]; then
