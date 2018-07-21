@@ -54,6 +54,7 @@ name="${SVC_NAME}"
 __cmd__="${2}"
 __cmd_args__="${@#*$2}"
 __svc__="${1}"
+__av0__="${0}"
 if [ -d "${__svc__}" ]; then
 :	${SV_TYPE:=sv}
 else

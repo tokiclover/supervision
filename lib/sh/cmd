@@ -17,11 +17,11 @@ fi
 exec 2>&1
 
 case "${0}" in
-	(/*) head="${0%/*}"   ;;
-	(*)  head="${PWD}/${0#./}"
-	     head="${head%/*}";;
+	(/*) __av0__="${0%/*}"   ;;
+	(*)  __av0__="${PWD}/${0#./}"
+	     __av0__="${__av0__%/*}";;
 esac
-:	${SVC_DIR=${head%/log}}
+:	${SVC_DIR=${__av0__%/log}}
 :	${SVC_NAME=${SVC_DIR##*/}}
 case "${SVC_DIR}" in
 	(*/etc/*)
@@ -32,13 +32,12 @@ case "${SVC_DIR}" in
 	;;
 esac
 
-case "${head}" in
+case "${__av0__}" in
 	(*/log) __cmd_dir__=log;;
 	(*)     __cmd_dir__="" ;;
 esac
 __cmd__="${0##*/}"
-__svc__="${head%/$__cmd_dir__}"
-unset head
+__svc__="${__av0__%/$__cmd_dir__}"
 SV_TYPE=sv
 SV_LIBDIR=${SVC_DIR}/../../lib
 
@@ -46,7 +45,6 @@ trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" EXIT INT TERM QUIT
 source "${SV_LIBDIR}"/sh/runscript-functions ||
 	{ echo "${__cmd__}: error: Required file not found." >&2; exit 1; }
 :	${SVC_CMD:=${SVC_NAME}}
-
 
 if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
 	yesno "${__environ__}" || SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}
