@@ -151,21 +151,31 @@ svc_sig()
 
 svc_wait()
 {
-	local file limit opt val=0
+	local x t o="${1}" v=0 i=5
 	SVC_DEBUG "function=svc_wait( ${@} )"
 
 	case "${1}" in
-		(-[E]) opt="${1}"; shift;;
+		(-[E]) shift;;
 	esac
-	limit="${1:-60}"
-	file=${2:-${SV_TMPDIR}/wait/${SVC_NAME}}
+	t="${1:-60}"
+	x=${2:-${SV_TMPDIR}/wait/${SVC_NAME}}
+	[ $((${t}%${i})) -eq 0 ] || i="${t}"
 
-	while [ ${val} -le ${limit} ]; do
-		val=$((${val}+1))
-		waitfile ${opt} 1 ${file} && return 0
-		if [ $((${val}%2)) -eq 0 ]; then
-			info "Waiting for ${file} (${val} seconds)"
+	while [ ${v} -le ${t} ]; do
+		v=$((${v}+${i}))
+		if waitfile ${o} ${i} ${x}; then
+			trap "rm -f ${x}" EXIT INT QUIT TERM
+			if svc_state -w; then
+				error "service is busy -- retry later"
+				return 1
+			else
+				if [ -z "${2}" ]; then
+					echo "pid=$$:command=${__cmd__}" >${x}
+				fi
+			fi
+			return 0
 		fi
+		info "Waiting for ${x} (${v} seconds)"
 	done
 	return 1
 }

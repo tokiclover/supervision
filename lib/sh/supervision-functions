@@ -454,13 +454,6 @@ svc_cmd()
 			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
 			return 1
 		fi
-		trap "rm -f ${SV_TMPDIR}/wait/${SVC_NAME}" INT QUIT TERM
-		if svc_state -w; then
-			error "service is busy -- retry later"
-			return 1
-		else
-			svc_mark -w
-		fi
 	fi
 
 	begin "service ${cmd}: "
@@ -498,6 +491,15 @@ svc_run()
 	fi
 	svc_start_pre || return
 	[ "${__SVC_DEPEND__}" = 0 ] || svc_depend || return
+	#
+	# this is done internaly (rs) already
+	#
+	if yesno "${__SVC_WAIT__:-1}"; then
+		if ! svc_wait -E 60; then
+			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
+			return 1
+		fi
+	fi
 
 	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
 	#
