@@ -449,11 +449,9 @@ svc_cmd()
 	#
 	# this is done internaly (rs) already
 	#
-	if yesno "${__SVC_WAIT__:-1}"; then
-		if ! svc_wait -E 60; then
-			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
-			return 1
-		fi
+	if ! svc_wait -E 60; then
+		error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
+		return 1
 	fi
 
 	begin "service ${cmd}: "
@@ -494,11 +492,9 @@ svc_run()
 	#
 	# this is done internaly (rs) already
 	#
-	if yesno "${__SVC_WAIT__:-1}"; then
-		if ! svc_wait -E 60; then
-			error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
-			return 1
-		fi
+	if ! svc_wait -E 60; then
+		error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
+		return 1
 	fi
 
 	local virt real=${SV_TMPDIR}/star/${SVC_NAME}
