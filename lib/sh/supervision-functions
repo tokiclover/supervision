@@ -174,14 +174,26 @@ svc_state()
 #
 svc_config()
 {
-	local file
+	local x
 	SVC_DEBUG "function=svc_config( ${@} )"
-	for file in ${SVC_CONFIGFILE} ${SVC_REQUIRED_FILES}; do
-		if [ ! -f "${file}" ]; then
-			error "\`${file}' required file not found"
+
+	for x in ${SVC_CONFIGFILE} ${SVC_REQUIRED_FILES}; do
+		if [ ! -f "${x}" ]; then
+			error "Failed to found \`${x}'"
 			return 1
 		fi
 	done
+
+	if [ -n "${SVC_NICE}" -a "${SVC_NICE}" -ge -19 -a "${SVC_NICE}" -le 20 ]; then
+		x="$(command -v nice 2>${NULL})"
+		[ -n "${x}" -a -x "${x}" ] || return 0
+		if [ -z "${PRE_CMD}" ]; then
+			PRE_CMD="${x}"
+			PRE_OPTS="-n${SVC_NICE}"
+		else
+			PRE_OPTS="${PRE_OPTS} ${x} -n${SVC_NICE}"
+		fi
+	fi
 }
 svc_start_pre()
 {
