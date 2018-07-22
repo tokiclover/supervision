@@ -513,7 +513,7 @@ svc_run()
 			fi
 		fi
 	fi
-	trap "rm -f ${real} ${virt}" INT QUIT TERM
+	trap "rm -f ${SVC_PIDFILE} ${real} ${virt}" INT QUIT TERM
 	echo >${real}
 	echo $$ >${SVC_PIDFILE}
 
