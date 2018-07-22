@@ -5,34 +5,47 @@
 
 TTY="${SVC_NAME#*-}"
 #
-# XXX: chose a getty ommand or first found will be used;
+# XXX: chose a getty ommand or the first found will be used;
 #      or else, make symbolic links with command name prefix
-#      instead of the generic `getty' name.
-#
-#SVC_CMD=/sbin/agetty
+#      instead of the generic `getty' name like 'agetty-tty<N>'
+SVC_CMD=/sbin/agetty
+#SVC_CMD=/sbin/mgetty
+#SVC_CMD=/sbin/mingetty
+#SVC_CMD=/sbin/fbgetty
 SVC_TRY=16
 SVC_AFTER="*"
+name="${SVC_CMD##*/}"
 
 #
 # XXX: Safety net
 #
-if [ -z "${SVC_CMD}" ]; then
+find_getty()
+{
+	local cmd
 	for cmd in ${SVC_NAME%-*} agetty mgetty mingetty fbgetty; do
-		if command -v "${cmd}" >${NULL} 2>&1; then
+		name="${cmd}"
+		cmd="$(command -v ${cmd} 2>${NULL})"
+		if [ -n "${cmd}" ] && [ -x "${cmd}" ]; then
 			SVC_CMD="${cmd}"
-			break;
+			return 0
 		fi
 	done
-	cmd=
-fi
-name="${SVC_CMD##*/}"
 
+	cmd=$(command -v busybox 2>${NULL})
+	if [ -n "${cmd}" ] && [ -x "${cmd}" ]; then
+		warn "using busybox getty!!!"
+		name=getty SVC_CMD="${cmd}"
+		return 0
+	fi
+	name=
+	return 1
+}
 
 find_issue()
 {
 	[ -f /etc/issue.${TTY} ] && TTY_OPTS="${TTY_OPTS} ${1} /etc/issue.${TTY}"
 }
-getty_options()
+agetty_options()
 {
 	find_issue -f
 	case "${TTY}" in
@@ -47,6 +60,9 @@ getty_options()
 rescue_shell()
 {
 	if [ "${OS_NAME}" = "Linux" ]; then
+		if rs sulogn start; then
+			return 0
+		fi
 	:	${SULOGIN_TTY:=/dev/tty8}
 		if [ "${SV_SHELL##*/}" = "sulogin" ]; then
 			if [ -x ${SV_SHELL} ]; then
@@ -56,50 +72,52 @@ rescue_shell()
 			fi
 		fi
 		SULOGIN="$(command -v sulogin 2>${NULL})"
-		[ "${?}" = 0 ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
+		[ -n "${SULOGIN}" ] && [ -x "${SULOGIN}" ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
 	fi
 
 	exec <${CONSOLE} >${CONSOLE}
 	exec 2>&1
 	for sh in ${SV_SHELL:-$SHELL} sh bash zsh ksh ${SHELLS}; do
 		sh=$(command -v ${sh} 2>${NULL})
-		[ "${?}" = 0 ] && exec ${sh} -lim
+		[ -n "${sh}" ] && [ -x "${sh}" ] && exec ${sh} -lim
 	done
-	error "No functional shell found!!!"
+	error "Failed to find a shell found!!!"
 }
 
 _start_pre()
 {
 	local cmd
 	if   [ "${name}" = "mgetty" ]; then
-	find_issue -i
-	SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
-	SVC_OPTS="${TTY} ${TTY_OPTS}"
+		find_issue -i
+		SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
+		SVC_OPTS="${TTY} ${TTY_OPTS}"
 	elif [ "${name}" = "fbgetty" ]; then
-	find_issue -i
-	SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
+		find_issue -i
+		SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
 	elif [ "${name}" = "mingetty" ]; then
-	SVC_OPTS="${TTY}"
+		SVC_OPTS="${TTY}"
 	elif [ "${name}" = "agetty" ]; then
-	getty_options
-	else
-	cmd=$(command -v busybox 2>${NULL})
-	if [ "${?}" = 0 ]; then
-		warn "using busybox getty!!!"
-		getty_options
+		agetty_options
+	elif [ "${name}" = "getty" ]; then
+		agetty_options
 		SVC_OPTS="getty ${SVC_OPTS}"
-		name=getty SVC_CMD=${cmd}
-	else
-		error "No suitable getty command found"
-		error "Launching sulogin instead; and"
-		error "do fix this by setting up getty"
-		rescue_shell
-	fi
 	fi # name
 }
 start_pre()
 {
 	if [ "${__cmd__}" = "run" ]; then
+		if [ -z "${SVC_CMD}" ] || [ ! -x ${SVC_CMD} ]; then
+			if ! find_getty; then
+				error "Failed to find a getty binary!"
+				error "Configure \`${SVC_DIR}/OPTIONS' and or install a getty package."
+
+				error "Launching sulogin instead; and"
+				rescue_shell
+				return 1
+			else
+				info "Found \`${SVC_CMD}' binary; setting up the service."
+			fi
+		fi
 		_start_pre
 	else
 		return 0
