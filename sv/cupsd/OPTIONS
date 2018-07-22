@@ -3,7 +3,8 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
-SVC_OPTS=-f
+SVC_CMD='/usr/sbin/cupsd'
+SVC_OPTS='-f'
 SVC_NEED='dbus'
 SVC_AFTER='logger'
 
