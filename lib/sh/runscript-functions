@@ -182,7 +182,7 @@ svc_wait()
 	while [ ${v} -le ${t} ]; do
 		v=$((${v}+${i}))
 		if waitfile ${o} ${i} ${x}; then
-			if [ -z "${2}" -o -n "${o}" ]; then
+			if [ -z "${2}" -a -n "${o}" ]; then
 				if svc_state -w; then
 					error "service is busy -- retry later"
 					return 1
