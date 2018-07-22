@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) depgen     1.5 2017/01/22 21:09:26                       Exp $
+# $Id:  @(#) depgen     1.6 2018/07/22 21:09:26                       Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -21,8 +21,10 @@ SV_CGROUP=0
 name="${0##*/}"
 SV_LIBDIR="${0%/sh/*}"
 export LC_ALL=C LANG=C
-. "${0%/*}"/runscript-functions ||
-	{ echo "Required file not found." >&2; exit 1; }
+if ! . ${SV_LIBDIR}/sh/runscript-functions; then
+	echo "${name}: error: Required file not found \`${SV_LIBDIR}/sh/run-functions'" >&2
+	exit 1
+fi
 SV_DEPDIR="${SV_TMPDIR}/deps"
 
 add_dep()
