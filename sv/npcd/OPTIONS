@@ -4,6 +4,7 @@
 #
 
 SVC_CONFIGFILE=/etc/pnp/npcd.cfg
+SVC_CMD=/usr/bin/npcd
 SVC_OPTS="--config ${SVC_CONFIGFILE}"
 SVC_USE="net syslog"
 SVC_STARTED_COMMANDS=reload
