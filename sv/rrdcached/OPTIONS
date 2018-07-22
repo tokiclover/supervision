@@ -13,6 +13,7 @@ esac
 #
 # Setup sane default values
 #
+SVC_CMD=/usr/bin/rrdcached
 SVC_OPTS=""
 SVC_USER=nobody
 SVC_GROUP=nobody
