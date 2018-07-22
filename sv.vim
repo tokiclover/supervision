@@ -18,11 +18,12 @@ let is_bash=1
 runtime! syntax/sh.vim
 unlet b:current_syntax
 
-syn keyword svKwd begin die end error eval_colors info yesno checkpath warn SOURCE
-syn keyword svKwd env_del env_svc env_sv  svc_cmd svc_down svc_mark svc_state
+syn keyword svKwd begin die end error eval_colors info yesno warn SOURCE
+syn keyword svKwd env_del env_svc env_sv svc_cmd svc_down svc_mark svc_state
 syn keyword svKwd env_rs rs_cmd svc_sig svc_wait svc_zap mountinfo fstabinfo
 syn keyword svKwd start start_pre start_post stop stop_pre stop_post restart
 syn keyword svKwd log_start_pre log_stop_post
+syn keyword svKwd checkpath fstabinfo mountinfo waitfile
 syn keyword svVars LOG_MODE LOG_PROC LOG_SIZE LOG_STAT LOG_PREFIX LOG_PRE_CMD
 syn keyword svVars LOG_CMD LOG_OPTS LOG_FIN_CMD LOG_FIN_OPTS LOG_PRE_OPTS
 syn keyword svVars LOGDIR LOG_ARGS LOG_STAT LOG_COMP LOG_PREFIX LOG_SIZE 
