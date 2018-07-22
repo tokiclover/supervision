@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) cmd    0.3 2018/06/30 21:09:26                                Exp $
+# $Id:  @(#) cmd    0.4 2018/07/22 21:09:26                                Exp $
 # $L$:  2-clause/new/simplified BSD                                        Exp $
 #
 
@@ -41,8 +41,10 @@ readonly __svc__="${__av0__%/$__cmd_dir__}"
 readonly SV_TYPE=sv
 SV_LIBDIR=${SVC_DIR}/../../lib
 
-source "${SV_LIBDIR}"/sh/runscript-functions ||
-	{ echo "${__cmd__}: error: Required file not found." >&2; exit 1; }
+if ! . ${SV_LIBDIR}/sh/runscript-functions; then
+	echo "${__cmd__}: error: Required file not found \`${SV_LIBDIR}/sh/run-functions'" >&2
+	exit 1
+fi
 :	${SVC_CMD:=${SVC_NAME}}
 
 if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
