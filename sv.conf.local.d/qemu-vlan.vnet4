@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv.conf.d/qemu-vlan.vnet4, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.local.d/qemu-vlan.vnet4           Exp $
 # 
 
 QEMU_VLAN_DHCP="dnsmasq"
