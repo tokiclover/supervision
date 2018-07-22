@@ -6,6 +6,7 @@
 description='ZFS Event Daemon'
 SVC_AFTER='localfs'
 SVC_NEED='zfs'
+SVC_CMD=/sbin/zed
 SVC_OPTS='-F -p /var/run/zed.pid'
 
 #
