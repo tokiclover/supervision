@@ -50,7 +50,7 @@ fi
 
 :	${SV_LIBDIR:=${0%/sh/*}}
 :	${SVC_NAME:=${1##*/}}
-readonly name="${SVC_NAME}"
+name="${SVC_NAME}"
 readonly __cmd__="${2}"
 readonly __cmd_args__="${@#*$2}"
 readonly __svc__="${1}"
