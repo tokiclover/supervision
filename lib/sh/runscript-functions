@@ -167,6 +167,18 @@ svc_wait()
 	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
 
+	if [ -z "${o}" ] && [ -e ${x} ]; then
+		local pid
+		read pid <${x}
+		pid="${pid%:*}"
+		if [ -n "${pid}" ]; then
+			pid="${pid#*=}"
+			if ! kill -0 "${pid}" >${NULL} 2>&1; then
+				rm -f ${x}
+			fi
+		fi
+	fi
+
 	while [ ${v} -le ${t} ]; do
 		v=$((${v}+${i}))
 		if waitfile ${o} ${i} ${x}; then
