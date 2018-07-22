@@ -5,11 +5,11 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH RS 8 "2016-12-30" "0.13.0" "System Manager's Manual"
+.TH SV-RUN 8 "2016-12-30" "0.13.0" "System Manager's Manual"
 .SH NAME
-rs \- manage runscript and supervision services
+sv-run \- manage runscript and supervision services
 .SH DESCRIPTION
-.B rs
+.B sv-run
 is a utility to manage runscript and supervised services.
 This utility is used in conjunction with a supervsion suite like
 .B runit
@@ -19,13 +19,13 @@ or
 .B daemontools(-encore)
 to get a fully supervised init-system and service-manager.
 .SH SYNOPSIS
-.B rs
+.B sv-run
 .RB [\| OPTIONS \| ]
 .RB \| SERVICE \|
 .RB \| COMMAND \|
 .RB [\| ARGUMENTS \|]
 
-.B rs
+.B sv-run
 .RB [\| \-h|\-\-help \|]
 .RB [\| \-v|\-\-version \|]
 
@@ -33,13 +33,13 @@ to get a fully supervised init-system and service-manager.
 name can be replaced by
 .B scan
 to update the dependency cache of the list of services passed as arguments
-like \fBrs scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
+like \fBsv-run scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
 
 .B SERVICE
 name can be replaced by the special use case
 .B stage
 to manage a whole bundle of services instead of a single service; for example,
-`rs --default stage' to bring the system to default runlevel.
+`sv-run --default stage' to bring the system to default runlevel.
 This usage is now superseded by
 .B sv-stage
 utility, see
@@ -56,17 +56,17 @@ to
 environment variable; or else, copy the symlink to
 .I /sbin
 for example to get the same behaviour; or else use
-.B rs
+.B sv-run
 instead because
 .B service
 is a just limited interfaces to manage service.
 
 Do note that it's rather prefered and recommended to use
-.B rs
+.B sv-run
 command to manage services rather than using the service executable. And this
 is more true for supervision services when dealing with dependencies and
 virtual services. Starting a supervision service shall be done with
-.B rs
+.B sv-run
 binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND [ARGUMENTS]\fR'.
 
 .SH OPTIONS
@@ -146,9 +146,9 @@ print service description to standard output.
 A command
 .B name
 argument can be passed to print the description of the command instead of the
-description of the service, `rs udev desc reload' for example.
+description of the service, `sv-run udev desc reload' for example.
 .B scan
-update the dependency cache of a service. \fIrs scan\fB SERVICES\fR can be used
+update the dependency cache of a service. \fIsv-run scan\fB SERVICES\fR can be used
 for a list of service instead.
 .B down
 send down command to the supervisor (supervision only)
@@ -163,7 +163,7 @@ for runscript particular services or
 .I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fB[.INSTANCE]\fR
 for supervision services for the local configuration file,
 and \fBsupervsion\fR(5) for settings related to
-.B rs
+.B sv-run
 service management.
 .SH "RETURN VALUE"
 .TP
@@ -207,7 +207,7 @@ execve system call failure
 .SH "APPLICATION USAGE"
 Some services are added to the service directory? Try starting them then.
 It seems to work? Good, try to add them in a init-stage or runlevel with
-`\fIrs \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
+`\fIsv-run \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
 by running `\fIsv-stage \fB--RUNLEVEL\fR' and then checkout
 \fISV_TMPDIR/deps/\fBRUNLEVEL\fR to see if the service is inserted
 in the right place depending on the dependency definitions. Or better,
@@ -217,7 +217,7 @@ dependency definition. Major dependency redefinition is necessary.
 
 .B NOTE:
 Cyclical dependency definitions will cause dependency setup to fail when using
-`\fIrs \fBSERVICE \fIstart\fR'
+`\fIsv-run \fBSERVICE \fIstart\fR'
 or service scheduling havoc in dependency tree files mentionned above.
 .SH "FUTURE DIRECTIONS"
 None.

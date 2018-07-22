@@ -248,7 +248,7 @@ ifneq ($(OS),Linux)
 dist_SVC_SED += -e 's|/usr/|$(PREFIX)/|g'
 endif
 ifneq ($(EXEC_PREFIX),)
-dist_SVC_SED += 's|/sbin/rs|$(SBINDIR)/rs|g'
+dist_SVC_SED += 's|/sbin/sv-run|$(SBINDIR)/sv-run|g'
 endif
 
 dist_MAN_SED += \
@@ -276,11 +276,11 @@ $(SUBDIRS): FORCE
 
 install: install-dir install-dist install-sv-svcs
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
-	$(install_SCRIPT) src/rs $(DESTDIR)$(SBINDIR)
+	$(install_SCRIPT) src/sv-run $(DESTDIR)$(SBINDIR)
 	$(install_SCRIPT) src/sv-shutdown $(DESTDIR)$(SBINDIR)
-	$(LN_S) $(SBINDIR)/rs $(DESTDIR)$(SBINDIR)/sv-stage
+	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/sv-stage
 	for s in $(dist_RS_SYMLINKS); do \
-		$(LN_S) $(SBINDIR)/rs $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
+		$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
 	done
 	for s in $(dist_SHUTDOWN_SYMLINKS); do \
 		$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
@@ -295,7 +295,7 @@ install: install-dir install-dist install-sv-svcs
 	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
 	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/cmd
-	sed $(dist_MAN_SED) rs.8 >$(DESTDIR)$(MANDIR)/man8/rs.8
+	sed $(dist_MAN_SED) sv-run.8 >$(DESTDIR)$(MANDIR)/man8/sv-run.8
 	sed $(dist_MAN_SED) sv-stage.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
 	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed $(dist_MAN_SED) sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
@@ -346,9 +346,9 @@ $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
 		$(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/sv-shutdown \
-		$(DESTDIR)$(SBINDIR)/rs \
+		$(DESTDIR)$(SBINDIR)/sv-run \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
-		$(DESTDIR)$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/rs.8 \
+		$(DESTDIR)$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
 		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(SV_SVCDIR).conf.local.d/%)

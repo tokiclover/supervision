@@ -14,14 +14,14 @@ fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := waitfile.c
 
-rs_SRCS   := sv-conf.c sv-deps.c rs.c sv-list.c sv-stage.c
-rs_HDRS   := sv.h
-rs_CFLAGS  = $(PTHREAD_FLAGS)
-rs_LDFLAGS = $(PTHREAD_FLAGS)
+sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-stage.c
+sv-run_HDRS   := sv.h
+sv-run_CFLAGS  = $(PTHREAD_FLAGS)
+sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
-HDRRS      = $(dist_HDRS) $(rs_HDRS)
+HDRRS      = $(dist_HDRS) $(sv-run_HDRS)
 simple_BINS := checkpath fstabinfo mountinfo sv-config sv-shutdown waitfile
-dist_BINS  = $(simple_BINS) rs
+dist_BINS  = $(simple_BINS) sv-run
 
 ifeq (SYSVINIT,yes)
 .SECONDEXPANSION:
@@ -32,11 +32,11 @@ endif
 all: $(dist_BINS)
 
 clean:
-	rm -f $(dist_BINS) $(dist_OBJS) $(rs_SRCS:%.c=%.o) $(simple_BINS:%=%.o) \
+	rm -f $(dist_BINS) $(dist_OBJS) $(sv-run_SRCS:%.c=%.o) $(simple_BINS:%=%.o) \
 		$(simple_BINS)
 
-rs: $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(rs_HDRS)
-	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(rs_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
+sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(sv-run_HDRS)
+	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 checkpath: $(checkpath_SRCS:%.c=%.o) error.h
 fstabinfo: $(fstabinfo_SRCS:%.c=%.o) error.h

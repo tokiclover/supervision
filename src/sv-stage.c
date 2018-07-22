@@ -813,8 +813,8 @@ int main(int argc, char *argv[])
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	sv_sigsetup();
 
-	if (strcmp(progname, "rs") == 0 || strcmp(progname, "service") == 0)
-		goto rs;
+	if (strcmp(progname, "sv-run") == 0 || strcmp(progname, "service") == 0)
+		goto sv_run;
 	else if (strcmp(progname, "rc") == 0) {
 		setenv("SVC_DEBUG", off, 1);
 		goto rc;
@@ -844,7 +844,7 @@ stage:
 	else if (argc == 1)
 		goto rc;
 	else
-		goto rs;
+		goto sv_run;
 
 	exit(EXIT_SUCCESS);
 
@@ -891,7 +891,7 @@ scan:
 	execv(SV_DEPGEN, argv);
 	ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
 
-rs:
+sv_run:
 	/* compatibility with <v0.13.0 */
 	if (argc) {
 		if (strcmp(*argv, "stage") == 0) {
