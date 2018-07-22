@@ -1,13 +1,13 @@
 #!/bin/sh
 
-ln -fs src/rs lib/sbin/service
+ln -fs src/sv-run lib/sbin/service
 lib/sbin/service sysfs status
 sv/sysfs start
 sv/atd/run status
 
 printf "bogus usage\n"
-src/rs stage
+src/sv-run stage
 printf "\n"
 
-ln -fs rs src/sv-stage
+ln -fs sv-run src/sv-stage
 src/sv-stage --default status
