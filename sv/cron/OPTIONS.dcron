@@ -3,7 +3,8 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
-SVC_CMD=crond
+name=dcron
+SVC_CMD=/usr/sbin/crond
 SVC_OPTS=-n
 
 case "${SVC_OPTS}" in

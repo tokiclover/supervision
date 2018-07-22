@@ -1,9 +1,11 @@
 #
-# $Id: @(#) /etc/sv/cron/OPTIONS.vxie-cron                            Exp $
+# $Id: @(#) /etc/sv/cron/OPTIONS.vixie-cron                           Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
 description='Vixie Cron Daemon'
+name=vixie-cron
+SVC_CMD=/usr/sbin/vixie-cron
 SVC_OPTS=-n
 case "${SVC_OPTS}" in
 	(*-s*) SVC_USE=logger;;

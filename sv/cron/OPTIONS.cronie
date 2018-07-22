@@ -3,8 +3,9 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
+name=cronie
 SVC_CRONTABS_DIR=/var/spool/anacron
-SVC_CMD=anacron
+SVC_CMD=/usr/sbin/anacron
 SVC_OPTS='-d -s -S ${SVC_CRONTABS_DIR}'
 
 #

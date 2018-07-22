@@ -3,6 +3,7 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
+name=fcron
 SVC_CONFIGFILE=/etc/${name}/${name}.conf
 SVC_CRONTABS_DIR=/var/spool/${name}
 SVC_CMD=/usr/libexec/${name}
