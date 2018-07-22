@@ -6,6 +6,7 @@
 description='Scanner Access Now Easy daemon'
 
 ENV_DIR=Yes
+SVC_CMD=/usr/sbin/saned
 SVC_OPTS='-d 2'
 SVC_USER=saned
 SVC_GROUP=saned
