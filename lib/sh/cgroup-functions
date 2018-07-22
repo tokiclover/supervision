@@ -12,6 +12,7 @@ __CGROUP_NAME__=supervision
 __CGROUP_ROOT__=/sys/fs/cgroup
 __CGROUP_PATH__="${__CGROUP_ROOT__}/${__CGROUP_NAME__}"
 SYSFS_OPTS="nodev,nosuid,noexec"
+readonly __CGROUP_NAME__ __CGROUP_ROOT__ __CGROUP_PATH__ SYSFS_OPTS
 
 cgroup_mount_sys()
 {
