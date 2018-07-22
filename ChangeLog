@@ -1,5 +1,15 @@
 Header: supervision/ChangeLog, 2015/04/24
 
+0.14.0:
+
+Removed `/lib/sv/opt' and merged the directory to `/lib/sv/sh';
+Renamed `rs(8)' command to `sv-run(8)';
+
+
+ADDIDION:
+SUPERVISION SERVICE:
+RUNSCRIPT SERVICE: qemu-vlan.vnet{0,4};
+
 0.13.1:
 
 Stabilisation release: there are fixes alll over the place, a few are
