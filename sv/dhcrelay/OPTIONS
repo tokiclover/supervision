@@ -5,21 +5,22 @@
 
 description='Dynamic Host Configuration Protocol (DHCP) relay'
 
-SVC_CMD=dhcrelay
+SVC_CMD='/usr/sbin/dhcrelay'
+SVC_OPTS='-d 192.168.0.255'
 SVC_USE='logger'
 SVC_NEED='net'
-#
-# XXX: a server IP address shall be appended here to get a functional relay
-#
-SVC_OPTS='-d 192.168.0.255'
-if [ "${SVC_NAME%6}" != "${SVC_NAME}" ]; then
-	SVC_OPTS="-6 ${SVC_OPTS}"
-else
-	SVC_OPTS="-4 ${SVC_OPTS}"
-fi
 
 start_pre()
 {
+	#
+	# XXX: a server IP address shall be appended here to get a functional relay
+	#
+	if [ "${SVC_NAME%6}" != "${SVC_NAME}" ]; then
+		SVC_OPTS="-6 ${SVC_OPTS}"
+	else
+		SVC_OPTS="-4 ${SVC_OPTS}"
+	fi
+
 	local iface
 	for iface in ${DHCRELAY_INTERFACES}; do
 		SVC_OPTS="${SVC_OPTS} -i ${iface}"
