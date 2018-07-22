@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) runscript    0.6 2017/01/24 21:09:26                     Exp $
+# $Id:  @(#) runscript    0.8 2018/07/22 21:09:26                     Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -68,8 +68,10 @@ esac
 shift
 readonly SVC_NAME SV_TYPE
 
-. ${SV_LIBDIR}/sh/runscript-functions ||
-	{ echo "${0##*/}: error: Required file not found." >&2; exit 1; }
+if ! . ${SV_LIBDIR}/sh/runscript-functions; then
+	echo "${0##*/}: error: Required file not found \`${SV_LIBDIR}/sh/run-functions'" >&2
+	exit 1
+fi
 
 #
 # Handle service command
