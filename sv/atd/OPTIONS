@@ -3,6 +3,7 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
+SVC_CMD=/usr/sbin/atd
 SVC_OPTS='-f -d'
 SVC_USER=at
 SVC_GROUP=at
