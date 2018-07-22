@@ -1,4 +1,4 @@
-#!/sbin/rs
+#!/sbin/sv-run
 #
 # $Id: @(#) /etc/sv/tmpdirs   0.22.0 2016/06/06                       Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $

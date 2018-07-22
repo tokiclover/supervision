@@ -1,4 +1,4 @@
-#!/sbin/rs
+#!/sbin/sv-run
 #
 # $Id: @(#) /etc/sv/miscfs   2017/01/12                               Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $

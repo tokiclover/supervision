@@ -1,4 +1,4 @@
-#!/sbin/rs
+#!/sbin/sv-run
 #
 # $Id: @(#) /etc/sv/ipset                                             Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $
@@ -23,7 +23,7 @@ check()
 		checkpath -qf -m 0600 "${IPSET_RULES_FILE}"
 	else
 		error "Create some rules before starting this service"
-		error "And then run \`rs ${SVC_NAME} save' to save the rules"
+		error "And then run \`sv-run ${SVC_NAME} save' to save the rules"
 		return 1
 	fi
 }

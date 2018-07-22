@@ -1,4 +1,4 @@
-#!/sbin/rs
+#!/sbin/sv-run
 #
 # $Id: @(#) /etc/sv/zramfs   0.22.1 2016/07/20                        Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $

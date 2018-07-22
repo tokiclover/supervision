@@ -60,7 +60,7 @@ agetty_options()
 rescue_shell()
 {
 	if [ "${OS_NAME}" = "Linux" ]; then
-		if rs sulogn start; then
+		if sv-run sulogn start; then
 			return 0
 		fi
 	:	${SULOGIN_TTY:=/dev/tty8}

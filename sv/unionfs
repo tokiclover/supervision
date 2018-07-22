@@ -1,4 +1,4 @@
-#!/sbin/rs
+#!/sbin/sv-run
 #
 # $Id: @(#) /etc/sv/unionsfs    0.22.0 2016/07/20                     Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $
