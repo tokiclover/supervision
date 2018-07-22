@@ -3,6 +3,7 @@
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
+SVC_CMD=/usr/sbin/acpid
 SVC_OPTS=--foreground
 SVC_USE=logger
 
