@@ -12,7 +12,7 @@ Supervision package aims to provide and easy, simple and efficient
 service-manager and init-system build to function with a supervision suite.
 Though the init-system part can be bypassed altogether by using only
 .I default
-runlevel or init-stage and
+run level or init stage and
 thus benefit the easy to use the service-management framework for supervision.
 .SS SUPERVISION
 Supervision aims to provide an easy and efficient way to supervision;
@@ -278,7 +278,7 @@ subsystem environment.
 To have the supervisor \fB({damontools[-encore],runit,s6})\fR executed as \fBPID 1\fR...
 Just setup the container or subsystem; once done, use something like
 the following for docker: `\fBdocker run [OPTIONS] --env container=docker --tmpfs /run
-IMAGE /lib/sv/sh/init-stage --default\fR'; and voila! the supervisor will be executed
+IMAGE /lib/sv/sh/sv-init.sh --default\fR'; and voila! the supervisor will be executed
 as \fIPID 1\fR and another process will handle service management to setup the container.
 
 .SH OPTIONS
@@ -700,7 +700,7 @@ T}
 
 .SH RUNLEVELS
 Superivision is organized in seven distinct runlevels like the classic SystemV
-runlevels but are internaly handled like three init-stage plus system
+runlevels but are internaly handled like three run levels plus system
 initialization; one for system boot; second for multi users system;
 third for system shutdown; and an extra single user mode and nonetwork for
 compatiblity with SystemV or BSD init-system.
@@ -735,13 +735,13 @@ Just issue the classic command to add a service to
 runlevel: `\fIrs --single sulogin add\fR'; however, this is already done in the
 default installation process.
 .B sysinit
-runlevel is the initialization init-stage;
+runlevel is the initialization init stage;
 .B sysboot
-runlevel is the first init-stage;
+runlevel is the first init stage;
 .B default
 (multi users mode) runlevel is the
 .I default
-init-stage;
+init stage;
 .B {nonetwork,single}
 are only a modified
 .B sysboot
@@ -836,7 +836,7 @@ support: child process (supervisor) will naturally inherit supervision CGroup.
 .SS @SBINDIR@
 .TP
 .I @SBINDIR@/rs
-Multi-purpose binary to run either an init-stage or runlevel or service command, e.g.
+Multi-purpose binary to run either an init stage or run level or service command, e.g.
 `rs --sysboot zramfs add' to add
 .B zramfs
 service to syteme boot runlevel); `rs acpid start' or `rsv-init --default' to start
@@ -858,7 +858,7 @@ Runlevel directory
 .B \fI@SYSCONFDIR@/sv\fR (\fBSV_SVCDIR\fR)
 See SV_SVCDIR/.RUNLEVEL for active services.
 Use `rs -(0|1||3|4|5) SERVICE add` to add a particular service to a particular
-init-stage or runlevel.
+init stage or run level.
 .B sysinit
 is ready to use;
 .B sysboot
@@ -1024,7 +1024,7 @@ Simple script to list dependencies
 .I @LIBDIR@/sv/sh/cgroup-release-agent
 CGroup Release Agent script
 .TP
-.I @LIBDIR@/sv/sh/init-stage
+.I @LIBDIR@/sv/sh/sv-init.sh
 Init-stage-{1,2,3} handler for supervision
 .TP
 .I @LIBDIR@/sv/sh/cgroup-functions
