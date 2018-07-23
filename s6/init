@@ -4,7 +4,7 @@
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_INIT_SH=/lib/sv/sh/sv-init.sh
 SV_RUNDIR=/run/service
 SV_SERVICE=/etc/service
 
@@ -14,9 +14,9 @@ for link in crash finish; do
 	ln -f -s /etc/s6/${link} "${SV_RUNDIR}"/.s6-svscan/${link}
 done
 
-if [ -x ${SV_INIT_STAGE} ]; then
-	${SV_INIT_STAGE} --sysinit
-	exec ${SV_INIT_STAGE} --default
+if [ -x ${SV_INIT_SH} ]; then
+	${SV_INIT_SH} --sysinit
+	exec ${SV_INIT_SH} --default
 fi
 RUNLEVEL=S rc sysinit
 RUNLEVEL=S rc boot

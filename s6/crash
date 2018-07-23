@@ -6,10 +6,10 @@
 
 :	${SV_RUNDIR:=/run/service}
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_INIT_SH=/lib/sv/sh/sv-init.sh
 
-if [ -x ${SV_INIT_STAGE} ]; then
-	exec ${SV_INIT_STAGE} --default
+if [ -x ${SV_INIT_SH} ]; then
+	exec ${SV_INIT_SH} --default
 fi
 
 exec /usr/bin/env - PATH=${PATH} s6-svscan ${SV_OPTS} ${SV_RUNDIR}
