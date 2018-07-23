@@ -35,7 +35,7 @@ dist_EXTRA  = \
 dist_SH_BINS  = \
 	lib/sh/cmd \
 	lib/sh/tmpfiles \
-	lib/sh/runscript \
+	lib/sh/sv-run.sh \
 	lib/sh/sv-init.sh \
 	lib/sh/cgroup-release-agent \
 	lib/sh/depgen

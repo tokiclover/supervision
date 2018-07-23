@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) runscript    0.8 2018/07/22 21:09:26                     Exp $
+# $Id:  @(#) sv-run.sh    0.8 2018/07/22 21:09:26                     Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -17,14 +17,14 @@ fi
 
 help_message() {
 	cat <<-EOH
- usage: runscript [OPTIONS] SERVICE COMMAND [ARGUMENTS]
+ usage: ${0##*/} [OPTIONS] SERVICE COMMAND [ARGUMENTS]
    COMMAND: add|del|desc|remove|reload|restart|start|stop|status|zap|cgroup_remove_service
    OPTIONS: [OPTIONS] SERVICE COMMAND [ARGUMENTS]
      -D, --nodeps     Disable dependencies1
      -d, --debug      Enable debug mode
      -x, --trace      Enable shell trace
-     -r, --rs         Select runscript backend
-     -s, --sv         Select supervision backend
+     -r, --rs         Select runscript service type
+     -s, --sv         Select supervision service type
      -h, --help       Print help and exit
 EOH
 ${1+exit ${1}}
