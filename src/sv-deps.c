@@ -44,7 +44,7 @@ static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent);
 static int           sv_svcdeps_gen(const char *svc);
 static void sv_virtsvc_insert(SV_SvcDeps_T *elm);
 
-static void sv_runlevel_migrate(void);
+static void sv_init_level_migrate(void);
 
 static void sv_deptree_alloc(SV_DepTree_T *deptree)
 {
@@ -189,7 +189,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 	DBG("%s(%p)\n", __func__, deptree);
 #endif
 
-	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
+	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
 	if (access(path, F_OK))
 		return -1;
 	if ((fp = fopen(path, "r+")) == NULL) {
@@ -233,7 +233,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	if (!deptree)
 		return -ENOENT;
 
-	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_runlevel[sv_stage]);
+	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
 	if ((fp = fopen(path, "w+")) == NULL) {
 		ERR("Failed to open `%s': %s\n", path, strerror(errno));
 		return -1;
@@ -326,7 +326,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 	sv_deptree_file_save(deptree);
 }
 
-static void sv_runlevel_migrate(void)
+static void sv_init_level_migrate(void)
 {
 	char b[128];
 	int i;
@@ -334,7 +334,7 @@ static void sv_runlevel_migrate(void)
 	DBG("%s(void)\n", __func__);
 #endif
 
-	switch (sv_stage) {
+	switch (sv_init) {
 	case SV_SYSINIT_LEVEL : i = 0; break;
 	case SV_SYSBOOT_LEVEL : i = 1; break;
 	case SV_DEFAULT_LEVEL : i = 2; break;
@@ -344,7 +344,7 @@ static void sv_runlevel_migrate(void)
 
 	snprintf(b, sizeof(b), "%s/.stage-%d", SV_SVCDIR, i);
 	if ((i = access(b, F_OK))) {
-		snprintf(b, sizeof(b), "%s/.%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+		snprintf(b, sizeof(b), "%s/.%s", SV_SVCDIR, sv_init_level[sv_init]);
 		i = access(b, F_OK);
 	}
 	if (!i) {
@@ -370,8 +370,8 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 		ptr = dir_path;
 	else {
 		ptr = path;
-		sv_runlevel_migrate();
-		snprintf(path, sizeof(path), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[sv_stage]);
+		sv_init_level_migrate();
+		snprintf(path, sizeof(path), "%s.init.d/%s", SV_SVCDIR, sv_init_level[sv_init]);
 	}
 	if ((dir = opendir(ptr)) == NULL) {
 		ERR("Failed to open `%s' directory: %s\n", ptr, strerror(errno));
@@ -481,7 +481,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	if (!file_test(SV_TMPDIR_DEPS, 'd')) {
 		if (sv_level == SV_SYSINIT_LEVEL) {
 			arg = "--background";
-			ptr = (char*)sv_runlevel[sv_level];
+			ptr = (char*)sv_init_level[sv_level];
 		}
 		else {
 			arg = "--foreground";

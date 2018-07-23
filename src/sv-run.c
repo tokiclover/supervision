@@ -76,7 +76,7 @@ static const char *const environ_whitelist[] = {
 static const char *environ_list[] = {
 	"COLUMNS", "SVC_DEBUG", "SVC_TRACE", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION",
-	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_STAGE",
+	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_INITLEVEL",
 	NULL
 };
 
@@ -147,7 +147,7 @@ static int svc_wait(const char *svc, int timeout, int lock_fd);
 int svc_exec(int argc, const char *argv[]);
 
 /*
- * execute a service list (called from svc_stage())
+ * execute a service list (called from svc_init())
  * @return 0 on success or number of failed services
  */
 int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
@@ -342,14 +342,14 @@ int svc_cmd(struct svcrun *run)
 	switch(run->cmd) {
 	case SV_SVC_CMD_ADD:
 	case SV_SVC_CMD_DEL:
-		if (sv_stage < 0) {
+		if (sv_init < 0) {
 			fprintf(stderr, "%s: runlevel argument is required\n", progname);
 			fprintf(stderr, "Usage: %s -(0|1|3|4|5) %s %s\n", progname,
 					run->name, sv_svc_cmd[run->cmd]);
 			return 1;
 		}
 
-		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR, sv_runlevel[sv_stage],
+		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR, sv_init_level[sv_init],
 				run->name);
 		if (!access(buf, F_OK)) {
 			if (run->cmd == SV_SVC_CMD_DEL)
@@ -477,7 +477,7 @@ runsvc:
 		_exit(ETIMEDOUT);
 	}
 	/* close the lockfile to be able to mount rootfs read-only */
-	if (sv_stage == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
+	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
 		close(run->lock);
 
 	/* supervise the service */

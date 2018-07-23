@@ -72,7 +72,7 @@ extern "C" {
 
 extern int sv_parallel;
 extern int sv_level;
-extern int sv_stage;
+extern int sv_init;
 extern int sv_system;
 extern int svc_deps;
 extern int svc_quiet;
@@ -95,7 +95,7 @@ enum {
 	SV_REBOOT_LEVEL,
 #define SV_REBOOT_LEVEL SV_REBOOT_LEVEL
 };
-extern const char *const sv_runlevel[];
+extern const char *const sv_init_level[];
 
 extern void sv_cleanup(void);
 
