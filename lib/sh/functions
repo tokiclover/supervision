@@ -35,7 +35,7 @@ logger()
 error()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG}; then
+	if yesno ${SVC_SYSLOG}; then
 		logger "${name}: error: ${@}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -57,7 +57,7 @@ die()
 info()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG_INFO}; then
+	if yesno ${SVC_SYSLOG_INFO}; then
 		logger "${name}: info: ${@}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -71,7 +71,7 @@ info()
 warn()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG}; then
+	if yesno ${SVC_SYSLOG}; then
 		logger "${name}: warning: ${@}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -84,7 +84,7 @@ warn()
 #
 begin()
 {
-	if ${SVC_SYSLOG_INFO}; then
+	if yesno ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${@}"
 	fi
 	printf "${__print_eol__}"
@@ -102,7 +102,7 @@ end()
 {
 	local suffix ret="${1:-0}"
 	shift
-	if ${SVC_SYSLOG_INFO}; then
+	if yesno ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${@}"
 	fi
 	case "${ret}" in

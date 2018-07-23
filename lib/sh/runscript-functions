@@ -82,10 +82,10 @@ svc_add()
 }
 SVC_DEBUG()
 {
-	if ${SVC_SYSLOG}; then
+	if yesno ${SVC_SYSLOG}; then
 		logger "${name}: debug: ${@}"
 	fi
-	if ${SVC_DEBUG}; then
+	if yesno ${SVC_DEBUG}; then
 		printf "${__print_eol__}${name}: debug: ${@}" >&2
 	fi
 	return 0
@@ -318,7 +318,6 @@ if yesno "${SVC_SYSLOG_INFO:-${SV_SYSLOG_INFO}}"; then
 else
 	SVC_SYSLOG_INFO=false
 fi
-readonly SVC_DEBUG SVC_SYSLOG SVC_SYSLOG_INFO
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
