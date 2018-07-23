@@ -36,7 +36,7 @@ dist_SH_BINS  = \
 	lib/sh/cmd \
 	lib/sh/tmpfiles \
 	lib/sh/runscript \
-	lib/sh/init-stage \
+	lib/sh/sv-init.sh \
 	lib/sh/cgroup-release-agent \
 	lib/sh/depgen
 dist_SV_SBINS = \
@@ -53,7 +53,7 @@ dist_SV_BINS  = \
 	src/fstabinfo \
 	src/mountinfo \
 	src/waitfile
-dist_SCRIPTS  = $(dist_INIT_STAGE)
+dist_SCRIPTS  = $(dist_INIT_SH)
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
 	apache2 \
@@ -220,12 +220,12 @@ dist_DIRS += $(PREFIX)$(SV_SVCDIR)
 endif
 endif
 
-ifeq ($(RUNIT_INIT_STAGE),yes)
-dist_INIT_STAGE += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
+ifeq ($(RUNIT_INIT_SH),yes)
+dist_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
 dist_DIRS    += $(SYSCONFDIR)/runit
 endif
-ifeq ($(S6_INIT_STAGE),yes)
-dist_INIT_STAGE += s6/crash s6/finish s6/init
+ifeq ($(S6_INIT_SH),yes)
+dist_INIT_SH += s6/crash s6/finish s6/init
 dist_DIRS    += $(SYSCONFDIR)/s6
 endif
 
@@ -235,7 +235,7 @@ dist_SV_SVCS  += initctl
 endif
 
 DISTFILES   = \
-	$(dist_INIT_STAGE) $(dist_SV_OPTS)
+	$(dist_INIT_SH) $(dist_SV_OPTS)
 dist_RUNLEVEL_DIRS = sysinit sysboot default shutdown single
 dist_DIRS  += \
 	$(SV_LIBDIR)/bin $(SV_LIBDIR)/sbin $(SV_LIBDIR)/sh $(DOCDIR) \
@@ -258,7 +258,7 @@ dist_MAN_SED += \
 	-e 's|@SBINDIR@|$(SBINDIR)|g' \
 	-e 's|@PREFIX@|$(PREFIX)|g' \
 	-e 's|@_PATH_NOLOGIN@|$(_PATH_NOLOGIN)|g'
-INIT_STAGE_SED = -e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
+INIT_SH_SED = -e 's|\(PATH=\).*$$|\1$(_PATH_STDPATH)|g' \
 	-e 's|\(_PATH_WALL=\).*$$|\1$(_PATH_WALL)|g' \
 	-e 's|/etc|$(SYSCONFDIR)|g' \
 	-e 's|/lib|$(LIBDIR)|g' \
@@ -311,8 +311,8 @@ ifneq ($(dist_SVC_SED),)
 		-i $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
 		   $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%/OPTIONS*)
 endif
-	sed $(INIT_STAGE_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/init-stage \
-		$(dist_INIT_STAGE:%=$(DESTDIR)$(SYSCONFDIR)/%)
+	sed $(INIT_SH_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/sv-init.sh \
+		$(dist_INIT_SH:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		$(LN_S) "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done

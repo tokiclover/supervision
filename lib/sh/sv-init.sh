@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) init-stage    1.8 2018/07/22 21:09:26                    Exp $
+# $Id:  @(#) sv-init.sh    1.8 2018/07/22 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -13,11 +13,12 @@ if [ -n "${ZSH_VERSION}" ]; then
 fi
 
 :	${CONSOLE:=/dev/console}
-:	${SV_SHELL:=${SHELL:-/bin/sh}}
-svc_rsh()
+svc_rescue_shell()
 {
-	NULL=/dev/null
-	PATH=/bin:/sbin:/usr/bin:/usr/sbin
+	SVC_DEBUG "function=svc_rescue_shell( ${@} )"
+:	${SV_SHELL:=${SHELL:-/bin/sh}}
+:	${NULL:=/dev/null}
+:	${PATH:=/bin:/sbin:/usr/bin:/usr/sbin}
 
 	if [ "${OS_NAME:-$(uname -s)}" = "Linux" ]; then
 	:	${SULOGIN_TTY:=/dev/tty8}
@@ -29,30 +30,30 @@ svc_rsh()
 			fi
 		fi
 		SULOGIN="$(command -v sulogin 2>${NULL})"
-		[ "${?}" = 0 ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
+		[ -n "${SULOGIN}" ] && [ -x "${SULOGIN}" ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
 	fi
 
 	exec <${CONSOLE} >${CONSOLE}
 	exec 2>&1
 
-	for sh in ${SV_SHELL} sh bash zsh ksh ${SHELLS}; do
+	for sh in ${SV_SHELL} sh bash zsh ksh csh ${SHELLS}; do
 		sh=$(command -v ${sh} 2>${NULL})
-		[ "${?}" = 0 ] && exec ${sh} -lim
+		[ -n "${sh}" ] && [ -x "${sh}" ] && exec ${sh} -lim
 	done
 
 	echo "No functional shell found!!!" >&2
 }
 
 name="${0##*/}"
-if [ "${name}" = "init-stage" ]; then
+if [ "${name}" = "sv-init.sh" ]; then
 	SV_LIBDIR="${0%/sh/*}"
 else
-	name="init-stage"
+	name="sv-init.sh"
 :	${SV_LIBDIR:=/lib/sv}
 fi
 if ! . ${SV_LIBDIR}/sh/runscript-functions; then
 	echo "${name}: error: Required file not found \`${SV_LIBDIR}/sh/runscript-functions'" >&2
-	[ -n "${SV_OPTS}" ] && svc_rsh || exit 1
+	[ -n "${SV_OPTS}" ] && svc_rescue_shell || exit 1
 fi
 :	${SV_SVCDIR:=/etc/sv}
 . ${SV_LIBDIR}/sh/SV-CONFIG
@@ -64,6 +65,7 @@ SVC_NAME="${SV_CMD}"
 
 early_console()
 {
+	SVC_DEBUG "function=early_console( ${@} )"
 	[ -d ${SV_LIBDIR}/cache ] || return
 
 	local encoding='%@' args kbd_args=-a keymap consolefont
@@ -83,6 +85,7 @@ early_console()
 
 svc_init()
 {
+	SVC_DEBUG "function=svc_init( ${@} )"
 	local dir opt procfs OS_NAME="$(uname -s)"
 	[ -w /etc/mtab ] || opt=-n
 
@@ -106,7 +109,7 @@ svc_init()
 	fi
 	if ! mountinfo --quiet /run; then
 		begin "Mounting /run"
-		mount ${opt} -t tmpfs -o nodev,mode=755,size=${RUN_FS_SIZE:-1%} run /run
+		mount ${opt} -t tmpfs -o nodev,mode=755,size=${SV_RUN_FS_SIZE:-1%} run /run
 		end ${?}
 	fi
 	fi # OS_NAME=Linux
@@ -128,13 +131,13 @@ svc_init()
 		esac
 	done
 
-	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
+	[ -d "${SV_RUNDIR}" ] || svc_rundir
 }
 
-svc_tmpdir()
+svc_rundir()
 {
-	rm -fr "${SV_TMPDIR}"
-	mkdir -p "${SV_TMPDIR}"
+	SVC_DEBUG "function=svc_rundir( ${@} )"
+	rm -fr ${SV_TMPDIR}
 	[ -d ${SV_SVCDIR}/.env ] && cp -a ${SV_SVCDIR}/.env ${SV_TMPDIR}
 	mkdir -p "${SV_TMPDIR}"/down "${SV_TMPDIR}"/deps "${SV_TMPDIR}"/fail \
 		${SV_TMPDIR}/envs ${SV_TMPDIR}/opts \
@@ -160,8 +163,9 @@ svc_tmpdir()
 	ENV_SVC SV_CGROUP
 }
 
-make_pidfile()
+make_svscan_pidfile()
 {
+	SVC_DEBUG "function=make_svscan_pidfile( ${@} )"
 	trap "rm -f ${SV_TMPDIR}/${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid" INT QUIT TERM
 	echo $$ >${SV_TMPDIR}/${SV_CMD}.pid
 	ln -sf ${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid
@@ -169,6 +173,7 @@ make_pidfile()
 kill_svscan()
 {
 	local args cmd dir pid
+	SVC_DEBUG "function=kill_svscan( ${@} )"
 
 	if [ "${OS_NAME}" =      "FreeBSD" ]; then
 		args=-fl
@@ -184,9 +189,10 @@ kill_svscan()
 	done
 }
 
-start_stage_2()
+svc_defaul_level()
 {
 	local args cmd dir pid count
+	SVC_DEBUG "function=svc_defaul_level( ${@} )"
 	svc_wait 30 ${SV_TMPDIR}/${SV_CMD}.pid
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
@@ -206,7 +212,7 @@ start_stage_2()
 		fi
 	fi
 
-	sv-init --default || sv-init --single || svc_rsh
+	sv-init --default || sv-init --single || svc_rescue_shell
 }
 
 case ${SV_CMD} in
@@ -215,10 +221,11 @@ case ${SV_CMD} in
 	;;
 esac
 
-init_stage()
+svc_init_level()
 {
+	SVC_DEBUG "function=svc_init_level( ${@} )"
 if   [ "${1}" = "--svscan" ]; then
-	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
+	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	if [ -e "${SV_TMPDIR}/${SV_CMD}.pid" ]; then
 		kill_svscan
 	fi
@@ -227,21 +234,21 @@ if   [ "${1}" = "--svscan" ]; then
 	else
 		ARGS="&" PRECMD=""
 	fi
-	make_pidfile
+	make_svscan_pidfile
 	eval ${PRECMD} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS:+"$SV_OPTS"} ${ARGS}
 elif [ "${1}" = "--sysinit" ]; then
 	#
 	# XXX: initialize temporary directory
 	#
 	if [ -n "${SV_SYSTEM}" ]; then
-		[ -d "${SV_RUNDIR}" ] || svc_tmpdir
+		[ -d "${SV_RUNDIR}" ] || svc_rundir
 		return 0
 	fi
 	early_console
 	svc_init
 	[ "${2}" = "--background" ] || sv-init --sysinit
 elif [ "${1}" = "--default" ]; then
-	[ -d "${SV_RUNDIR}" ] || svc_tmpdir
+	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	#
 	# Set up CGroup
 	#
@@ -260,15 +267,15 @@ elif [ "${1}" = "--default" ]; then
 	# XXX: This hackery is necessary to get the real pid;
 	# this is used to send SIGCONT to runsvdir.
 	#
-	sh -c ". ${SV_LIBDIR}/sh/init-stage; start_stage_2;" &
+	sh -c ". ${SV_LIBDIR}/sh/sv-init.sh; svc_defaul_level;" &
 
-	make_pidfile
+	make_svscan_pidfile
 	exec ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS:+"${SV_OPTS}"}
 
 	#
 	# Drop into a rescue shell
 	#
-	svc_rsh
+	svc_rescue_shell
 elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	ACTION=${1}
 	case "${ACTION}" in
@@ -290,9 +297,9 @@ fi
 }
 
 case "${1}" in
-	(--[idrs]*)
-	begin "Starting ${1#--}\n"
-	init_stage "${@}"
+	(--default|--reboot|--sysinit|--shutdown|--svscan)
+	begin "Starting ${1#--} level\n"
+	svc_init_level "${@}"
 	end "${?}"
 	;;
 esac
