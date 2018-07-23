@@ -8,7 +8,7 @@ exec >/dev/console 2>&1
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 _PATH_WALL=
-SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_INIT_SH=/lib/sv/sh/sv-init.sh
 SV_SHUTDOWN=/lib/sv/sbin/shutdown
 SV_RUNDIR=/run/service
 
@@ -20,8 +20,8 @@ fi
 if [ -x ${SV_SHUTDOWN} ]; then
 	${SV_SHUTDOWN} --${ACTION} -m now
 fi
-if [ -x ${SV_INIT_STAGE} ]; then
-	${SV_INIT_STAGE} --${ACTION}
+if [ -x ${SV_INIT_SH} ]; then
+	${SV_INIT_SH} --${ACTION}
 	#
 	# XXX: safety net
 	#

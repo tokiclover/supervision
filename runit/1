@@ -5,12 +5,12 @@
 #
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_INIT_SH=/lib/sv/sh/sv-init.sh
 
 touch   /etc/runit/stopit
 chmod 0 /etc/runit/stopit
-if [ -x ${SV_INIT_STAGE} ]; then
-	${SV_INIT_STAGE} --sysinit
+if [ -x ${SV_INIT_SH} ]; then
+	${SV_INIT_SH} --sysinit
 else
 
 #

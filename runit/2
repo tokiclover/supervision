@@ -5,10 +5,10 @@
 #
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-SV_INIT_STAGE=/lib/sv/sh/init-stage
+SV_INIT_SH=/lib/sv/sh/sv-init.sh
 SV_OPTS='log:..................................................................'
 
-[ -x ${SV_INIT_STAGE} ] && SV_OPTS="${SV_OPTS}" exec ${SV_INIT_STAGE} --default
+[ -x ${SV_INIT_SH} ] && SV_OPTS="${SV_OPTS}" exec ${SV_INIT_SH} --default
 
 RUNLEVEL=S rc boot
 #
