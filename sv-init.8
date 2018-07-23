@@ -7,9 +7,9 @@
 .pc
 .TH SV-STAGE 8 "2016-12-30" "0.13.0" "System Manager's Manual"
 .SH NAME
-sv-stage \- utility to manage init-stage or runlevel
+sv-init \- utility to manage init-stage or runlevel
 .SH DESCRIPTION
-.B sv-stage
+.B sv-init
 is a utility to manage init-stages or runlevel
 for SystemV or BSD terminology.
 This utility is used in conjunction with a supervsion suite like
@@ -25,23 +25,23 @@ can be configured to work with this utility by running
 And then, the recommended way to use this package is to use the included
 `\fI@LIBDIR@/sv/sh/init-stage\fR' handler from `\fI@SYSCONFDIR@/runit/{1,2,3}\fR' for
 example. Although, using
-.B sv-stage
+.B sv-init
 directly will still work when not using the init-system part of the package.
 So, using it a replacement of
 .B rc
 would work in a standard SystemV or BSD system. Still, there are still some work
 to be done to be realy compatible with BSD style service and runlevel management.
 .SH SYNOPSIS
-.B sv-stage
+.B sv-init
 .RB [\| OPTIONS \| ]
 .RB (\| \-\-RUNLEVEL \|)
 .RB [\| ARGUMENTS \|]
 
-.B sv-stage
+.B sv-init
 .RB [\| \-\-RUNLEVEL \|]
 .RB status
 
-.B sv-stage
+.B sv-init
 .RB [\| \-h|\-\-help \|]
 .RB [\| \-v|\-\-version \|]
 
@@ -75,7 +75,7 @@ or
 .B NOTE:
 .B single
 runlevel is not stopped before switching to another runlevel in case somthing
-happen. So, issueing a `\fBsv-stage --single \fIstop\fR' would be necessary to
+happen. So, issueing a `\fBsv-init --single \fIstop\fR' would be necessary to
 stop
 .B sulogin
 or the rescue shell used as single user service.
@@ -90,7 +90,7 @@ to
 environment variable; or else, copy the symlink to
 .I /sbin
 for example to get the same behaviour; or else use
-.B sv-stage
+.B sv-init
 instead because
 .B service
 or
