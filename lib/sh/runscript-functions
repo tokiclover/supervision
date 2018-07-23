@@ -77,8 +77,8 @@ rs_status()
 svc_add()
 {
 	SVC_DEBUG "function=svc_add( ${@} )"
-	[ -n "${SV_STAGE}" ] || return
-	svc_state -e && ln -fns ${__svc__} ${SV_SVCDIR}.init.d/${SV_STAGE}
+	[ -n "${SV_INITLEVEL}" ] || return
+	svc_state -e && ln -fns ${__svc__} ${SV_SVCDIR}.init.d/${SV_INITLEVEL}
 }
 SVC_DEBUG()
 {
@@ -93,8 +93,8 @@ SVC_DEBUG()
 svc_del()
 {
 	SVC_DEBUG "function=svc_del( ${@} )"
-	[ -n "${SV_STAGE}" ] || return
-	rm -fr ${SV_SVCDIR}.init.d/${SV_STAGE}/${SVC_NAME}
+	[ -n "${SV_INITLEVEL}" ] || return
+	rm -fr ${SV_SVCDIR}.init.d/${SV_INITLEVEL}/${SVC_NAME}
 }
 svc_zap()
 {
