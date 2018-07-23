@@ -210,7 +210,7 @@ dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
-dist_RS_SYMLINKS = rc service
+dist_SV-RUN_SYMLINKS = rc service
 dist_SHUTDOWN_SYMLINKS = halt poweroff reboot shutdown
 dist_BINS_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
 
@@ -278,8 +278,9 @@ install: install-dir install-dist install-sv-svcs
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_SCRIPT) src/sv-run $(DESTDIR)$(SBINDIR)
 	$(install_SCRIPT) src/sv-shutdown $(DESTDIR)$(SBINDIR)
+	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/sv-rc
 	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/sv-stage
-	for s in $(dist_RS_SYMLINKS); do \
+	for s in $(dist_SV-RUN_SYMLINKS); do \
 		$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
 	done
 	for s in $(dist_SHUTDOWN_SYMLINKS); do \
@@ -346,7 +347,7 @@ $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
 		$(DESTDIR)$(SBINDIR)/sv-stage $(DESTDIR)$(SBINDIR)/sv-shutdown \
-		$(DESTDIR)$(SBINDIR)/sv-run \
+		$(DESDIR)$(SBINDIR)/sv-rc $(DESTDIR)$(SBINDIR)/sv-run \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
 		$(DESTDIR)$(MANDIR)/man8/sv-stage.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
 		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
@@ -361,11 +362,11 @@ uninstall: uninstall-doc
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
 		$(DESTDIR)$(SV_LIBDIR)/cache $(DESTDIR)$(SV_SVCDIR).init.d
 	rm -f $(dist_BINS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
-		$(dist_RS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV-RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SHUTDOWN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SV_BINS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
 		$(dist_SV_SBINS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_RS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV-RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SH_BINS:%=$(DESTDIR)$(SV_LIBDIR)/sh/%) \
 		$(dist_SH_LIBS:%=$(DESTDIR)$(SV_LIBDIR)/sh/%) \
 		$(DESTDIR)$(SV_SVCDIR)/getty-tty*

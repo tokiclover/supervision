@@ -815,7 +815,7 @@ int main(int argc, char *argv[])
 
 	if (strcmp(progname, "sv-run") == 0 || strcmp(progname, "service") == 0)
 		goto sv_run;
-	else if (strcmp(progname, "rc") == 0) {
+	else if (!strcmp(progname, "rc") || !strcmp(progname, "sv-rc")) {
 		setenv("SVC_DEBUG", off, 1);
 		goto rc;
 	}
@@ -879,13 +879,13 @@ rc_help:
 		}
 	}
 
-	if (strcmp(progname, "rc") == 0)
+	if (!strcmp(progname, "rc") || !strcmp(progname, "sv-rc"))
 		goto rc_help;
 	ERR("invalid argument -- `%s'\n", *argv);
 	fprintf(stderr, "Usage: %s -(0|1|2|3|4|5|6) [OPTIONS]\n", progname);
 	exit(EXIT_FAILURE);
 
-scan:
+svc_scan:
 	svc_sigsetup();
 	setenv("SVCDEPS_UPDATE", on, 1);
 	execv(SV_DEPGEN, argv);
@@ -899,7 +899,7 @@ sv_run:
 			goto stage;
 		}
 		else if (strcmp(*argv, "scan") == 0)
-			goto scan;
+			goto svc_can;
 	}
 
 	unsetenv("SV_STAGE");
