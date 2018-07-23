@@ -4,6 +4,9 @@ Header: supervision/ChangeLog, 2015/04/24
 
 Removed `/lib/sv/opt' and merged the directory to `/lib/sv/sh';
 Renamed `rs(8)' command to `sv-run(8)';
+Rename `sv-stage(8)' command to `sv-init(8)'; along with the
+environment variable `SV_STAGE' to `SV_INITLEVEL';
+Support `sv-rc(8)' command alias of `sv-init(8)';
 
 
 ADDIDION:
