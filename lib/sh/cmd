@@ -42,7 +42,7 @@ readonly SV_TYPE=sv
 SV_LIBDIR=${SVC_DIR}/../../lib
 
 if ! . ${SV_LIBDIR}/sh/runscript-functions; then
-	echo "${__cmd__}: error: Required file not found \`${SV_LIBDIR}/sh/run-functions'" >&2
+	echo "${__cmd__}: error: Required file not found \`${SV_LIBDIR}/sh/runscript-functions'" >&2
 	exit 1
 fi
 :	${SVC_CMD:=${SVC_NAME}}

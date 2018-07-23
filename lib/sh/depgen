@@ -22,7 +22,7 @@ name="${0##*/}"
 SV_LIBDIR="${0%/sh/*}"
 export LC_ALL=C LANG=C
 if ! . ${SV_LIBDIR}/sh/runscript-functions; then
-	echo "${name}: error: Required file not found \`${SV_LIBDIR}/sh/run-functions'" >&2
+	echo "${name}: error: Required file not found \`${SV_LIBDIR}/sh/runscript-functions'" >&2
 	exit 1
 fi
 SV_DEPDIR="${SV_TMPDIR}/deps"

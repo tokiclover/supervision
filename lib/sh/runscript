@@ -69,7 +69,7 @@ shift
 readonly SVC_NAME SV_TYPE
 
 if ! . ${SV_LIBDIR}/sh/runscript-functions; then
-	echo "${0##*/}: error: Required file not found \`${SV_LIBDIR}/sh/run-functions'" >&2
+	echo "${0##*/}: error: Required file not found \`${SV_LIBDIR}/sh/runscript-functions'" >&2
 	exit 1
 fi
 
