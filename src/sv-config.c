@@ -38,7 +38,7 @@ const char *progname;
 #define SV_SYSBOOT_LEVEL 3
 #define SV_DEFAULT_LEVEL 1
 #define SV_SHUTDOWN_LEVEL 0
-static const char *const sv_runlevel[] = {
+static const char *const sv_init_level[] = {
 	"sysinit", "sysboot", "default", "shutdown", "single", NULL
 };
 
@@ -261,16 +261,16 @@ static int svupdate(void)
 #endif
 
 	/* move v0.1[23].0 run level dirs to new v0.14.0 location */
-	for (j = 0; sv_runlevel[j]; j++) {
+	for (j = 0; sv_init_level[j]; j++) {
 		snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, j);
-		snprintf(np, sizeof(np), "%s/.%s"      , SV_SVCDIR, sv_runlevel[j]);
+		snprintf(np, sizeof(np), "%s/.%s"      , SV_SVCDIR, sv_init_level[j]);
 		if (file_test(np, 'd'))
 			memmove(op, np, sizeof(np));
 		else if (!file_test(op, 'd'))
 			return EXIT_SUCCESS;
 		if (!(od = opendir(op)))
 			ERROR("Failed to opendir `%s'", op);
-		snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_runlevel[j]);
+		snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_init_level[j]);
 		if (!(nd = opendir(np)))
 			ERROR("Failed to opendir `%s'", np);
 		if ((ofd = dirfd(od)) < 0)
