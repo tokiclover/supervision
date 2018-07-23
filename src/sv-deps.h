@@ -31,7 +31,7 @@
 #define SV_KEYWORD_SET(dep, kwd) (dep->keyword |= (1<<kwd))
 
 #define SV_DEPGEN SV_LIBDIR "/sh/depgen"
-#define SV_INIT_STAGE SV_LIBDIR "/sh/init-stage"
+#define SV_INIT_SH SV_LIBDIR "/sh/sv-init.sh"
 #define SV_DEPTREE_INC 16
 /* safety net for broken cyclic dependency */
 #define SV_DEPTREE_MAX  256

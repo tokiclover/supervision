@@ -85,7 +85,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 #endif
 
 	/* add service to list if and only if, either a service is {use,need}ed or
-	 * belongs to this particular init-stage/runlevel */
+	 * belongs to this particular init level/run level */
 	if (type < SV_SVCDEPS_USE && !sv_stringlist_find(deptree->list, s))
 		return -1;
 
@@ -428,7 +428,7 @@ static int sv_svcdeps_gen(const char *svc)
 			t++;                                                         \
 		} while (t < 600);                                               \
 		if (t >= 600) {                                                  \
-			ERR("Timed out waiting for `%s'\n", SV_INIT_STAGE);          \
+			ERR("Timed out waiting for `%s'\n", SV_INIT_SH);          \
 			exit(EXIT_FAILURE);                                          \
 		}                                                                \
 	} else {                                                             \
@@ -439,15 +439,15 @@ static int sv_svcdeps_gen(const char *svc)
 			}                                                            \
 		} while (!WIFEXITED(t));                                         \
 		if (!file_test(SV_TMPDIR_DEPS, 'd'))                             \
-			ERROR("`%s' failed to setup `%s", SV_INIT_STAGE, SV_TMPDIR); \
+			ERROR("`%s' failed to setup `%s", SV_INIT_SH, SV_TMPDIR); \
 	}
 
 #define ARG_OFFSET 32
 #define EXEC_SVSCAN                                                      \
 	if (sv_level != SV_SYSINIT_LEVEL)                                    \
 		setsid();                                                        \
-	execl(SV_INIT_STAGE, strrchr(SV_INIT_STAGE, '/')+1, cmd, arg, NULL); \
-	ERROR("Failed to execl(%s ...)", SV_INIT_STAGE);
+	execl(SV_INIT_SH, strrchr(SV_INIT_SH, '/')+1, cmd, arg, NULL); \
+	ERROR("Failed to execl(%s ...)", SV_INIT_SH);
 
 SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 {
@@ -677,7 +677,7 @@ SV_SvcDeps_T *sv_virtsvc_find(SV_StringList_T *svclist, const char *svc)
 		d = SERVICES.virt_svcdeps[i];
 		if (!svclist)
 			break;
-		/* insert any provider included in the init-stage */
+		/* insert any provider included in the init level */
 		if (sv_stringlist_find(svclist, d->svc))
 			break;
 	}
