@@ -75,6 +75,8 @@ svc_start()
 				svc_mark -f
 				val=2
 			fi
+		else
+			rm -f ${SVC_PIDFILE}
 		fi
 	fi
 	fi # __SVCCMD__
