@@ -255,6 +255,7 @@ static int svupdate(void)
 	char const*const dir[2] = { SV_SVCDIR, SV_RUNDIR };
 	DIR *nd, *od;
 	int i, j, k, ofd, nfd;
+	size_t sz;
 	struct dirent *ent;
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
@@ -305,6 +306,16 @@ static int svupdate(void)
 #endif
 			snprintf(op, sizeof(op), "%s", ent->d_name);
 			len = strlen(op);
+
+			/* handle user services */
+			if (!j) {
+				snprintf(op+len, sizeof(op)-len, "/%s", *cmd);
+				sz = len+5U;
+				if ((readlinkat(ofd, op, op+sz, sizeof(op)-sz) > 0) &&
+					!(strstr(op+sz, "/.opt/")))
+					continue;
+				*(op+len) = '\0';
+			}
 
 			for (k = 0; k < 2; k++) {
 				for (i = 0; i < 2; i++) {
