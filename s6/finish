@@ -7,7 +7,7 @@
 exec >/dev/console 2>&1
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-INIT_STAGE=/lib/sv/sh/init-stage
+SV_INIT_STAGE=/lib/sv/sh/init-stage
 [ -d /lib/sv ] && PATH="/lib/sv/bin:/lib/sv/sbin:${PATH}"
 
 case "${1}" in
@@ -17,8 +17,8 @@ esac
 :	${RUNLEVEL:=0}
 :	${ACTION:=shutdown}
 
-if [ -x ${INIT_STAGE} ]; then
-	${INIT_STAGE} "--${ACTION}" || sv-stage "--${ACTION}"
+if [ -x ${SV_INIT_STAGE} ]; then
+	${SV_INIT_STAGE} "--${ACTION}" || sv-stage "--${ACTION}"
 case "${ACTION}" in
 	(reboot) reboot -f ;;
 	(shutdown) halt -f ;;
