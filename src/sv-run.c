@@ -515,7 +515,7 @@ runsvc:
 	/* restore previous default signal handling */
 	svc_sigsetup();
 
-	execve(SV_RUNSCRIPT, (char *const*)run->ARGV, (char *const*)run->envp);
+	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
 	_exit(255);
 supervise:
 	RUN = run;
@@ -1017,7 +1017,7 @@ int svc_exec(int argc, const char *argv[]) {
 		run.path = NULL;
 	}
 	svc.str = (char*)run.name;
-	run.argv[0] = "runscript";
+	run.argv[0] = strrchr(SV_RUN_SH, '/')+1U;
 	run.argv[4] = argv[1];
 
 	/* setup argv and argc */

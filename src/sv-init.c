@@ -504,7 +504,7 @@ static int svc_init_command(int level, int argc, const char *argv[])
 
 __attribute__((__noreturn__)) static void sv_init_status(void)
 {
-	const char *argv[8] = { "runscript" };
+	const char *argv[8];
 	struct svcrun run = { .argc = 8, .argv = argv };
 	SV_String_T *svc;
 	SV_StringList_T *list, *l;
@@ -520,6 +520,7 @@ __attribute__((__noreturn__)) static void sv_init_status(void)
 	else
 		list = sv_svclist_load(NULL);
 	list = sv_stringlist_sort(&list);
+	argv[0] = strrchr(SV_RUN_SH, '/')+1U;
 	argv[4] = sv_svc_cmd[SV_SVC_CMD_STATUS];
 	argv[5] = (char *)0;
 
@@ -534,7 +535,7 @@ __attribute__((__noreturn__)) static void sv_init_status(void)
 static void svc_init(const char *cmd)
 {
 	const char *command = cmd;
-	const char *argv[8] = { "runscript" };
+	const char *argv[8];
 	char buf[128];
 	char b[32];
 	int p, r;
@@ -584,6 +585,7 @@ static void svc_init(const char *cmd)
 	if (strcmp(command, sv_svc_cmd[SV_SVC_CMD_STOP]) == 0)
 		svc_start = 0;
 
+	argv[0] = strrchr(SV_RUN_SH, '/')+1U;
 	argv[5] = (char *)0;
 	chdir("/");
 

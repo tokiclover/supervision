@@ -54,7 +54,7 @@ extern "C" {
 #define SV_ENVIRON SV_TMPDIR "/environ"
 #define SV_LOGFILE SV_TMPDIR "/sv.log"
 #define SV_PIDFILE SV_TMPDIR "/sv.pid"
-#define SV_RUNSCRIPT SV_LIBDIR "/sh/runscript"
+#define SV_RUN_SH SV_LIBDIR "/sh/sv-run.sh"
 
 /* status command to issue to svc_{mark,state} when the STAT querry the status
  * and MARK command remove the status; so the command is only valid with svc_mark
