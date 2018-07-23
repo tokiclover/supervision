@@ -17,7 +17,7 @@
 	"This is free software: you are free to change and distribute it.\n" \
 	"There is NO WARANTY, to the extend permitted by law.\n"
 
-#define SV_VERSION "0.13.0"
+#define SV_VERSION "0.14.0"
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
