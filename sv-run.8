@@ -115,10 +115,10 @@ remove the temporary files of a service to be able to start a fresh environment,
 or restart a service if already started.
 .TP
 .B add
-add a service to an init-stage or runlevel (stage level argument is required.)
+add a service to an sv-init.sh or runlevel (stage level argument is required.)
 .TP
 .B del
-remove a service from an init-stage or runlevel (stage level argument is required.)
+remove a service from an sv-init.sh or runlevel (stage level argument is required.)
 .TP
 .B cgroup_remove_service
 remove the
@@ -206,7 +206,7 @@ system call failure (fork...)
 execve system call failure
 .SH "APPLICATION USAGE"
 Some services are added to the service directory? Try starting them then.
-It seems to work? Good, try to add them in a init-stage or runlevel with
+It seems to work? Good, try to add them in a sv-init.sh or runlevel with
 `\fIsv-run \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
 by running `\fIsv-stage \fB--RUNLEVEL\fR' and then checkout
 \fISV_TMPDIR/deps/\fBRUNLEVEL\fR to see if the service is inserted
