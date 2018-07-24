@@ -675,6 +675,8 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 {
 	char f_path[PATH_MAX];
 	int fd;
+	FILE *fp;
+	pid_t pd;
 	int w;
 	mode_t m;
 	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY;
@@ -689,13 +691,21 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, svc);
 
 	if (lock_fd == SVC_LOCK) {
-		w = !access(f_path, F_OK);
+		if (!(w = access(f_path, F_OK))) {
+			/* check the holder of the lock file */
+			if ((fp = fopen(f_path, "r"))) {
+				if (fscanf(fp, "pid=%d:", &pd) && !kill(pd, 0))
+					svc_wait(svc, timeout, 0);
+			}
+			else
+				LOG_ERR("Failed to `fopen(%s,..)': %s\n", f_path, strerror(errno));
+		}
 		m = umask(0);
 		fd = open(f_path, f_flags, f_mode);
 		/* got different behaviours of open(3p)/O_CREAT when the file is locked
 		 * (try that mode | S_ISGID hack of SVR3 to enable mandatory lock?)
 		 */
-		if (w && fd < 0) {
+		if (!w && fd < 0) {
 			switch (errno) {
 				case EWOULDBLOCK:
 				case EEXIST:
