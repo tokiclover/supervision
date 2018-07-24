@@ -6,15 +6,51 @@
 
 SVC_BEFORE="miscfs logger"
 SVC_KEYWORD="docker prefix supervision systemd-nspawn vserver"
-sysctl="$(command -v sysctl 2>${NULL})"
+SVC_CONFIGFILE="/etc/sysctl.conf"
+#SVC_CONFIGDIRS="/etc/sysctl.d"
 
-start_pre()
+OpenBSD_start()
 {
-	[ -n "${sysctl}" -a -x "${sysctl}" ]
+	local v x z
+	for x in ${SVC_CONFIGFILE} ${SVC_CONFIGDIRS}/*.conf; do
+		[ -r ${x} ] || continue
+		begin "Applying \`${x}' configuration file"
+		while read v z; do
+			case "${v}" in
+				([a-zA-Z]*) sysctl -q "${v}";;
+			esac
+		done <${x}
+		end "${?}"
+	done
 }
+FreeBSD_start()
+{
+	local v x z
+	for x in ${SVC_CONFIGFILE} ${SVC_CONFIGDIRS}/*.conf; do
+		[ -r ${x} ] || continue
+		begin "Applying \`${x}' configuration file"
+		sysctl -q -f ${x}
+		end "${?}"
+	done
+}
+NetBSD_start()
+{
+	FreeBSD_start
+}
+Linux_start()
+{
+	sysctl --quiet --system
+}
+
 start()
 {
-	${sysctl} --quiet --system
+	if command -v ${OS_NAME}_start >${NULL} 2>&1; then
+		${OS_NAME}_start
+	else
+		error "There is nothing to do for this ${SV_NAME} OS!!!"
+		error "Define a \`${OS_NAME}_start ' function for this OS!"
+		return 1
+	fi
 }
 
 #
