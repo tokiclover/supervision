@@ -36,7 +36,7 @@ syn keyword svVars NULL SV_SVCDIR SV_TMPDIR SV_RUNDIR SV_SERVICE SV_OPTS SV_CMD
 syn keyword svVars SVC_COMMANDS SVC_STARTED_COMMANDS SVC_STOPPED_COMMANDS
 syn keyword svVars RC_OPTS COLOR description __cmd__ __cmd_dir__ __cmd_args__ name
 syn keyword svVars SVC_KEYWORD SVC_TIMEOUT SVC_TRY SVC_SYSLOG SVC_SYSLOG_INFO
-syn keyword svVars SVC_NICE
+syn keyword svVars SVC_NICE SVC_CONFIGDIRS
 
 syn cluster shCommandSubList add=svKwd
 

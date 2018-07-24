@@ -189,7 +189,14 @@ svc_config()
 
 	for x in ${SVC_CONFIGFILE} ${SVC_REQUIRED_FILES}; do
 		if [ ! -f "${x}" ]; then
-			error "Failed to found \`${x}'"
+			error "Failed to found \`${x}' configuration file"
+			return 1
+		fi
+	done
+
+	for x in ${SVC_CONFIGDIRS}; do
+		if [ ! -d "${x}" ]; then
+			error "Failed to found \`${x}' configuration directory"
 			return 1
 		fi
 	done
