@@ -16,7 +16,7 @@ SVC_KEYWORD='prefix supervision timeout'
 login_setup()
 {
 	local records=/var/run/utmp
-	if [ "${OS_NAME}" = NetBSD ]; then
+	if [ "${SV_UNAME}" = NetBSD ]; then
 		records="${records} /var/run/utmpx"
 	fi
 	[ -e /var/log/wtmp ] && records="${records} /var/log/wtmp"
@@ -97,7 +97,7 @@ start()
 	[ "${SV_INITLEVEL}" = "${SV_SYSBOOT_LEVEL}" ] || return
 
 	local fhs_dirs
-	if [ "${OS_NAME}" = Linux ]; then
+	if [ "${SV_UNAME}" = Linux ]; then
 		fhs_dirs=/var/lib/misc
 	fi
 	mkdir -p -m 0755 /var/log ${fhs_dirs} ||

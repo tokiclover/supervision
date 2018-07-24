@@ -36,7 +36,7 @@ HWCLOCK()
 
 start_pre()
 {
-	case "${OS_NAME}" in
+	case "${SV_UNAME}" in
 		(s930) clock_message="s390";;
 		(*) device_info "cobd" && clock_message="coLinux";;
 	esac

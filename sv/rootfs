@@ -14,7 +14,7 @@ start()
 	case ",$(fstabinfo -r -o /)," in
 		(*,ro,*) ;;
 		(*)
-		if [ "${OS_NAME}" = Linux ]; then
+		if [ "${SV_UNAME}" = Linux ]; then
 			mnt_opts='-n -w -o remount'
 		else
 			mnt_opts='-u -w'

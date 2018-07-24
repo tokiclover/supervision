@@ -20,7 +20,7 @@ svc_rescue_shell()
 :	${NULL:=/dev/null}
 :	${PATH:=/bin:/sbin:/usr/bin:/usr/sbin}
 
-	if [ "${OS_NAME:-$(uname -s)}" = "Linux" ]; then
+	if [ "${SV_UNAME:-$(uname -s)}" = "Linux" ]; then
 	:	${SULOGIN_TTY:=/dev/tty8}
 		if [ "${SV_SHELL##*/}" = "sulogin" ]; then
 			if [ -x ${SV_SHELL} ]; then
@@ -87,10 +87,10 @@ early_console()
 svc_init()
 {
 	SVC_DEBUG "function=svc_init( ${@} )"
-	local dir opt procfs OS_NAME="$(uname -s)"
+	local dir opt procfs SV_UNAME="$(uname -s)"
 	[ -w /etc/mtab ] || opt=-n
 
-	if   [ "${OS_NAME}" = "GNU/kFreeBSD" ]; then
+	if   [ "${SV_UNAME}" = "GNU/kFreeBSD" ]; then
 		procfs=linprocfs
 	else
 		procfs=proc
@@ -102,7 +102,7 @@ svc_init()
 		end ${?}
 	fi
 
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 	if [ ! -d /run ]; then
 		begin "Creating /run"
 		mkdir -m 0755 -p /run
@@ -113,7 +113,7 @@ svc_init()
 		mount ${opt} -t tmpfs -o nodev,mode=755,size=${SV_RUN_FS_SIZE:-1%} run /run
 		end ${?}
 	fi
-	fi # OS_NAME=Linux
+	fi # SV_UNAME=Linux
 
 	#
 	# XXX: Add some insurance to get a few services started early (e.g. lvm
@@ -146,8 +146,10 @@ svc_rundir()
 	#
 	# Initialization
 	#
-	OS_NAME="$(uname -s)"
-	ENV_SVC OS_NAME
+	SV_UNAME="$(uname -s)"
+	ENV_SVC SV_UNAME
+	SV_UNAME_RELEASE="$(uname -r)"
+	ENV_SVC SV_UNAME_RELEASE
 
 	#
 	# Set up CGroup
@@ -192,7 +194,7 @@ svc_defaul_level()
 	svc_wait 30 ${SV_PIDFILE}
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
-		if [ "${OS_NAME}" = "FreeBSD" ]; then
+		if [ "${SV_UNAME}" = "FreeBSD" ]; then
 			args=-fl
 		else
 			args=-ax
@@ -248,7 +250,7 @@ elif [ "${1}" = "--default" ]; then
 	#
 	# Set up CGroup
 	#
-	if yesno "${SV_CGROUP}" && [ "${OS_NAME}" = "Linux" ]; then
+	if yesno "${SV_CGROUP}" && [ "${SV_UNAME}" = "Linux" ]; then
 		cgroup_add_service
 	fi
 	#
@@ -285,7 +287,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	#
 	# CGroup clean up
 	#
-	if yesno "${SV_CGROUP}" && [ "${OS_NAME}" = "Linux" ]; then
+	if yesno "${SV_CGROUP}" && [ "${SV_UNAME}" = "Linux" ]; then
 		cgroup_remove_service
 	fi
 	${SV_LIBDIR}/sbin/shutdown --force ${ACTION} now

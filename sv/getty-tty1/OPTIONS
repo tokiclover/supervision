@@ -59,7 +59,7 @@ agetty_options()
 }
 rescue_shell()
 {
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 		if sv-run sulogn start; then
 			return 0
 		fi

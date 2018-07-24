@@ -49,7 +49,7 @@ start()
 		rm -f /forcefsck
 	fi
 
-	if [ "${OS_NAME}" = Linux ]; then
+	if [ "${SV_UNAME}" = Linux ]; then
 		fsck_opts="${fsck_opts} -C -T -t opts=no_netdev${exclude_fs}"
 		if echo > /${SVC_NAME}.$$ 2>&1; then
 			rm /${SVC_NAME}.$$
@@ -63,7 +63,7 @@ start()
 		(0) return 0;;
 		(1) warn "Filesystems repaired"; return 0;;
 		(2|3)
-			if [ "${OS_NAME}" = Linux ]; then
+			if [ "${SV_UNAME}" = Linux ]; then
 				error "Filesystems repaired"
 				warn "System reboot"
 				_reboot -f
@@ -74,7 +74,7 @@ start()
 			fi
 			;;
 		(4)
-			if [ "${OS_NAME}" = Linux ]; then
+			if [ "${SV_UNAME}" = Linux ]; then
 				error "Filesystem errors left uncorrected"
 				warn "Aborting!!!"
 				_abort

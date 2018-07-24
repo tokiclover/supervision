@@ -31,7 +31,7 @@ mount_command()
 	esac
 	mnt_dir="${1}"
 
-	[ "${OS_NAME}" = Linux ] && fusr_opt='-'
+	[ "${SV_UNAME}" = Linux ] && fusr_opt='-'
 	fusr_cmd=$(command -v fuser 2>${NULL})
 
 	#
@@ -89,7 +89,7 @@ start()
 		netfs="${netfs},${exclude}${fs}"
 	done
 
-	if [ "${OS_NAME}" = Linux ]; then
+	if [ "${SV_UNAME}" = Linux ]; then
 		mnt_opts="-O ${exclude}_netddev"
 	fi
 	begin "Mounting ${SVC_NAME%fs} filesystem"
@@ -123,7 +123,7 @@ stop()
 		umount -at "${net_fstype#,}"
 		end "${?}"
 
-		if [ "${OS_NAME}" = Linux ]; then
+		if [ "${SV_UNAME}" = Linux ]; then
 			umount -a -O _netdev
 			end "${?}" "Linux"
 		fi

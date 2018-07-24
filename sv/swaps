@@ -14,10 +14,10 @@ fi
 start()
 {
 	local swap_opts
-	if [ "${OS_NAME}" = Linux ]; then
+	if [ "${SV_UNAME}" = Linux ]; then
 		swap_opts='-e'
 	fi
-	case "${OS_NAME}" in
+	case "${SV_UNAME}" in
 		(OpenBSD|NetBSD) swapctl -A -t noblk >${NULL} 2>&1;;
 		(*) swapon -a ${swap_opts} >${NULL} 2>&1;;
 	esac
@@ -25,7 +25,7 @@ start()
 stop()
 {
 	[ "${SV_INITLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
-	case "${OS_NAME}" in
+	case "${SV_UNAME}" in
 		(OpenBSD|NetBSD) swapctl -U -t noblk >${NULL} 2>&1;;
 		(*) swapoff -a >${NULL} 2>&1;;
 	esac

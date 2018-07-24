@@ -44,11 +44,11 @@ Linux_start()
 
 start()
 {
-	if command -v ${OS_NAME}_start >${NULL} 2>&1; then
-		${OS_NAME}_start
+	if command -v ${SV_UNAME}_start >${NULL} 2>&1; then
+		${SV_UNAME}_start
 	else
 		error "There is nothing to do for this ${SV_NAME} OS!!!"
-		error "Define a \`${OS_NAME}_start ' function for this OS!"
+		error "Define a \`${SV_UNAME}_start ' function for this OS!"
 		return 1
 	fi
 }

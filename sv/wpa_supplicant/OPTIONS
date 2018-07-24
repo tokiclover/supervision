@@ -33,7 +33,7 @@ start_pre()
 find_iface()
 {
 	local iface
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 		for iface in /sys/class/net/*; do
 			[ -e "${iface}"/wireless -o -e "${iface}"/phy80211 ] &&
 				WPA_IFACE="${WPA_IFACE} -i ${iface##*/}"

@@ -70,7 +70,7 @@ svc_start()
 		#
 		# XXX: {Free,Open,Net}BSD pkill(1) do not have the `-F ${pidfile}'
 		#
-		if [ "${OS_NAME}" = "Linux" ]; then
+		if [ "${SV_UNAME}" = "Linux" ]; then
 			chk_cmd='pkill -0 -F ${SVC_PIDFILE} -f ${SVC_CMD}'
 		else
 			chk_cmd='kill -0 $(cat ${SVC_PIDFILE})'
@@ -239,7 +239,7 @@ svc_start_pre()
 	#
 	# Set up CGroup
 	#
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 		if yesno "${SV_CGROUP}"; then
 			cgroup_add_service
 		fi
@@ -265,7 +265,7 @@ svc_stop_post()
 	#
 	# Set up CGroup
 	#
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 		if yesno "${SV_CGROUP}"; then
 			cgroup_remove_service
 		fi

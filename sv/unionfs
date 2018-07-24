@@ -119,7 +119,7 @@ unionfs_umount()
 	DIR="${1}/${2#/}" dir="/${2#/}"
 	mountinfo -q -t ${unionfs_filesystem} ${dir} || return
 
-	if [ "${OS_NAME}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 		mnt_opts="-O no_netdev"
 	fi
 	case "${unionfs_filesystem}" in

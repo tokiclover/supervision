@@ -13,7 +13,7 @@ start()
 	local mod k_modules kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
 
 	IFS=".-"
-	eval set -- $(uname -r)
+	set ${SV_UNAME_RELEASE}
 
 	kv_major="${1}" kv_minor="${2}" kv_patch="${3}"
 	IFS="${ifs}"

@@ -9,7 +9,7 @@ SVC_KEYWORD="docker jail prefix supervison systemd-nspawn uml vserver"
 
 start()
 {
-	case "${OS_NAME}" in
+	case "${SV_UNAME}" in
 		(Linux)
 		ifconfig lo 127.0.0.1 netmask 255.0.0.0
 		route add -net 127.0.0.0 netmask 255.0.0.0 gw 127.0.0.1
