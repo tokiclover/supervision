@@ -61,6 +61,7 @@ fi
 umask 022
 
 SV_CMD="${__SV_CMD__##*/}"
+SV_PIDFILE=${SV_TMPDIR}/${SV_CMD}.pid
 SVC_NAME="${SV_CMD}"
 
 early_console()
@@ -166,21 +167,16 @@ svc_rundir()
 make_svscan_pidfile()
 {
 	SVC_DEBUG "function=make_svscan_pidfile( ${@} )"
-	trap "rm -f ${SV_TMPDIR}/${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid" INT QUIT TERM
-	echo $$ >${SV_TMPDIR}/${SV_CMD}.pid
+	trap "rm -f ${SV_PIDFILE} ${SV_TMPDIR}/svscan.pid" INT QUIT TERM
+	echo $$ >${SV_PIDFILE}
 	ln -sf ${SV_CMD}.pid ${SV_TMPDIR}/svscan.pid
 }
 kill_svscan()
 {
-	local args cmd dir pid
+	local cmd dir pid
 	SVC_DEBUG "function=kill_svscan( ${@} )"
 
-	if [ "${OS_NAME}" =      "FreeBSD" ]; then
-		args=-fl
-	else
-		args=-ax
-	fi
-	pgrep ${args} "${SV_CMD}" | \
+	pgrep -lf ${__SV_CMD__} | \
 	while read pid cmd dir args; do
 		if [ "${dir}" = "${SV_RUNDIR}" ]; then
 			kill -TERM ${pid} 2>${NULL}
@@ -193,7 +189,7 @@ svc_defaul_level()
 {
 	local args cmd dir pid count
 	SVC_DEBUG "function=svc_defaul_level( ${@} )"
-	svc_wait 30 ${SV_TMPDIR}/${SV_CMD}.pid
+	svc_wait 30 ${SV_PIDFILE}
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
 		if [ "${OS_NAME}" = "FreeBSD" ]; then
@@ -201,11 +197,11 @@ svc_defaul_level()
 		else
 			args=-ax
 		fi
-		if [ -e ${SV_TMPDIR}/${SV_CMD}.pid ]; then
+		if [ -e ${SV_PIDFILE} ]; then
 			pgrep ${args} ${SV_CMD} | \
 			while read pid cmd dir args; do
 				if [ x${dir} = x${SV_RUNDIR} ]; then
-					echo "${pid}" >${SV_TMPDIR}/${SV_CMD}.pid
+					echo "${pid}" >${SV_PIDFILE}
 					break
 				fi
 			done
@@ -226,7 +222,7 @@ svc_init_level()
 	SVC_DEBUG "function=svc_init_level( ${@} )"
 if   [ "${1}" = "--svscan" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
-	if [ -e "${SV_TMPDIR}/${SV_CMD}.pid" ]; then
+	if [ -e ${SV_PIDFILE__} ]; then
 		kill_svscan
 	fi
 	if [ "${2}" = "--foreground" ]; then
@@ -259,9 +255,9 @@ elif [ "${1}" = "--default" ]; then
 	# Bring up what left and stage-2 assuming `svcscan'
 	# is ready when the following pidfile is present
 	#
-	if [ -e "${SV_TMPDIR}/${SV_CMD}.pid" ]; then
+	if [ -e ${SV_PIDFILE} ]; then
 		kill_svscan
-		rm ${SV_TMPDIR}/${SV_CMD}.pid
+		rm ${SV_PIDFILE}
 	fi
 	#
 	# XXX: This hackery is necessary to get the real pid;
