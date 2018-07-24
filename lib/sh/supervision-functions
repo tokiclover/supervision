@@ -52,7 +52,7 @@ svc_up()
 
 svc_start()
 {
-	local val=1
+	local val=1 chk_pid
 	SVC_DEBUG "function=svc_start( ${@} )"
 
 	svc_state -p && return 0
@@ -67,7 +67,15 @@ svc_start()
 	if svc_state -f; then
 		:;
 	elif svc_wait ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
-		if [ -e "${SVC_PIDFILE}" ] && pkill -0 -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}; then
+		#
+		# XXX: {Free,Open,Net}BSD pkill(1) do not have the `-F ${pidfile}'
+		#
+		if [ "${OS_NAME}" = "Linux" ]; then
+			chk_cmd='pkill -0 -F ${SVC_PIDFILE} -f ${SVC_CMD}'
+		else
+			chk_cmd='kill -0 $(cat ${SVC_PIDFILE})'
+		fi
+		if [ -e "${SVC_PIDFILE}" ] && eval ${chk_cmd}; then
 			if svc_command start_post; then
 				svc_mark -s
 				val=0
