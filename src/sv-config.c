@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -257,6 +258,7 @@ static int svupdate(void)
 	int i, j, k, ofd, nfd;
 	size_t sz;
 	struct dirent *ent;
+	struct utsname un;
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
@@ -268,7 +270,7 @@ static int svupdate(void)
 		if (file_test(np, 'd'))
 			memmove(op, np, sizeof(np));
 		else if (!file_test(op, 'd'))
-			return EXIT_SUCCESS;
+			break;
 		if (!(od = opendir(op)))
 			ERROR("Failed to opendir `%s'", op);
 		snprintf(np, sizeof(np), "%s.init.d/%s", SV_SVCDIR, sv_init_level[j]);
@@ -336,6 +338,8 @@ static int svupdate(void)
 
 	/* update SERVICE_{ENV,OPTIONS} to v0.13.0 format */
 	snprintf(np, sizeof(np), "%s/.tmp", SV_RUNDIR);
+	if (access(np, F_OK))
+		return EXIT_SUCCESS;
 	if (!(nd = opendir(np)))
 		ERROR("Failed to `opendir(%s)'", np);
 	if ((nfd = dirfd(nd)) < 0)
@@ -373,6 +377,16 @@ static int svupdate(void)
 				ERR("Failed to `renameat(.., %s,.., %s)'", ent->d_name, op);
 		}
 	}
+
+	/* update SV_TMPDIR/env environment file */
+	if ((ofd = openat(nfd, "env", O_CREAT|O_TRUNC|O_RDWR, 0644)) > 0) {
+		if (uname(&un) == -1)
+			ERROR("Failed to get the name of the system: %s\n", strerror(errno));
+		snprintf(op, sizeof(op), "SV_UNAME='%s'\nSV_UNAME_RELEASE='%s'\n",
+				un.sysname, un.release);
+		err_write(ofd, op, np);
+	}
+	else ERROR("Failed to update `%s/.tmp/env': %s\n", SV_RUNDIR, strerror(errno));
 	(void)closedir(nd);
 
 	return EXIT_SUCCESS;
