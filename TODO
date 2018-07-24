@@ -15,4 +15,7 @@
 * [x] log message to syslog(3) (add a new `SV_SYSLOG' and `SV_SYSLOG_INFO' for
       info level message);
 * [x] add PID to lock file along with the service command;
-*
+* [x] check service lock file before waiting for the lock file;
+* [ ] check service pidfile for validity before marking a service as started;
+* [ ] add the full environment of service to be able to process commands once
+      the service is started and removed from service directory;
