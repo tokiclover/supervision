@@ -1,0 +1,34 @@
+#!/sbin/sv-run
+#
+# $Id: @(#) /etc/sv/local                                             Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+#
+
+description='Run old-style or simplified local scripts'
+SVC_AFTER='*'
+SV_LOCALDIR="/usr/local/etc/sv.local.d"
+SV_LOCALCONF="/usr/local/etc/sv.local.conf.d"
+
+exec__cmd__()
+{
+	local x
+	for x in ${SV_LOCALDIR}/*; do
+		if [ -x "${x}" ]; then
+			begin "\tStarting \`${x##*/}'"
+			(. ${x} "${__cmd__}")
+			end "${?}"
+		fi
+	done
+}
+start()
+{
+	exec__cmd__ "${__cmd__}"
+}
+stop()
+{
+	exec__cmd__ "${__cmd__}"
+}
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

@@ -204,6 +204,7 @@ dist_SYSBOOT = \
 	tmpfiles.setup
 dist_DEFAULT = \
 	$(EXTRA_DEFAULT_SERVICES) \
+	local \
 	sshd \
 	getty-tty6 getty-tty5 getty-tty4 getty-tty3 getty-tty2 getty-tty1
 dist_SHUTDOWN = \
@@ -294,6 +295,7 @@ install: install-dir install-dist install-sv-svcs
 	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
 	-$(install_DATA)  $(dist_RS_SVCS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
 	$(install_SCRIPT) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
+	$(install_DATA) -D README.local $(DESTDIR)/usr/local$(SV_SVCDIR).local.d/README
 	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/cmd
 	sed $(dist_MAN_SED) sv-run.8 >$(DESTDIR)$(MANDIR)/man8/sv-run.8
