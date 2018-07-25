@@ -8,7 +8,7 @@ SVC_CONFIGFILE=/etc/rsyncd.conf
 SVC_CMD=/usr/bin/rsync
 SVC_USER=nobody
 SVC_GROUP=nobody
-SVC_OPTS='${RSYNC_OPTS} --config=${SVC_CONFIGFILE} --daemon --no-detach'
+SVC_OPTS="${RSYNC_OPTS} --config=${SVC_CONFIGFILE} --daemon --no-detach"
 SVC_USE=net
 
 #RSYNC_OPTS='--log-file=${LOGDIR}/${SVC_NAME}.log --verbose'
