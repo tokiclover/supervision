@@ -102,6 +102,49 @@ svc_zap()
 	rm -f ${SV_TMPDIR}/*/${SVC_NAME}
 }
 
+svc_check_pid()
+{
+	SVC_DEBUG "function=svc_check_pid( ${@} )"
+
+	local arg cmd pid pidfile="${SV_TMPDIR}/pids/${SVC_NAME}"
+	#
+	# XXX: wait the pidfile
+	#
+	if [ -n "${SVC_PIDFILE}" ]; then
+		if ! svc_wait ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
+			error "Failed to start daemon -- or fix \`${SVC_PIDFILE}'"
+			return 1
+		fi
+	fi
+	if [ "${SV_UNAME}" = "Linux" ]; then
+		arg="${SVC_PIDFILE:+-F${SVC_PIDFILE}}"
+	fi
+	set -- $(pgrep ${arg} ${SVC_USER:+-u ${SVC_USER}} -f ${SVC_CMD} 2>${NULL})
+
+	if [ ${#} = 0 ]; then
+		return 1
+	elif [ ${#} = 1 ] || [ "${pidfile}" != "${SVC_PIDFILE}" ]; then
+		echo -n "${1}" >${pidfile}
+	elif [ -n "${SVC_PIDFILE}" -a -r "${SVC_PIDFILE}" ]; then
+		read pid <${SVC_PIDFILE}
+		echo -n "${pid}" >${pidfile}
+	else
+		if [ -z "${SVC_OPTS}" ]; then
+			return 0
+		fi
+		pgrep -l ${SVC_USER:+-u ${SVC_USER}} -f ${SVC_CMD} 2>${NULL} | \
+		while read pid cmd arg; do
+			if [ "x${arg}" = "x${SVC_OPTS}" ]; then
+				echo "${pid}" >${pidfile}
+				break
+			fi
+		done
+	fi
+:	${SVC_PIDFILE:=${pidfile}}
+	ENV_SET SVC_PIDFILE
+	return 0
+}
+
 rs_cmd()
 {
 	local ARGS='"${@}"' cmd="${1}" val
