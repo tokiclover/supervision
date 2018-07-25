@@ -156,13 +156,17 @@ cgroup_remove_service()
 {
 	cgroup_get_state || return 0
 	yesno "${cgroup_cleanup:-${CGROUP_CLEANUP}}" || return 0
-	local CGROUP_GET_PIDS SIG
+	local CGROUP_GET_PIDS SIG PID
 	CGROUP_GET_PIDS='cgroup_get_pids || { end 0; return 0; };'
 
 	begin "Cleaning up CGroup"
 	for SIG in TERM QUIT INT; do
 		eval ${CGROUP_GET_PIDS}
-		kill -${SIG} ${PIDS}
+		kill -${SIG} ${PIDS} >${NULL} 2>&1
+		for PID in ${PIDS}; do
+			waitfile -E ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN}} /proc/${PID} && \
+				break
+		done
 	done
 	eval ${CGROUP_GET_PIDS}
 	kill -TERM ${PIDS}
