@@ -17,13 +17,16 @@
 :	${LOGDIR:=/var/log}
 
 
+if [ -z "${__RUNSCRIPT_FUNCTIONS__}" ]; then
+__RUNSCRIPT_FUNCTIONS__=1
+
 NETWORKFS='afs ceph cifs coda davfs fuse fuse.sshfs gfs glusterfs lustre ncpfs nfs nfs4 ocfs2 shfs smbfs'
 NULL='/dev/null'
 
 __SV_DEPS_ORDER__='need:NEED use:USE before:BEFORE after:AFTER'
 __SV_PREFIX__=/usr
 
-_PATH_STDPATH=/bin:/sbin:/usr/bin:/usr/sbin
+_PATH_STDPATH=/usr/bin:/bin:/usr/sbin:/sbin
 case "${__SV_PREFIX__}" in
 	(/usr|/usr/local) PATH=${_PATH_STDPATH} ;;
 	(/*) PATH=${_PATH_STDPATH}:${__SV_PREFIX__}/bin:${__SV_PREFIX__}/sbin ;;
@@ -32,10 +35,6 @@ PATH=${SV_LIBDIR}/bin:${SV_LIBDIR}/sbin:${PATH}:/usr/local/bin:/usr/local/sbin
 readonly LOGDIR SV_CONFDIR SV_CONFLOCAL NULL
 readonly __SV_DEPS_ORDER__ __SV_PREFIX__ _PATH_STDPATH
 
-
-
-if [ -z "${__RUNSCRIPT_FUNCTIONS__}" ]; then
-__RUNSCRIPT_FUNCTIONS__=1
 
 umask 022
 
@@ -287,6 +286,13 @@ stop()
 	rm -f ${SVC_PIDFILE} ${SV_TMPDIR}/star/${SVC_NAME} ${SV_TMPDIR}/opts/${SVC_NAME}
 }
 
+if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
+:	${COLUMNS:=80}
+else
+:	${COLUMNS:=$(tput cols)}
+	trap ': COLUMNS="$(tput cols)"' WINCH
+fi
+
 fi #__RUNSCRIPT_FUNCTIONS__
 
 #
@@ -335,24 +341,27 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	SOURCE "${SVC_DIR}/OPTIONS.${name}"
 	SOURCE "${SV_CONFLOCAL}/${name}"
 	fi
+	if [ -z "${__SV_CONFIG__}" ]; then
 	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
 	readonly __SV_NAM__ __SVCENV__ __SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ \
 			__LOGCMD__ __PRECMD__ __SCANCMD__ __SIGSTRT__ __SIGSTOP__ __SIGSONCE__ \
 			__SIGPAUSE__ __SIGCONT__ __SIGHUP__ __SIGALRM__ __SIGINT__ __SIGTERM__ \
 			__SIGKILL__ __SIGEXIT__ __SIGQUIT__ __SIGUSR1__ __SIGUSR2__ __SIGWTUP__ \
 			__SIGWDWN__ __SIGRELD__
+	__SV_CONFIG__=1
+	fi
 fi # SV_TYPE=sv
 
+if [ -n "${SVC_NAME}" ]; then
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
+fi
+if [ -z "${__env__}" ]; then
 SOURCE ${SV_TMPDIR}/env
-SOURCE ${SV_TMPDIR}/environ && __environ__=1 || __environ__=0
 readonly SV_UNAME SV_UNAME_RELEASE
-
-if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
-:	${COLUMNS:=80}
-else
-:	${COLUMNS:=$(tput cols)}
-	trap ': COLUMNS="$(tput cols)"' WINCH
+__env__=1
+fi
+if [ -z "${__environ__}" ]; then
+SOURCE ${SV_TMPDIR}/environ && __environ__=1 || __environ__=0
 fi
 
 #
