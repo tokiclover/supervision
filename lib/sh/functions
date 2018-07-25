@@ -139,6 +139,7 @@ SOURCE()
 {
 	local arg msg opt ret
 	msg='Failed to source ${arg}'
+	SVC_DEBUG "function=SOURCE( ${@} )"
 	while [ ${#} -ge 1 ]; do
 		case "${1}" in
 			(-[ed]) opt=${1};;
@@ -172,6 +173,7 @@ eval_colors()
 {
 	local e f b c
 	e='\e[' f='3' b='4'
+	SVC_DEBUG "function=eval_colors( ${@} )"
 
 	for c in 0:blk 1:red 2:grn 3:ylw 4:blu 5:mag 6:cyn 7:wht; do
 		eval color_fg_${c#*:}="'${e}1;${f}${c%:*}m'"
