@@ -20,7 +20,7 @@ get_config()
 start_pre()
 {
 	SVC_PIDFILE="$(get_config pid_file)"
-	env_svc SVC_PIDFILE
+	ENV_SET SVC_PIDFILE
 }
 
 #
