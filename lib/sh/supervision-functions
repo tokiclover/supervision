@@ -275,7 +275,7 @@ svc_stop_post()
 	else
 		:	${SVC_TRY:=${SV_TRY:-3}}
 		__SVC_TRY__=$((${SVC_TRY}+1))
-		env_svc __SVC_TRY__
+		ENV_SET __SVC_TRY__
 		if [ ${__SVC_TRY__:-0} -ge ${SVC_TRY} ]; then
 			svc_remove
 			svc_mark -f
@@ -309,7 +309,7 @@ svc_depend()
 :	${RET_NEED:=0}
 	if [ "${SV_TYPE}" = "sv" ]; then
 		__SVC_DEPEND__="${RET_NEED}"
-		env_svc __SVC_DEPEND__
+		ENV_SET __SVC_DEPEND__
 	fi
 	if [ "${RET_NEED}" != 0 ]; then
 		error "Failed to set up service dependencies"
@@ -353,6 +353,16 @@ env_svc()
 {
 	SVC_DEBUG "function=env_svc( ${@} )"
 	[ -n "${*}" ] && svc_env "opts/${SVC_NAME}" "${@}"
+}
+ENV_DEL()
+{
+	SVC_DEBUG "function=ENV_DEL( ${@} )"
+	env_del "${@}"
+}
+ENV_SET()
+{
+	SVC_DEBUG "function=ENV_SET( ${@} )"
+	env_svc "${@}"
 }
 ENV_SVC()
 {
