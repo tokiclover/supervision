@@ -11,7 +11,7 @@ SVC_COMMANDS=check_config
 SVC_LIBDIR=/var/lib/dhcp
 SVC_LOGFILE=${LOGDIR}/${name}.log
 SVC_CMD=/sbin/dhclient
-SVC_OPTS='${DHCP_OPTS} -cf ${SVC_CONFIGFILE} -d -nw -q -lf ${SVC_LIBDIR}/${name}.leases -pf /var/run/${name}.pid ${DHCP_IFACES}'
+SVC_OPTS="${DHCP_OPTS} -cf ${SVC_CONFIGFILE} -d -nw -q -lf ${SVC_LIBDIR}/${name}.leases -pf /var/run/${name}.pid ${DHCP_IFACES}"
 SVC_USE='logger'
 
 start_pre()
