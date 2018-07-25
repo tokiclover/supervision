@@ -47,7 +47,7 @@ dep_gen()
 	fi
 	SVC_NAME="${__svc__##*/}"
 	if isin ${SVC_NAME} ${SVCLIST}; then
-		${append} || return
+		${append} || return 0
 	else
 		SVCLIST="${SVCLIST} ${SVC_NAME}"
 	fi
@@ -69,7 +69,7 @@ SVCLIST=
 svcdeps=${SV_DEPDIR}/svcdeps
 svclist=${SV_DEPDIR}/svclist
 svcdirs="${SV_SVCDIR}"
-if [ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" ]; then
+if [ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" -a "${__PREFIX__}" != "/usr" ]; then
 	svcdirs="${svcdirs} ${__SV_PREFIX__}${SV_SVCDIR}"
 fi
 if [ -n "${SV_PREFIX}" -a -d "${SV_PREFIX}" ]; then
