@@ -7,7 +7,7 @@ description='PC/SC Smart Card Daemon'
 
 SVC_CONFIGFILE=/etc/reader.conf.d/reader.conf
 SVC_CMD=/usr/sbin/pcscd
-SVC_OPTS='--config ${SVC_CONFIGFILE} --foreground'
+SVC_OPTS="--config ${SVC_CONFIGFILE} --foreground"
 SVC_AFTER='udev dbus'
 SVC_USE=logger
 
