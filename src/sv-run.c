@@ -180,14 +180,14 @@ int svc_cmd(struct svcrun *run)
 	int i;
 	char *cmd = (char*)run->argv[4];
 	char buf[PATH_MAX] = { "" };
-	struct tm *lt;
+	struct tm lt;
 #define STRFTIME_OFF 32
 	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
 #define MK_STRFTIME(tmpdir) do {                                    \
 	snprintf(buf, sizeof(buf), "%s/%s", tmpdir, run->name);         \
 	stat(buf, &st_buf);                                             \
-	lt = localtime(&st_buf.st_mtime);                               \
-	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)lt);     \
+	localtime_r(&st_buf.st_mtime, &lt);                             \
+	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
 } while (0/*CONST COND*/)
 
 #ifdef SV_DEBUG

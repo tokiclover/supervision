@@ -902,6 +902,8 @@ check_builtin "strerror" "string.h" "strerror(0)" ||
 	DIE "missing strerror() system builtin"
 check_builtin "ctime_r" "time.h" "ctime_r(NULL, NULL)" ||
 	DIE "missing ctime_r() system builtin"
+check_builtin "localtime_r" "time.h" "localtime_r(NULL, NULL)" ||
+	DIE "missing localtime_r() system builtin"
 check_builtin "nanosleep" "time.h" "nanosleep(NULL, NULL)" ||
 	DIE "missing nanosleep() system builtin"
 check_builtin "pthread_kill" "signal.h" "pthread_kill((pthread_t)0, 0)" "$PTHREAD_FLAGS" ||
