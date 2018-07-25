@@ -216,6 +216,11 @@ start()
 	yesno "${ENV_DIR}" && svc_environ
 
 	eval ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
+	if [ "${?}" = 0 ]; then
+		svc_check_pid
+	else
+		return 1
+	fi
 }
 stop()
 {
@@ -226,8 +231,17 @@ stop()
 			cgroup_remove_service && return
 		fi
 	fi
-	[ -n "${SVC_PIDFILE}" -a -f "${SVC_PIDFILE}" ] &&
-		pkill -TERM -F ${SVC_PIDFILE} -x "${SVC_CMD%%*/}"
+
+	if [ -n "${SVC_PIDFILE}" -a -r "${SVC_PIDFILE}" ]; then
+		local pid sig
+		read pid <${SVC_PIDFILE}
+		for sig in TERM QUIT KILL; do
+			kill -${sig} ${pid} >${NULL} 2>&1 || continue
+			waitfile -E ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-30}} /proc/${pid} && \
+				break
+		done
+	fi
+	rm -f ${SVC_PIDFILE} ${SV_TMPDIR}/star/${SVC_NAME} ${SV_TMPDIR}/opts/${SVC_NAME}
 }
 
 fi #__RUNSCRIPT_FUNCTIONS__
