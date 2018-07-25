@@ -85,7 +85,7 @@ ssh_agent_setup()
 	# Save environment
 	#
 	SSH_SETUPED=true
-	env_svc SSH_SETUPED
+	ENV_SET SSH_SETUPED
 
 	#
 	# Setup Keychain
