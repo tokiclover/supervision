@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-init.c  0.14.0 2018/07/22
+ * @(#)sv-rc.c  0.14.0 2018/07/26
  */
 
 #include <stdio.h>
@@ -184,7 +184,10 @@ __attribute__((__noreturn__)) static void help_message(int retval)
 {
 	int i;
 
-	printf("Usage: %s [OPTIONS] (ARGUMENTS)\n", progname);
+	if (!strcmp(progname, "sv-rc") || !strcmp(progname, "rc"))
+		printf("Usage: %s [OPTIONS] (RUNLEVEL)\n", progname);
+	else
+		printf("Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS]\n", progname);
 	for ( i = 0; i < 7; i++)
 		printf("    -%d, -%c, --%-12s %s\n", i, longopts[i].val, longopts[i].name,
 				longopts_help[i]);
@@ -815,105 +818,101 @@ int main(int argc, char *argv[])
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	sv_sigsetup();
 
-	if (strcmp(progname, "sv-run") == 0 || strcmp(progname, "service") == 0)
-		goto sv_run;
-	else if (!strcmp(progname, "rc") || !strcmp(progname, "sv-rc")) {
-		setenv("SVC_DEBUG", off, 1);
-		goto sv_rc;
-	}
-	else if (strcmp(progname, "sv-init") == 0) {
-		if (argc &&   strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0)
-			sv_init_status();
-		if (argc && !(strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_START]) == 0 ||
-					  strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STOP] ) == 0 ))
-			goto sv_rc;
-
-sv_init:
-		setenv("SVC_DEBUG", off, 1);
-		setenv("SVC_TRACE", off, 1);
-		if (sv_init >= 0) {
-			svc_init(*argv);
-			exit(EXIT_SUCCESS);
-		}
-		else {
-			fprintf(stderr, "Usage: %s -(0|1|2|3|4|5|6) [start|stop]"
-					"(runlevel argument required)\n", progname);
+	if (!strcmp(progname, "sv-run")) {
+		if (!argc) {
+sv_run_help:
+			fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS]\n", progname);
 			exit(EXIT_FAILURE);
 		}
-	}
-	else if (strcmp(*argv, "scan") == 0)
-		goto svc_scan;
-	else if (argc == 1)
-		goto sv_rc;
-	else
-		goto sv_run;
 
-	exit(EXIT_SUCCESS);
+		if (!strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STATUS]))
+			sv_init_status();
+		else if (!strcmp(*argv, "scan")) {
+			argc--; argv++;
+			svc_sigsetup();
+			setenv("SVCDEPS_UPDATE", on, 1);
+			execv(SV_DEPGEN, argv);
+			ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
+		}
+		else if (strcmp(*argv, "init") == 0) {
+			/* compatibility with <v0.13.0 */
+			argc--, argv++;
+			if (argc) {
+				if (!strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STATUS]))
+					sv_init_status();
+				if(!strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_START]) ||
+				   !strcmp(*argv, sv_svc_cmd[SV_SVC_CMD_STOP] ) )
+					if (sv_init >= 0)
+						goto sv_rc_init;
+sv_run_init_help:
+				fprintf(stderr, "Usage: %s [OPTIONS] init [start|stop|status]\n", progname);
+				exit(EXIT_FAILURE);
+			}
+			else goto sv_run_init_help;
+		}
+		else {
+sv_run:
+			/* handle service command or
+			 * support SystemV or BSD like system rc command
+			 */
+			if (argc < 2) goto sv_run_help;
+			unsetenv("SV_INITLEVEL");
+			unsetenv("SV_RUNLEVEL");
+			return svc_exec(argc, argv);
+		}
+	}
+	else if (!strcmp(progname, "service")) goto sv_run;
+	else if (!strcmp(progname, "rc")) goto sv_rc;
+	else if (!strcmp(progname, "sv-rc")) {
+		if (sv_init >= 0) {
+sv_rc_init:
+			setenv("SVC_TRACE", off, 1);
+			if (sv_init >= 0) {
+				svc_init(*argv);
+				exit(EXIT_SUCCESS);
+			}
+			else {
+				fprintf(stderr, "Usage: %s -(0|1|2|3|4|5|6)"
+						"(runlevel argument required)\n", progname);
+				exit(EXIT_FAILURE);
+			}
+		}
 
 sv_rc:
-	if (argc != 1) {
-rc_help:
-		fprintf(stderr, "Usage: %s (nonetwork|single|sysinit|sysboot|default|"
-				"shutdown|reboot)\n", progname);
-		exit(EXIT_FAILURE);
-	}
+		if (argc != 1) {
+sv_rc_help:
+			fprintf(stderr, "Usage: %s (nonetwork|single|sysinit|sysboot|default|"
+					"shutdown|reboot)\n", progname);
+			exit(EXIT_FAILURE);
+		}
 
-	/* support SystemV compatiblity rc command */
-	for (sv_level = 0; sv_init_level[sv_level]; sv_level++) {
-		if (strcmp(*argv, sv_init_level[sv_level]) == 0) {
-			switch(sv_level) {
-			case SV_REBOOT_LEVEL:
-			case SV_SHUTDOWN_LEVEL:
-				sv_init = SV_SHUTDOWN_LEVEL;
-				break;
-			case SV_NOWNETWORK_LEVEL:
-			case SV_SYSBOOT_LEVEL:
-				sv_init = SV_SYSBOOT_LEVEL;
-				break;
-			case SV_DEFAULT_LEVEL:
-			case SV_SINGLE_LEVEL:
-			case SV_SYSINIT_LEVEL:
-				sv_init = sv_level;
-				break;
+		/* support SystemV and BSD like system rc runlevel */
+		for (sv_level = 0; sv_init_level[sv_level]; sv_level++) {
+			if (!strcmp(*argv, sv_init_level[sv_level])) {
+				switch(sv_level) {
+				case SV_REBOOT_LEVEL:
+				case SV_SHUTDOWN_LEVEL:
+					sv_init = SV_SHUTDOWN_LEVEL;
+					break;
+				case SV_NOWNETWORK_LEVEL:
+				case SV_SYSBOOT_LEVEL:
+					sv_init = SV_SYSBOOT_LEVEL;
+					break;
+				case SV_DEFAULT_LEVEL:
+				case SV_SINGLE_LEVEL:
+				case SV_SYSINIT_LEVEL:
+					sv_init = sv_level;
+					break;
+				}
+				argc--; argv++; *argv = NULL;
+				goto sv_rc_init;
 			}
-			argc--; argv++;
-			goto sv_init;
 		}
+
+		ERR("invalid argument -- `%s'\n", *argv);
+		goto sv_rc_help;
 	}
 
-	if (!strcmp(progname, "rc") || !strcmp(progname, "sv-rc"))
-		goto rc_help;
-	ERR("invalid argument -- `%s'\n", *argv);
-	fprintf(stderr, "Usage: %s -(0|1|2|3|4|5|6) [OPTIONS]\n", progname);
+	ERR("nothing to do -- invalid usage!!!\n", NULL);
 	exit(EXIT_FAILURE);
-
-svc_scan:
-	svc_sigsetup();
-	setenv("SVCDEPS_UPDATE", on, 1);
-	execv(SV_DEPGEN, argv);
-	ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
-
-sv_run:
-	/* compatibility with <v0.13.0 */
-	if (argc) {
-		if (strcmp(*argv, "init") == 0) {
-			argc--, argv++;
-			goto sv_init;
-		}
-		else if (strcmp(*argv, "scan") == 0)
-			goto svc_scan;
-	}
-
-	unsetenv("SV_INITLEVEL");
-	unsetenv("SV_RUNLEVEL");
-
-	/* handle service command or
-	 * support systemV compatiblity rc command
-	 */
-	if (argc < 2) {
-		fprintf(stderr, "Usage: %s [OPTIONS] SERVICE COMMAND [ARGUMENTS]\n",
-				progname);
-		exit(EXIT_FAILURE);
-	}
-	return svc_exec(argc, argv);
 }

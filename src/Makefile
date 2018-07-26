@@ -14,7 +14,7 @@ fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := waitfile.c
 
-sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-init.c
+sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c
 sv-run_HDRS   := sv.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)

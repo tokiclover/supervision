@@ -253,6 +253,7 @@ dist_SVC_SED += 's|/sbin/sv-run|$(SBINDIR)/sv-run|g'
 endif
 
 dist_MAN_SED += \
+	-e 's,@EXEC_PREFIX@,$(EXEC_PREFIX),g' \
 	-e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' \
 	-e 's|@RUNDIR@|$(RUNDIR)|g' \
 	-e 's|@LIBDIR@|$(LIBDIR)|g' \
@@ -280,7 +281,6 @@ install: install-dir install-dist install-sv-svcs
 	$(install_SCRIPT) src/sv-run $(DESTDIR)$(SBINDIR)
 	$(install_SCRIPT) src/sv-shutdown $(DESTDIR)$(SBINDIR)
 	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/sv-rc
-	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/sv-init
 	for s in $(dist_SV-RUN_SYMLINKS); do \
 		$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/$${s}; \
 	done
@@ -299,7 +299,7 @@ install: install-dir install-dist install-sv-svcs
 	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/cmd
 	sed $(dist_MAN_SED) sv-run.8 >$(DESTDIR)$(MANDIR)/man8/sv-run.8
-	sed $(dist_MAN_SED) sv-init.8 >$(DESTDIR)$(MANDIR)/man8/sv-stage.8
+	sed $(dist_MAN_SED) sv-rc.8 >$(DESTDIR)$(MANDIR)/man8/sv-rc.8
 	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed $(dist_MAN_SED) sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
@@ -348,10 +348,10 @@ $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
-		$(DESTDIR)$(SBINDIR)/sv-init $(DESTDIR)$(SBINDIR)/sv-shutdown \
+		$(DESTDIR)$(SBINDIR)/sv-shutdown \
 		$(DESDIR)$(SBINDIR)/sv-rc $(DESTDIR)$(SBINDIR)/sv-run \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
-		$(DESTDIR)$(MANDIR)/man8/sv-init.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
+		$(DESTDIR)$(MANDIR)/man8/sv-rc.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
 		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(SV_SVCDIR).conf.local.d/%)
