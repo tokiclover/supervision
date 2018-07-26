@@ -302,7 +302,7 @@ yesno "${SVC_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
 yesno "${SVC_TRACE}" && set -x
 
 #
-# Use RC config file if requested
+# Use OpenRC config file if requested
 #
 if yesno "${RC_OPTS}"; then
 :	${RC_CONFDIR:=/etc/conf.d}
