@@ -73,7 +73,7 @@ The other command remove the service from
 .B SV_RUNDIR
 (running /service/ directory.)
 And the last to remove Control Group PIDs hierarchy.
-`\fI@SBINDIR@/rs\fR [OPTIONS] SERVICE COMMAND [ARGUMENTS]' can be used for
+`\fI@EXEC_PREFIX@@SBINDIR@/sv-run\fR [OPTIONS] SERVICE COMMAND [ARGUMENTS]' can be used for
 any service type and efficiency; or the following for a particular service type.
 Some commands, like
 .I {add,del}
@@ -149,7 +149,7 @@ in
 .I sysboot
 runlevel for
 .I net
-(just issue a `rs --sysboot dhcp add' and be done with it.)
+(just issue a `sv-run --sysboot dhcp add' and be done with it.)
 .TP
 .B SUPERVISION
 Another scheme is to use a single directory for multiple providers like,
@@ -836,13 +836,13 @@ See cgconfig.conf(5) and enable cgred service.
 This is only necessary if not using the bundled Init-Stage-2 which have CGroup
 support: child process (supervisor) will naturally inherit supervision CGroup.
 .SH FILES
-.SS @SBINDIR@
+.SS @EXEC_PREFIX@@SBINDIR@
 .TP
-.I @SBINDIR@/rs
+.I @EXEC_PREFIX@@SBINDIR@/sv-run
 Multi-purpose binary to run either an init stage or run level or service command, e.g.
 `rs --sysboot zramfs add' to add
 .B zramfs
-service to syteme boot runlevel); `rs acpid start' or `rsv-init --default' to start
+service to syteme boot runlevel); `rs acpid start' or `sv-init default' to start
 daemons and default services (default runlevel) in multi users mode.
 .SS @SYSCONFDIR@
 .TP
@@ -999,7 +999,7 @@ Simple and cheap wait file utility (alternative to \fIsvc_wait\fR shell function
 .I @LIBDIR@/sv/sbin/service
 Compatiblity system utility symlink so that `servce SERVICE COMMAND' would work as
 expected. This symlink may copied to
-.I @SBINDIR@
+.I @EXEC_PREFIX@@SBINDIR@
 system directory or the add \fI@LIBDIR@/sv/bin:@LIBDIR@/sv/sbin\fR to \fBPATH\fR environment variable.
 .TP
 .I @LIBDIR@/sv/sbin/sv-config
@@ -1008,7 +1008,7 @@ and ``fI@LIBDIR@/sv/sbin/sv-config --config runit\fR' to set up supervisor
 .TP
 .I @LIBDIR@/sv/sbin/sv-shutdown
 Simple utility to handle system halt or reboot. It could be symlinked to
-.B @SBINDIR@/sbin/{halt,shutdown,reboot}
+.B @EXEC_PREFIX@@SBINDIR@/sbin/{halt,shutdown,reboot}
 to get SystemV or BSD interface... minor no compatible command line options.
 .TP
 .I @LIBDIR@/sv/sbin/{halt,poweroff,reboot,shutdown}
@@ -1049,7 +1049,7 @@ Supervision Functions/Helpers library
 .I @LIBDIR@/sv/sh/tmpfiles
 Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .SH "SEE ALSO"
-.BR rs (8),
+.BR sv-run (8),
 .BR sv-init (8),
 .BR sv-shutdown (8),
 .BR sh (1p)
