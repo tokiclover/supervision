@@ -329,17 +329,20 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 elif [ "${SV_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${__svc__}}
 	readonly SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
-	SOURCE -d ${__svc__}/OPTIONS
 
+	if [ "${name}" = "${SVC_NAME}" ]; then
+	SOURCE "${SV_CONFLOCAL}/${SVC_NAME}"
+	else
+	SOURCE "${SV_CONFLOCAL}/${name}"
+	fi
+	SOURCE -d ${__svc__}/OPTIONS
 	#
 	# Handle specific (virtual) service backend/instance
 	#
 	if [ "${name}" = "${SVC_NAME}" ]; then
 	SOURCE "${SVC_DIR}/OPTIONS.${SVC_NAME}"
-	SOURCE "${SV_CONFLOCAL}/${SVC_NAME}"
 	else
 	SOURCE "${SVC_DIR}/OPTIONS.${name}"
-	SOURCE "${SV_CONFLOCAL}/${name}"
 	fi
 	if [ -z "${__SV_CONFIG__}" ]; then
 	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
@@ -352,7 +355,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	fi
 fi # SV_TYPE=sv
 
-if [ -n "${SVC_NAME}" ]; then
+if [ -n "${__cmd__}" ]; then
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
 fi
 if [ -z "${__env__}" ]; then
