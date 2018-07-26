@@ -1,0 +1,190 @@
+.\"
+.\" CopyLeft (c) 2016-2018 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH SV-RC 8 "2018-07-26" "0.13.0" "System Manager's Manual"
+.SH NAME
+sv-rc \- utility to manage init system
+.SH DESCRIPTION
+.B sv-rc
+is a utility to manage init system
+for SystemV or BSD like systems.
+This utility is used in conjunction with supervsion utilities like
+.B runit
+,
+.B s6
+or even
+.B daemontools[-encore]
+to get a fully supervised init-system and service-manager. Otherwise, only
+runscript service would work out of the box. Supported supervision utilities
+can be configured to work with this package by running
+`\fI@LIBDIR@/sv/sbin/sv-config --config \fBSUPERVISOR\fR'.
+And then, the recommended way to use this utility is to use the included
+`\fI@LIBDIR@/sv/sh/sv-init.sh\fR' handler for `\fI@SYSCONFDIR@/runit/{1,2,3}\fR'
+or \fB@SYSCONFDIR@/s6/{finish,crash,init}\fR init-stage for
+example.
+
+Or else, use
+.B sv-rc
+utility directly for a SystemV or BSD like init-system.
+So, using this utility for a replacement of SystemV or BSD like
+.B rc
+utility would work out of the box in a standard SystemV or BSD like system.
+Still, there are still some work to be done to be realy compatible with BSD init-system
+and testing.
+.SH SYNOPSIS
+.TP
+.B sv-rc
+.RB [\| OPTIONS \| ]
+.RB (\| RUNLEVEL \|)
+.TP
+.B sv-rc
+.RB [\| \-h|\-\-help \|]
+.RB [\| \-v|\-\-version \|]
+
+Either an init stage or run level is passed as a command line argument (like
+.B rc
+utility does.)
+When a runlevel is passed as an argument runlevel will
+be switched; e.g. requiring
+.B single
+runlevel when being in
+.B default
+runlevel will require stopping
+.B default
+runlevel beforehand.
+
+.B NOTE:
+.B single
+runlevel is not stopped before switching to another runlevel in case somthing
+happen.
+
+.B NOTE:
+If
+.B rc
+is not installed in the default path, either add
+.B @LIBDIR@/sv/bin:@LIBDIR@/sv/sbin
+to
+.B PATH
+environment variable; or else, copy the symlink to
+.I @EXEC_PREFIX@/sbin/rc
+for example to get the same behaviour; or else use
+.B sv-rc
+instead.
+
+.SH SYSTEM-V OR BSD LIKE RC USAGE
+.B rc
+.RB \| sysinit|sysboot|default|shutdown|reboot|single|nonetwork \|
+
+Some runlevels can be required at bootup by appending a runlevel name to
+.B softlevel=\fIsingle\fR|\fInonetwork\fR
+kernel command line argument like
+.I softlevel=single
+to request single user runlevel.
+And extra
+.B noinit
+kernel command line argument is also available to mark a comma separated list of
+services as started to avoid starting them in
+.I any
+runlevels but \fIsysinit\fR, like
+.I noinit=atd,cron
+to avoid starting
+.I cron
+and
+.I atd
+services.
+
+.B WARNING:
+Services marked as started can be safely started after issuing
+`\fIsv-run \fBSERVICE \fIzap\fR
+service command. And some services will inevitably fail like networkfs if no
+network service is started.
+Second,
+.B (reboot|shutdown)
+runlevels shall not be used when using
+.I runit
+or \fIs6\fR;
+use \fI@EXCE_PREFIX@/sbin/sv-shutdown --(reboot|shutdown)\fR instead to properly
+.B reboot
+or
+.B shutdown
+a system by sending the proper signal to
+.B PID
+\fI1\fR (\fBINIT\fR) instead. Any other
+.B init
+that does not trigger a \fIreboot\fR|\fIshutdown\fR (by using
+\fI@LIBDIR@/sv/sh/sv-init.sh\fR or \fB@EXEC_PREFIX@/sbin/sv-rc\fR)
+can be used and then issue a \fIsv-rc (reboot|shutdown)\fR to get almost the same
+effect. However, using
+.I sv-shutdown
+has almost the same effect (minus the \fBreboot|shutdown\fR signal to \fBinit\fR...
+so using `\fI@LIBDIR@/sv/sh/sv-init.sh\fR' instead of
+.B sv-rc
+binary is more safe when using a supported supervision utility.
+
+.SH OPTIONS
+.TP
+.B (sysinit|sysboot|default|shutdown|reboot|single|nonetwork)
+Select a particular init stage or runlevel (a long option with \fI--\fR
+prefix is also suported.)
+.TP
+.B \-(0|1|2|3|4|5|6) | \-(p|s|N|l|S|b|r)
+Select a particular init stage or runlevel (short options aliases)
+.TP
+.B \-d|\-\-debug
+Enable debugging mode for services (extra shell debug output)
+.TP
+.B \-v|\-\-version
+Print the version message
+.TP
+.B \-h|\-\-help
+Print the help message
+.TP
+.B \-q|\-\-quiet
+Suppress verbose message (ignored)
+.SH CONFIGURATION
+See
+.I @SYSCONFDIR@/sv.conf
+for the global configuration file, or
+.I @SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR
+for local service configuration file; or else,
+.I @SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
+for runscript services, or
+.I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fB[.INSTANCE]\fR
+for supervision services configuration files; and lastly
+.BR supervsion (5)
+for configration settings related to services and
+.BR sv-run (8)
+service-manager utility.
+.SH "RETURN VALUE"
+.TP
+.B 0
+success
+.TP
+.B 1
+miscellaneous operational failures (failure to read the dependency file...);
+or
+.B SIGUSR1
+was sent to abort operation; or
+a signal (\fBSIGTERM\fR ...) was sent to terminate the program
+.TP
+.B errno
+system call failure (fork...)
+.SH "APPLICATION USAGE"
+Refer to 
+.BR sv-run (8)
+section for more information.
+.SH "FUTURE DIRECTIONS"
+None.
+.SH "SEE ALSO"
+.BR sv-run (8)
+.BR supervision (5)
+.BR sv-shutdown (8)
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"
