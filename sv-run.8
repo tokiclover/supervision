@@ -5,13 +5,13 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-RUN 8 "2016-12-30" "0.13.0" "System Manager's Manual"
+.TH SV-RUN 8 "2018-07-26" "0.14.0" "System Manager's Manual"
 .SH NAME
 sv-run \- manage runscript and supervision services
 .SH DESCRIPTION
 .B sv-run
 is a utility to manage runscript and supervised services.
-This utility is used in conjunction with a supervsion suite like
+This utility is used in conjunction with a supervsor like
 .B runit
 ,
 .B s6
@@ -37,24 +37,24 @@ like \fBsv-run scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
 
 .B SERVICE
 name can be replaced by the special use case
-.B stage
+.B init
 to manage a whole bundle of services instead of a single service; for example,
-`sv-run --default stage' to bring the system to default runlevel.
+`sv-run --default init' to bring the system to default runlevel.
 This usage is now superseded by
-.B sv-stage
+.B sv-rc
 utility, see
-.BR sv-stage (8)
+.BR sv-rc (8)
 manual page; and is thus discouraged.
 
 .B NOTE:
 If
 .B service
 is not installed in the default path, either add
-.B $SV_LIBDIR/bin:$SV_LIBDIR/sbin
+.B @LIBDIR@/bin:@LIBDIR@/sbin
 to
 .B PATH
 environment variable; or else, copy the symlink to
-.I /sbin
+.I @EXEC_PREFIX@/sbin
 for example to get the same behaviour; or else use
 .B sv-run
 instead because
@@ -74,20 +74,23 @@ binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND [ARGUME
 .B --(sysinit|sysboot|default|shutdown|reboot|single|nonetwork)
 Select a particular init stage or runlevel (long options)
 .TP
-.B \-(0|1|2|3|4|5|6) | \-(p|s|N|d|S|b|r)
+.B \-(0|1|2|3|4|5|6) | \-(p|s|N|l|S|b|r)
 Select a particular init stage or runlevel (short options)
 .TP
 .B \-D|\-\-nodeps
 Disable dependency tracking when starting/stopping services
 .TP
-.B \-g|\-\-debug
-Enable debugging mode for services (shell tracing)
+.B \-d|\-\-debug
+Enable debugging mode for services (debugging output to stderr)
+.TP
+.B \-x|\-\-trace
+Enable shell trace for services (shell tracing)
 .TP
 .B \-h|\-\-help
 Print the help message
 .TP
 .B \-q|\-\-quiet
-Suppress verbose message
+Suppress verbose message (ignored)
 .SH "SERVICE COMMANDS"
 Standard LSB along with extra service commands are supported.
 .TP
@@ -135,20 +138,20 @@ add a new supervised service from a template. This command should be run with
 .B extra-commands
 extra comands defined as shell functions and added to
 .B SVC_COMMANDS
-or
+(command that can be executed with any service status) or
 .B SVC_STARTED_COMMANDS
-or
+(for any command that can be executed in started service status) or
 .B SVC_STOPPED_COMMANDS
-environment variable. Any defined command can be used as a standard LSB command.
+(for command that can be executed in stopped service status)
+environment variable. Any defined command can be used like a standard LSB command.
 .TP
-.B desc
+.B desc [COMMAND_NAME]
 print service description to standard output.
-A command
-.B name
-argument can be passed to print the description of the command instead of the
+.B COMMAND_NAME
+argument can be passed to print the description of the named command instead of the
 description of the service, `sv-run udev desc reload' for example.
 .B scan
-update the dependency cache of a service. \fIsv-run scan\fB SERVICES\fR can be used
+update the dependency cache of a service. \fIsv-run scan \fBSERVICES\fR can be used
 for a list of service instead.
 .B down
 send down command to the supervisor (supervision only)
@@ -161,7 +164,9 @@ for the global configuration file, or
 .I @SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
 for runscript particular services or
 .I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fB[.INSTANCE]\fR
-for supervision services for the local configuration file,
+for supervision services for the configuration file, or else,
+.I @SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR
+for the local configuration file for any service type;
 and \fBsupervsion\fR(5) for settings related to
 .B sv-run
 service management.
@@ -206,10 +211,10 @@ system call failure (fork...)
 execve system call failure
 .SH "APPLICATION USAGE"
 Some services are added to the service directory? Try starting them then.
-It seems to work? Good, try to add them in a sv-init.sh or runlevel with
+It seems to work? Good, try to add them in an init runlevel with
 `\fIsv-run \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
-by running `\fIsv-stage \fB--RUNLEVEL\fR' and then checkout
-\fISV_TMPDIR/deps/\fBRUNLEVEL\fR to see if the service is inserted
+by running `\fIsv-rc \fBRUNLEVEL\fR' and then checkout
+\fI${SV_TMPDIR}/deps/\fBRUNLEVEL\fR to see if the service is inserted
 in the right place depending on the dependency definitions. Or better,
 check out the file beforehand. It looks weird or the order changed dramatically?
 Try removing the file altogether and try again. Else, it can be a case of cyclic
@@ -223,7 +228,7 @@ or service scheduling havoc in dependency tree files mentionned above.
 None.
 .SH "SEE ALSO"
 .RB supervision (5)
-.RB sv-stage (8)
+.RB sv-rc (8)
 .RB sv-shutdown (8)
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
