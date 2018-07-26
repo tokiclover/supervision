@@ -63,8 +63,8 @@ APPLICATION USAGE
 -----------------
 
 The recommanded way to use this package for service management is to use
-`${LIBDIR}/sv/sh/init-stage --(sysinit|default|shutdown)` to start particular stage. And then use
-`rs [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services;
+`${LIBDIR}/sv/sh/sv-init.sh --(sysinit|default|shutdown)` to start particular stage. And then use
+`sv-run [OPTIONS] SERVICE COMMAND [ARGUMENTS]` to manage particular services;
 or rather use `${LIBDIR}/sv/sbin/service [OPTIONS] SERVICE COMMAND` for
 SystemV compatibility. *NOTE:* That symlink can be copied to `/sbin` if
 necessary to ease administration and if there is no other SystemV binary
@@ -72,7 +72,7 @@ installed in the system.
 
 Or else, use the magic `--svscan` command line argument to set up `/service/` and
 `svscan`, set `SV_SYSTEM="supervision"` in `/etc/sv.conf` and then use
-`sv-stage --default [start|stop]` to start/stop daemons.
+`sv-init --default [start|stop]` to start/stop daemons.
 This will ensure proper service dependency scheduling.
 
 Support for containrization solutions or subsystems is available via _keywords_
@@ -90,14 +90,14 @@ subsystem environment.
 To have the supervisor `({damontools[-encore],runit,s6})` executed as __PID 1__...
 Just setup the container or subsystem; once done, use something like
 the following for docker: `docker run [OPTIONS] --env container=docker --tmpfs /run
-IMAGE /lib/sv/sh/init-stage --default`; and voila! the supervisor will be executed
+IMAGE /lib/sv/sh/sv-init.sh --default`; and voila! the supervisor will be executed
 as `PID 1` and another process will handle service management to setup the container.
 
 And then... a bit more, new supervision services can be easily added by
 running `${LIBDIR}/sv/sbin/sv-config [--log] SERVICE new` (`--log` argument
 would add a *log* directory for the service.)
 
-See `supervision(5)`, `sv-stage(8)`, `sv-shutdown(8)` and or `rs(8)` man page
+See `supervision(5)`, `sv-init(8)`, `sv-shutdown(8)` and or `sv-run(8)` man page
 for more information.
 
 REQUIREMENTS
