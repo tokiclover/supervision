@@ -753,7 +753,7 @@ runlevels without network services. So, in practice,
 replace
 .B sysboot
 runlevel to be able to repair a system.
-See \fBsv-init\gR(8) for more inforation about runlevels.
+See \fBsv-rc\gR(8) for more inforation about runlevels.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
 Supervision Framework support CGroup. CGroup support is autodected on
@@ -842,7 +842,7 @@ support: child process (supervisor) will naturally inherit supervision CGroup.
 Multi-purpose binary to run either an init stage or run level or service command, e.g.
 `rs --sysboot zramfs add' to add
 .B zramfs
-service to syteme boot runlevel); `rs acpid start' or `sv-init default' to start
+service to syteme boot runlevel); `rs acpid start' or `sv-rc default' to start
 daemons and default services (default runlevel) in multi users mode.
 .SS @SYSCONFDIR@
 .TP
@@ -1050,7 +1050,7 @@ Supervision Functions/Helpers library
 Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .SH "SEE ALSO"
 .BR sv-run (8),
-.BR sv-init (8),
+.BR sv-rc (8),
 .BR sv-shutdown (8),
 .BR sh (1p)
 .BR \%svc (8),
