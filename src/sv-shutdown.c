@@ -408,7 +408,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	DBG("%s(void)\n", __func__);
 #endif
 
-	argv[0] = "sv-stage", argv[1] = arg, argv[2] = NULL;
+	argv[0] = "sv-rc", argv[1] = arg, argv[2] = NULL;
 	if (shutdown_action == SD_REBOOT)
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_REBOOT]);
 	else if (shutdown_action == SD_POWEROFF)
