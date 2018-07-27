@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-RC 8 "2018-07-26" "0.13.0" "System Manager's Manual"
+.TH SV-RC 8 "2018-07-26" "0.14.0" "System Manager's Manual"
 .SH NAME
 sv-rc \- utility to manage init system
 .SH DESCRIPTION
@@ -76,8 +76,8 @@ for example to get the same behaviour; or else use
 instead.
 
 .SH SYSTEM-V OR BSD LIKE RC USAGE
-.B rc
-.RB \| sysinit|sysboot|default|shutdown|reboot|single|nonetwork \|
+.RB [\| sv\- \|]rc
+.RB (\| sysinit | sysboot | default | shutdown | reboot | single | nonetwork \|)
 
 Some runlevels can be required at bootup by appending a runlevel name to
 .B softlevel=\fIsingle\fR|\fInonetwork\fR
@@ -127,24 +127,24 @@ binary is more safe when using a supported supervision utility.
 
 .SH OPTIONS
 .TP
-.B (sysinit|sysboot|default|shutdown|reboot|single|nonetwork)
+.RB (\| sysinit | sysboot | default | shutdown | reboot | single | nonetwork \|)
 Select a particular init stage or runlevel (a long option with \fI--\fR
 prefix is also suported.)
 .TP
-.B \-(0|1|2|3|4|5|6) | \-(p|s|N|l|S|b|r)
+.RB (\| \-0 | \-1 | \-2 | \-3 | \-4 | \-5 | \-6 \|) | (\| \-p | \-s | \-N | \-l | \-S | \-b | \-r \|)
 Select a particular init stage or runlevel (short options aliases)
 .TP
-.B \-d|\-\-debug
-Enable debugging mode for services (extra shell debug output)
+.RB \| \-d | \-\-debug \|
+Enable debugging mode for services (debugging output to stderr)
 .TP
-.B \-v|\-\-version
+.RB \| \-v | \-\-version \|
 Print the version message
 .TP
-.B \-h|\-\-help
+.RB \| \-h | \-\-help \|
 Print the help message
 .TP
-.B \-q|\-\-quiet
-Suppress verbose message (ignored)
+.RB \| \-q | \-\-quiet \|
+Suppress verbose message
 .SH CONFIGURATION
 See
 .I @SYSCONFDIR@/sv.conf
