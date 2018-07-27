@@ -5,29 +5,40 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-SHUTDOWN 8 "2017-01-10" "0.13.0" "System Manager's Utility"
+.TH SV-SHUTDOWN 8 "2018-07-20" "0.13.0" "System Manager's Utility"
 .SH NAME
-sv-shutdown \- utility to manage system halt/reboot/poweroff
+sv-shutdown \- utility to manage system
+.BR halt (8)
+,
+.BR reboot (8)
+and
+.BR poweroff (8)
 .SH DESCRIPTION
 .B sv-shutdown
 is a utility to manage system halt, poweroff and reboot when
-.B rs
-is used as init-system or service-manager.
-The utility can be used with SystemV or BSD utility name aliases, namely,
-.B {halt,poweroff,reboot,shutdown}
-to adopt the behaviour of the said utility. This means that the utility will
+.BR sv-rc (8)
+is used as init-system.
+This utility can be used with SystemV or BSD utility name aliases, namely,
+.BR halt (8)
+,
+.BR poweroff (8)
+,
+.BR reboot (8)
+and
+.BR shutdown (8)
+to adopt the behaviour of the said utility. This means that, the utility will
 halt the system if called as
-.B halt
+.BR halt (8)
 , poweroff if called as
-.B poweroff
+.BR poweroff (8)
 , put the system to single runlevel if called as
-.B shutdown
+.BR shutdown (8)
 without argument.
 .B sh-shutdown
 requires that an action
-.I --(poweroff|reboot|halt|cancel|message)
+.RB (\| \-\-poweroff | \-\-reboot | \-\-halt | \-\-cancel | \-\-message \|)
 or
-.I -(p|r|h|c|m)
+.RB (\| \-p | \-r | \-h | \-c | \-m \|)
 to be specified.
 .SH SYNOPSIS
 .B sv-shutdown
@@ -38,74 +49,74 @@ to be specified.
 
 The
 .B TIME
-argument is only required when called as
-.B shutdown.
+argument is only required when called as the
+.B shutdown (8)
+alias.
 And the
 .B ACTION
 is reuired only if called as \fBsv-shutdown\fR,
 the other aliases have default actions as previously said above.
 
 .B shutdown
-.RB [\| -c | -m | -h | -p | -r \|]
+.RB [\| \-c | \-m | \-h | \-p | \-r \|]
 .RB \| TIME \|
 .RB [\| MESSAGE \|]
 
-.B halt \| poweroff \| reboot
+.RB (\| halt | poweroff | reboot \|)
 .RB [\| -n \|]
 .RB [\| -p \|]
 .RB [\| -q \|]
 
 .SH OPTIONS
 .TP
-.B \-6 \| \-r \| \-\-reboot
+.RB \| \-6 | \-r | \-\-reboot \|
 Reboot the system after shutdown
 .TP
-.B \-0 \| \-s \| \-\-shutdown
+.RB \| \-0 | \-s | \-\-shutdown \|
 Action to shutdown the system
 .TP
-.B \-H \| \-h \| \-\-halt
-Action to halt the system (equivalent to --poweroff unless --force is used)
+.RB \| \-H | \-h | \-\-halt \|
+Action to halt the system (equivalent to \fB--poweroff\fR unless \fB--force\fR is used)
 .TP
-.B \-P \| \-p \| \-\-poweroff
-Action to poweroff the msystem (equivalent to --shutdown unless
+.RB \| \-P | \-p | \-\-poweroff \|
+Action to poweroff the msystem (equivalent to \fB--shutdown\R unless the
 .B shutdown
 alias is used)
 .TP
-.B \-f \| \-\-fast
+.RB \| \-f | \-\-fast \|
 "Fast boot", skip
-.B fsck(8)
+.RB fsck (8)
 on reboot
 .TP
-.B \-F \| \--fsck
+.RB \| \-F | \--fsck \|
 Force filesystem check
-.B fsck(8)
+.RB fsck (8)
 on reboot
 .TP
-.B \-n \| \--nosync
+.RB \| \-n | \-\-nosync \|
 Do not synchronize filesystems before calling
 .B shutdown
-(default to sync)
+(the default is to synchronize filesystems)
 .TP
-.B \-l \| \-\-syslog
-Log shutdown action to system log (default) for message broadcast mode
+.RB \| \-l | \-\-syslog \|
+Log shutdown action to system logger (default) for message broadcast mode
 .TP
-.B \-c \| \-\-cancel
-Cancell a previous and waiting call to shutdown
+.rB \| \-c | \-\-cancel \|
+Cancell a previous and waiting call to \fBshutdown\fR
 .TP
-.B \-m \| \-\-message
-Broadcast only the message to everyone
+.RB \| \-m | \-\-message \|
+Broadcast only the message to users
 .TP
-.B \-q \| \-\-force
+.RB \| \-q | \-\-force \|
 Force a system {halt,poweroff,reboot} without calling shutdown
 (this option force a shutdown cancellation as well)
 .TP
 .RB (\| TIME \|)
-.I Time
-is the time to shutdown the system and can be either
+The time to shutdown the system can be either
 .I now
 or specified as \fI+\fBmintues\fR (number of minutes to wait); or else in
-.RB [\| yymmdd \|]hhmm
-format with an optional \fIyear\fR and \fImonth\fR which default to the current
+.RB [\| yymmdd \|]hhmm \|
+format with an optional \fIyear\fR, \fImonth\fR and \fIday\fR which default to the current
 system values (\fB[\|h\|]h:mm\fR format is also supported when only the
 .I hour
 and
@@ -165,8 +176,8 @@ Print the help message
 Print version string message
 .SH "SEE ALSO"
 .BR supervision (5)
-.BR rs (8)
-.BR sv-stage (8)
+.BR sv-run (8)
+.BR sv-rc (8)
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
