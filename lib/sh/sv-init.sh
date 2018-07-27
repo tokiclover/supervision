@@ -187,10 +187,10 @@ kill_svscan()
 	done
 }
 
-svc_defaul_level()
+svc_init_default()
 {
 	local args cmd dir pid count
-	SVC_DEBUG "function=svc_defaul_level( ${@} )"
+	SVC_DEBUG "function=svc_init_default( ${@} )"
 	svc_wait 30 ${SV_PIDFILE}
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
@@ -210,7 +210,7 @@ svc_defaul_level()
 		fi
 	fi
 
-	sv-rc --default || sv-rc --single || svc_rescue_shell
+	sv-rc default || sv-rc single || svc_rescue_shell
 }
 
 case ${SV_CMD} in
@@ -244,7 +244,7 @@ elif [ "${1}" = "--sysinit" ]; then
 	fi
 	early_console
 	svc_init
-	[ "${2}" = "--background" ] || sv-rc --sysinit
+	[ "${2}" = "--background" ] || sv-rc sysinit
 elif [ "${1}" = "--default" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	#
@@ -265,7 +265,7 @@ elif [ "${1}" = "--default" ]; then
 	# XXX: This hackery is necessary to get the real pid;
 	# this is used to send SIGCONT to runsvdir.
 	#
-	sh -c ". ${SV_LIBDIR}/sh/sv-init.sh; svc_defaul_level;" &
+	sh -c ". ${SV_LIBDIR}/sh/sv-init.sh; svc_init_default;" &
 
 	make_svscan_pidfile
 	exec ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS:+"${SV_OPTS}"}
@@ -277,9 +277,10 @@ elif [ "${1}" = "--default" ]; then
 elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	ACTION=${1}
 	case "${ACTION}" in
-		(--reboot|--shutdown)  sv-rc ${ACTION};;
-		(*) ACTION=--shutdown; sv-rc ${ACTION};;
+		(--reboot|--shutdown)  ;;
+		(*) ACTION="--shutdown";;
 	esac
+	sv-rc ${ACTION#--}
 	if [ -n "${SV_SYSTEM}" ]; then
 		return 0
 	fi
@@ -290,7 +291,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	if yesno "${SV_CGROUP}" && [ "${SV_UNAME}" = "Linux" ]; then
 		cgroup_remove_service
 	fi
-	${SV_LIBDIR}/sbin/shutdown --force ${ACTION} now
+	sv-shutdown --force ${ACTION} now
 fi
 }
 
