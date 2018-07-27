@@ -16,7 +16,7 @@ This utility is used in conjunction with a supervsor like
 ,
 .B s6
 or
-.B daemontools(-encore)
+.B daemontools[\| \-encore \|]
 to get a fully supervised init-system and service-manager.
 .SH SYNOPSIS
 .B sv-run
@@ -71,29 +71,30 @@ binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND [ARGUME
 
 .SH OPTIONS
 .TP
-.B --(sysinit|sysboot|default|shutdown|reboot|single|nonetwork)
+.RB (\| \-\-sysinit | \-\-sysboot | \-\-default | \-\-shutdown | \-\-reboot | \-\-single | \-\-nonetwork \|)
 Select a particular init stage or runlevel (long options)
 .TP
-.B \-(0|1|2|3|4|5|6) | \-(p|s|N|l|S|b|r)
+.RB (\| \-0 | \-1 | \-2 | \-3 | \-4 | \-5 | \-6 \|) | (\| \-p | \-s | \-N | \-l | \-S | \-b | \-r \|)
 Select a particular init stage or runlevel (short options)
 .TP
-.B \-D|\-\-nodeps
+.RB \| \-D | \-\-nodeps \|
 Disable dependency tracking when starting/stopping services
 .TP
-.B \-d|\-\-debug
+.RB \| \-d | \-\-debug \|
 Enable debugging mode for services (debugging output to stderr)
 .TP
-.B \-x|\-\-trace
+.RB \| \-x | \-\-trace \|
 Enable shell trace for services (shell tracing)
+.RB \| \-q | \-\-quiet \|
+Suppress verbose message
 .TP
-.B \-h|\-\-help
+.RB \| \-v | \-\-version \|
+Print the version message
+.TP
+.RB \| \-h | \-\-help \|
 Print the help message
-.TP
-.B \-q|\-\-quiet
-Suppress verbose message (ignored)
 .SH "SERVICE COMMANDS"
 Standard LSB along with extra service commands are supported.
-.TP
 .B start
 start a service if down or stopped (supervision service wait up to 10 seconds
 by default to start a service.)
