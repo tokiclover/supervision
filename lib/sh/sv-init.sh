@@ -155,7 +155,7 @@ svc_rundir()
 	# Set up CGroup
 	#
 	if yesno ${SV_CGROUP:-YES} && [ -z "${SV_SYSTEM}" ]; then
-		if rs devfs start && rs sysfs start; then
+		if sv-run devfs start && sv-run sysfs start; then
 		cgroup_start_sys && SV_CGROUP=Yes || SV_CGROUP=No
 		else
 		SV_CGROUP=FALSE
