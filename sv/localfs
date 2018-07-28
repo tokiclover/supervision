@@ -18,7 +18,6 @@ elif [ "${SVC_NAME}" = networkfs ]; then
 	SVC_USE='dns'
 else
 	error "invalid service name"
-	exit 1
 fi
 
 mount_command()
