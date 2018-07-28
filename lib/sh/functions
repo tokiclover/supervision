@@ -40,8 +40,8 @@ error()
 		logger "${name}: error: ${@}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
-	local prefix="${name:+${color_fg_mag}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_red}error: ${prefix} ${message}${__eol_print__}" >&2
+	local prefix="${name:+${color_fg_mag}${name}}"
+	printf "${__print_eol__}${prefix} ${color_fg_red}error${color_rst}: ${message}${__eol_print__}" >&2
 }
 
 #
@@ -62,8 +62,8 @@ info()
 		logger "${name}: info: ${message}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
-	local prefix="${name:+${color_fg_ylw}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_blu}info: ${prefix} ${message}${__eol_print__}"
+	local prefix="${name:+${color_fg_ylw}${name}}"
+	printf "${__print_eol__}${prefix} ${color_fg_blu}info${color_rst}: ${message}${__eol_print__}"
 }
 
 #
@@ -76,8 +76,8 @@ warn()
 		logger "${name}: warning: ${message}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
-	local prefix="${name:+${color_fg_red}${name}:${color_rst}}"
-	printf "${__print_eol__}${color_fg_ylw}warning: ${prefix} ${message}${__eol_print__}" >&2
+	local prefix="${name:+${color_fg_red}${name}}"
+	printf "${__print_eol__}${prefix} ${color_fg_ylw}warning${color_rst}: ${message}${__eol_print__}" >&2
 }
 
 #
