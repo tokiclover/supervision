@@ -25,10 +25,7 @@ start()
 	# Build a space separated list to be able to load everything with a single
 	# command
 	#
-	for mod in ${modules} ${kv_modules}; do
-		k_modules="${k_modules} ${mod}"
-	done
-	modprobe -aq ${k_modules}
+	modprobe -aq ${modules} ${kv_modules}
 	return 0
 }
 
