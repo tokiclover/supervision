@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)waitfile.c  0.12.6.4 2016/12/24
+ * @(#)waitfile.c  0.2.0 2016/12/24
  */
 
 #include <errno.h>
@@ -16,11 +16,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#define VERSION "0.1.0"
+#define VERSION "0.2.0"
 
 #define WAIT_SECS 60    /* default delay */
 #define WAIT_MSEC 1000  /* interval for displaying warning */
@@ -30,6 +31,10 @@ const char *progname;
 
 #define ERR(fmt, ...)  fprintf(stderr, "%s: error: "   fmt, progname, __VA_ARGS__)
 #define WARN(fmt, ...) fprintf(stderr, "%s: warning: " fmt, progname, __VA_ARGS__)
+
+static const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGKILL" };
+static void sighandler(int sig);
+static void sigsetup(void);
 
 enum {
 	FILE_EXIST = 0x01,
@@ -64,6 +69,51 @@ static void help_message(int status)
 	exit(status);
 }
 
+static void sighandler(int sig)
+{
+	int i = -1, serrno = errno;
+#ifdef SV_DEBUG
+	DBG("%s(%d)\n", __func__, sig);
+#endif
+
+	switch (sig) {
+	case SIGHUP:
+		i = 0;
+	case SIGINT:
+		if (i < 0) i = 1;
+	case SIGTERM:
+		if (i < 0) i = 3;
+	case SIGQUIT:
+		if (i < 0) i = 2;
+	case SIGKILL:
+		if (i < 0) i = 4;
+		ERR("caught %s, aborting\n", signame[i]);
+		exit(EXIT_FAILURE);
+	default:
+		ERR("caught unknown signal %d\n", sig);
+	}
+
+	/* restore errno */
+	errno = serrno;
+}
+
+static void sigsetup(void)
+{
+	int *sig = (int []){ SIGHUP, SIGINT, SIGQUIT, SIGTERM, 0 };
+	struct sigaction sa;
+#ifdef SV_DEBUG
+	DBG("%s(void)\n", __func__);
+#endif
+	memset(&sa, 0, sizeof(sa));
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = sighandler;
+	for ( ; *sig; sig++)
+		if (sigaction(*sig, &sa, NULL)) {
+			ERR("%s: sigaction(%d,..): %s\n", __func__, *sig, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+}
+
 static int waitfile(const char *file, long unsigned int timeout, int flags)
 {
 	int i, j, r;
@@ -85,7 +135,7 @@ static int waitfile(const char *file, long unsigned int timeout, int flags)
 				return 0;
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
-				return 2;
+				return EXIT_FAILURE;
 		}
 		if (!(++i % ssec) && m)
 			WARN("waiting for %s (%d seconds)\n", file, i);
@@ -95,7 +145,7 @@ static int waitfile(const char *file, long unsigned int timeout, int flags)
 	if ((r && flags) || (!r && !e))
 		return 0;
 	else
-		return 1;
+		return 2;
 }
 
 int main(int argc, char *argv[])
@@ -103,6 +153,7 @@ int main(int argc, char *argv[])
 	int flags = 0, opt;
 	long unsigned int timeout;
 
+	sigsetup();
 	progname = strrchr(argv[0], '/');
 	if (progname == NULL)
 		progname = argv[0];
