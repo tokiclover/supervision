@@ -175,10 +175,15 @@ make_svscan_pidfile()
 }
 kill_svscan()
 {
-	local cmd dir pid
+	local arg cmd dir pid
 	SVC_DEBUG "function=kill_svscan( ${@} )"
 
-	pgrep -lf ${__SV_CMD__} | \
+	if [ "${SV_UNAME}" = "Linux" ]; then
+		arg=-a
+	else
+		arg=-l
+	fi
+	pgrep ${arg} -f ${__SV_CMD__} | \
 	while read pid cmd dir args; do
 		if [ "${dir}" = "${SV_RUNDIR}" ]; then
 			kill -TERM ${pid} 2>${NULL}
