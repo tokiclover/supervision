@@ -12,10 +12,12 @@ SVC_KEYWORD='docker jail openvz prefix systemd-nspawn timeout uml vserver xenu l
 
 _abort()
 {
-	[ -e ${SV_TMPDIR}/sv.pid ] &&
-		pkill -USR1 -F ${SV_TMPDIR}/sv.pid -x sv-stage ||
-		killall -USR1 -e sv-stage
-		return 1
+	local pid pidfile=${SV_TMPDIR}/sv.pid
+	if [ -e ${pidfile} ]; then
+		read pid <${pidfile}
+		kill -USR1 ${pid} || pkill -USR1 -x sv-rc
+	fi
+	return 1
 }
 _forcefsck()
 {
