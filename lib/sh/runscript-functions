@@ -311,6 +311,7 @@ if yesno "${RC_OPTS}"; then
 fi
 
 
+if [ -n "${__svc__}" ]; then
 #
 # Set up runscript environment
 #
@@ -354,18 +355,16 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	__SV_CONFIG__=1
 	fi
 fi # SV_TYPE=sv
-
-if [ -n "${__cmd__}" ]; then
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
-fi
+fi # __svc__
+
 if [ -z "${__env__}" ]; then
 SOURCE ${SV_TMPDIR}/env
-readonly SV_UNAME SV_UNAME_RELEASE
 __env__=1
-fi
+fi # __env__
 if [ -z "${__environ__}" ]; then
 SOURCE ${SV_TMPDIR}/environ && __environ__=1 || __environ__=0
-fi
+fi # __environ__
 
 #
 # Set debug options
@@ -373,7 +372,7 @@ fi
 if yesno "${SVC_TRACE}"; then
 	set -x
 fi
-if yesno "${SVC_DEBUG:-$SV_DEBUG}"; then
+if yesno "${SVC_DEBUG:-${SV_DEBUG}}"; then
 	SVC_DEBUG=true
 else
 	SVC_DEBUG=false
