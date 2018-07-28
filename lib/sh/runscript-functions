@@ -203,7 +203,8 @@ svc_sig()
 
 svc_wait()
 {
-	local x t o="${1}" v=0 i=5 r
+	local x p t o="${1}" v=0 i=5 r
+	local __wait_file__=${SV_TMPDIR}/wait/${SVC_NAME}
 	SVC_DEBUG "function=svc_wait( ${@} )"
 
 	case "${1}" in
@@ -211,19 +212,24 @@ svc_wait()
 		(*) o= ;;
 	esac
 	t="${1:-60}"
-	x=${2:-${SV_TMPDIR}/wait/${SVC_NAME}}
+	x=${2:-${__wait_file__}}
 	if ! yesno "${__SVC_WAIT__:-1}" && [ -z "${2}" ]; then
 		return 0
 	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
 
-	if [ -z "${o}" ] && [ -e ${x} ]; then
-		local pid
-		read pid <${x}
-		pid="${pid%:*}"
-		if [ -n "${pid}" ]; then
-			pid="${pid#*=}"
-			if ! kill -0 "${pid}" >${NULL} 2>&1; then
+	if [ -z "${o}" -a "${x}" = "${__wait_file__}" ]; then
+		read p <${x}
+		pid="${p%:*}"
+		pid="${p#*=}"
+		if [ -n "${p}" ]; then
+			#
+			# XXX: race fix
+			#
+			if [ "${p}" = "$$" ]; then
+				return 0
+			fi
+			if ! kill -0 ${p} >${NULL} 2>&1; then
 				rm -f ${x}
 			fi
 		fi
@@ -232,7 +238,7 @@ svc_wait()
 	while [ ${v} -le ${t} ]; do
 		v=$((${v}+${i}))
 		if waitfile ${o} ${i} ${x}; then
-			if [ -z "${2}" -a -n "${o}" ]; then
+			if [ "${x}" = "${__wait_file__}"  -a -n "${o}" ]; then
 				if svc_state -w; then
 					error "service is busy -- retry later"
 					return 1
@@ -244,6 +250,11 @@ svc_wait()
 		elif [ "${?}" != "2" ]; then
 			error "unexpected \`waitfile' failure! bailing out!!!"
 			return 2
+		elif [ "${x}" = "${__wait_file__}" ]; then
+			read p <${x}
+			if [ -n "${p}" ]; then
+				kill -0 ${p} || rm -f ${x}
+			fi
 		fi
 		info "Waiting for ${x} (${v} seconds)"
 	done
