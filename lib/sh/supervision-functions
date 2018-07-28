@@ -476,7 +476,7 @@ svc_cmd()
 	#
 	# this is done internaly (rs) already
 	#
-	if ! svc_wait -E 60; then
+	if ! svc_wait; then
 		error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
 		return 1
 	fi
@@ -519,7 +519,7 @@ svc_run()
 	#
 	# this is done internaly (rs) already
 	#
-	if ! svc_wait -E 60; then
+	if ! svc_wait; then
 		error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
 		return 1
 	fi
