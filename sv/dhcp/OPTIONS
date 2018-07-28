@@ -4,7 +4,7 @@
 #
 
 name=dhcpcd
-SVC_AFTER='iptables ipt6tables'
+SVC_AFTER='iptables ipt6tables wpa_supplicant wpa_supplicant.wlan0'
 SVC_PROVIDE='net'
 #
 # support instance for interface
