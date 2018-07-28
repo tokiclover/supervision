@@ -312,7 +312,7 @@ if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
 :	${COLUMNS:=80}
 else
 :	${COLUMNS:=$(tput cols)}
-	trap ': COLUMNS="$(tput cols)"' WINCH
+	trap ': COLUMNS=$(tput cols)' WINCH
 fi
 
 fi #__RUNSCRIPT_FUNCTIONS__
