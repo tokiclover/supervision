@@ -329,7 +329,10 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 static void sv_init_level_migrate(void)
 {
 	char b[128];
-	int i;
+	char c[128] = SV_LIBDIR "/sbin/sv-config --update";
+	int i, r;
+	pid_t p;
+	size_t l = strlen(c);
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
@@ -343,13 +346,28 @@ static void sv_init_level_migrate(void)
 	}
 
 	snprintf(b, sizeof(b), "%s/.stage-%d", SV_SVCDIR, i);
-	if ((i = access(b, F_OK))) {
+	if ((r = access(b, F_OK))) {
 		snprintf(b, sizeof(b), "%s/.%s", SV_SVCDIR, sv_init_level[sv_init]);
 		i = access(b, F_OK);
 	}
 	if (!i) {
-		snprintf(b,  sizeof(b), "%s/sbin/sv-config --update", SV_LIBDIR);
-		if (system(b)) ERROR("Failed to execute `%s'", b);
+		if ((p = fork()) > 0) { /* parent */
+			do {
+				i = waitpid(p, &r, 0);
+				if (i < 0) {
+					if (errno != ECHILD) continue;
+					else ERROR("%s: waitpid()", __func__);
+				}
+			} while (!WIFEXITED(r));
+			if (WEXITSTATUS(r))
+				ERR("Failed to execute `%s'\n", c);
+		}
+		else if (!p) { /* child */
+			*(c-8U) = '\0';
+			if (execl(c, strrchr(c, '/')+1, c+l-7U, NULL))
+				ERROR("Failed to execute `%s'", c);
+		}
+		else ERROR("%s: failed to fork()", __func__);
 	}
 }
 
@@ -400,8 +418,9 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 
 static int sv_svcdeps_gen(const char *svc)
 {
-	int retval;
+	int retval, status;
 	char cmd[1024], *ptr;
+	pid_t pid;
 #ifdef SV_DEBUG
 	DBG("%s(%s)\n", __func__, svc);
 #endif
@@ -413,10 +432,21 @@ static int sv_svcdeps_gen(const char *svc)
 	else
 		ptr = SV_DEPGEN;
 
-	retval = system(ptr);
-	if (retval)
-		ERR("Failed to execute `%s': %s\n", cmd, strerror(errno));
-	return retval;
+	if ((pid = fork()) > 0) { /* parent */
+		do {
+			retval = waitpid(pid, &status, 0);
+			if (retval < 0) {
+				if (errno != ECHILD) continue;
+				ERROR("%s: failed to fork()", __func__);
+			}
+		} while (!WIFEXITED(status));
+		return WEXITSTATUS(status);
+	}
+	else if (!pid) { /* child */
+		if (execl(SV_DEPGEN, strrchr(SV_DEPGEN, '/')+1, svc, NULL))
+			ERROR("Failed to execute `%s'", SV_DEPGEN);
+	}
+	else ERROR("%s: failed to fork()", __func__);
 }
 
 #define WAIT_SVSCAN                                                      \
