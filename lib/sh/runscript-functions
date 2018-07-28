@@ -164,6 +164,14 @@ rs_cmd()
 	esac
 	shift
 
+	#
+	# this is done internaly (rs) already
+	#
+	if ! svc_wait -E 60; then
+		error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
+		return 1
+	fi
+
 	begin "service ${__cmd__}: "
 	for cmd in ${cmd}; do
 		command -v ${cmd} >${NULL} 2>&1 || continue
