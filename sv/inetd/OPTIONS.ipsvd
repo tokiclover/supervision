@@ -12,7 +12,6 @@ case "${SVC_NAME}" in
 	;;
 esac
 SVC_USE=net
-SVC_PROVIDE=inetd
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
