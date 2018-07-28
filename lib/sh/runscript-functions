@@ -85,7 +85,7 @@ SVC_DEBUG()
 		logger "${name}: debug: ${@}"
 	fi
 	if yesno ${SVC_DEBUG}; then
-		printf "${__print_eol__}${name}: debug: ${@}" >&2
+		printf "${__print_eol__}${name}: debug: ${@}${__eol_print__}" >&2
 	fi
 	return 0
 }
