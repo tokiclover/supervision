@@ -20,7 +20,7 @@ svc_rescue_shell()
 :	${NULL:=/dev/null}
 :	${PATH:=/bin:/sbin:/usr/bin:/usr/sbin}
 
-	if [ "${SV_UNAME:-$(uname -s)}" = "Linux" ]; then
+	if [ "${SV_UNAME}" = "Linux" ]; then
 	:	${SULOGIN_TTY:=/dev/tty8}
 		if [ "${SV_SHELL##*/}" = "sulogin" ]; then
 			if [ -x ${SV_SHELL} ]; then
@@ -60,6 +60,8 @@ fi
 . ${SV_SVCDIR}.conf
 umask 022
 
+:	${SV_UNAME:=$(uname -s)}
+:	${SV_UNAME_RELEASE:=$(uname -r)}
 SV_CMD="${__SV_CMD__##*/}"
 SV_PIDFILE=${SV_TMPDIR}/${SV_CMD}.pid
 SVC_NAME="${SV_CMD}"
@@ -87,7 +89,7 @@ early_console()
 svc_init()
 {
 	SVC_DEBUG "function=svc_init( ${@} )"
-	local dir opt procfs SV_UNAME="$(uname -s)"
+	local dir opt procfs
 	[ -w /etc/mtab ] || opt=-n
 
 	if   [ "${SV_UNAME}" = "GNU/kFreeBSD" ]; then
@@ -146,9 +148,7 @@ svc_rundir()
 	#
 	# Initialization
 	#
-	SV_UNAME="$(uname -s)"
 	ENV_SVC SV_UNAME
-	SV_UNAME_RELEASE="$(uname -r)"
 	ENV_SVC SV_UNAME_RELEASE
 
 	#
