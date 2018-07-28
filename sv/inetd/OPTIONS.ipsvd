@@ -8,7 +8,7 @@ case "${SVC_NAME}" in
 	(*.tcpsvd) name=tcpsvd SVC_CMD=/usr/bin/tcpsvd SVC_OPTS="-i /etc/tcpsvd.d";;
 	(*)
 	error "invalid service name -- ${SVC_NAME}"
-	error "{tc,ud}psvd instances shall be used instead"
+	error "\`ipsvd.{tc,ud}psvd' instances shall be used instead"
 	;;
 esac
 SVC_USE=net
