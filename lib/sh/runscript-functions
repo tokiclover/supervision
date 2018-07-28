@@ -320,7 +320,6 @@ fi #__RUNSCRIPT_FUNCTIONS__
 #
 # Set debug options
 #
-yesno "${SVC_DEBUG}" && SVC_DEBUG=true || SVC_DEBUG=false
 yesno "${SVC_TRACE}" && set -x
 
 #
@@ -351,7 +350,6 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${__svc__}}
-	readonly SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
 
 	if [ "${name}" = "${SVC_NAME}" ]; then
 	SOURCE "${SV_CONFLOCAL}/${SVC_NAME}"
