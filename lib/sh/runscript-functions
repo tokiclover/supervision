@@ -167,7 +167,7 @@ rs_cmd()
 	#
 	# this is done internaly (rs) already
 	#
-	if ! svc_wait -E 60; then
+	if ! svc_wait; then
 		error "service is busy -- or remove ${SV_TMPDIR}/wait/${SVC_NAME}?"
 		return 1
 	fi
@@ -220,8 +220,8 @@ svc_wait()
 
 	if [ -z "${o}" -a "${x}" = "${__wait_file__}" ]; then
 		read p <${x}
-		pid="${p%:*}"
-		pid="${p#*=}"
+		p="${p%:*}"
+		p="${p#*=}"
 		if [ -n "${p}" ]; then
 			#
 			# XXX: race fix
@@ -251,7 +251,6 @@ svc_wait()
 			error "unexpected \`waitfile' failure! bailing out!!!"
 			return 2
 		elif [ "${x}" = "${__wait_file__}" ]; then
-			read p <${x}
 			if [ -n "${p}" ]; then
 				kill -0 ${p} || rm -f ${x}
 			fi
