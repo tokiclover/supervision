@@ -9,5 +9,5 @@ printf "bogus usage\n"
 src/sv-run stage
 printf "\n"
 
-ln -fs sv-run src/sv-stage
-src/sv-stage --default status
+ln -fs sv-run src/sv-rc
+src/sv-rc --default status
