@@ -136,7 +136,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout);
  * @timeout: timeout to use to poll the lockfile;
  * @return: 0 on success (lockfile available);
  */
-static int svc_wait(const char *svc, int timeout, int lock_fd);
+static int svc_wait(const char *svc, int timeout, int lock_fd, pid_t pid);
 #define SVC_TIMEOUT_SECS 60    /* default delay */
 #define SVC_TIMEOUT_MSEC 1000  /* interval for displaying warning */
 #define SVC_TIMEOUT_POLL 100   /* poll interval */
@@ -478,7 +478,7 @@ runsvc:
 	}
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
-		close(run->lock);
+		svc_lock(run->name, run->lock, 0);
 
 	/* supervise the service */
 	if (run->dep->timeout > 0) {
@@ -561,7 +561,7 @@ static int svc_waitpid(struct svcrun *run, int flags)
 	else if (WIFSIGNALED(status))
 		run->status = WTERMSIG(status);
 	if (run->lock)
-		close(run->lock);
+		svc_lock(run->name, run->lock, 0);
 	run->cld = 0;
 
 	svc_mark(run, SV_SVC_MARK_WAIT, NULL);
@@ -671,6 +671,14 @@ int svc_environ_update(off_t off)
 	return 0;
 }
 
+#define SVC_WAIT_LOCK                                    \
+	if ((fp = fopen(f_path, "r"))) {                     \
+		if (fscanf(fp, "pid=%d:", &pd) && !kill(pd, 0))  \
+			w = svc_wait(svc, timeout, 0, pd);           \
+		fclose(fp);                                      \
+	}                                                    \
+	else LOG_ERR("Failed to `fopen(%s,..)': %s\n", f_path, strerror(errno));
+
 static int svc_lock(const char *svc, int lock_fd, int timeout)
 {
 	char f_path[PATH_MAX];
@@ -693,12 +701,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	if (lock_fd == SVC_LOCK) {
 		if (!(w = access(f_path, F_OK))) {
 			/* check the holder of the lock file */
-			if ((fp = fopen(f_path, "r"))) {
-				if (fscanf(fp, "pid=%d:", &pd) && !kill(pd, 0))
-					svc_wait(svc, timeout, 0);
-			}
-			else
-				LOG_ERR("Failed to `fopen(%s,..)': %s\n", f_path, strerror(errno));
+			SVC_WAIT_LOCK;
 		}
 		m = umask(0);
 		fd = open(f_path, f_flags, f_mode);
@@ -709,7 +712,8 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 			switch (errno) {
 				case EWOULDBLOCK:
 				case EEXIST:
-					if (svc_wait(svc, timeout, 0) < 0)
+					SVC_WAIT_LOCK;
+					if (w < 0)
 						return -1;
 					break;
 				default:
@@ -728,7 +732,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 		if (flock(fd, LOCK_EX|LOCK_NB) == -1)
 			switch(errno) {
 			case EWOULDBLOCK:
-				if (svc_wait(svc, timeout, lock_fd) > 0)
+				if (svc_wait(svc, timeout, lock_fd, 0) > 0)
 					return fd;
 			default:
 				LOG_ERR("%s: Failed to flock(%d, LOCK_EX...): %s\n", svc, fd,
@@ -744,8 +748,9 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 		unlink(f_path);
 	return 0;
 }
+#undef SVC_WAIT_LOCK
 
-static int svc_wait(const char *svc, int timeout, int lock_fd)
+static int svc_wait(const char *svc, int timeout, int lock_fd, pid_t pid)
 {
 	int i, j;
 	int err;
@@ -764,6 +769,8 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 	for (i = 0; i < timeout; ) {
 		for (j = SVC_TIMEOUT_POLL; j <= msec; j += SVC_TIMEOUT_POLL) {
 			if (svc_state(svc, SV_SVC_STAT_WAIT) < 1)
+				return 0;
+			if (pid && kill(pid, 0))
 				return 0;
 			/* add some insurence for failed services */
 			if (lock_fd) {
