@@ -83,6 +83,7 @@ dist_SV_SVCS  = \
 	snmptrapd \
 	syslog \
 	inetd \
+	ipsvd \
 	httpd \
 	nagios \
 	npcd \
@@ -105,6 +106,7 @@ dist_SV_LOGS = \
 	gpm/log \
 	hostapd/log \
 	inetd/log \
+	ipsvd/log \
 	libvirtd/log \
 	mysql/log \
 	nagios/log \
@@ -143,7 +145,7 @@ dist_SV_OPTS  = \
 	cron/OPTIONS.cronie cron/OPTIONS.dcron \
 	cron/OPTIONS.fcron cron/OPTIONS.vixie-cron \
 	httpd/OPTIONS.busybox-httpd httpd/OPTIONS.lighttpd \
-	inetd/OPTIONS.ipsvd inetd/OPTIONS.xinetd \
+	inetd/OPTIONS.xinetd \
 	ntp/OPTIONS.busybox-ntpd ntp/OPTIONS.ntpd \
 	php-fpm/OPTIONS.php-fpm5.6 \
 	rrdcached/OPTIONS.nagios \
