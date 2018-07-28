@@ -9,7 +9,6 @@ case "${SVC_NAME}" in
 	(*)
 	error "invalid service name -- ${SVC_NAME}"
 	error "{tc,ud}psvd instances shall be used instead"
-	exit 1
 	;;
 esac
 SVC_USE=net
