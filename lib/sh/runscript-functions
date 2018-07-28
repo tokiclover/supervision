@@ -348,6 +348,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	else
 	SOURCE "${SVC_DIR}/OPTIONS.${name}"
 	fi
+	readonly SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
 	if [ -z "${__SV_CONFIG__}" ]; then
 	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
 	readonly __SV_NAM__ __SVCENV__ __SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ \
