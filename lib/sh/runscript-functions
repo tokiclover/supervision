@@ -195,7 +195,7 @@ svc_sig()
 
 svc_wait()
 {
-	local x t o="${1}" v=0 i=5
+	local x t o="${1}" v=0 i=5 r
 	SVC_DEBUG "function=svc_wait( ${@} )"
 
 	case "${1}" in
@@ -233,6 +233,9 @@ svc_wait()
 				trap "rm -f ${x}" EXIT INT QUIT TERM
 			fi
 			return 0
+		elif [ "${?}" != "2" ]; then
+			error "unexpected \`waitfile' failure! bailing out!!!"
+			return 2
 		fi
 		info "Waiting for ${x} (${v} seconds)"
 	done
