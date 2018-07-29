@@ -59,7 +59,7 @@ static sigset_t ss_thread;
 const char *progname;
 const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1",
 	"SIGKILL" };
-static const char *applet = "rs";
+static const char *applet = "sv-run";
 
 /* !!! likewise (service command) !!! */
 const char *const sv_svc_cmd[] = { "stop", "start",
