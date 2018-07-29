@@ -213,9 +213,9 @@ svc_init_default()
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
 		if [ "${SV_UNAME}" = "Linux" ]; then
-			args=-ax
+			args=-af
 		else
-			args=-fl
+			args=-lf
 		fi
 		if [ -e ${SV_PIDFILE} ]; then
 			pgrep ${args} ${SV_CMD} | \
