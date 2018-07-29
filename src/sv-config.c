@@ -510,7 +510,7 @@ static int newsvc(const char *svc)
 int main(int argc, char *argv[])
 {
 	int opt, i = 1;
-	char *args[8] = { "rs" };
+	char *args[8] = { "sv-run" };
 
 	progname = strrchr(argv[0], '/');
 	if (progname == NULL)
@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
 		else {
 			while (*argv && (i < 7)) args[i++] = *argv++;
 			args[i++] = (char*)0;
-			return execvp(EXEC_PREFIX "/sbin/rs", (char*const*)args);
+			return execvp(EXEC_PREFIX "/sbin/sv-run", (char*const*)args);
 		}
 	}
 	else {
