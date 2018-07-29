@@ -683,6 +683,9 @@ static int svc_wait(const char *svc, int timeout, int lock_fd)
 	int i, j;
 	int err;
 	int msec = SVC_WAIT_MSEC, nsec, ssec = 10;
+#ifdef SV_DEBUG
+	DBG("%s(%s, %d, %d)\n", __func__, svc, timeout, lock_fd);
+#endif
 	if (timeout < ssec) {
 		nsec = timeout;
 		msec = 1000*timeout;
