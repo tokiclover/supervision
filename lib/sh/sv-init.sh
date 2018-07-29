@@ -212,10 +212,10 @@ svc_init_default()
 	svc_wait 30 ${SV_PIDFILE}
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
-		if [ "${SV_UNAME}" = "FreeBSD" ]; then
-			args=-fl
-		else
+		if [ "${SV_UNAME}" = "Linux" ]; then
 			args=-ax
+		else
+			args=-fl
 		fi
 		if [ -e ${SV_PIDFILE} ]; then
 			pgrep ${args} ${SV_CMD} | \
