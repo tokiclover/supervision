@@ -375,7 +375,11 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	__SV_CONFIG__=1
 	fi
 fi # SV_TYPE=sv
+
+if [ -n "${__cmd__}" ]; then
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
+fi # __cmd__
+
 fi # __svc__
 
 if [ -z "${__env__}" ]; then
