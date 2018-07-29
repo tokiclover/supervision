@@ -100,8 +100,10 @@ svc_init()
 
 	if ! mountinfo --quiet /proc 2>${NULL}; then
 		begin "Mounting /proc"
+		if ! fstabinfo --mount /proc >${NULL} 2>&1; then
 		mount ${opt} -t ${procfs} -o ${SYSFS_OPTS:-nodev} proc /proc
-		end ${?}
+		fi
+		end "${?}"
 	fi
 
 	if [ "${SV_UNAME}" = "Linux" ]; then
@@ -112,8 +114,10 @@ svc_init()
 	fi
 	if ! mountinfo --quiet /run; then
 		begin "Mounting /run"
+		if ! fstabinfo --mount /run >${NULL} 2>&1; then
 		mount ${opt} -t tmpfs -o nodev,mode=755,size=${SV_RUN_FS_SIZE:-1%} run /run
-		end ${?}
+		fi
+		end "${?}"
 	fi
 	fi # SV_UNAME=Linux
 
