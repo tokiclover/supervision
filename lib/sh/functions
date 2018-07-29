@@ -45,14 +45,6 @@ error()
 }
 
 #
-# @FUNCTION: Print error message to stderr & exit
-#
-die()
-{
-	local ret=${?}; error "${@}"; exit ${ret}
-}
-
-#
 # @FUNCTION: Print info message to stdout
 #
 info()
