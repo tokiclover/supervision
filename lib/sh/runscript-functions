@@ -380,6 +380,11 @@ if [ -n "${__cmd__}" ]; then
 SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
 fi # __cmd__
 
+SV_SERVICE=${__svc__}
+RC_SERVICE=${__svc__}
+export SV_SERVICE RC_SERVICE
+readonly SV_SERVICE RC_SERVICE
+
 fi # __svc__
 
 if [ -z "${__env__}" ]; then
