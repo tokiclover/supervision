@@ -307,13 +307,6 @@ stop()
 	rm -f ${SVC_PIDFILE} ${SV_TMPDIR}/star/${SVC_NAME} ${SV_TMPDIR}/opts/${SVC_NAME}
 }
 
-if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
-:	${COLUMNS:=80}
-else
-:	${COLUMNS:=$(tput cols)}
-	trap ': COLUMNS=$(tput cols)' WINCH
-fi
-
 fi #__RUNSCRIPT_FUNCTIONS__
 
 #
@@ -349,6 +342,13 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${__svc__}}
+
+	if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
+:	${COLUMNS:=80}
+	else
+:	${COLUMNS:=$(tput cols)}
+	trap ': COLUMNS=$(tput cols)' WINCH
+	fi # __cmd__
 
 	if [ "${name}" = "${SVC_NAME}" ]; then
 	SOURCE "${SV_CONFLOCAL}/${SVC_NAME}"
