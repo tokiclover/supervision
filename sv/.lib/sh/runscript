@@ -95,7 +95,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	# Save environment file to handle false start failures
 	#
 	if [ "${__cmd__}" = "start" ] && ! svc_state -a; then
-	trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" INT TERM QUIT
+	trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" EXIT INT TERM QUIT
 	while read line; do
 		printf "${line}\n"
 	done <${SV_TMPDIR}/environ >${SV_TMPDIR}/envs/${SVC_NAME}
