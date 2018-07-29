@@ -139,6 +139,14 @@ svc_init()
 		esac
 	done
 
+	if grep -Eq "[[:space:]]+xenfs$" /proc/filesystems; then
+		begin "Mounting xenfs"
+		if ! fstabinfo --mount /proc/xen; then
+		mount ${opt} -t xenfs -o ${SYSFS_OPTS:-nosuid,nodev,noexec} xenfs /proc/xen
+		fi
+		end "${?}"
+	fi
+
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
 }
 
