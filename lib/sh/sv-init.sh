@@ -126,6 +126,7 @@ svc_init()
 	#   needs /run/lock/lvm which is started before miscfs.) Who need lvm
 	#   for `/var'? Nothing will ever... well, it will with some hassle.
 	#
+	checkpath -d -m 0775 -o root:uucp /run/lock
 	for dir in /var/run /var/lock; do
 		[ -L "${dir}" ] || continue
 		dir="$(readlink ${dir})"
