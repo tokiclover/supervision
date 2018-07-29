@@ -29,7 +29,6 @@ SV_DEPDIR="${SV_TMPDIR}/deps"
 
 add_dep()
 {
-	SVC_DEBUG "function=add_dep( ${@} )"
 	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
 	shift 2
 	echo "${svc}:${dep}=\"${@}\""
@@ -38,7 +37,6 @@ dep_gen()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	local dep SVC_KEYWORD SVC_PROVIDE SVC_TIMEOUT SVC_PIDFILE
-	SVC_DEBUG "function=dep_gen( ${@} )"
 
 	if   [ -d "${__svc__}" ]; then
 		SV_TYPE=sv
