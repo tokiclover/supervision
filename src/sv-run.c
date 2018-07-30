@@ -18,7 +18,6 @@
 #include <poll.h>
 #include <time.h>
 #include <pthread.h>
-#include "sv.h"
 #include "sv-deps.h"
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
@@ -191,7 +190,7 @@ int svc_cmd(struct svcrun *run)
 } while (0/*CONST COND*/)
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, run);
+	if (sv_debug) DBG("%s(%p)\n", __func__, run);
 #endif
 
 	if (!st_dep.st_mtime) {
@@ -441,7 +440,7 @@ static int svc_run(struct svcrun *run)
 	off_t off = 0;
 	char buf[128];
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, run);
+	if (sv_debug) DBG("%s(%p)\n", __func__, run);
 #endif
 
 	if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_TIMEOUT))
@@ -537,7 +536,7 @@ static int svc_waitpid(struct svcrun *run, int flags)
 	int status = 0;
 	pid_t pid;
 #ifdef SV_DEBUG
-	DBG("%s(%p, %d)\n", __func__, run, flags);
+	if (sv_debug) DBG("%s(%p, %d)\n", __func__, run, flags);
 #endif
 
 	/* do this hack to only mark children status */
@@ -582,7 +581,7 @@ static int svc_depend(struct svcrun *run)
 	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, run);
+	if (sv_debug) DBG("%s(%p)\n", __func__, run);
 #endif
 
 	/* skip before deps type */
@@ -615,7 +614,7 @@ static void svc_env(void)
 	int i = 0, j;
 
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	if (svc_environ)
@@ -647,7 +646,7 @@ int svc_environ_update(off_t off)
 	char *ptr;
 
 #ifdef SV_DEBUG
-	DBG("%s(%ld)\n", __func__, off);
+	if (sv_debug) DBG("%s(%ld)\n", __func__, off);
 #endif
 
 	if (!environ_fd) {
@@ -691,7 +690,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	static mode_t f_mode = 0644;
 
 #ifdef SV_DEBUG
-	DBG("%s(%s, %d, %d)\n", __func__, svc, lock_fd, timeout);
+	if (sv_debug) DBG("%s(%s, %d, %d)\n", __func__, svc, lock_fd, timeout);
 #endif
 
 	if (svc == NULL)
@@ -756,7 +755,7 @@ static int svc_wait(const char *svc, int timeout, int lock_fd, pid_t pid)
 	int err;
 	int msec = SVC_TIMEOUT_MSEC, nsec, ssec = 10;
 #ifdef SV_DEBUG
-	DBG("%s(%s, %d, %d)\n", __func__, svc, timeout, lock_fd);
+	if (sv_debug) DBG("%s(%s, %d, %d)\n", __func__, svc, timeout, lock_fd);
 #endif
 	if (timeout < ssec) {
 		nsec = timeout;
@@ -798,7 +797,7 @@ static void svc_zap(const char *svc)
 		SV_TMPDIR "/envs", SV_TMPDIR "/opts", NULL };
 
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, svc);
+	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 
 	for (i = 0; dirs[i]; i++) {
@@ -816,7 +815,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 	mode_t m;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p, %c, %s)\n", __func__, run, status, what);
+	if (sv_debug) DBG("%s(%p, %c, %s)\n", __func__, run, status, what);
 #endif
 
 	if (!run)
@@ -899,7 +898,7 @@ static int svc_state(const char *svc, int status)
 	char path[PATH_MAX], *ptr = NULL;
 
 #ifdef SV_DEBUG
-	DBG("%s(%s, %c)\n", __func__, svc, status);
+	if (sv_debug) DBG("%s(%s, %c)\n", __func__, svc, status);
 #endif
 
 	if (!svc)
@@ -941,7 +940,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 	int i = -1, serrno = errno;
 
 #ifdef SV_DEBUG
-	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
+	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 
 	switch (sig) {
@@ -983,7 +982,7 @@ static void rs_sigsetup(void)
 	memset(&sa, 0, sizeof(sa));
 
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	sa.sa_sigaction = rs_sighandler;
@@ -1000,7 +999,7 @@ void svc_sigsetup(void)
 	int *sig = (int []){ SIGALRM, SIGCHLD, SIGHUP, SIGINT, SIGQUIT, SIGTERM,
 		SIGUSR1, 0 };
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	memset(&sa, 0, sizeof(sa));
 
@@ -1017,7 +1016,7 @@ int svc_exec(int argc, const char *argv[]) {
 	struct svcrun run;
 	SV_String_T svc;
 #ifdef SV_DEBUG
-	DBG("%s(%d, %p)\n", __func__, argc, argv);
+	if (sv_debug) DBG("%s(%d, %p)\n", __func__, argc, argv);
 #endif
 	memset(&svc, 0, sizeof(svc));
 
@@ -1077,7 +1076,7 @@ static void *thread_worker_handler(void *arg)
 	struct runlist *p = arg;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, arg);
+	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
 #endif
 
 	tmp = err_malloc(sizeof(struct svcrun));
@@ -1203,7 +1202,7 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	struct runlist *p;
 
 #ifdef SV_DEBUG
-	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
+	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 
 	switch(sig) {
@@ -1256,7 +1255,7 @@ static void thread_signal_handler(siginfo_t *si)
 	struct timespec ts;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, si);
+	if (sv_debug) DBG("%s(%p)\n", __func__, si);
 #endif
 
 	do {
@@ -1318,7 +1317,7 @@ __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attr
 	int *sig = (int []){ SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };
 	struct sigaction sa;
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, arg);
+	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
 #endif
 	memset(&sa, 0, sizeof(sa));
 	memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
@@ -1366,7 +1365,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	struct runlist *p;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
+	if (sv_debug) DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
 #endif
 
 	if (!list)
@@ -1427,7 +1426,7 @@ static void thread_worker_cleanup(struct runlist *p)
 {
 	int i;
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, p);
+	if (sv_debug) DBG("%s(%p)\n", __func__, p);
 #endif
 
 	for (i = 0; i < p->len && p->run[i]; i++) {

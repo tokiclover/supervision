@@ -22,14 +22,17 @@ static int  sv_conf_load(void);
 /* free an allocated configuration list */
 static void sv_conf_free(void);
 
-int sv_conf_yesno(const char *env) {
+inline int sv_conf_yesno(const char *env) {
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("%s(%s)\n", __func__, env);
+#endif
 	return sv_yesno(sv_getconf(env));
 }
 
 const char *sv_getconf(const char *env)
 {
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, env);
+	if (sv_debug) DBG("%s(%s)\n", __func__, env);
 #endif
 	if (!SV_CONFIG_ARRAY)
 		if (sv_conf_load())
@@ -62,7 +65,7 @@ static int sv_conf_load(void)
 	size_t count = 0, len = 0, l, num = 16, pos;
 
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	if ((fp = fopen(SV_CONFIG_FILE, "r")) == NULL) {
@@ -113,7 +116,7 @@ static void sv_conf_free(void)
 {
 	int i = 0;
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	while (SV_CONFIG_ARRAY[i])
 		free((void *)SV_CONFIG_ARRAY[i++]);

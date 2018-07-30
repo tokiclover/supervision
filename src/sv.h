@@ -70,6 +70,35 @@ extern "C" {
 #define SV_SVC_STAT_WAIT 'w'
 #define SV_SVC_MARK_WAIT 'W'
 
+#if defined(ERROR_H) && defined(SV_DEBUG)
+#include <stdio.h>
+extern FILE *debugfp;
+#  undef ERR
+#  define ERR(fmt, ...) do {              \
+	fprintf(stderr, "%s: %serror%s: "    fmt, progname, \
+		print_color(COLOR_RED, COLOR_FG), \
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__); \
+	fprintf(debugfp, "%s: error: "    fmt, progname, __VA_ARGS__); \
+  } while (0/*CONSTCOND*/)
+#  undef WARN
+#  define WARN(fmt, ...) do {             \
+	fprintf(stderr, "%s: %swarning%s: " fmt, progname, \
+		print_color(COLOR_YLW, COLOR_FG), \
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__); \
+	fprintf(debugfp, "%s: warning: "    fmt, progname, __VA_ARGS__); \
+  } while (0/*CONSTCOND*/)
+#  undef ERROR
+#  define ERROR(fmt, ...)  do {           \
+	fprintf(debugfp, "%s: error: "    fmt, progname, __VA_ARGS__); \
+	error(errno, "%s: %serror%s: "   fmt, progname, \
+		print_color(COLOR_RED, COLOR_FG), \
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__); \
+  } while (0/*CONSTCOND*/)
+#  undef DBG
+#  define DBG(fmt, ...) fprintf(debugfp, "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
+#endif /* ERROR_H && SV_DEBUG */
+
+extern int sv_debug;
 extern int sv_parallel;
 extern int sv_level;
 extern int sv_init;

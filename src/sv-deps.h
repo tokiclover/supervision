@@ -12,8 +12,9 @@
 #ifndef SV_DEPS_H
 #define SV_DEPS_H
 
-#include "sv.h"
+#include "error.h"
 #include "sv-list.h"
+#include "sv.h"
 #include "helper.h"
 
 #define SV_SVCDEPS_TYPE   4

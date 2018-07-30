@@ -21,7 +21,6 @@
 #ifdef __FreeBSD__
 # include <sys/sysctl.h>
 #endif
-#include "sv.h"
 #include "sv-deps.h"
 
 /* execute a service command (low level) */
@@ -40,6 +39,7 @@ static void sv_sigsetup(void);
 
 static int sv_system_detect(void);
 
+int sv_debug    =  0;
 int sv_parallel =  0;
 int sv_level    = -1;
 int sv_init     = -1;
@@ -49,6 +49,8 @@ int svc_deps  = 1;
 int svc_quiet = 1;
 SV_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
 
+FILE *debugfp;
+static int debugfd = STDERR_FILENO;
 static FILE *logfp;
 static int logfd;
 
@@ -244,7 +246,7 @@ static const char *svc_run_level(const char *level)
 	const char *retval;
 	int fd, flags = O_NONBLOCK|O_CREAT, len;
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, level);
+	if (sv_debug) DBG("%s(%s)\n", __func__, level);
 #endif
 
 	if (level)
@@ -283,7 +285,7 @@ static void svc_level(void)
 	char *entry = NULL, *ptr, *ent;
 	int i;
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	entry = get_cmdline_option("softlevel");
@@ -314,9 +316,6 @@ static void svc_level(void)
 int svc_end(const char *svc, int status)
 {
 	static char ok[] = "ok", no[] = "no", *m;
-#ifdef SV_DEBUG
-	DBG("%s(%s, %d)\n", __func__, svc, status);
-#endif
 	if (status)
 		m = no;
 	else
@@ -324,15 +323,11 @@ int svc_end(const char *svc, int status)
 	return svc_log("(%s) [%s]\n", svc, m);
 }
 
-int svc_log(const char *fmt, ...)
+__attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 {
 	static char logfile[] = "/var/log/sv.log", *logpath;
 	int retval = 0;
 	va_list ap;
-#ifdef SV_DEBUG
-	DBG("%s()\n", __func__);
-#endif
-
 
 	/* save logfile if necessary */
 	if (!logpath && sv_conf_yesno("SV_LOGGER"))
@@ -343,7 +338,13 @@ int svc_log(const char *fmt, ...)
 		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd < 0)
 			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
-		if (logfd > 0) logfp = fdopen(logfd, "a+");
+		if (logfd > 0) {
+			logfp = fdopen(logfd, "a+");
+			if ((debugfd = dup(logfd)) > 0) {
+				if (!(debugfp = fdopen(debugfd, "a+"))) debugfp = logfp;
+			}
+			else debugfd = STDERR_FILENO;
+		}
 	}
 
 	va_start(ap, fmt);
@@ -361,7 +362,7 @@ int svc_log(const char *fmt, ...)
 void sv_cleanup(void)
 {
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	if (!access(SV_ENVIRON, F_OK))
 		unlink(SV_ENVIRON);
@@ -373,7 +374,7 @@ static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), vo
 {
 	int i = -1, serrno = errno;
 #ifdef SV_DEBUG
-	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
+	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 
 	switch (sig) {
@@ -409,7 +410,7 @@ static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), vo
 static void sv_sigsetup(void)
 {
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
@@ -434,7 +435,7 @@ static void sv_sigsetup(void)
 static int sv_system_detect(void)
 {
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 #ifdef __FreeBSD__
 	int jail;
@@ -490,7 +491,7 @@ static int svc_init_command(int level, int argc, const char *argv[])
 {
 	int i, retval;
 #ifdef SV_DEBUG
-	DBG("%s(%d, %d, %p)\n", __func__, level, argc, argv);
+	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, level, argc, argv);
 #endif
 
 	if (!*sv_run_level[level])
@@ -512,7 +513,7 @@ __attribute__((__noreturn__)) static void sv_init_status(void)
 	SV_String_T *svc;
 	SV_StringList_T *list, *l;
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	if (sv_init < 0) {
@@ -547,7 +548,7 @@ static void svc_init(const char *cmd)
 	const char *runlevel;
 	time_t t;
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, cmd);
+	if (sv_debug) DBG("%s(%s)\n", __func__, cmd);
 #endif
 
 	runlevel  = svc_run_level(NULL);
@@ -613,6 +614,7 @@ static void svc_init(const char *cmd)
 		else if (level == SV_REBOOT_LEVEL) {
 			level = 0;
 			/* close the logfile because rootfs will be mounted read-only */
+			debugfp = stderr; debugfd = STDERR_FILENO;
 			if (!fclose(logfp))
 				logfd = 0;
 			if (!close(logfd))
@@ -720,6 +722,7 @@ int main(int argc, char *argv[])
 	char *ptr;
 	char on[] = "1", off[] = "0";
 
+	debugfp = stderr;
 	progname = strrchr(argv[0], '/');
 	if (!progname)
 		progname = argv[0];
@@ -820,6 +823,7 @@ int main(int argc, char *argv[])
 	setenv("SV_VERSION", SV_VERSION, 1);
 	setenv("SV_SYSBOOT_LEVEL" , sv_init_level[SV_SYSBOOT_LEVEL] , 1);
 	setenv("SV_SHUTDOWN_LEVEL", sv_init_level[SV_SHUTDOWN_LEVEL], 1);
+	sv_debug    = sv_conf_yesno("SV_DEBUG");
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	sv_sigsetup();
 

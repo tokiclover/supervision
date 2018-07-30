@@ -50,7 +50,7 @@ static void sv_deptree_alloc(SV_DepTree_T *deptree)
 {
 	int p;
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, deptree);
+	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
 
 	deptree->size += SV_DEPTREE_INC;
@@ -63,7 +63,7 @@ void sv_deptree_free(SV_DepTree_T *deptree)
 {
 	int i;
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, deptree);
+	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
 	for (i = 0; i < deptree->size; i++)
 		sv_stringlist_free(&deptree->tree[i]);
@@ -81,7 +81,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	int p, t, r;
 
 #ifdef SV_DEBUG
-	DBG("%s(type=%d, prio=%d, svc=%s, deptree=%p)\n", __func__, type, prio, svc->str, deptree);
+	if (sv_debug) DBG("%s(type=%d, prio=%d, svc=%s, deptree=%p)\n", __func__, type, prio, svc->str, deptree);
 #endif
 
 	/* add service to list if and only if, either a service is {use,need}ed or
@@ -102,7 +102,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	}
 	pri = prio+1;
 #ifdef SV_DEBUG
-	DBG("t=%-4d p=%-4d d=%p svc=%-32s s=%-16s v=%-16s\n", type, prio, d,
+	if (sv_debug) DBG("t=%-4d p=%-4d d=%p svc=%-32s s=%-16s v=%-16s\n", type, prio, d,
 			svc->str, s, d->virt);
 #endif
 
@@ -186,7 +186,7 @@ static int sv_deptree_file_load(SV_DepTree_T *deptree)
 	size_t len = 0;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, deptree);
+	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
 
 	snprintf(path, ARRAY_SIZE(path), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
@@ -227,7 +227,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	FILE *fp;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, deptree);
+	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
 
 	if (!deptree)
@@ -258,7 +258,7 @@ void svc_deptree_load(SV_DepTree_T *deptree)
 	SV_String_T *ent;
 	sv_deptree_alloc(deptree);
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, deptree);
+	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
 	TAILQ_FOREACH(ent, deptree->list, entries)
 		sv_deptree_add(SV_SVCDEPS_USE, -1, ent, deptree);
@@ -272,7 +272,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 	int pri;
 
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, deptree);
+	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
 
 	/* load previous deptree file if any, or initialize a new list */
@@ -334,7 +334,7 @@ static void sv_init_level_migrate(void)
 	pid_t p;
 	size_t l = strlen(c);
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	switch (sv_init) {
@@ -378,7 +378,7 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 	struct dirent *ent;
 	SV_StringList_T *svclist;
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, dir_path);
+	if (sv_debug) DBG("%s(%s)\n", __func__, dir_path);
 #endif
 
 	/*
@@ -422,7 +422,7 @@ static int sv_svcdeps_gen(const char *svc)
 	char cmd[1024], *ptr;
 	pid_t pid;
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, svc);
+	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 
 	if (svc) {
@@ -489,7 +489,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 	pid_t p;
 	SV_SvcDeps_T *deps = NULL;
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, service);
+	if (sv_debug) DBG("%s(%s)\n", __func__, service);
 #endif
 
 	/* create a new list only when not updating the list */
@@ -619,7 +619,7 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 static SV_SvcDepsList_T *sv_svcdeps_new(void)
 {
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	SV_SvcDepsList_T *list = err_malloc(sizeof(SV_SvcDepsList_T));
 	TAILQ_INIT(list);
@@ -629,7 +629,7 @@ static SV_SvcDepsList_T *sv_svcdeps_new(void)
 static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 {
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, svc);
+	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 	static unsigned int id;
 	SV_SvcDeps_T *elm = err_malloc(sizeof(SV_SvcDeps_T));
@@ -650,7 +650,7 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 static SV_SvcDeps_T *sv_svcdeps_adu(const char *svc)
 {
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, svc);
+	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 	SV_SvcDeps_T *elm = sv_svcdeps_find(svc);
 	if (elm)
@@ -662,7 +662,7 @@ static SV_SvcDeps_T *sv_svcdeps_adu(const char *svc)
 static SV_String_T *sv_stringlist_fid(SV_StringList_T *list, SV_String_T *ent)
 {
 #ifdef SV_DEBUG
-	DBG("%s(%p, %p)\n", __func__, list, ent);
+	if (sv_debug) DBG("%s(%p, %p)\n", __func__, list, ent);
 #endif
 	SV_String_T *elm;
 	SV_SvcDeps_T *d, *D = ent->data;
@@ -681,7 +681,7 @@ static SV_SvcDeps_T *sv_svcdeps_find(const char *svc)
 {
 	SV_SvcDeps_T *elm;
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, svc);
+	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 
 	TAILQ_FOREACH(elm, SERVICES.svcdeps, entries)
@@ -695,7 +695,7 @@ SV_SvcDeps_T *sv_virtsvc_find(SV_StringList_T *svclist, const char *svc)
 	int i;
 	SV_SvcDeps_T *d = NULL;
 #ifdef SV_DEBUG
-	DBG("%s(%p, %s)\n", __func__, svclist, svc);
+	if (sv_debug) DBG("%s(%p, %s)\n", __func__, svclist, svc);
 #endif
 
 	if (!svc || !SERVICES.virt_svcdeps)
@@ -719,7 +719,7 @@ static void sv_virtsvc_insert(SV_SvcDeps_T *elm)
 {
 	static size_t num;
 #ifdef SV_DEBUG
-	DBG("%s(%p)\n", __func__, elm);
+	if (sv_debug) DBG("%s(%p)\n", __func__, elm);
 #endif
 
 	if (SERVICES.virt_count == num) {
@@ -736,7 +736,7 @@ static void sv_svcdeps_free(void)
 	int i;
 	SV_SvcDeps_T *elm;
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	if (!SERVICES.svcdeps)
