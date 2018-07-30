@@ -31,6 +31,11 @@ const char *progname;
 
 #define ERR(fmt, ...)  fprintf(stderr, "%s: error: "   fmt, progname, __VA_ARGS__)
 #define WARN(fmt, ...) fprintf(stderr, "%s: warning: " fmt, progname, __VA_ARGS__)
+#if defined SV_DEBUG
+#  define DBG(fmt, ...) fprintf(stderr, "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
+#else
+#  define DBG(fmt, ...)
+#endif
 
 static const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGKILL" };
 static void sighandler(int sig);
