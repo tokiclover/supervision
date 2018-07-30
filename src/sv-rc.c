@@ -669,6 +669,11 @@ static void svc_init(const char *cmd)
 		ctime_r(&t, b);
 		svc_log( "\n\t%s runlevel (%s command) at %s\n", sv_init_level[sv_level],
 				command, b);
+		printf("\n\t%s%s%s %s(ing) init %s%s%s runlevel at %s%s%s\n",
+				print_color(COLOR_MAG, COLOR_FG), progname, print_color(COLOR_RST, COLOR_RST),
+				command, print_color(COLOR_BLU, COLOR_FG), sv_init_level[sv_level],
+				print_color(COLOR_RST, COLOR_RST), print_color(COLOR_YLW, COLOR_RST),
+				b, print_color(COLOR_RST, COLOR_RST));
 
 		sv_deptree_load(&DEPTREE);
 		if (svc_start)
