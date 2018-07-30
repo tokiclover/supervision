@@ -16,9 +16,6 @@ __attribute__((__unused__)) char *print_color(int col, int attr)
 	static char *buf;
 	static int pos, tty = -1;
 	int old, val = -1;
-#ifdef SV_DEBUG
-	DBG("%s(%d, %d)\n", __func__, col, attr);
-#endif
 
 	if (!buf) {
 		buf = err_malloc(BUFSIZ);
