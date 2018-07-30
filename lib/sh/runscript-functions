@@ -85,6 +85,8 @@ SVC_DEBUG()
 		logger "${name}: debug: ${@}"
 	fi
 	if yesno ${SVC_DEBUG}; then
+		local message="${*}"
+		__print_len__=$((${#message}+${#name}+9))
 		printf "${__print_eol__}${name}: debug: ${@}${__eol_print__}" >&2
 	fi
 	return 0
