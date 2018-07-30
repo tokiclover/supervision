@@ -818,8 +818,7 @@ message:
 time_error:
 	if (errno)
 		ERROR("invalid time argument -- `%s'", *argv);
-	else
-		(void)ERR("invalid time argument -- `%s'\n", *argv);
+	(void)ERR("invalid time argument -- `%s'\n", *argv);
 	return EXIT_FAILURE;
 }
 
