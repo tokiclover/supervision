@@ -31,7 +31,7 @@
 #define SV_RUNDIR RUNDIR "/sv"
 #define SV_CONFIG SV_LIBDIR "/sh/SV-CONFIG"
 
-__attribute__((__unused__)) int file_test(const char *pathname, int mode);
+__attribute__((__unused__)) extern int file_test(const char *pathname, int mode);
 
 const char *progname;
 
