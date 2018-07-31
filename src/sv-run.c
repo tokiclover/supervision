@@ -193,24 +193,23 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	 */
 	st_buf->st_mtime = 0;
 	len = strlen(run->name);
-	if (len > 24L) len +=  2L;
-	else           len  = 24L;
-	LEN = len+16L+8L+7L*3L+10L*4L+1L;
-	OFF = strlen(buf)+1L;
-	memmove(buf+LEN+OFF, buf, OFF);
-	retval = snprintf(buf, LEN, "%-*s %s(%stype=%s%s%s ",
+	if (len > 24LU) len +=  2LU;
+	else           len   = 24LU;
+	LEN = len+16LU+8LU+7LU*3LU+10LU*4LU+1LU;
+	OFF = strlen(buf)+1LU;
+	memmove(buf+LEN+104LU+1LU+OFF, buf, OFF);
+	retval  = snprintf(buf, LEN+104LU, "%-*.128s %s(%stype=%s%s%s ",
 			len, run->name, print_color(COLOR_CYN, COLOR_FG),
 			print_color(COLOR_RST, COLOR_RST),
 			print_color(COLOR_BLU, COLOR_FG), type,
 			print_color(COLOR_RST, COLOR_RST));
 	off = buf+retval;
 	len = retval;
-	snprintf(off, LEN-retval, "             %s%-32s%s)%s",
-			print_color(COLOR_BLU, COLOR_FG), buf+LEN+OFF,
+	retval += snprintf(off, LEN+104LU-retval, "             %s)%s",
 			print_color(COLOR_CYN, COLOR_FG),
 			print_color(COLOR_RST, COLOR_RST));
-	OFF += LEN;
-	tmp = buf+OFF;
+	OFF += LEN+104LU+1LU;
+	tmp = buf+OFF+2LU;
 
 	if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
 		MK_STRFTIME(SV_TMPDIR_DOWN);
