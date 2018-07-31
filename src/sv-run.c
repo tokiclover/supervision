@@ -178,13 +178,16 @@ int svc_cmd(struct svcrun *run)
 	int retval;
 	int i;
 	char *cmd = (char*)run->argv[4];
-	char buf[PATH_MAX] = { "" };
+	char buf[10124] = { "" };
+	char *off, *tmp;
+	size_t LEN, len, OFF;
+	FILE *fp;
 	struct tm lt;
 #define STRFTIME_OFF 32
 	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
 #define MK_STRFTIME(tmpdir) do {                                    \
-	snprintf(buf, sizeof(buf), "%s/%s", tmpdir, run->name);         \
-	stat(buf, &st_buf);                                             \
+	snprintf(tmp, sizeof(buf)-OFF-len, "%s/%s", tmpdir, run->name); \
+	stat(tmp, &st_buf);                                             \
 	localtime_r(&st_buf.st_mtime, &lt);                             \
 	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
 } while (0/*CONST COND*/)
@@ -206,6 +209,28 @@ int svc_cmd(struct svcrun *run)
 	run->cmd = -1;
 	run->dep = NULL;
 	run->mark = 0;
+
+	/* get service path */
+	if (!run->path) {
+		retval = -ENOENT;
+		for (i = 0; i < sizeof(svcd); i++) {
+			if (svcd[i])
+				snprintf(buf, sizeof(buf), "%s/%s/%s", svcd[i], SV_SVCDIR, run->name);
+			else if (!i)
+				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
+			else
+				break;
+			if (!access(buf, F_OK)) {
+				retval = 0;
+				break;
+			}
+		}
+		if (retval)
+			return -ENOENT;
+	}
+	/* get service type */
+	stat(buf, &st_buf);
+	run->tmp = S_ISDIR(st_buf.st_mode);
 
 	if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_START]) == 0) {
 		run->mark = SV_SVC_STAT_STAR;
@@ -234,101 +259,145 @@ int svc_cmd(struct svcrun *run)
 		return 0;
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0) {
+		/* output format preparation to the following:
+		 * SERVICE (type=rs|sv pid=int8_t service=SERVICE_PATH) [STATE] {at|since DATE} *command=COMMAND*
+		 */
+		st_buf.st_mtime = 0;
+		len = strlen(run->name);
+		if (len > 24L) len +=  2L;
+		else           len  = 24L;
+		LEN = len+16L+8L+7L*3L+10L*4L+1L;
+		OFF = strlen(buf)+1L;
+		memmove(buf+LEN+OFF, buf, OFF);
+		snprintf(buf, LEN, "%-*s %s(%stype=%s%s%s              %s%-32s%s)%s",
+				len, run->name, print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST),
+				print_color(COLOR_BLU, COLOR_FG), type[run->tmp]+2L,
+				print_color(COLOR_RST, COLOR_RST),
+				print_color(COLOR_BLU, COLOR_FG), buf+LEN+OFF,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST));
+		OFF += LEN;
+		tmp = buf+OFF;
+
 		if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
 			MK_STRFTIME(SV_TMPDIR_DOWN);
 
-			printf("%-16s %sdown%s at %s\n", run->name,
+			printf("%s %s[%sdown%s] {%sat %s%s}%s\n", buf,
+					print_color(COLOR_CYN, COLOR_FG),
 					print_color(COLOR_MAG, COLOR_FG),
-					print_color(COLOR_BLK, COLOR_RST), ptr);
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST), ptr,
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST));
 			return 8;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 			     svc_state(run->name, SV_SVC_STAT_PIDS)) {
 			if (svc_state(run->name, SV_SVC_STAT_STAR))
 				MK_STRFTIME(SV_TMPDIR_STAR);
-			else
+			else {
 				MK_STRFTIME(SV_TMPDIR_PIDS);
 
-			printf("%-16s %sstarted%s at %s\n", run->name,
+				/* get the pidfile */
+				if ((fp = fopen(tmp, "r"))) {
+					if (fscanf(fp, "%d", &i) && (off = strstr(buf, "type=")))
+						snprintf(off+9U, 12U, "pid=%d", i);
+					fclose(fp);
+				}
+			}
+
+			printf("%s %s[%sstarted%s] {%sat %s%s}%s\n", buf,
+					print_color(COLOR_CYN, COLOR_FG),
 					print_color(COLOR_GRN, COLOR_FG),
-					print_color(COLOR_BLK, COLOR_RST), ptr);
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST), ptr,
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST));
 			return 0;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
 			MK_STRFTIME(SV_TMPDIR_FAIL);
 
 			if ((i = open(buf, O_RDONLY)) > 0) {
-				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
+				if ((retval = read(i, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-16s %s%s%s command %sfailed%s at %s\n",
-							run->name, print_color(COLOR_RED, COLOR_FG),
-							buf, print_color(COLOR_BLK, COLOR_RST),
+					printf("%s %s[%sfailed%s]  {%sat %s%s} *%scommand=%s%s*%s\n", buf,
+							print_color(COLOR_CYN, COLOR_FG),
 							print_color(COLOR_RED, COLOR_FG),
-							print_color(COLOR_RST, COLOR_RST),ptr);
+							print_color(COLOR_CYN, COLOR_FG),
+							print_color(COLOR_RST, COLOR_RST), ptr,
+							print_color(COLOR_CYN, COLOR_FG),
+							print_color(COLOR_RST, COLOR_RST), tmp,
+							print_color(COLOR_CYN, COLOR_FG),
+							print_color(COLOR_RST, COLOR_RST));
 				}
 				close(i);
 			}
 			else
-				printf("%-16s %sfailed%s at %s\n", run->name,
+				printf("%s %s[%sfailed%s]  {%sat %s%s}%s\n", buf,
+						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_RED, COLOR_FG),
-						print_color(COLOR_BLK, COLOR_RST), ptr);
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST), ptr,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST));
 			return 16;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
 			MK_STRFTIME(SV_TMPDIR_WAIT);
 
 			if ((i = open(buf, O_RDONLY)) > 0) {
-				if ((retval = read(i, buf, sizeof(buf)-STRFTIME_OFF)) > 0) {
+				if ((retval = read(i, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
 					buf[retval++] = '\0';
-					printf("%-16s waiting %s%s%s since %s\n",
-							run->name, print_color(COLOR_YLW, COLOR_FG),
-							buf, print_color(COLOR_BLK, COLOR_RST), ptr);
+					off = strchr(tmp, ':');
+					*off++ = '\0';
+					snprintf(strstr(buf, "type=")+9U, 12U, "%s", tmp);
+					printf("%s %[%waiting%s] {%since %s%s} *%s%s*%s)\n", buf,
+							print_color(COLOR_CYN, COLOR_FG),
+							print_color(COLOR_YLW, COLOR_FG),
+							print_color(COLOR_CYN, COLOR_FG),
+							print_color(COLOR_RST, COLOR_RST), ptr,
+							print_color(COLOR_CYN, COLOR_FG), off,
+							print_color(COLOR_CYN, COLOR_FG),
+							print_color(COLOR_RST, COLOR_RST));
 				}
 				close(i);
 			}
 			else
-				printf("%-16s %smwaiting%s since %s\n", run->name,
+				printf("%s %s[%swaiting%s] {%ssince %s%s}%s\n", buf,
+						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_YLW, COLOR_FG),
-						print_color(COLOR_BLK, COLOR_RST), ptr);
+						print_color(COLOR_RST, COLOR_RST), ptr,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST));
 			return 32;
 		}
 		else if (svc_state(run->name, SV_SVC_STAT_ACTIVE)) {
 			MK_STRFTIME(SV_TMPDIR);
 
-			printf("%-16s %sactive%s since %s\n", run->name,
+			printf("%s %s[%sactive%s] {%ssince %s%s}%s\n", buf,
+					print_color(COLOR_CYN, COLOR_FG),
 					print_color(COLOR_MAG, COLOR_FG),
-					print_color(COLOR_BLK, COLOR_RST), ptr);
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST), ptr,
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST));
 			return 32;
 		}
 		else {
-			printf("%-16s %sstopped%s\n", run->name,
+			printf("%s %s[%sstopped%s]%s\n", buf,
+					print_color(COLOR_CYN, COLOR_FG),
 					print_color(COLOR_BLU, COLOR_FG),
-					print_color(COLOR_BLK, COLOR_RST));
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST));
 			return 3;
 		}
 	}
 #undef STRFTIME_OFF
 #undef MK_STRFTIME
 
-	/* get service path */
-	if (!run->path) {
-		retval = -ENOENT;
-		for (i = 0; i < sizeof(svcd); i++) {
-			if (svcd[i])
-				snprintf(buf, sizeof(buf), "%s/%s/%s", svcd[i], SV_SVCDIR, run->name);
-			else if (!i)
-				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
-			else
-				break;
-			if (!access(buf, F_OK)) {
-				retval = 0;
-				break;
-			}
-		}
-		if (retval)
-			return -ENOENT;
-		run->path = err_strdup(buf);
-	}
+	run->path = err_strdup(buf);
 	if (!run->svc->data)
 		run->svc->data = sv_svcdeps_load(run->name);
 	run->dep = run->svc->data;
@@ -390,9 +459,8 @@ int svc_cmd(struct svcrun *run)
 	for (i = 0; i <= run->argc; i++)
 		run->ARGV[i] = run->argv[i];
 
-	/* get service type */
-	stat(run->path, &st_buf);
-	if (S_ISDIR(st_buf.st_mode))
+	/* set service type */
+	if (run->tmp)
 		run->ARGV[1] = type[1];
 	else
 		run->ARGV[1] = type[0];
