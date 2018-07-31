@@ -178,7 +178,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 #define STRFTIME_OFF 32
 	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
 #define MK_STRFTIME(tmpdir) do {                                    \
-	snprintf(tmp, sizeof(buf)-OFF-len, "%s/%s", tmpdir, run->name); \
+	snprintf(tmp, sizeof(buf)-OFF, "%s/%s", tmpdir, run->name);     \
 	stat(tmp, st_buf);                                              \
 	localtime_r(&st_buf->st_mtime, &lt);                            \
 	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
@@ -188,6 +188,19 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	if (sv_debug) DBG("%s(%p, %p, %p)\n", __func__, run, st_buf, buf);
 #endif
 
+	OFF = strlen(buf)+1LU;
+	/* find the runlevel */
+	for (fd = 0; sv_init_level[fd]; fd++) {
+		snprintf(buf+OFF, 1024LU-OFF, "%s.init.d/%s/%s", SV_SVCDIR,
+				 sv_init_level[fd], run->name);
+		if (!lstat(buf+OFF, st_buf)) break;
+	}
+	len = 1024LU-STRFTIME_OFF-13LU;
+	if (sv_init_level[fd])
+		snprintf(buf+len, 13LU, "%s", sv_init_level[fd]);
+	else
+		snprintf(buf+len, 13LU, "  ");
+
 	/* output format preparation to the following:
 	 * SERVICE (type=rs|sv pid=int8_t service=SERVICE_PATH) [STATE] {at|since DATE} *command=COMMAND*
 	 */
@@ -195,8 +208,8 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	len = strlen(run->name);
 	if (len > 24LU) len +=  2LU;
 	else           len   = 24LU;
-	LEN = len+16LU+8LU+7LU*3LU+10LU*4LU+1LU;
-	OFF = strlen(buf)+1LU;
+	LEN = len+16LU+8LU+7LU*3LU+10LU*6LU+1LU;
+
 	memmove(buf+LEN+104LU+1LU+OFF, buf, OFF);
 	retval  = snprintf(buf, LEN+104LU, "%-*.128s %s(%stype=%s%s%s ",
 			len, run->name, print_color(COLOR_CYN, COLOR_FG),
@@ -205,10 +218,12 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 			print_color(COLOR_RST, COLOR_RST));
 	off = buf+retval;
 	len = retval;
-	retval += snprintf(off, LEN+104LU-retval, "             %s)%s",
+	retval += snprintf(off, LEN+104LU-retval, "             %s{%s%7.8s%s})%s",
+			print_color(COLOR_CYN, COLOR_FG),
+			print_color(COLOR_MAG, COLOR_FG), buf+1024LU-STRFTIME_OFF-13LU,
 			print_color(COLOR_CYN, COLOR_FG),
 			print_color(COLOR_RST, COLOR_RST));
-	OFF += LEN+104LU+1LU;
+	OFF += LEN+104LU+13LU+1LU;
 	tmp = buf+OFF+2LU;
 
 	if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
