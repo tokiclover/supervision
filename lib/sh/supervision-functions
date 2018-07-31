@@ -541,8 +541,8 @@ svc_run()
 		fi
 	fi
 	trap "rm -f ${SVC_PIDFILE} ${real} ${virt}" INT QUIT TERM
-	echo >${real}
-	echo $$ >${SVC_PIDFILE}
+	printf "" >${real}
+	printf "$$" >${SVC_PIDFILE}
 
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
 	svc_state -f
