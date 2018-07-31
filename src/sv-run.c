@@ -174,7 +174,6 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	int fd, retval;
 	char *off, *tmp;
 	size_t LEN, len, OFF;
-	FILE *fp;
 	struct tm lt;
 #define STRFTIME_OFF 32
 	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
@@ -199,11 +198,14 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	LEN = len+16L+8L+7L*3L+10L*4L+1L;
 	OFF = strlen(buf)+1L;
 	memmove(buf+LEN+OFF, buf, OFF);
-	snprintf(buf, LEN, "%-*s %s(%stype=%s%s%s              %s%-32s%s)%s",
-			(int)len, run->name, print_color(COLOR_CYN, COLOR_FG),
+	retval = snprintf(buf, LEN, "%-*s %s(%stype=%s%s%s ",
+			len, run->name, print_color(COLOR_CYN, COLOR_FG),
 			print_color(COLOR_RST, COLOR_RST),
 			print_color(COLOR_BLU, COLOR_FG), type,
-			print_color(COLOR_RST, COLOR_RST),
+			print_color(COLOR_RST, COLOR_RST));
+	off = buf+retval;
+	len = retval;
+	snprintf(off, LEN-retval, "             %s%-32s%s)%s",
 			print_color(COLOR_BLU, COLOR_FG), buf+LEN+OFF,
 			print_color(COLOR_CYN, COLOR_FG),
 			print_color(COLOR_RST, COLOR_RST));
@@ -224,18 +226,25 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	}
 	else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 		     svc_state(run->name, SV_SVC_STAT_PIDS)) {
-		if (svc_state(run->name, SV_SVC_STAT_STAR))
-			MK_STRFTIME(SV_TMPDIR_STAR);
-		else {
+		if (svc_state(run->name, SV_SVC_STAT_PIDS)) {
 			MK_STRFTIME(SV_TMPDIR_PIDS);
 
 			/* get the pidfile */
-			if ((fp = fopen(tmp, "r"))) {
-				if (fscanf(fp, "%d", &fd) && (off = strstr(buf, "type=")))
-					snprintf(off+9U, 12U, "pid=%d", fd);
-				fclose(fp);
+			if ((fd = open(tmp, O_RDONLY)) > 0) {
+				sprintf(tmp, "pid=");
+				if ((retval = read(fd, tmp+4LU, 8LU)) > 0) {
+					LEN = 3LU+retval;
+					if (*(tmp+LEN) == '\n') {
+						*(tmp+LEN) = '\0';
+						LEN--;
+					}
+					memcpy(buf+len, tmp, LEN);
+				}
+				close(fd);
 			}
 		}
+		else
+			MK_STRFTIME(SV_TMPDIR_STAR);
 
 		printf("%s %s[%sstarted%s] {%sat %s%s}%s\n", buf,
 				print_color(COLOR_CYN, COLOR_FG),
@@ -249,9 +258,10 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
 		MK_STRFTIME(SV_TMPDIR_FAIL);
 
-		if ((fd = open(buf, O_RDONLY)) > 0) {
+		if ((fd = open(tmp, O_RDONLY)) > 0) {
 			if ((retval = read(fd, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
-				buf[retval++] = '\0';
+				if (*(tmp+retval) == '\n') *(tmp+retval) = '\0';
+				else tmp[++retval] = '\0';
 				printf("%s %s[%sfailed%s]  {%sat %s%s} *%scommand=%s%s*%s\n", buf,
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_RED, COLOR_FG),
@@ -277,12 +287,14 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
 		MK_STRFTIME(SV_TMPDIR_WAIT);
 
-		if ((fd = open(buf, O_RDONLY)) > 0) {
-			if ((retval = read(fd, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
-				buf[retval++] = '\0';
+		if ((fd = open(tmp, O_RDONLY)) > 0) {
+			if ((retval = read(fd, tmp+4LU, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
+				tmp[retval++] = '\0';
 				off = strchr(tmp, ':');
 				*off++ = '\0';
-				snprintf(strstr(buf, "type=")+9U, 12U, "%s", tmp);
+				memcpy(buf+len, tmp, strlen(tmp) > 12LU ? 12LU : strlen(tmp));
+				len = strlen(off);
+				if (*(off+len) == '\n') *(off+len) = '\0';
 				printf("%s %s[%swaiting%s] {%since %s%s} *%s%s*%s)\n", buf,
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_YLW, COLOR_FG),
