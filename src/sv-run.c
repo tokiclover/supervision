@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-run.c  0.14.0 2018/08/12
+ * @(#)sv-run.c  0.14.0 2018/08/30
  */
 
 #include <stdio.h>
@@ -167,6 +167,166 @@ extern sigset_t ss_child, ss_null, ss_full, ss_old;
  */
 static const char **svc_environ;
 static void svc_env(void);
+static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, char *type);
+
+static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, char *type)
+{
+	int fd, retval;
+	char *off, *tmp;
+	size_t LEN, len, OFF;
+	FILE *fp;
+	struct tm lt;
+#define STRFTIME_OFF 32
+	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
+#define MK_STRFTIME(tmpdir) do {                                    \
+	snprintf(tmp, sizeof(buf)-OFF-len, "%s/%s", tmpdir, run->name); \
+	stat(tmp, st_buf);                                              \
+	localtime_r(&st_buf->st_mtime, &lt);                            \
+	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
+} while (0/*CONST COND*/)
+
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("%s(%p, %p, %p)\n", __func__, run, st_buf, buf);
+#endif
+
+	/* output format preparation to the following:
+	 * SERVICE (type=rs|sv pid=int8_t service=SERVICE_PATH) [STATE] {at|since DATE} *command=COMMAND*
+	 */
+	st_buf->st_mtime = 0;
+	len = strlen(run->name);
+	if (len > 24L) len +=  2L;
+	else           len  = 24L;
+	LEN = len+16L+8L+7L*3L+10L*4L+1L;
+	OFF = strlen(buf)+1L;
+	memmove(buf+LEN+OFF, buf, OFF);
+	snprintf(buf, LEN, "%-*s %s(%stype=%s%s%s              %s%-32s%s)%s",
+			(int)len, run->name, print_color(COLOR_CYN, COLOR_FG),
+			print_color(COLOR_RST, COLOR_RST),
+			print_color(COLOR_BLU, COLOR_FG), type,
+			print_color(COLOR_RST, COLOR_RST),
+			print_color(COLOR_BLU, COLOR_FG), buf+LEN+OFF,
+			print_color(COLOR_CYN, COLOR_FG),
+			print_color(COLOR_RST, COLOR_RST));
+	OFF += LEN;
+	tmp = buf+OFF;
+
+	if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
+		MK_STRFTIME(SV_TMPDIR_DOWN);
+
+		printf("%s %s[%sdown%s] {%sat %s%s}%s\n", buf,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_MAG, COLOR_FG),
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST), ptr,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST));
+		return 8;
+	}
+	else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
+		     svc_state(run->name, SV_SVC_STAT_PIDS)) {
+		if (svc_state(run->name, SV_SVC_STAT_STAR))
+			MK_STRFTIME(SV_TMPDIR_STAR);
+		else {
+			MK_STRFTIME(SV_TMPDIR_PIDS);
+
+			/* get the pidfile */
+			if ((fp = fopen(tmp, "r"))) {
+				if (fscanf(fp, "%d", &fd) && (off = strstr(buf, "type=")))
+					snprintf(off+9U, 12U, "pid=%d", fd);
+				fclose(fp);
+			}
+		}
+
+		printf("%s %s[%sstarted%s] {%sat %s%s}%s\n", buf,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_GRN, COLOR_FG),
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST), ptr,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST));
+		return 0;
+	}
+	else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
+		MK_STRFTIME(SV_TMPDIR_FAIL);
+
+		if ((fd = open(buf, O_RDONLY)) > 0) {
+			if ((retval = read(fd, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
+				buf[retval++] = '\0';
+				printf("%s %s[%sfailed%s]  {%sat %s%s} *%scommand=%s%s*%s\n", buf,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RED, COLOR_FG),
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST), ptr,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST), tmp,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST));
+			}
+			close(fd);
+		}
+		else
+			printf("%s %s[%sfailed%s]  {%sat %s%s}%s\n", buf,
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RED, COLOR_FG),
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST), ptr,
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST));
+		return 16;
+	}
+	else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
+		MK_STRFTIME(SV_TMPDIR_WAIT);
+
+		if ((fd = open(buf, O_RDONLY)) > 0) {
+			if ((retval = read(fd, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
+				buf[retval++] = '\0';
+				off = strchr(tmp, ':');
+				*off++ = '\0';
+				snprintf(strstr(buf, "type=")+9U, 12U, "%s", tmp);
+				printf("%s %s[%swaiting%s] {%since %s%s} *%s%s*%s)\n", buf,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_YLW, COLOR_FG),
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST), ptr,
+						print_color(COLOR_CYN, COLOR_FG), off,
+						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST));
+			}
+			close(fd);
+		}
+		else
+			printf("%s %s[%swaiting%s] {%ssince %s%s}%s\n", buf,
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_YLW, COLOR_FG),
+					print_color(COLOR_CYN, COLOR_FG), ptr,
+					print_color(COLOR_RST, COLOR_RST),
+					print_color(COLOR_CYN, COLOR_FG),
+					print_color(COLOR_RST, COLOR_RST));
+		return 32;
+	}
+	else if (svc_state(run->name, SV_SVC_STAT_ACTIVE)) {
+		MK_STRFTIME(SV_TMPDIR);
+
+		printf("%s %s[%sactive%s] {%ssince %s%s}%s\n", buf,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_MAG, COLOR_FG),
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST), ptr,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST));
+		return 32;
+	}
+	else {
+		printf("%s %s[%sstopped%s]%s\n", buf,
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_BLU, COLOR_FG),
+				print_color(COLOR_CYN, COLOR_FG),
+				print_color(COLOR_RST, COLOR_RST));
+		return 3;
+	}
+#undef STRFTIME_OFF
+#undef MK_STRFTIME
+}
 
 int svc_cmd(struct svcrun *run)
 {
@@ -179,18 +339,6 @@ int svc_cmd(struct svcrun *run)
 	int i;
 	char *cmd = (char*)run->argv[4];
 	char buf[10124] = { "" };
-	char *off, *tmp;
-	size_t LEN, len, OFF;
-	FILE *fp;
-	struct tm lt;
-#define STRFTIME_OFF 32
-	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
-#define MK_STRFTIME(tmpdir) do {                                    \
-	snprintf(tmp, sizeof(buf)-OFF-len, "%s/%s", tmpdir, run->name); \
-	stat(tmp, &st_buf);                                             \
-	localtime_r(&st_buf.st_mtime, &lt);                             \
-	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
-} while (0/*CONST COND*/)
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, run);
@@ -259,143 +407,8 @@ int svc_cmd(struct svcrun *run)
 		return 0;
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0) {
-		/* output format preparation to the following:
-		 * SERVICE (type=rs|sv pid=int8_t service=SERVICE_PATH) [STATE] {at|since DATE} *command=COMMAND*
-		 */
-		st_buf.st_mtime = 0;
-		len = strlen(run->name);
-		if (len > 24L) len +=  2L;
-		else           len  = 24L;
-		LEN = len+16L+8L+7L*3L+10L*4L+1L;
-		OFF = strlen(buf)+1L;
-		memmove(buf+LEN+OFF, buf, OFF);
-		snprintf(buf, LEN, "%-*s %s(%stype=%s%s%s              %s%-32s%s)%s",
-				len, run->name, print_color(COLOR_CYN, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST),
-				print_color(COLOR_BLU, COLOR_FG), type[run->tmp]+2L,
-				print_color(COLOR_RST, COLOR_RST),
-				print_color(COLOR_BLU, COLOR_FG), buf+LEN+OFF,
-				print_color(COLOR_CYN, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		OFF += LEN;
-		tmp = buf+OFF;
-
-		if (svc_state(run->name, SV_SVC_STAT_DOWN)) {
-			MK_STRFTIME(SV_TMPDIR_DOWN);
-
-			printf("%s %s[%sdown%s] {%sat %s%s}%s\n", buf,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_MAG, COLOR_FG),
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST), ptr,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST));
-			return 8;
-		}
-		else if (svc_state(run->name, SV_SVC_STAT_STAR) ||
-			     svc_state(run->name, SV_SVC_STAT_PIDS)) {
-			if (svc_state(run->name, SV_SVC_STAT_STAR))
-				MK_STRFTIME(SV_TMPDIR_STAR);
-			else {
-				MK_STRFTIME(SV_TMPDIR_PIDS);
-
-				/* get the pidfile */
-				if ((fp = fopen(tmp, "r"))) {
-					if (fscanf(fp, "%d", &i) && (off = strstr(buf, "type=")))
-						snprintf(off+9U, 12U, "pid=%d", i);
-					fclose(fp);
-				}
-			}
-
-			printf("%s %s[%sstarted%s] {%sat %s%s}%s\n", buf,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_GRN, COLOR_FG),
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST), ptr,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST));
-			return 0;
-		}
-		else if (svc_state(run->name, SV_SVC_STAT_FAIL)) {
-			MK_STRFTIME(SV_TMPDIR_FAIL);
-
-			if ((i = open(buf, O_RDONLY)) > 0) {
-				if ((retval = read(i, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
-					buf[retval++] = '\0';
-					printf("%s %s[%sfailed%s]  {%sat %s%s} *%scommand=%s%s*%s\n", buf,
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_RED, COLOR_FG),
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_RST, COLOR_RST), ptr,
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_RST, COLOR_RST), tmp,
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_RST, COLOR_RST));
-				}
-				close(i);
-			}
-			else
-				printf("%s %s[%sfailed%s]  {%sat %s%s}%s\n", buf,
-						print_color(COLOR_CYN, COLOR_FG),
-						print_color(COLOR_RED, COLOR_FG),
-						print_color(COLOR_CYN, COLOR_FG),
-						print_color(COLOR_RST, COLOR_RST), ptr,
-						print_color(COLOR_CYN, COLOR_FG),
-						print_color(COLOR_RST, COLOR_RST));
-			return 16;
-		}
-		else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
-			MK_STRFTIME(SV_TMPDIR_WAIT);
-
-			if ((i = open(buf, O_RDONLY)) > 0) {
-				if ((retval = read(i, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
-					buf[retval++] = '\0';
-					off = strchr(tmp, ':');
-					*off++ = '\0';
-					snprintf(strstr(buf, "type=")+9U, 12U, "%s", tmp);
-					printf("%s %[%waiting%s] {%since %s%s} *%s%s*%s)\n", buf,
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_YLW, COLOR_FG),
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_RST, COLOR_RST), ptr,
-							print_color(COLOR_CYN, COLOR_FG), off,
-							print_color(COLOR_CYN, COLOR_FG),
-							print_color(COLOR_RST, COLOR_RST));
-				}
-				close(i);
-			}
-			else
-				printf("%s %s[%swaiting%s] {%ssince %s%s}%s\n", buf,
-						print_color(COLOR_CYN, COLOR_FG),
-						print_color(COLOR_YLW, COLOR_FG),
-						print_color(COLOR_RST, COLOR_RST), ptr,
-						print_color(COLOR_CYN, COLOR_FG),
-						print_color(COLOR_RST, COLOR_RST));
-			return 32;
-		}
-		else if (svc_state(run->name, SV_SVC_STAT_ACTIVE)) {
-			MK_STRFTIME(SV_TMPDIR);
-
-			printf("%s %s[%sactive%s] {%ssince %s%s}%s\n", buf,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_MAG, COLOR_FG),
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST), ptr,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST));
-			return 32;
-		}
-		else {
-			printf("%s %s[%sstopped%s]%s\n", buf,
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_BLU, COLOR_FG),
-					print_color(COLOR_CYN, COLOR_FG),
-					print_color(COLOR_RST, COLOR_RST));
-			return 3;
-		}
+		return svc_print_status(run, &st_buf, buf, type[run->tmp]+2U);
 	}
-#undef STRFTIME_OFF
-#undef MK_STRFTIME
 
 	run->path = err_strdup(buf);
 	if (!run->svc->data)
