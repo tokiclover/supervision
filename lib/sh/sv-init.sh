@@ -36,7 +36,7 @@ svc_rescue_shell()
 	exec <${CONSOLE} >${CONSOLE}
 	exec 2>&1
 
-	for sh in ${SV_SHELL} sh bash zsh ksh csh ${SHELLS}; do
+	for sh in ${SV_SHELL} sh bash zsh ksh csh tcsh ${SHELLS}; do
 		sh=$(command -v ${sh} 2>${NULL})
 		[ -n "${sh}" ] && [ -x "${sh}" ] && exec ${sh} -lim
 	done
