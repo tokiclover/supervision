@@ -6,12 +6,12 @@
 # $C$: Copyright (c) 2007-2008 Roy Marples <roy@marples.name>         Exp $
 #
 
-description='Set up /tmp /var/MISC'
+description='Set up /tmp /var/MISCLLANEOUS'
 SVC_NEED='localfs'
 SVC_USE='zramfs'
 SVC_BEFORE='logger'
 SVC_AFTER='clock rootfs sysctl'
-SVC_KEYWORD='prefix supervision timeout'
+SVC_KEYWORD='prefix shutdown supervision timeout'
 
 login_setup()
 {
