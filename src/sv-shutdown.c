@@ -414,7 +414,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	if (shutdown_action == SD_REBOOT) {
 		init_signal = SIGINT;
 		action_force = SD_ACTION_REBOOT;
-		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_REBOOT]);
+		snprintf(arg, sizeof(arg), "%s", action[SD_ACTION_REBOOT]);
 	}
 	else if (shutdown_action == SD_POWEROFF) {
 		if (!strcmp(progname, action[SD_ACTION_HALT]))
@@ -422,12 +422,12 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 		else
 			init_signal = SIGUSR2;
 		action_force = SD_ACTION_SHUTDOWN;
-		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SHUTDOWN]);
+		snprintf(arg, sizeof(arg), "%s", action[SD_ACTION_SHUTDOWN]);
 	}
 	else if (shutdown_action == SD_SINGLE) {
 		init_signal = SIGTERM;
 		action_force = SD_ACTION_SINGLE;
-		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SINGLE]);
+		snprintf(arg, sizeof(arg), "%s", action[SD_ACTION_SINGLE]);
 	}
 
 	if ((fp = fopen(SV_CONFIG, "r"))) {
@@ -527,7 +527,7 @@ shutdown:
 	}
 	else if (shutdown_action == SD_SINGLE) {
 		*argv = "sv-rc";
-		snprintf(arg, sizeof(arg), "-%c", SD_SINGLE);
+		snprintf(arg, sizeof(arg), "%s", action[SD_ACTION_SINGLE]);
 	}
 	else {
 		len = strlen(arg)+1LU;
@@ -566,7 +566,7 @@ shutdown:
 
 		if (action_force < 0) {
 			*argv = "sv-rc";
-			snprintf(arg, sizeof(arg), "-%c", shutdown_action);
+			snprintf(arg, sizeof(arg), "%c", action[ai]);
 		}
 	}
 
