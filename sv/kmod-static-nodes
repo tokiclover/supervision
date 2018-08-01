@@ -7,7 +7,7 @@
 description="Set up static kernel nodes"
 SVC_AFTER='devfs'
 SVC_BEFORE='dev tmpfiles.dev'
-SVC_KEYWORD='docker lxc supervision systemd-nspawn'
+SVC_KEYWORD='docker lxc shutdown supervision systemd-nspawn'
 
 start()
 {
