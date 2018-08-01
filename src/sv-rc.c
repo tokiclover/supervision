@@ -631,6 +631,8 @@ static void svc_init(const char *cmd)
 						(strcmp(runlevel, sv_init_level[SV_SYSBOOT_LEVEL]) &&
 						 strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL])))) {
 			level = sv_level;
+			/* do nothing with a subsystem */ 
+			if (getenv("SV_SYSTEM")) continue;
 			sv_level = sv_init = SV_SYSBOOT_LEVEL;
 			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
