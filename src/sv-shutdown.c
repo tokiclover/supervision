@@ -428,7 +428,6 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 		init_signal = SIGTERM;
 		action_force = SD_ACTION_SINGLE;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SINGLE]);
-		goto shutdown;
 	}
 
 	if ((fp = fopen(SV_CONFIG, "r"))) {
