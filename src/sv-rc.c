@@ -393,9 +393,6 @@ static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), vo
 		/* block child signals */
 		sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
-		/* kill any worker process we have started */
-		kill(0, SIGTERM);
-
 		if (sig == SIGUSR2)
 			exit(EXIT_SUCCESS);
 		exit(EXIT_FAILURE);
