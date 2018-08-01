@@ -5,7 +5,7 @@
 #
 
 description='Set up /dev/MISCELLANEOUS filesystems'
-SVC_KEYWORD='docker lxc prefix supervision systemd-nspawn uml vserver xenu'
+SVC_KEYWORD='docker lxc prefix shutdown supervision systemd-nspawn uml vserver xenu'
 :	${SYSFS_OPTS:=nodev,nosuid,noexec}
 
 mount_dev()
