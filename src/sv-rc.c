@@ -650,6 +650,9 @@ static void svc_init(const char *cmd)
 			/* stop default runlevel only when service command is NULL */
 			if (!cmd && !strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL])) {
 			level = sv_init;
+			/* do nothing if the runlevel is different than sysinit */
+			if (runlevel && !strcmp(runlevel, sv_init_level[SV_SYSINIT_LEVEL]))
+					continue;
 			sv_init = SV_DEFAULT_LEVEL;
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
