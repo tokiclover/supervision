@@ -35,7 +35,7 @@ start_pre()
 
 stop_post()
 {
-	local ctrl eq mnt_pnt mnt_pts
+	local ctrl eq mnt_pnt mnt_pts=false
 	while read ctrl eq mnt_pnt; do
 		case "${ctrl}" in
 			('#'*)    continue    ;;
