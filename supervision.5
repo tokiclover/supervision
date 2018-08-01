@@ -573,14 +573,13 @@ environment variables.
 .SS KEYWORDS
 .TP
 .B timeout
-Disable timeout for \fI{start,stop}\fR command (relevent only when
-.B SVC_TIMEOUT
-or
+Disable timeout for any service command (relevent only when
 .B SV_TIMEOUT
 is set to an unsigned or postive integer.)
 .TP
-.RB shutdown
+.B shutdown
 Disable the service in \fI{reboot,shutdown}\fR runlevels
+or simply, disable the \fBstop\fR service command.
 .TP
 .B SUBSYSTEM:
 .RB [\| docker \|]
