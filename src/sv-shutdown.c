@@ -525,6 +525,10 @@ shutdown:
 		sprintf(arg, "%c", shutdown_action);
 #endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
 	}
+	else if (shutdown_action == SD_SINGLE) {
+		*argv = "sv-rc";
+		snprintf(arg, sizeof(arg), "-%c", SD_SINGLE);
+	}
 	else {
 		len = strlen(arg)+1LU;
 		if ((fp = fopen("/proc/1/cmdline", "r"))) {
