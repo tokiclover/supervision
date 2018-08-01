@@ -176,9 +176,9 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	size_t LEN, len, OFF;
 	struct tm lt;
 #define STRFTIME_OFF 32
-	char *ptr = buf+sizeof(buf)-STRFTIME_OFF;
+	char *ptr = buf+1024LU-STRFTIME_OFF;
 #define MK_STRFTIME(tmpdir) do {                                    \
-	snprintf(tmp, sizeof(buf)-OFF, "%s/%s", tmpdir, run->name);     \
+	snprintf(tmp, 1024LU-OFF, "%s/%s", tmpdir, run->name);          \
 	stat(tmp, st_buf);                                              \
 	localtime_r(&st_buf->st_mtime, &lt);                            \
 	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
@@ -273,7 +273,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 		MK_STRFTIME(SV_TMPDIR_FAIL);
 
 		if ((fd = open(tmp, O_RDONLY)) > 0) {
-			if ((retval = read(fd, tmp, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
+			if ((retval = read(fd, tmp, 1024LU-(tmp-buf)-STRFTIME_OFF)) > 0) {
 				if (*(tmp+retval) == '\n') *(tmp+retval) = '\0';
 				else tmp[++retval] = '\0';
 				printf("%s %s[%sfailed%s]  {%sat %s%s} *%scommand=%s%s*%s\n", buf,
@@ -309,7 +309,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 				memcpy(buf+len, tmp, strlen(tmp) > 12LU ? 12LU : strlen(tmp));
 				len = strlen(off);
 				if (*(off+len) == '\n') *(off+len) = '\0';
-				printf("%s %s[%swaiting%s] {%since %s%s} *%s%s*%s)\n", buf,
+				printf("%s %s[%swaiting%s] {%since %s%s} *%s%s*%s\n", buf,
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_YLW, COLOR_FG),
 						print_color(COLOR_CYN, COLOR_FG),
