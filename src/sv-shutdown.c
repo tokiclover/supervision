@@ -404,16 +404,25 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	struct timespec ts = { .tv_sec = 0L, .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
 	struct utmpx ut;
+	int default_signal = 0;
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
 	argv[0] = "sv-rc", argv[1] = arg, argv[2] = NULL;
-	if (shutdown_action == SD_REBOOT)
+	if (shutdown_action == SD_REBOOT) {
+		default_signal = SIGINT;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_REBOOT]);
-	else if (shutdown_action == SD_POWEROFF)
+	}
+	else if (shutdown_action == SD_POWEROFF) {
+		if (!strcmp(progname, action[SD_ACTION_HALT]))
+			default_signal = SIGUSR1;
+		else
+			default_signal = SIGUSR2;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SHUTDOWN]);
+	}
 	else if (shutdown_action == SD_SINGLE) {
+		default_signal = SIGTERM;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SINGLE]);
 		goto shutdown;
 	}
@@ -430,6 +439,11 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	}
 	else {
 		ERR("Failed to open `%s': %s\n", SV_CONFIG, strerror(errno));
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
+	  defined(__DragonFly__)
+		WARN("\007*** using the default %s procedure!!! ***\007\n", action[ai]);
+		goto shutdown;
+#endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
 		sighandler(SIGUSR1, NULL, NULL);
 	}
 
@@ -443,15 +457,15 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 			argv[0] = "s6-svscanctl";
 		}
 		else if (strncmp(ptr, "daemontools", 11) == 0)
-			;
+			WARN("\007*** forcing system %s procedure!!! ***\007\n", action[ai]);
 		else {
 			ERR("Invalid supervision backend -- %s\n", ptr);
 			sighandler(SIGUSR1, NULL, NULL);
 		}
-		free(ptr);
 	}
 	else {
 		ERR("Failed to get `%s' value\n", ent);
+		ERR("Execute `%s/sv/sbin/sv-config --config SUPERVISOR' beforehand!\n", LIBDIR);
 		sighandler(SIGUSR1, NULL, NULL);
 	}
 
@@ -518,6 +532,19 @@ shutdown:
 	ut.ut_type = EMPTY;
 	ut.ut_tv.tv_sec = shuttime;
 	(void)pututxline((const struct utmpx*)&ut);
+
+# if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
+	  defined(__DragonFly__)
+	if (!ptr) {
+		if (kill(1, default_signal)) {
+			ERR("Failed to send the shutdown signal to PID=1: %s\n",
+				strerror(errno));
+			sighandler(SIGUSR1, NULL, NULL);
+			exit(EXIT_FAILURE);
+		}
+		exit(EXIT_SUCCESS);
+	}
+# endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
 
 	execvp(*argv, argv);
 	ERR("Failed to execvp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
