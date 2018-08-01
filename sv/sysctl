@@ -5,7 +5,7 @@
 #
 
 SVC_BEFORE="miscfs logger"
-SVC_KEYWORD="docker prefix supervision systemd-nspawn vserver"
+SVC_KEYWORD="docker prefix shutdown supervision systemd-nspawn vserver"
 SVC_CONFIGFILE="/etc/sysctl.conf"
 #SVC_CONFIGDIRS="/etc/sysctl.d"
 
