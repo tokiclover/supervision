@@ -6,7 +6,7 @@
 
 description="kernel modules loader"
 SVC_AFTER="devfs sysfs"
-SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver"
+SVC_KEYWORD="docker lxc openvz prefix shutdown supervision systemd-nspawn uml vserver"
 
 start()
 {
