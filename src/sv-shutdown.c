@@ -398,31 +398,35 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 {
 	FILE *fp;
 	size_t len = 0;
-	char *line = NULL, *ptr = NULL;
-	char *argv[8], arg[32];
+	char *line = NULL, *supervisor = NULL;
+	char *argv[8], arg[128];
 	const char ent[] = "__SV_NAM__";
 	struct timespec ts = { .tv_sec = 0L, .tv_nsec = 0L };
 	struct timeinterval *ti = timelist;
 	struct utmpx ut;
-	int default_signal = 0;
+	int init_signal = 0;
+	int action_force = 0;
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
 	argv[0] = "sv-rc", argv[1] = arg, argv[2] = NULL;
 	if (shutdown_action == SD_REBOOT) {
-		default_signal = SIGINT;
+		init_signal = SIGINT;
+		action_force = SD_ACTION_REBOOT;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_REBOOT]);
 	}
 	else if (shutdown_action == SD_POWEROFF) {
 		if (!strcmp(progname, action[SD_ACTION_HALT]))
-			default_signal = SIGUSR1;
+			init_signal = SIGUSR1;
 		else
-			default_signal = SIGUSR2;
+			init_signal = SIGUSR2;
+		action_force = SD_ACTION_SHUTDOWN;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SHUTDOWN]);
 	}
 	else if (shutdown_action == SD_SINGLE) {
-		default_signal = SIGTERM;
+		init_signal = SIGTERM;
+		action_force = SD_ACTION_SINGLE;
 		snprintf(arg, sizeof(arg), "--%s", action[SD_ACTION_SINGLE]);
 		goto shutdown;
 	}
@@ -430,8 +434,8 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	if ((fp = fopen(SV_CONFIG, "r"))) {
 		while (getline(&line, &len, fp) > 0)
 			if (strncmp(line, ent, sizeof(ent)-1) == 0) {
-				ptr = shell_string_value(line+sizeof(ent));
-				ptr = err_strdup(ptr);
+				supervisor = shell_string_value(line+sizeof(ent));
+				supervisor = err_strdup(supervisor);
 				free(line);
 				fclose(fp);
 				break;
@@ -439,27 +443,23 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	}
 	else {
 		ERR("Failed to open `%s': %s\n", SV_CONFIG, strerror(errno));
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
-	  defined(__DragonFly__)
 		WARN("\007*** using the default %s procedure!!! ***\007\n", action[ai]);
 		goto shutdown;
-#endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
-		sighandler(SIGUSR1, NULL, NULL);
 	}
 
-	if (ptr) {
-		if (strcmp(ptr, "runit") == 0) {
+	if (supervisor) {
+		if (strcmp(supervisor, "runit") == 0) {
 			snprintf(arg, sizeof(arg), "%d", shutdown_action);
 			argv[0] = "runit-init";
 		}
-		else if (strcmp(ptr, "s6") == 0) {
+		else if (strcmp(supervisor, "s6") == 0) {
 			snprintf(arg, sizeof(arg), "-%d", shutdown_action);
 			argv[0] = "s6-svscanctl";
 		}
-		else if (strncmp(ptr, "daemontools", 11) == 0)
+		else if (strncmp(supervisor, "daemontools", 11LU) == 0)
 			WARN("\007*** forcing system %s procedure!!! ***\007\n", action[ai]);
 		else {
-			ERR("Invalid supervision backend -- %s\n", ptr);
+			ERR("Invalid supervision backend -- %s\n", supervisor);
 			sighandler(SIGUSR1, NULL, NULL);
 		}
 	}
@@ -500,11 +500,78 @@ shutdown:
 	unlink(_PATH_NOLOGIN);
 	(void)printf("\r\n\007System %s time has arrived\007\r\n", action[ai]);
 
+	if (!supervisor) {
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
+	  defined(__DragonFly__)
+		bsd_init_signal:
+# ifdef SV_DEBUG
+		switch (init_signal) {
+		case SIGINT : init_signal = 0; break;
+		case SIGTERM: init_signal = 1; break;
+		case SIGUSR1: init_signal = 3; break;
+		case SIGUSR2: init_signal = 4; break;
+		}
+		(void)DBG("kill(1, %s)\n", signame[init_signal]);
+		exit(EXIT_SUCCESS);
+# else
+		if (kill(1, init_signal)) {
+			ERR("Failed to send the %s signal to `init' (PID=1): %s\n", action[ai],
+				strerror(errno));
+			sighandler(SIGUSR1, NULL, NULL);
+		}
+		exit(EXIT_SUCCESS);
+# endif /* SV_DEBUG */
+#else
+		*argv = "init";
+		sprintf(arg, "%c", shutdown_action);
+#endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
+	}
+	else {
+		len = strlen(arg)+1LU;
+		if ((fp = fopen("/proc/1/cmdline", "r"))) {
+			if (fread(arg+len, sizeof(char), sizeof(arg)-len, fp)) {
+				if (!strcmp(supervisor, "runit") && strcmp(arg+len, "runit")) {
+					ERR("\007*** `init' (PID=1) is not `runit' -- "
+							"forcing system %s ***\007\n", action[ai]);
+					action_force = -action_force;
+				}
+				else if (!strcmp(supervisor, "s6") && strcmp(arg+len, "s6-svscan")) {
+					ERR("\007*** `init' (PID=1) is not `s6-svscan' -- "
+							"forcing system %s ***\007\n", action[ai]);
+					action_force = -action_force;
+				}
+				else if (!strncmp(supervisor, "daemontools", 11LU)) {
+					if (strcmp(arg+len, "init")) {
+						ERR("\007*** `init' (PID=1) is not named `init' -- "
+								"forcing system %s ***\007\n", action[ai]);
+						action_force = -action_force;
+					}
+					else {
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
+	  defined(__DragonFly__)
+						goto bsd_init_signal;
+#else
+						*argv = "init";
+						sprintf(arg, "%c", shutdown_action);
+#endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
+					}
+				}
+			}
+			else ERR("Failed to read `%s': %s\n", "/proc/1/cmdline", strerror(errno));
+		}
+		else ERR("Failed to open `%s': %s\n", "/proc/1/cmdline", strerror(errno));
+
+		if (action_force < 0) {
+			*argv = "sv-rc";
+			snprintf(arg, sizeof(arg), "-%c", shutdown_action);
+		}
+	}
+
 #ifdef SV_DEBUG
 	if (reboot_force)
-		(void)printf("reboot(%X)\n", reboot_action);
+		(void)DBG("reboot(%X)\n", reboot_action);
 	else
-		(void)printf("execlp(%s, %s, NULL)\n", *argv, argv[1]);
+		(void)DBG("execlp(%s, %s, NULL)\n", *argv, argv[1]);
 	exit(EXIT_SUCCESS);
 #else
 	if (slog_flag) {
@@ -522,8 +589,6 @@ shutdown:
 
 	if (reboot_sync)
 		sync();
-	if (reboot_force)
-		exit(reboot(reboot_action));
 
 	/* write utmp record */
 	memset(&ut, 0, sizeof(ut));
@@ -533,19 +598,8 @@ shutdown:
 	ut.ut_tv.tv_sec = shuttime;
 	(void)pututxline((const struct utmpx*)&ut);
 
-# if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
-	  defined(__DragonFly__)
-	if (!ptr) {
-		if (kill(1, default_signal)) {
-			ERR("Failed to send the shutdown signal to PID=1: %s\n",
-				strerror(errno));
-			sighandler(SIGUSR1, NULL, NULL);
-			exit(EXIT_FAILURE);
-		}
-		exit(EXIT_SUCCESS);
-	}
-# endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
-
+	if (reboot_force)
+		exit(reboot(reboot_action));
 	execvp(*argv, argv);
 	ERR("Failed to execvp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
 	sighandler(SIGUSR1, NULL, NULL);
