@@ -133,30 +133,23 @@ yesno()
 #
 SOURCE()
 {
-	local arg msg opt ret
-	msg='Failed to source ${arg}'
-	while [ ${#} -ge 1 ]; do
-		case "${1}" in
-			(-[ed]) opt=${1};;
-			(*) break;;
-		esac
-		shift
-	done
+	local arg opt ret
+	case "${1}" in
+		(-[ed]) opt="${1}"; shift;;
+	esac
 
 	for arg; do
-	[ -e "${1}" ] && . "${1}"
-	case "${?}" in
-		(0)
-			;;
-		(*)
-			ret=$((${ret} + ${?}))
-			case "${opt}" in
-				(-e) eval error \"${msg}\";;
-				(-d) eval die   \"${msg}\";;
-			esac
-			;;
-	esac
-	shift
+		if [ -r "${1}" ]; then
+			if ! . "${arg}"; then
+				[ -n "${opt}" ] && error "Failed to source \`${arg}'"
+				[ "${opt}" = "-d" ] && return 2
+				ret=$((${ret}+2))
+			fi
+		else
+			[ -n "${opt}" ] && error "Failed to found \`${arg}'"
+			[ "${opt}" = "-d" ] && return 1
+			ret=$((${ret}+1))
+		fi
 	done
 	return ${ret}
 }
