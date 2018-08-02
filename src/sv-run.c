@@ -297,7 +297,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 					print_color(COLOR_RST, COLOR_RST), ptr,
 					print_color(COLOR_CYN, COLOR_FG),
 					print_color(COLOR_RST, COLOR_RST));
-		return 16;
+		return 9;
 	}
 	else if (svc_state(run->name, SV_SVC_STAT_WAIT)) {
 		MK_STRFTIME(SV_TMPDIR_WAIT);
@@ -330,7 +330,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 					print_color(COLOR_RST, COLOR_RST),
 					print_color(COLOR_CYN, COLOR_FG),
 					print_color(COLOR_RST, COLOR_RST));
-		return 32;
+		return 10;
 	}
 	else if (svc_state(run->name, SV_SVC_STAT_ACTIVE)) {
 		MK_STRFTIME(SV_TMPDIR);
@@ -342,7 +342,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 				print_color(COLOR_RST, COLOR_RST), ptr,
 				print_color(COLOR_CYN, COLOR_FG),
 				print_color(COLOR_RST, COLOR_RST));
-		return 32;
+		return 8;
 	}
 	else {
 		printf("%s %s[%sstopped%s]%s\n", buf,
@@ -350,7 +350,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 				print_color(COLOR_BLU, COLOR_FG),
 				print_color(COLOR_CYN, COLOR_FG),
 				print_color(COLOR_RST, COLOR_RST));
-		return 3;
+		return 7;
 	}
 #undef STRFTIME_OFF
 #undef MK_STRFTIME
@@ -455,7 +455,7 @@ int svc_cmd(struct svcrun *run)
 			fprintf(stderr, "%s: runlevel argument is required\n", progname);
 			fprintf(stderr, "Usage: %s -(0|1|3|4|5) %s %s\n", progname,
 					run->name, sv_svc_cmd[run->cmd]);
-			return 1;
+			return -EINVAL;
 		}
 
 		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR, sv_init_level[sv_init],
@@ -624,7 +624,7 @@ runsvc:
 	svc_sigsetup();
 
 	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
-	_exit(255);
+	_exit(EXIT_FAILURE);
 supervise:
 	RUN = run;
 	/* restore signal mask */
@@ -1158,8 +1158,9 @@ int svc_exec(int argc, const char *argv[]) {
 		atexit(sv_cleanup);
 	switch(retval) {
 	case -EBUSY:
-	case -EINVAL:
 		return EXIT_SUCCESS;
+	case -EINVAL:
+		return 3;
 	case -ENOENT:
 		ERR("inexistant service -- %s\n", run.name);
 		return 2;
@@ -1171,6 +1172,7 @@ int svc_exec(int argc, const char *argv[]) {
 		run.cld = run.pid;
 		return svc_waitpid(&run, 0);
 	default:
+		if (retval < 0) return EXIT_FAILURE;
 		return retval;
 	}
 }

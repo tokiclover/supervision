@@ -174,14 +174,19 @@ service management.
 .SH "RETURN VALUE"
 .TP
 .B 0
-success (service already started/stopped)
+success (service already started or a service commmand was successfully executed)
 .TP
 .B 1
 miscellaneous operational failures; or
-a signal was sent to abort or terminate the program
+a signal was sent to abort or terminate the program; or
+a syscall failed;
 .TP
 .B 2
 failure to find the requested service
+.TP
+.B 3
+invalid arguments (trying to stop a non started service; add or remove a service
+to a runlevel without specifying the runlevel...)
 .TP
 .B 4
 failure to lock a service lockfile for service command; or timed out when trying to
@@ -190,26 +195,25 @@ lock the lockfile.
 .B 5
 service keywords does not permit to \fI{stat,stop}\fR the service
 .TP
+.B 7
+for
+.I status
+service when a service is stopped
+.TP
 .B 8
 for
 .I status
-service command when a service is started and down (supervision only)
+service command when a service is active and down (supervision only)
 .TP
-.B 16
+.B 9
 for
 .I status
 service command when a service command failed
 .TP
-.B 32
+.B 10
 for
 .I status
 service command when a service is waiting for the lockfile
-.TP
-.B errno
-system call failure (fork...)
-.TP
-.B 255
-execve system call failure
 .SH "APPLICATION USAGE"
 Some services are added to the service directory? Try starting them then.
 It seems to work? Good, try to add them in an init runlevel with
