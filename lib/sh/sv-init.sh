@@ -36,12 +36,10 @@ svc_rescue_shell()
 	exec <${CONSOLE} >${CONSOLE}
 	exec 2>&1
 
-	for sh in ${SV_SHELL} sh bash zsh ksh csh tcsh ${SHELLS}; do
-		sh=$(command -v ${sh} 2>${NULL})
-		[ -n "${sh}" ] && [ -x "${sh}" ] && exec ${sh} -lim
-	done
-
-	echo "No functional shell found!!!" >&2
+	echo "${name}: error: *** Launching a rescue shell !!! ***" >&2
+	echo "${name}: error: *** Fix the issue and then run \`exec ${0} --default' to resume system boot. ***" >&2
+	echo "${name}: error: *** \`exec' is necessary because this PID=$$ should not exit to successfully boot!!! ***"
+	exec /bin/login || echo "${name}: error: *** Failed to launche a rescue \`/bin/login'!!! ***" >&2
 }
 
 name="${0##*/}"
