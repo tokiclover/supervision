@@ -60,23 +60,26 @@ agetty_options()
 		;;
 	esac
 }
-rescue_shell()
+_rescue_shell()
 {
 	if [ "${SV_UNAME}" = "Linux" ]; then
-		if sv-run sulogn start; then
+		if sv-run sulogin start; then
 			return 0
 		fi
-	:	${SULOGIN_TTY:=/dev/tty8}
-		if [ "${SV_SHELL##*/}" = "sulogin" ]; then
-			if [ -x ${SV_SHELL} ]; then
-			exec ${SV_SHELL} -p ${SULOGIN_TTY}
-			else
-			SV_SHELL=
-			fi
-		fi
-		SULOGIN="$(command -v sulogin 2>${NULL})"
-		[ -n "${SULOGIN}" ] && [ -x "${SULOGIN}" ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
 	fi
+	#
+	# XXX: launch a login shell
+	#
+	local pidfile=/var/run/login-shell.pid
+	if ! svc_wait -E -p 5 ${pidfile}; then
+		return 1
+	fi
+	printf "$$" >${pidfile}
+	trap "rm -f ${pidfile}" INT TERM QUIT
+	info "\a*** Launching \`/bin/login' rescue shell ***\a"
+	info "*** Just press \`C-D' or \`exit' in the shell to resume system boot up ***"
+	exec 2>&1
+	exec /bin/login "root" "USER=root"
 }
 
 _start_pre()
@@ -103,14 +106,16 @@ start_pre()
 	if [ "${__cmd__}" = "run" ]; then
 		if [ -z "${SVC_CMD}" ] || [ ! -x ${SVC_CMD} ]; then
 			if ! find_getty; then
-				error "Failed to find a getty binary!"
-				error "Configure \`${SVC_DIR}/OPTIONS' and or install a getty package."
+				error "*** Failed to find a getty binary!!! ***"
+				error "*** Configure \`${SVC_DIR}/OPTIONS' and or install [a]getty(8) ***"
 
-				error "Launching sulogin instead; and"
-				rescue_shell
+				error "*** Launching (su)login instead: ***"
+				_rescue_shell
 				return 1
 			else
-				info "Found \`${SVC_CMD}' binary; setting up the service."
+				warn "*** \`${SVC_NAME}' service is not configured!!! ***"
+				warn "*** Configure \`${SVC_DIR}/OPTIONS' by setting up \`SVC_CMD' ***"
+				info "*** Found \`${SVC_CMD}' binary; setting up the service. ***"
 			fi
 		fi
 		_start_pre
