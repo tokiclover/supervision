@@ -695,8 +695,9 @@ T}
 \fBsvc_sig -SIGNAL\fR@T{
 Send a particular SIGNAL to the daemon service
 T}
-\fBsvc_wait [-E] TIMEOUT FILE\fR@T{
-Wait a service file to appear or disapear--with \fI-E\fR option
+\fBsvc_wait [-E] [-p] TIMEOUT FILE\fR@T{
+Wait a service file to appear or disapear--with \fI-E\fR option; add \fI-p\fR for
+PID[file] checking
 T}
 \fBsvc_zap\fR@T{
 Remove temporary service files
