@@ -161,7 +161,7 @@ __attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
 	if (err >= 0)
 		exit(err);
 	else
-		abort();
+		exit(EXIT_FAILURE);
 }
 
 void *err_malloc(size_t size)
