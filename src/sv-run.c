@@ -275,15 +275,16 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 		if ((fd = open(tmp, O_RDONLY)) > 0) {
 			if ((retval = read(fd, tmp, 1024LU-(tmp-buf)-STRFTIME_OFF)) > 0) {
 				if (*(tmp+retval) == '\n') *(tmp+retval) = '\0';
+				else if (*(tmp+retval) == 's') *(tmp+retval) = '\0'; /* BUGFIX */
 				else tmp[++retval] = '\0';
 				printf("%s %s[%sfailed%s]  {%sat %s%s} *%scommand=%s%s*%s\n", buf,
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_RED, COLOR_FG),
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_RST, COLOR_RST), ptr,
-						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RED, COLOR_FG),
 						print_color(COLOR_RST, COLOR_RST), tmp,
-						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_RED, COLOR_FG),
 						print_color(COLOR_RST, COLOR_RST));
 			}
 			close(fd);
@@ -303,19 +304,20 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 
 		if ((fd = open(tmp, O_RDONLY)) > 0) {
 			if ((retval = read(fd, tmp+4LU, sizeof(buf)-(tmp-buf)-STRFTIME_OFF)) > 0) {
-				tmp[retval++] = '\0';
+				if (*(tmp+retval) == '\n') *(tmp+retval) = '\0';
+				else if (*(tmp+retval) == 's') *(tmp+retval) = '\0'; /* BUGFIX */
+				else *(tmp+retval++) = '\0';
 				off = strchr(tmp, ':');
 				*off++ = '\0';
 				memcpy(buf+len, tmp, strlen(tmp) > 12LU ? 12LU : strlen(tmp));
 				len = strlen(off);
-				if (*(off+len) == '\n') *(off+len) = '\0';
 				printf("%s %s[%swaiting%s] {%since %s%s} *%s%s*%s\n", buf,
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_YLW, COLOR_FG),
 						print_color(COLOR_CYN, COLOR_FG),
 						print_color(COLOR_RST, COLOR_RST), ptr,
-						print_color(COLOR_CYN, COLOR_FG), off,
-						print_color(COLOR_CYN, COLOR_FG),
+						print_color(COLOR_YLW, COLOR_FG), off,
+						print_color(COLOR_YLW, COLOR_FG),
 						print_color(COLOR_RST, COLOR_RST));
 			}
 			close(fd);
