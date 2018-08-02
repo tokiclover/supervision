@@ -262,7 +262,7 @@ EOF
 make_bridge()
 {
 	${ip} link add name ${br} type bridge forward_delay 0 ||
-		die "Failed to add \`${br}' bridge device"
+		{ error "Failed to add \`${br}' bridge device"; return 1; }
 	#
 	# setup mac address for persistent networking
 	#
@@ -296,7 +296,7 @@ make_bridge()
 		${ip} link set dev ${if} down
 		${ifconfig} ${if} up promisc 0.0.0.0/24
 		${ip} link set dev ${if} master ${br} ||
-			die "Failed to add ${if} to ${br} bridge"
+			{ error "Failed to add ${if} to ${br} bridge"; return 1; }
 	else
 		p="172.16.1$n"
 	:	${address:=${p}.2}
@@ -325,7 +325,10 @@ stop_pre()
 	${vde} && vde_switch=vde_switch || vde_switch=
 	for cmd in ifconfig ip md5sum sed ${dhcp} ${vde_switch}; do
 		eval "${cmd}=$(command -v ${cmd} 2>/dev/null)"
-		[ "${?}" = 0 ] || die "${cmd} required command not found"
+		if [ "${?}" != 0 ]; then
+			error "${cmd} required command not found"
+			return 2
+		fi
 	done
 }
 start_pre()
@@ -379,10 +382,10 @@ start()
 		# bring up the tap interface
 		#
 		${ip} tuntap add dev "${tap}" mode tap user "${user}" group "${group}" ||
-			die "Failed to create ${tap} device"
+			{ error "Failed to create ${tap} device"; return 1; }
 
 		${ip} link set dev "${tap}" ${tap_opts} master "${br}" up ||
-			die "Failed to bridge ${tap} to ${br}"
+			{ error "Failed to bridge ${tap} to ${br}"; return 1; }
 
 		#
 		# use a vde switch if enabled
@@ -397,7 +400,7 @@ start()
 			${vde_switch} ${VDE_SWITCH_ARGS} --mode 660 --tap "${tap}" \
 				--sock /var/run/${tap}.vde_switch -g "${group}" --daemon \
 				--pidfile /var/run/${tap}.vde_switch.pid --macaddr "${ether}" ||
-				die "Failed to connect ${tap} interface to VDE switch"
+				{ error "Failed to connect ${tap} interface to VDE switch"; return 1; }
 		fi
 
 		i=$((${i}+1))
