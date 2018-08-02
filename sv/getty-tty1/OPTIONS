@@ -43,7 +43,10 @@ find_getty()
 
 find_issue()
 {
-	[ -f /etc/issue.${TTY} ] && TTY_OPTS="${TTY_OPTS} ${1} /etc/issue.${TTY}"
+	local x
+	for x in /etc/issue.${TTY} /etc/issue.d/${TTY}; do
+		[ -f ${x} ] && TTY_OPTS="${TTY_OPTS} ${1} ${x}"
+	done
 }
 agetty_options()
 {
@@ -74,14 +77,6 @@ rescue_shell()
 		SULOGIN="$(command -v sulogin 2>${NULL})"
 		[ -n "${SULOGIN}" ] && [ -x "${SULOGIN}" ] && exec ${SULOGIN} -p ${SULOGIN_TTY}
 	fi
-
-	exec <${CONSOLE} >${CONSOLE}
-	exec 2>&1
-	for sh in ${SV_SHELL:-$SHELL} sh bash zsh ksh ${SHELLS}; do
-		sh=$(command -v ${sh} 2>${NULL})
-		[ -n "${sh}" ] && [ -x "${sh}" ] && exec ${sh} -lim
-	done
-	error "Failed to find a shell found!!!"
 }
 
 _start_pre()
