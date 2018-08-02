@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) supervision-functions    4.5 2018/07/18 21:09:26         Exp $
+# $Id:  @(#) supervision-functions    4.5 2018/08/02 21:09:26         Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -56,17 +56,20 @@ svc_start()
 	SVC_DEBUG "function=svc_start( ${@} )"
 
 	svc_state -p && return 0
+	rm -f ${SV_TMPDIR}/fail/${SVC_NAME}
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
-	rm -f ${SV_TMPDIR}/fail/${SVC_NAME}
 	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"; then
+		val=0
 	#
-	# XXX: wait pidfile
+	# XXX: wait pidfile because sv(8) is unreliable with false negative failures
 	#
-	if svc_state -f; then
-		:;
-	elif svc_wait ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
+	elif svc_wait -p ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
+		val=0
+	fi
+
+	if [ "${val}" = "0" ]; then
 		#
 		# XXX: {Free,Open,Net}BSD pkill(1) do not have the `-F ${pidfile}'
 		#
@@ -78,16 +81,12 @@ svc_start()
 		if [ -e "${SVC_PIDFILE}" ] && eval ${chk_cmd}; then
 			if svc_command start_post; then
 				svc_mark -s
-				val=0
 			else
 				svc_mark -f
 				val=2
 			fi
-		else
-			rm -f ${SVC_PIDFILE}
 		fi
 	fi
-	fi # __SVCCMD__
 	return "${val}"
 }
 
@@ -102,13 +101,19 @@ svc_stop()
 		return 2
 	fi
 	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"; then
-		if svc_wait -E ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-30}} ${SVC_PIDFILE}; then
-			if svc_command stop_post; then
-				svc_mark -S
-				val=0
-			else
-				val=2
-			fi
+		val=0
+	#
+	# XXX: wait pidfile because sv(8) is unreliable with false negative failures
+	#
+	elif svc_wait -E -p ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-10}} ${SVC_PIDFILE}; then
+		val=0
+	fi
+	if [ "${val}" = "0" ]; then
+		if svc_command stop_post; then
+			svc_mark -S
+			val=0
+		else
+			val=2
 		fi
 	fi
 	return "${val}"
