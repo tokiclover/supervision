@@ -110,15 +110,11 @@ dist_SV_LOGS = \
 	nagios/log \
 	ntp/log \
 	postgresql/log \
-	rrdcached.nagios/log \
 	rrdcached/log \
 	rsync-daemon/log \
 	saned/log \
 	snmpd/log \
 	snmptrapd/log \
-	socklog-inet/log \
-	socklog-ucspi/log \
-	socklog-unix/log \
 	syslog/log \
 	virtlockd/log \
 	virtlogd/log \
@@ -316,7 +312,8 @@ endif
 	sed $(INIT_SH_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/sv-init.sh \
 		$(dist_INIT_SH:%=$(DESTDIR)$(SYSCONFDIR)/%)
 	for svc in $(dist_SVC_INSTANCES); do \
-		$(LN_S) "$${svc#*:}" $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
+		echo $(LN_S) "$${svc#*:}" "$(DESTDIR)$(SV_SVCDIR)/$${svc%:*}"; \
+		$(LN_S) "$${svc#*:}" "$(DESTDIR)$(SV_SVCDIR)/$${svc%:*}"; \
 	done
 	$(LN_S) $(dist_SYSINIT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysinit/
 	$(LN_S) $(dist_SYSBOOT:%=$(SV_SVCDIR)/%) $(DESTDIR)$(SV_SVCDIR).init.d/sysboot/
