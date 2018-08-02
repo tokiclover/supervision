@@ -522,7 +522,7 @@ shutdown:
 # endif /* SV_DEBUG */
 #else
 		*argv = "init";
-		sprintf(arg, "%c", shutdown_action);
+		sprintf(arg, "%d", shutdown_action);
 #endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
 	}
 	else if (shutdown_action == SD_SINGLE) {
@@ -555,7 +555,7 @@ shutdown:
 						goto bsd_init_signal;
 #else
 						*argv = "init";
-						sprintf(arg, "%c", shutdown_action);
+						sprintf(arg, "%d", shutdown_action);
 #endif /* __(FreeBSD|OpenBSD|NetBSD|DragonFly)__ */
 					}
 				}
@@ -566,7 +566,7 @@ shutdown:
 
 		if (action_force < 0) {
 			*argv = "sv-rc";
-			snprintf(arg, sizeof(arg), "%c", action[ai]);
+			snprintf(arg, sizeof(arg), "%s", action[ai]);
 		}
 	}
 
