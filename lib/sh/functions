@@ -131,7 +131,7 @@ yesno()
 # @FUNCTION: source wrapper
 # @ARG: [OPT] FILE
 #
-SOURCE()
+DOT()
 {
 	local arg opt ret
 	case "${1}" in
@@ -139,7 +139,7 @@ SOURCE()
 	esac
 
 	for arg; do
-		if [ -r "${1}" ]; then
+		if [ -r "${arg}" ]; then
 			if ! . "${arg}"; then
 				[ -n "${opt}" ] && error "Failed to source \`${arg}'"
 				[ "${opt}" = "-d" ] && return 2
@@ -153,9 +153,9 @@ SOURCE()
 	done
 	return ${ret}
 }
-DOT()
+SOURCE()
 {
-	SOURCE "${@}"
+	DOT "${@}"
 }
 
 #
