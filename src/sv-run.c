@@ -91,7 +91,7 @@ static void  thread_worker_cleanup(struct runlist *p);
  */
 int svc_cmd(struct svcrun *run);
 static int svc_run(struct svcrun *run);
-static int svc_waitpid(struct svcrun *run, int flags);
+__attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags);
 #define SVC_WAITPID 0x0100
 
 /*
@@ -571,8 +571,7 @@ static int svc_run(struct svcrun *run)
 	else if (run->pid == 0) /* child */
 		goto runsvc;
 	else {
-		ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__, strerror(errno));
-		return -errno;
+		ERROR("%s:%d: Failed to fork()", __func__, __LINE__);
 	}
 
 runsvc:
@@ -604,7 +603,11 @@ runsvc:
 			/* restore signal mask */
 			sigprocmask(SIG_SETMASK, &ss_old, NULL);
 	}
-	else run->cld = run->pid;
+	else {
+		run->cld = run->pid;
+		DBG("%s:%d: executing service=%s command=%s (pid=%d)\n", __func__, __LINE__,
+				run->name, run->argv[4], run->pid);
+	}
 
 	/* write the service command and the pid to the lock file */
 	snprintf(buf, sizeof(buf), "pid=%d:command=%s", getpid(), run->argv[4]);
@@ -624,6 +627,7 @@ runsvc:
 	svc_sigsetup();
 
 	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
+	ERR("%s:%d: Failed to execve(): %s\n", __func__, __LINE__, strerror(errno));
 	_exit(EXIT_FAILURE);
 supervise:
 	RUN = run;
@@ -635,17 +639,19 @@ supervise:
 	/* setup a timeout and wait for the child */
 	if (run->dep->timeout > 0)
 		alarm(run->dep->timeout);
-	while (run->cld)
+	while (run->cld) {
+		DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
 		sigsuspend(&ss_old);
+	}
 	_exit(run->status);
 }
 
-static int svc_waitpid(struct svcrun *run, int flags)
+__attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags)
 {
 	int status = 0;
 	pid_t pid;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%p, %d)\n", __func__, run, flags);
+	if (sv_debug) DBG("%s(%p[=%s], %d)\n", __func__, run, run->name, flags);
 #endif
 
 	/* do this hack to only mark children status */
@@ -653,10 +659,15 @@ static int svc_waitpid(struct svcrun *run, int flags)
 		status = run->status;
 	else
 	do {
+		DBG("%s:%d: waiting for pid=%d (service=%s)\n", __func__, __LINE__,
+				run->cld, run->name);
 		pid = waitpid(run->cld, &status, flags);
 		if (pid < 0) {
-			if (errno != EINTR)
+			if (errno != EINTR) {
+				LOG_ERR("%s:%d:service=%s: Failed to waitpid(%d,..): %s\n",
+						__func__, __LINE__, run->name, run->cld, strerror(errno));
 				return -1;
+			}
 		}
 		if (pid == 0)
 			return SVC_WAITPID;
@@ -924,7 +935,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 	mode_t m;
 
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%p, %c, %s)\n", __func__, run, status, what);
+	if (sv_debug) DBG("%s(%p[=%s], %c, %s)\n", __func__, run, run->name, status, what);
 #endif
 
 	if (!run)
@@ -1047,6 +1058,8 @@ static int svc_state(const char *svc, int status)
 static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 	int i = -1, serrno = errno;
+	int j = -1;
+	static const char *sn[] = { "SIGCONT", "SIGSTOP", "SIGTRAP" };
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
@@ -1070,12 +1083,18 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 	case SIGCHLD:
 		switch(si->si_code) {
 		case CLD_CONTINUED:
+			if (j < 0) j = 0;
 		case CLD_STOPPED:
+			if (j < 0) j = 1;
 		case CLD_TRAPPED:
+			if (j < 0) j = 2;
+			DBG("%s:%d:service=%s: pid=%d received %s signal\n", __func__,
+					__LINE__, RUN->name, RUN->cld, sn[j]);
+			errno = serrno;
 			return;
 		}
 		if (RUN)
-			svc_waitpid(RUN, WNOHANG);
+			(void)svc_waitpid(RUN, WNOHANG);
 		break;
 	default:
 		ERR("caught unknown signal %d\n", sig);
@@ -1244,7 +1263,8 @@ static void *thread_worker_handler(void *arg)
 			goto waitpid;
 			break;
 		default:
-			LOG_WARN("%s:%d: unhandled return value!!!\n", __func__, __LINE__);
+			LOG_ERR("%s:%d:service=%s: unhandled return value!!!\n", __func__,
+					__LINE__, svc);
 			continue;
 		}
 
@@ -1285,8 +1305,10 @@ static void *thread_worker_handler(void *arg)
 
 waitpid:
 	pthread_mutex_lock(&p->mutex);
-	while (p->job)
+	while (p->job) {
+		DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, p->job);
 		pthread_cond_wait(&p->cond, &p->mutex);
+	}
 	pthread_mutex_unlock(&p->mutex);
 
 	if (eagain > 0) {
@@ -1311,6 +1333,8 @@ retval:
 static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 	int i = -1;
+	int j = -1;
+	static const char *sn[] = { "SIGCONT", "SIGSTOP", "SIGTRAP" };
 	int serrno = errno;
 	struct runlist *p;
 
@@ -1322,8 +1346,14 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	case SIGCHLD:
 		switch(si->si_code) {
 		case CLD_CONTINUED:
+			if (j < 0) j = 0;
 		case CLD_STOPPED:
+			if (j < 0) j = 1;
 		case CLD_TRAPPED:
+			if (j < 0) j = 2;
+			DBG("%s:%d:service=%s: pid=%d received %s signal\n", __func__,
+					__LINE__, RUN->name, RUN->cld, sn[j]);
+			errno = serrno;
 			return;
 		}
 		thread_signal_handler(si);
@@ -1372,12 +1402,17 @@ static void thread_signal_handler(siginfo_t *si)
 #endif
 
 	do {
+		DBG("%s:%d: waiting for pid=%d\n", __func__, __LINE__, si->si_pid);
 		r = waitpid(si->si_pid, &s, WNOHANG|WUNTRACED);
-		if (r < 0 && errno != EINTR)
+		if (r < 0 && errno != EINTR) {
+			LOG_ERR("%s:%d: Failed to waitpid(%d,...): %s\n",
+					__func__, __LINE__, si->si_pid, strerror(errno));
 			return;
+		}
 	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
 
 	for (;;) {
+		DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, si->si_pid);
 		/* read the first job which could have been changed */
 		pthread_mutex_lock(&RUNLIST_MUTEX);
 		rl = RUNLIST;
