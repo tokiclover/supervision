@@ -411,7 +411,7 @@ start_pre()
 			return 2
 		fi
 	else
-		SOURCE -d ${SVC_CONFIGFILE}
+		DOT -d ${SVC_CONFIGFILE}
 	fi
 
 	if ! grep -qsw tun /proc/modules; then
