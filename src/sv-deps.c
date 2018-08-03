@@ -102,7 +102,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	}
 	pri = prio+1;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("t=%-4d p=%-4d d=%p svc=%-32s s=%-16s v=%-16s\n", type, prio, d,
+	if (sv_debug) DBG("t=%-1d p=%-4d d=%p svc=%-8s s=%-8s v=%-8s\n", type, prio, d,
 			svc->str, s, d->virt);
 #endif
 
@@ -156,7 +156,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 				sv_deptree_add(SV_SVCDEPS_AFTER, prio, svc, deptree);
 			}
 #ifdef SV_DEBUG
-			DBG("move : p=%-4d s=%-16s\n", prio, s);
+			DBG("move : p=%-4d s=%-8s\n", prio, s);
 #endif
 			return prio;
 		}
@@ -164,7 +164,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	for (p = prio; p < deptree->size; p++)
 		if (sv_stringlist_find(deptree->tree[p], s)) {
 #ifdef SV_DEBUG
-			DBG("found: p=%-4d s=%-16s\n", p, s);
+			DBG("found: p=%-4d s=%-8s\n", p, s);
 #endif
 			return p;
 		}
@@ -172,7 +172,7 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	ent = sv_stringlist_add(deptree->tree[prio], s);
 	ent->data = d;
 #ifdef SV_DEBUG
-			DBG("add  : p=%-4d s=%-16s d=%p\n", prio, s, d);
+			DBG("add  : p=%-4d s=%-8s d=%p\n", prio, s, d);
 #endif
 	return prio;
 }
