@@ -153,6 +153,10 @@ SOURCE()
 	done
 	return ${ret}
 }
+DOT()
+{
+	SOURCE "${@}"
+}
 
 #
 # @FUNCTION: Colors handler
