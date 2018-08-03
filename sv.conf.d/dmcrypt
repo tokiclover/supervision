@@ -1,7 +1,7 @@
 #
 # $Id: /etc/sv.conf.d/dmcrypt, 2016/06/06           Exp $
 # 
-# See cryptsetup(8) and DOCDIR/supervision/crypttab for more information.
+# See cryptsetup(8) and /usr/share/doc/supervision/crypttab for more information.
 # Everything is configured in crypttab(8); so copy DOCDIR/crypttab
 # to /etc/crypttab and setup everything in that configuration file.
 #
