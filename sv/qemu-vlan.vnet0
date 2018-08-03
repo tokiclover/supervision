@@ -276,7 +276,8 @@ hwaddr()
 	${vde} && num="$((${num}*32))" || num=$((${num}*8))
 	local i=0 f=${cf%/*}/ether.conf
 	write_config=true
-	cat <<EOF >>$f
+	info "Saving hardware addresses to \`${f}':"
+	cat <<EOF_MAC >>${f}
 ##### Hardwre MAC Address #####
 # to be used with qemu -device virtio-net,mac=MAC
 #
@@ -288,7 +289,7 @@ $(eval '
 ')
 #
 ##### Hardwre MAC Address #####
-EOF
+EOF_MAC
 }
 qemu_vlan_make_bridge()
 {
