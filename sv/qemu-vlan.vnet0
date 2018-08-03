@@ -7,8 +7,12 @@
 
 description="QEMU Virtual Local Network"
 SVC_BEFORE="libvirt-guests libvirtd"
-SVC_AFTER="localfs"
-SVC_COMMANDS="hwaddr"
+SVC_COMMANDS="config hwaddr"
+SVC_STARTED_COMMANDS="ifup ifdown"
+description_config="Make configuration files for the bridge interface"
+description_hwaddr="Make new hardware mac addresses"
+description_ifup="Add a tap device to a bridge (tap device argument[s] required)"
+description_ifdown="Delete a tap device from a bridge (tap device argument[s] required)"
 
 #
 # set sane default
@@ -26,18 +30,19 @@ group=${SVC_GROUP:=qemu}
 
 if [ -f ${SVC_CONFIGFILE} ]; then
 	write_config=false
-	if [ -n "${dhcp}" ]; then
+	if [ "${dhcp}" = "dnsmasq" ]; then
 	SVC_REQUIRED_FILES="
 /etc/qemu/${br}/dhcp.lease
 /etc/qemu/${br}/dhcp.conf
 /etc/qemu/${br}/dhcp.host
 /etc/qemu/${br}/hosts
-"
-	if [ "${dhcp}" = "dnsmasq" ]; then
-	SVC_REQUIRED_FILES="${SVC_REQUIRED_FILES}
 /etc/qemu/${br}/dnsmasq.conf
 "
-	fi
+	elif [ "${dhcp}" = "dhcpd" ]; then
+	SVC_REQUIRED_FILES="
+/etc/qemu/${br}/dhcpd.lease
+/etc/qemu/${br}/dhcpd.conf
+"
 	fi
 else
 	write_config=true
@@ -154,6 +159,7 @@ qemu_vlan_make_dhcpd_server()
 
 	make_dhcpd_conf
 	[ -e ${lf} ] || printf '' >$lf
+	[ "${__cmd__}" = "config" ] && return
 
 	DHCPD_OPTS="-cf ${fc} -lf ${lf} -pf /var/run/${br}.dhcpd.pid -user dhcp -group dhcp"
 	eval dhcpd "${dhcp}_OPTS" "$DHCPD_ARGS" "${br}"
@@ -198,6 +204,7 @@ qemu_vlan_make_dnsmasq_server()
 	hs=${cf%/*}/hosts
 	df=${cf%/*}/dnsmasq.conf
 	qemu_vlan_make_dnsmasq_config
+	[ "${__cmd__}" != "config" ] && return
 
 	DNSMASQ_OPTS="--conf-file=${df} --pid-file=/var/run/${br}.dnsmasq.pid"
 	eval ${dnsmasq} "$DNSMASQ_OPTS" "$DNSMASQ_ARGS"
@@ -344,6 +351,32 @@ qemu_vlan_make_bridge()
 	qemu_vlan_save_config "netmask=${netmask}\ngateway=${gateway}\nbroadcast=${broadcast}\nether=${ether}\n"
 }
 
+config()
+{
+	write_config=true
+	qemu_vlan_make_config
+	qemu_vlan_make_dhcpd_server
+	qemu_vlan_make_dnsmasq_server
+}
+ifup()
+{
+	local tap
+	QEMU_VLAN_VIF=true
+	start_pre
+	for tap; do
+		start
+	done
+}
+ifdown()
+{
+	local tap
+	QEMU_VLAN_VIF=true
+	start_pre
+	for tap; do
+		stop
+	done
+}
+
 stop_pre()
 {
 	yesno "${QEMU_VLAN_VDE}" && QEMU_VLAN_VDE=true || QEMU_VLAN_VDE=false
@@ -431,6 +464,7 @@ start()
 		# use a vde switch if enabled
 		#
 		if ${vde}; then
+			${vif} && warn "QEMU_VLAN_VDE is active for this bridge!"
 			eval ether="\$vde_switch_ether_${i}"
 			if [ -z "${ether}" ]; then
 		:	${write_config:=true}
@@ -443,6 +477,7 @@ start()
 				{ error "Failed to connect \`${tap}' interface to VDE switch"; return 1; }
 		fi
 
+		${vif} && return 0
 		i=$((${i}+1))
 		write_config=
 	done
@@ -457,6 +492,7 @@ stop()
 		#
 		pidfile=/var/run/${tap}.vde_switch.pid
 		if ${vde} && [ -e ${pidfile} ]; then
+			${vif} && warn "QEMU_VLAN_VDE is active for this bridge!"
 			if pkill -TERM -x "vde_switch" -F ${pidfile}; then
 				rm -f ${pidfile}
 			fi
@@ -464,9 +500,9 @@ stop()
 
 		${ip} link set dev "${tap}" down
 		${ip} link del dev "${tap}"
+		${vif} && return 0
 		i=$((${i}+1))
 	done
-	${vif} && return 0
 
 	# 
 	# Delete the bridge
