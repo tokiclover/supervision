@@ -38,10 +38,10 @@
 #
 #   * Redirect ports for (non bridged) virtual network can be done using
 #     iptables's DNAT and SNAT targets. PREROUTING and POSTROUTING chains are supported
-#     for VMs are providing web services. The format is as the following:
+#     for VMs providing web services. The format is as the following:
 #
-# PREROUTING_RULSES="interface,proto,port,address:port[/4|6] interface,proto,..."
-# POSTROUTING_RULSES="interface,proto,port,address:port[/4|6] interface,proto,..."
+#QEMU_VLAN_PREROUTING_RULSES="interface,proto,port,address:port[/4|6] interface,proto,..."
+#QEMU_VLAN_POSTROUTING_RULSES="interface,proto,port,address:port[/4|6] interface,proto,..."
 #
 # interface   : external network interface to use for external traffic
 # proto       : network protocol to use for redirect (tcp, udp,...)
@@ -53,6 +53,9 @@
 #
 # ${iptables} -A PREROUTING  -t nat -d 192.168.x.y --dport 8080  -j DNAT --to-destination 172.16.u.v:80
 # ${iptables} -A POSTROUTING -t nat -s 172.16.u.v  --sport 80    -j SNAT --to-source   192.168.x.y:8080
+#
+#    `u' is the virtual LAN (`0' for `vnet0', `4' for `vnet4');
+#    `v' is the lower address byte of the machine.
 #
 # Examples:
 #
