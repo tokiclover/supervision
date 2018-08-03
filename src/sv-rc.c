@@ -340,10 +340,8 @@ __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
 		if (logfd > 0) {
 			logfp = fdopen(logfd, "a+");
-			if ((debugfd = dup(logfd)) > 0) {
-				if (!(debugfp = fdopen(debugfd, "a+"))) debugfp = logfp;
-			}
-			else debugfd = STDERR_FILENO;
+			debugfp = logfp;
+			debugfd = logfd;
 		}
 	}
 
