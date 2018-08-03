@@ -1170,7 +1170,9 @@ int svc_exec(int argc, const char *argv[]) {
 		return 5;
 	case SVC_WAITPID:
 		run.cld = run.pid;
-		return svc_waitpid(&run, 0);
+		retval = svc_waitpid(&run, 0);
+		if (retval < 0) return EXIT_FAILURE;
+		return retval;
 	default:
 		if (retval < 0) return EXIT_FAILURE;
 		return retval;
