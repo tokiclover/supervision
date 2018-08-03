@@ -1,5 +1,6 @@
-# /etc/sv.conf.d/libvirtd
-
+#
+# $Id: /etc/sv.conf.d/libvirtd           Exp $
+#
 # LIBVIRT_URIS
 # space separated list of libvirt URIs to communicate with to start/stop guests
 # Valid values are anything that can be passed to 'virsh connect'
@@ -66,3 +67,7 @@ LIBVIRT_START="yes"
 # NATed network for you. Valid values: 'yes' or 'no'
 
 LIBVIRT_NET_SHUTDOWN="yes"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
