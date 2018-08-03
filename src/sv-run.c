@@ -57,7 +57,7 @@ static sigset_t ss_thread;
 
 const char *progname;
 const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1",
-	"SIGKILL" };
+	"SIGUSR2", "SIGKILL" };
 static const char *applet = "sv-run";
 
 /* !!! likewise (service command) !!! */
@@ -1060,7 +1060,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 			else if (RUN->sig == SIGTERM)
 				i = 2, RUN->sig = SIGQUIT;
 			else
-				i = 5, RUN->sig = SIGKILL;
+				i = 6, RUN->sig = SIGKILL;
 			alarm(RUN->dep->timeout);
 			LOG_WARN("sending %s to process PID=%d (service=%s)!!!\n", signame[i],
 					RUN->cld, RUN->name);

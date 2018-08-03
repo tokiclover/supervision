@@ -386,8 +386,10 @@ static void sv_sighandler(int sig, siginfo_t *si __attribute__((__unused__)), vo
 		kill(0, sig);
 		exit(EXIT_FAILURE);
 	case SIGUSR1:
+		if (i < 0) i = 4;
 	case SIGUSR2:
-		fprintf(stderr, "%s: Aborting!\n", progname);
+		if (i < 0) i = 5;
+		fprintf(stderr, "%s: Aborting! (caught %s signal)\n", progname, signame[i]);
 		/* block child signals */
 		sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
