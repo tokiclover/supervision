@@ -2,7 +2,7 @@
 # $Id: @(#) /etc/sv/qemu-vlan                             Exp $
 # $A$: (c) 2016-2018 tokiclover <tokiclover@gmail.com>    Exp $
 # $L$: MIT (or 2-clause/new/simplified BSD)               Exp $
-# $V$: 0.2.0 2018/07/08 21:09:26                          Exp $
+# $V$: 0.4.0 2018/08/02 21:09:26                          Exp $
 #
 
 description="QEMU Virtual Local Network"
