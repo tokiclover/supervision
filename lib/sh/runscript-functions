@@ -328,7 +328,7 @@ yesno "${SVC_TRACE}" && set -x
 if yesno "${RC_OPTS}"; then
 :	${RC_CONFDIR:=/etc/conf.d}
 :	${RC_INITDIR:=/etc/init.d}
-	SOURCE ${RC_CONFDIR}/${SVC_NAME}
+	DOT ${RC_CONFDIR}/${SVC_NAME}
 fi
 
 
@@ -338,13 +338,13 @@ if [ -n "${__svc__}" ]; then
 #
 if   [ "${SV_TYPE}" = "rs" ]; then
 	if [ "${name}" != "${SVC_NAME}" ]; then
-	SOURCE "${SV_CONFDIR}/${name}"
-	SOURCE "${SV_CONFLOCAL}/${name}"
+	DOT "${SV_CONFDIR}/${name}"
+	DOT "${SV_CONFLOCAL}/${name}"
 	else
-	SOURCE "${SV_CONFDIR}/${SVC_NAME}"
-	SOURCE "${SV_CONFLOCAL}/${SVC_NAME}"
+	DOT "${SV_CONFDIR}/${SVC_NAME}"
+	DOT "${SV_CONFLOCAL}/${SVC_NAME}"
 	fi
-	SOURCE -d ${__svc__}
+	DOT -e ${__svc__} || return 1
 #
 # Set up supervision environment
 #
@@ -359,22 +359,22 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	fi # __cmd__
 
 	if [ "${name}" = "${SVC_NAME}" ]; then
-	SOURCE "${SV_CONFLOCAL}/${SVC_NAME}"
+	DOT "${SV_CONFLOCAL}/${SVC_NAME}"
 	else
-	SOURCE "${SV_CONFLOCAL}/${name}"
+	DOT "${SV_CONFLOCAL}/${name}"
 	fi
-	SOURCE -d ${__svc__}/OPTIONS
+	DOT -e ${__svc__}/OPTIONS || return 1
 	#
 	# Handle specific (virtual) service backend/instance
 	#
 	if [ "${name}" = "${SVC_NAME}" ]; then
-	SOURCE "${SVC_DIR}/OPTIONS.${SVC_NAME}"
+	DOT "${SVC_DIR}/OPTIONS.${SVC_NAME}"
 	else
-	SOURCE "${SVC_DIR}/OPTIONS.${name}"
+	DOT "${SVC_DIR}/OPTIONS.${name}"
 	fi
 	readonly SVC_PIDFILE="${SV_TMPDIR}/pids/${SVC_NAME}"
 	if [ -z "${__SV_CONFIG__}" ]; then
-	SOURCE -d ${SV_LIBDIR}/sh/SV-CONFIG
+	DOT -d ${SV_LIBDIR}/sh/SV-CONFIG
 	readonly __SV_NAM__ __SVCENV__ __SV_CMD__ __SVCCMD__ __CHKCMD__ __STACMD__ \
 			__LOGCMD__ __PRECMD__ __SCANCMD__ __SIGSTRT__ __SIGSTOP__ __SIGSONCE__ \
 			__SIGPAUSE__ __SIGCONT__ __SIGHUP__ __SIGALRM__ __SIGINT__ __SIGTERM__ \
@@ -385,7 +385,7 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 fi # SV_TYPE=sv
 
 if [ -n "${__cmd__}" ]; then
-SOURCE ${SV_TMPDIR}/opts/${SVC_NAME}
+DOT ${SV_TMPDIR}/opts/${SVC_NAME}
 fi # __cmd__
 
 SV_SERVICE=${__svc__}
@@ -396,11 +396,11 @@ readonly SV_SERVICE RC_SERVICE
 fi # __svc__
 
 if [ -z "${__env__}" ]; then
-SOURCE ${SV_TMPDIR}/env
+DOT ${SV_TMPDIR}/env
 __env__=1
 fi # __env__
 if [ -z "${__environ__}" ]; then
-SOURCE ${SV_TMPDIR}/environ && __environ__=1 || __environ__=0
+DOT ${SV_TMPDIR}/environ && __environ__=1 || __environ__=0
 fi # __environ__
 
 #
