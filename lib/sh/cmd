@@ -48,7 +48,7 @@ fi
 :	${SVC_CMD:=${SVC_NAME}}
 
 if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
-	yesno "${__environ__}" || SOURCE ${SV_TMPDIR}/envs/${SVC_NAME}
+	yesno "${__environ__}" || DOT ${SV_TMPDIR}/envs/${SVC_NAME}
 	#
 	# Use ENV dir(s) if requested
 	#
