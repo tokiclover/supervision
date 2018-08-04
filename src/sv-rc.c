@@ -44,6 +44,7 @@ int sv_parallel =  0;
 int sv_level    = -1;
 int sv_init     = -1;
 int sv_system = 0;
+int sv_timeout = 0;
 pid_t sv_pid  = 0;
 int svc_deps  = 1;
 int svc_quiet = 1;
@@ -827,6 +828,8 @@ int main(int argc, char *argv[])
 	setenv("SV_SHUTDOWN_LEVEL", sv_init_level[SV_SHUTDOWN_LEVEL], 1);
 	sv_debug    = sv_conf_yesno("SV_DEBUG");
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
+	if ((ptr = sv_getconf("SV_TIMEOUT")))
+		if (!sscanf( ptr, "%d", &sv_timeout)) sv_timeout = 0;
 	sv_sigsetup();
 
 	if (!strcmp(progname, "sv-run")) {

@@ -588,6 +588,7 @@ runsvc:
 		svc_lock(run->name, run->lock, 0);
 
 	/* supervise the service */
+	if (!run->dep->timeout) run->dep->timeout = sv_timeout;
 	if (run->dep->timeout > 0) {
 		/* block signal before fork() */
 		sigprocmask(SIG_SETMASK, &ss_full, NULL);
