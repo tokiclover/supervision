@@ -598,7 +598,7 @@ runsvc:
 		else if (run->cld < 0) { /* child */
 			ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__,
 					strerror(errno));
-			_exit(errno);
+			_exit(EXIT_FAILURE);
 		}
 		else
 			/* restore signal mask */
