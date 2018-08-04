@@ -419,18 +419,10 @@ SV_StringList_T *sv_svclist_load(char *dir_path)
 static int sv_svcdeps_gen(const char *svc)
 {
 	int retval, status;
-	char cmd[1024], *ptr;
 	pid_t pid;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
-
-	if (svc) {
-		ptr = cmd;
-		snprintf(cmd, ARRAY_SIZE(cmd), "%s %s", SV_DEPGEN, svc);
-	}
-	else
-		ptr = SV_DEPGEN;
 
 	if ((pid = fork()) > 0) { /* parent */
 		do {
@@ -440,13 +432,13 @@ static int sv_svcdeps_gen(const char *svc)
 				ERROR("%s: failed to fork()", __func__);
 			}
 		} while (!WIFEXITED(status));
-		return WEXITSTATUS(status);
 	}
 	else if (!pid) { /* child */
 		if (execl(SV_DEPGEN, strrchr(SV_DEPGEN, '/')+1, svc, NULL))
 			ERROR("Failed to execute `%s'", SV_DEPGEN);
 	}
 	else ERROR("%s: failed to fork()", __func__);
+	return WEXITSTATUS(status);
 }
 
 #define WAIT_SVSCAN                                                      \
