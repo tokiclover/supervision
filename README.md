@@ -13,8 +13,8 @@ DESCRIPTION
 -----------
 
 Full-featured and yet simple and efficient init-system and service-manager
-with service dependencies, LSB and extra service commands, virtual
-service and service instances and read-only rootfs support to name a few.
+with service dependencies, standard service commands and extra service commands,
+virtual service and service instances and read-only rootfs support to name a few.
 
 *BOOT AND SHUTDOWN STATS*:
 
@@ -42,7 +42,9 @@ INSTALLATION
 
 `make DESTDIR=/tmp installl` to install.
 
-And do not forget to run `${LIBDIR}/sv/sbin/sv-config --config ARG` afterwards!
+And *do not forget* to run `${LIBDIR}/sv/sbin/sv-config --config ARG` afterwards!
+Or, if updating an old installation *do not forget* to run
+`${LIBDIR}/sv/sbin/sv-config --update` afterwards!
 
 APPLICATION USAGE
 -----------------
