@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-RC 8 "2018-07-26" "0.14.0" "System Manager's Manual"
+.TH SV-RC 8 "2018-08-02" "0.14.0" "System Manager's Manual"
 .SH NAME
 sv-rc \- utility to manage init system
 .SH DESCRIPTION
@@ -163,6 +163,9 @@ service-manager utility.
 .TP
 .B 0
 success
+or
+.B SIGUSR2
+was sent to abort operation
 .TP
 .B 1
 miscellaneous operational failures (failure to read the dependency file...);
@@ -170,9 +173,6 @@ or
 .B SIGUSR1
 was sent to abort operation; or
 a signal (\fBSIGTERM\fR ...) was sent to terminate the program
-.TP
-.B errno
-system call failure (fork...)
 .SH "APPLICATION USAGE"
 Refer to 
 .BR sv-run (8)
