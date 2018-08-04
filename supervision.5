@@ -4,111 +4,150 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2018-07-18" "0.14.0" "File Format Manual"
+.TH SUPERVISION 5 "2018-08-04" "0.14.0" "File Format Manual"
 .SH NAME
 supervision \- supervision framework init-system and service-manager
 .SH DESCRIPTION
-Supervision package aims to provide and easy, simple and efficient
-service-manager and init-system build to function with a supervision suite.
+Supervision provide an easy, simple and efficient
+service-manager and init-system build to function with any supervisor.
 Though the init-system part can be bypassed altogether by using only
 .I default
-run level or init stage and
-thus benefit the easy to use the service-management framework for supervision.
-.SS SUPERVISION
-Supervision aims to provide an easy and efficient way to supervision;
-deamontools[-encore], runit and s6 supervisor backends are actually supported.
-(Supervision-)services use, by default, a single \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
-file and \fI./{finish,run}\fR command files symlinked to \fI@LIBDIR@/sv/sh/cmd\fR.
-The same goes for the log directory.
+run level or init-stage-2 and
+thus benefit the easy to use supervised service-management.
+A daemon could be supervised easily up to a single line service definition\-\-\c
+defining only \fBSVC_OPTS=--foregroud\fR would suffice to manage and supervise
+\fBacpid\fR service, or defining \fBSVC_OPTS='-f -d'\fR would suffice to manage
+and supervise atd service.
+.SS SUPERVISION SERVICE
+Supervision service provide an easy and efficient way to supervise daemons;
+deamontools[-encore], runit and s6 supervisor are actually supported.
+(Supervision-)services use, by default, an \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
+file for service definition
+and
+.RB \./{\| finish , run \|}
+command files symlinked to \fI@LIBDIR@/sv/sh/cmd\fR.
+The same goes for the log directory for \fI./{run,finish}\fR command files.
 .I Envdir
-variant with a global \fI@SYSCONFDIR@/sv/.env/\fR and local
+directory with a global \fI@SYSCONFDIR@/sv/.env/\fR and local
 \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/env/\fR is also supported.
-.SS RUNSCRIPT
+.SS RUNSCRIPT SERVICE
 It also support runscript services that can be used
 to finely set up and boot a full system.
 The same environment variables are used, minus that, almost only dependencies
 and extra commands are usable in this context if no daemon is involved.
-(Runscript-)services use a single executable \fI@SYSCONFDIR@/\fBSERVICE\fR file
+(Runscript-)services use a single executable \fI@SYSCONFDIR@/sv/\fBSERVICE\fR file
 with an optional configuration file \fI@SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
-which uses the same formating and syntax as improved common
+which uses the same format and syntax as an improved common
 .B rc
-script file (e.g. OpenRC.) Meaning that, only functions and dependency are
+script file (e.g. OpenRC or the {Open,Net,Free}BSD like system.)
+Meaning that, only functions and dependency are
 defined in the files. This is also true for supervision services.
 .SH CONFIGURATION
 Global configuration can be done with
 .I @SYSCONFDIR@/sv.conf
-file. Do note that, this will affect every service.
+configuration file. Do note that, this will affect every service.
 Local, per service, configuration is done with
-.I OPTIONS
-files. See
+\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
+file for supervision service and \fI@SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR for runscript
+service. See
 .B OPTIONS
 sub-section for more information.
 Any service type support a local configuration file in \fI@SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR as well.
 .SH "SERVICE COMMANDS"
-Standard LSB
-.I {start,stop,status}
-along with
-.I {reload,restart,zap}
-and
-.I {add,desc,cgroup_remove_service,scan}
+Standard service commands
+.RB {(\| start ),( stop ), status ,( reload ),( restart ),( desc ), scan , zap \|}
+and special supervised service commands
+.RB {\| add ,( cgroup_remove_service \|)}
 extra commands are supported.
 Supervision-services also support
-.I {new,remove,up,down}
+.RB {\| new , remove , up , down \|}
 command to create a new service with a template; the other two send the
-.I {up,down}
+.RB {\| up , down \|}
 command to the supervisor.
 .I reload
 command has special meaning for supervision services in that, if no
 .I reload
-command definition is found and the supervision suite support a
+command definition is found and the supervisor support a
 .I reload
 command, that command will be used instead.
 And then, if not, a
 .B SIGHUP
 would be sent the supervisor.
-Or else, send
-.B SIGHUP
-directly to the daemon.
+This special meaning is also used for runscript service if used to manage a daemon.
 The other command remove the service from
 .B SV_RUNDIR
 (running /service/ directory.)
-And the last to remove Control Group PIDs hierarchy.
-`\fI@EXEC_PREFIX@@SBINDIR@/sv-run\fR [OPTIONS] SERVICE COMMAND [ARGUMENTS]' can be used for
+And the last to remove Control Group hierarchy for linux systems.
+.B @EXEC_PREFIX@@SBINDIR@/sv-run
+.RB [\| OPTIONS \|]
+.RB \| SERVICE \|
+.RB \| COMMAND \|
+.RB [\| ARGUMENTS \|]
+can be used for
 any service type and efficiency; or the following for a particular service type.
 Some commands, like
-.I {add,del}
-require a runlevel
-`-(0|1|3|4|5)' to get the appropriate result.
+.RB {\| add , del \|}
+require a runlevel command line argument
+.RB (\| \-0 | \-1 | \-3 | \-4 | \-5 \|)
+to get the appropriate result.
 
-Or use \fI$PREFIX/@SYSCONFDIR@/sv\fR service directory when applicable instead
-of only \fI@SYSCONFDIR@/sv\fR service directory.
+Commands with parenthesis are optional. This is more true with runscript service.
+If such a command is not defined in the service when the service is not used to
+manage a daemon, no such command(s) are available.
+
+.B restart
+command is special in that, if no definition is found, a stop-start sequence will
+replace the command as the following:
+.RB {(\| stop_pre ),( stop ),( stop_post ),( start_pre ),( start ),( start_post \|)}
+would follow in that exact sequence if the commands are defined (shell functions.)
+Replace the
+.RB {\| stop , start \|}
+commands with the supervisor commands for supervision service which are always defined for
+this type of service.
+
+.B desc
+command is available only if a \fIdescription\fR variable is defined in the service;
+exra command(s) description is available if a \fIdescription_\fBCOMMAND\fR definition
+is found for each extra command supported by the service. And then a
+.B sv-run
+.RB \| SERVICE \|
+.RB \| desc \|
+.RB \| COMMAND \|
+can de used to display the command
+description.
 
 .TP
-.B SUPERVISION
+.B SUPERVISION SERVICE
 And
-.B `@SYSCONFDIR@/sv/SERVICE/run [OPTIONS] COMMAND [ARGUMENTS]'
-can be used instead for supervision services.
+.B @SYSCONFDIR@/sv/SERVICE/run
+.RB [\| OPTIONS \|]
+.RB \| COMMAND \|
+.RB [\| ARGUMENTS \|]
+can be used instead for supervision services,
+which is strongly discouraged.
 .TP
-.B RUNSCRIPT
+.B RUNSCRIPT SERVICE
 And
-.B `@SYSCONFDIR@/sv/SERVICE COMMAND [ARGUMENTS]'
+.B @SYSCONFDIR@/sv/SERVICE
+.RB \| COMMAND \|
+.RB [\| ARGUMENTS \|]
 can be used instead for runscript services.
 .SH "SERVICE INSTANCES"
 .TP
-.B SUPERVISION
+.B SUPERVISION SERVICE
 Service supporting many instances can be written in a short manner
-like a virtual service backend with specific \fIOPTIONS.\fRINSTANCE
-file, e.g.
+like a virtual service (see dns or dhcp service) with specific \fIOPTIONS.\fBINSTANCE\fR
+file(s), like
 .I syslog
 with
 .I socklog
-backend (suporting extra
-.I {inet,ucspi,unix}
+provider (which support extra
+.RB {\| inet , ucspi , unix \|}
 instances),
-instead of duplicating unecessary directory and symbolic links;
+instead of duplicating unecessary directory and symbolic links to \fI./{run,finish}\fR.
 And then a single extra
-.B INSTANCE->SERVICE
-symbolic link would suffice.
+`\fBln -s SERVICE INSTANCE\fR'
+symbolic link in th eservice directory would suffice.
 See also
 .I getty
 for an example of multi-providers/instances with
@@ -116,7 +155,7 @@ for an example of multi-providers/instances with
 a single symlink and a single \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
 file.
 .TP
-.B RUNSCRIPT
+.B RUNSCRIPT SERVICE
 Similarly, runscript service instances use a symlink to the service with an extra
 \fI@SYSCONFDIR@/sv.conf.d/\fBINSTANCE\fR configuration file if any.
 See
@@ -151,7 +190,7 @@ runlevel for
 .I net
 (just issue a `sv-run --sysboot dhcp add' and be done with it.)
 .TP
-.B SUPERVISION
+.B SUPERVISION SERVICE
 Another scheme is to use a single directory for multiple providers like,
 for example,
 .I dns
@@ -173,7 +212,7 @@ and
 .B DNS
 daemon will be started no matter what happen.
 This variant is made by using a single directory and a specific
-\fIOPTIONS.\fRPROVIDER
+\fIOPTIONS.\fBPROVIDER\fR
 file for service that should be in a single instance mode, like
 .B syslog
 (see
@@ -194,7 +233,7 @@ be what is expected. So, use the previous manner by defining
 .B SVC_PROVIDE
 environment variable.
 .TP
-.B RUNSCRIPT
+.B RUNSCRIPT SERVICE
 Similarly, runscript services use the first way of making a virtual service
 described above, namely, by setting
 .I SVC_PROVIDE
@@ -202,14 +241,14 @@ environment variable. The first variant cannot be used here because runscript
 services are execuable files instead of directories.
 .SH "APPLICATION USAGE"
 Full
-.I {after,before,need,use}
+.RB {\| after , before , need , use \|}
 service dependencies is supported. See
 .B DEPENDENCIES
 and
 .B RUNLEVELS
 for more information.
 .TP
-.B SUPERVISION
+.B SUPERVISION SERVICE
 If service dependencies matter, usage of Runit/S6 is recommanded.
 Cold system boot should be fine because of priority level scheduling which start
 services in parallele depending on the service dependencies; so, services with
@@ -217,14 +256,14 @@ dependencies would reliably wait enough if necessary, or else,
 .I SV_TRY
 or per service
 .I SVC_TTRY
-(supervision) limit configuration setting would restart (failed) services.
+(supervision service) limit configuration setting would restart (failed) services.
 .TP
-.B RUNSCRIPT
+.B RUNSCRIPT SERVICE
 Now runscript service can be used to start daemons which cannot be kept in the
 foreground even with
 .B fghack
 usage. See
-.I {nrpe,nginx}
+.RB {\| nrpe , nginx \|}
 services for practical examples. Just keep in mind that either
 .B SVC_PIDFILE
 should be defined and/or enable
@@ -242,9 +281,9 @@ service instead of
 one. There is no hack to try to find the PID of a daemon!
 This ability was just added to avoid defining
 .I ad infinitum
-.B {start,stop}()
+.RB {\| start , stop \|}
 shell function. Just define at least
-.B SVC_{CMD,OPTS}
+.RB {\| SVC_CMD , SVC_OPTS \|}
 and be done with it.
 
 .TP
@@ -275,7 +314,9 @@ for docker containers et al.
 Services that have the subsystem keyword will not be started in that particular
 subsystem environment.
 
-To have the supervisor \fB({damontools[-encore],runit,s6})\fR executed as \fBPID 1\fR...
+To have the supervisor
+.RB ({\| damontools[-encore] , runit , s6 \|})
+executed as \fBPID 1\fR...
 Just setup the container or subsystem; once done, use something like
 the following for docker: `\fBdocker run [OPTIONS] --env container=docker --tmpfs /run
 IMAGE /lib/sv/sh/sv-init.sh --default\fR'; and voila! the supervisor will be executed
@@ -285,13 +326,13 @@ as \fIPID 1\fR and another process will handle service management to setup the c
 .SS ENVIRONMENT
 The following environment variables are supported.
 .TP
-.B SUPERVISION
+.B SUPERVISION SERVICE
 Supervision services use \fI@SYSCONFDIR@/sv/\fRSERVICE\fI/OPTIONS\fR
 file or provider file(s) to define environment variables if necessary.
 This where the command and command line options are defined alond with
 shell functions for service setup and clean up if necessary.
 .TP
-.B RUNSCRIPT
+.B RUNSCRIPT SERVICE
 Runscript services use \fI@SYSCONFDIR@/sv/\fRSERVICE script to define shell functions and
 a default environment; and  \fI@SYSCONFDIR@/sv.conf.d/\fRSERVICE configuration file to
 define extra services dependencies and other environment variables and service
@@ -352,13 +393,13 @@ T}
 Keyword to enable per service (see \fBKEYWORDS\fR in this subsection)
 T}
 \fBSVC_TIMEOUT=30\fR@T{
-Timeout per service to use when nohang detection is enabled to send signals
+Timeout per service to use when nohang detection is enabled to send signals to kill the hanging service
 T}
 \fBSVC_REQUIRED_FILES\fR@T{
-Service required file-s
+Service required files
 T}
 \fBSVC_CMD\fR@T{
-Command name (default to SERVICE directory)
+Command name (default to SERVICE)
 T}
 \fBSVC_OPTS\fR@T{
 Command arguments
@@ -376,7 +417,7 @@ T}
 PID file of service (OVERRIDED for supervised services)
 T}
 \fBRC_OPTS=Yes\fR@T{
-To enable support for OpenRC configuration files
+To enable support for OpenRC service configuration files
 T}
 .TE
 
@@ -465,12 +506,14 @@ T}
 Extra service commands along with supported commands are defined as shell functions.
 .B WARNING:
 A few functions starting with
-.I {svc,rs}_
+.RB {\| svc_ , rs_ \|}
 prefix are used for internal usage (see \fBBUILTINS\fR);
 and thus are reserved for futur usage;
 use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
-\fIenv_{del,svc}\fR shell functions are also reserved for internal usage.
-\fI{checkpath,{fstab,mount}info,service,waitfile}\fR have shell functions of the
+.RB {\| env_del , env_svc \|}
+shell functions are also reserved for internal usage.
+.RB {\| checkpath , fstabinfo , mountinfo , service , waitfile \|}
+have shell functions of the
 same name to bypass shell path look up for efficiency.)
 And then, a few functions name have special meaning; read the following for more
 information.
@@ -495,8 +538,8 @@ T}
 .TE
 
 .TP
-.B SUPERVISION
-Those two shell functions can be used for logdir setup and clean up for supervision
+.B SUPERVISION SERVICE
+Those two shell functions can be used for logging directory setup and clean up for supervision
 services; there are no meaning for runscript services and thus are not supported.
 .TS
 tab (@);
@@ -510,7 +553,7 @@ T}
 .TE
 
 See
-.I @SV_LIBDIR@/sh/cmd
+.RB @EXEC_PREFIX@@LIBDIR@/sv/sh/cmd
 for the default and
 .I OPTIONS
 file for services like
@@ -521,11 +564,11 @@ file for services like
 .I sshd
 for practical examples.
 .TP
-.B RUNSCRIPT
+.B RUNSCRIPT SERVICE
 Standard
-.I {restart,start,stop}
+.RB {\| restart , start , stop \|}
 along with
-.I {start,stop}_{pre,post}
+.RB {\| start_pre , start_post , stop_pre , stop_post \|}
 (set/clean up) functions are supported.
 .TS
 tab (@);
@@ -542,11 +585,11 @@ T}
 .TE
 .SS DEPENDENCIES
 Standard
-.I {after,before,need,use}
+.RB {\| after , before , need , use \|}
 service dependencies is supported.
-.I {after,before}
-support a shell still regular expression to specify a broad range of service;
-e.g.
+.RB {\| after , before \|}
+support \fI*\R shell regular expression to specify a broad range of service;
+like
 .I SVC_AFTER="*"
 or
 .I SVC_BEFORE="*"
@@ -575,10 +618,14 @@ environment variables.
 .B timeout
 Disable timeout for any service command (relevent only when
 .B SV_TIMEOUT
+or
+.B SVC_TIEOUT
 is set to an unsigned or postive integer.)
 .TP
 .B shutdown
-Disable the service in \fI{reboot,shutdown}\fR runlevels
+Disable the service in
+.RB {\| reboot , shutdown \|}
+runlevels
 or simply, disable the \fBstop\fR service command.
 .TP
 .B SUBSYSTEM:
@@ -597,14 +644,14 @@ or simply, disable the \fBstop\fR service command.
 Disable the service in the SUBSYSTEM--see \fI@SYSCONFDIR@/sv.conf\fR for valid
 subsystem keywords.
 
-.SS ANSI COLORS
+.SS ANSI COLORS ESCAPE SEQUENCES
 .B ANSI
 escape sequences are available with
-.B color_{b,f}g_<ID>
-when \fB<ID>\fR is an integer from 0 to 7 for 8 colors terminal, or 0 to 255
+.RB {\| color_bg_COLOR , color_fg_COLOR \|}
+when \fBCOLOR\fR is an integer from 0 to 7 for 8 colors terminal, or 0 to 255
 for 256 colors terminals (a `\fIeval_clors 256\fR' is required beforehand.)
 There are a few aliases for the base colors and attributes mapped to
-\fIcolor_<ALIAS>\fR for the attributes and \fIcolor_{b,f}g_<ALIAS>\fR for colors:
+\fIcolor_ATTRIBUTE\fR for the attributes:
 .I und
 for underline,
 .I rst
@@ -613,6 +660,9 @@ for reset,
 for bold,
 .I ita
 for italic,
+and
+.RB {\| color_bg_COLOR , color_fg_COLOR \|}
+for colors:
 .I blk
 for black,
 .I red,
@@ -665,9 +715,9 @@ T}
 \fBdevice_info [-a|--all] DEVICES\fR@T{
 Probe /proc/{devices,misc} device info
 T}
-\fBSOURCE [-e|-d] FILES\fR@T{
+\fBDOT [-e|-d] FILES\fR@T{
 Dot or source builtin wrapper (\fI-e|-d\fR to print errors and \fI-d\fR to return ASAP
-if an error occur); alias of \fBDOT\fR builtin
+if an error occur); \fBSOURCE\fR is an alias of this builtin
 T}
 \fBENV_SET VARS...\fR@T{
 Save persistent environment variables (\fIenv_svc\fR alias)
@@ -731,7 +781,7 @@ is necessary, because, the supervisor is only started after
 .I sysinit
 runlevel.
 
-.I {sysinit,sysboot,default,nonetwork,shutdown,reboot,single,nonetwork}
+.RB {\| sysinit , sysboot , default , nonetwork , shutdown , reboot , single , nonetwork \|}
 run levels are supported.
 Extra services that should be started in
 .I single
@@ -739,10 +789,10 @@ run levels should be added into
 .I single
 runlevel like
 .I sulogin
-service or a shell for BSD OSs.
+service or a shell for BSD like systems.
 Just issue the classic command to add a service to
 .B single
-runlevel: `\fIrs --single sulogin add\fR'; however, this is already done in the
+runlevel: `\fIsv-run --single sulogin add\fR'; however, this is already done in the
 default installation process.
 .B sysinit
 runlevel is the initialization init stage;
@@ -752,37 +802,40 @@ runlevel is the first init stage;
 (multi users mode) runlevel is the
 .I default
 init stage;
-.B {nonetwork,single}
+.RB {\| nonetwork , single \|}
 are only a modified
 .B sysboot
 runlevels without network services. So, in practice,
-.B {nonetwork,single}
+.RB {\| nonetwork , single \|}
 replace
 .B sysboot
 runlevel to be able to repair a system.
-See \fBsv-rc\gR(8) for more inforation about runlevels.
+See
+.BR sv-rc (8)
+for more inforation about runlevels.
 .SH CONTROL GROUPS RESOURCE MANAGEMENT
 .SS OVERVIEW
-Supervision Framework support CGroup. CGroup support is autodected on
-start up on Linux. Just enable kernel CGroup support to benefit CGroup resource
+Supervision support Control Group. CGroup support is autodected on
+Linux systems. Just enable kernel Control Group support to benefit CGroup resource
 management. Or else, forcibly disable in
 .B @SYSCONFDIR@/sv.conf
 by setting
-.B SV_CGROUP=No.
+.B SV_CGROUP=DISABLE\fR.
 Set
 .B CGROUP_INHERIT=Yes
 to inherit other CGroups, and/or
 .B CGROUP_CLEANUP=Yes
-to clean up child processes of a \fIgroup\fR or supervised process (in ./finish.)
+to clean up child processes of a \fIgroup\fR or supervised processes.
 
 Global
 .B @SYSCONFDIR@/sv.conf
-and Local
-.B (@SYSCONFDIR@/SERVICE/OPTIONS files for supervised services
-or @SYSCOnFDIR@/sv.conf.d/SERVICE for runscript services)
-or @SYSCOnFDIR@/sv.conf.local.d/SERVICE for any service type)
-Resource Management Settings is supported e.g.
-.RB CGROUP_CPU='cpu.shares\ 256'.
+configuration file
+and local configuration file(s)
+(\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR files for supervised services
+or \fI@SYSCOnFDIR@/sv.conf.d/\fBSERVICE\fR for runscript services)
+or \fI@SYSCOnFDIR@/sv.conf.local.d/\fBSERVICE\fR for any service type)
+Resource Management Settings is supported like
+.RB CGROUP_CPU='cpu.shares\ 256'\fR.
 Multi-value of a parameter is supported along with sets of multi-parameter-value.
 .SS ENVIRONMENT
 See the following table and Linux Documentation for more info on Resource Controllers.
@@ -804,8 +857,16 @@ T}
 \fBCGROUP_DEVICES\fR@T{
 Use Device Whitlist Controller to manage resource for service(s)
 T}
+\fBCGROUP_FREEZER\fR@T{
+Use Freezer controler to freeze and unfreeze tasks for service(s)
+T}
+\fBCGROUP_HUGELTB\fR@T{
+Use HugeTLB page limits to manage resource for service(s)
+.B WARNING:
+A SIGBUS will be sent to processes bypassing this limit.
+T}
 \fBCGROUP_MEMORY\fR@T{
-Use Memory Controller to manage resource for service(s)
+Use Memory Controller to limit resources used by service(s)
 T}
 \fBCGROUP_NET_CLS\fR@T{
 Use Network Classifier to manage resource for service(s)
@@ -813,23 +874,29 @@ T}
 \fBCGROUP_NET_PRIO\fR@T{
 Use Network Priority to manage resource for service(s)
 T}
+\fBCGROUP_PIDS\fR@T{
+Use Process number (fork) limits to manage resources used by service(s)
+T}
+\fBCGROUP_RDMA\fR@T{
+Use RDMA resources to enforce resource management for service(s)
+T}
 .TE
 .SS SERVICE
-CGRED (CGroup Rules Engine Daemon) service is another alternative to CGroup
+CGRED (CGroup Rules Engine Daemon) service is another alternative to Control Group
 with finely grained rules and automatic PIDs classification.
 However, libcgroup should be installed beforehand.
 
 Something like the following can be used to put supervisor processes in CGroup:
 .nf
---[cgconfig.conf]--
+\fB** @SYSCONFDIR@/cgroup/cgconfig.conf **\fR
 group supervisor {
   "name=supervision" {
   }
 }
---[EOF]--
---[cgrules.conf]--
+\fB** FILE_EOF **\fR
+\fB** @SYSCONFDIR@/cgroup/cgrules.conf **\fR
 *:runsv  supervision   supervisor/
---[EOF]--
+\fB** FILE_EOF **\fR
 .fi
 Replace
 .IR runsv
@@ -838,18 +905,20 @@ with
 for daemontools[-encore] or
 .IR s6-supervise
 for S6.
-See cgconfig.conf(5) and enable cgred service.
+See
+.BR cgconfig.conf (5)
+and enable cgred service.
 
-This is only necessary if not using the bundled Init-Stage-2 which have CGroup
+This is only necessary if not using the bundled init-stage-2 (default run level) which have CGroup
 support: child process (supervisor) will naturally inherit supervision CGroup.
 .SH FILES
 .SS @EXEC_PREFIX@@SBINDIR@
 .TP
 .I @EXEC_PREFIX@@SBINDIR@/sv-run
 Multi-purpose binary to run either an init stage or run level or service command, e.g.
-`rs --sysboot zramfs add' to add
+`\fBsv-run \-\-sysboot zramfs add\fR' to add
 .B zramfs
-service to syteme boot runlevel); `rs acpid start' or `sv-rc default' to start
+service to systeme boot runlevel); `\fBsv-run acpid start\fR' or `\fBsv-rc default\fR' to start
 daemons and default services (default runlevel) in multi users mode.
 .SS @SYSCONFDIR@
 .TP
@@ -867,7 +936,12 @@ Runlevel directory
 .TP
 .B \fI@SYSCONFDIR@/sv\fR (\fBSV_SVCDIR\fR)
 See SV_SVCDIR/.RUNLEVEL for active services.
-Use `rs -(0|1||3|4|5) SERVICE add` to add a particular service to a particular
+Use
+.B sv-run
+.RB \| \-0 | \-1 | \-2 | \-3 | \-4 | \-5 \|
+.RB \| SERVICE \|
+.RB \| add \|
+to add a particular service to a particular
 init stage or run level.
 .B sysinit
 is ready to use;
@@ -991,9 +1065,9 @@ Simple and cheap fstab(5) utility
 Simple and cheap mountpoints utility
 .TP
 .I @LIBDIR@/sv/bin/waitfile
-Simple and cheap wait file utility (alternative to \fIsvc_wait\fR shell function)
+Simple and cheap wait file utility (the binary behind \fIsvc_wait\fR shell function)
 .TP
-.B SYMLINKS\ (backend binary symlinks)
+.B SYMLINKS\ \fR(binary symlinks)
 .RB \| @LIBDIR@/sv/bin/envdir \|\ \c
 .RB \| @LIBDIR@/sv/bin/envuidgid \|\ \c
 .RB \| @LIBDIR@/sv/bin/fghack \|\ \c
@@ -1011,7 +1085,14 @@ system directory or the add \fI@LIBDIR@/sv/bin:@LIBDIR@/sv/sbin\fR to \fBPATH\fR
 .TP
 .I @LIBDIR@/sv/sbin/sv-config
 `\fI@LIBDIR@/sv/sbin/sv-config [--log] \fBSERVICE\fI new\fR' to create a new supervision service;
-and ``fI@LIBDIR@/sv/sbin/sv-config --config runit\fR' to set up supervisor
+and
+.B @LIBDIR@/sv/sbin/sv-config
+.RB \| \-\-config \|
+.RB \| runit \|
+to set up runit supervisor; or
+.B @LIBDIR@/sv/sbin/sv-config
+.RB \| \-\-update \|
+after updating the package
 .TP
 .I @LIBDIR@/sv/sbin/sv-shutdown
 Simple utility to handle system halt or reboot. It could be symlinked to
@@ -1059,13 +1140,16 @@ Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .BR sv-run (8),
 .BR sv-rc (8),
 .BR sv-shutdown (8),
-.BR sh (1p)
+.BR sh (1);
+.B daemontools[encore]:
 .BR \%svc (8),
 .BR \%multilog (8),
-.BR \%svscan (8),
+.BR \%svscan (8);
+.B runit:
 .BR \%sv (8),
 .BR \%svlogd (8),
-.BR \%runsvdir (8),
+.BR \%runsvdir (8);
+.B s6:
 .BR \%s6-svc (8),
 .BR \%s6-log (8),
 .BR \%s6-svscan (8),
