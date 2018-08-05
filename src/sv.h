@@ -95,7 +95,11 @@ extern FILE *debugfp;
 		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__); \
   } while (0/*CONSTCOND*/)
 #  undef DBG
-#  define DBG(fmt, ...) fprintf(debugfp, "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
+#  define DBG(fmt, ...) do { \
+	fprintf(debugfp, "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__); \
+	if (debugfp != stderr)   \
+	fprintf(stderr , "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__); \
+  } while (0/*CONSTCOND*/)
 #endif /* ERROR_H && SV_DEBUG */
 
 extern int sv_debug;
