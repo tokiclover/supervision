@@ -810,7 +810,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	pid_t pd;
 	int w;
 	mode_t m;
-	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY;
+	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY | O_CLOEXEC;
 	static mode_t f_mode = 0644;
 
 #ifdef SV_DEBUG
