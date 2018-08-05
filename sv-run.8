@@ -5,18 +5,18 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-RUN 8 "2018-07-26" "0.14.0" "System Manager's Manual"
+.TH SV-RUN 8 "2018-08-04" "0.14.0" "System Manager's Manual"
 .SH NAME
 sv-run \- manage runscript and supervision services
 .SH DESCRIPTION
 .B sv-run
-is a utility to manage runscript and supervised services.
+is a utility to manage runscript and supervision services.
 This utility is used in conjunction with a supervsor like
 .B runit
 ,
 .B s6
 or
-.B daemontools[\| \-encore \|]
+.B daemontools[\-encore]
 to get a fully supervised init-system and service-manager.
 .SH SYNOPSIS
 .B sv-run
@@ -32,7 +32,7 @@ to get a fully supervised init-system and service-manager.
 .B SERVICE
 name can be replaced by
 .B scan
-to update the dependency cache of the list of services passed as arguments
+to update the dependency cache of services passed as arguments
 like \fBsv-run scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
 
 .B SERVICE
@@ -67,7 +67,10 @@ command to manage services rather than using the service executable. And this
 is more true for supervision services when dealing with dependencies and
 virtual services. Starting a supervision service shall be done with
 .B sv-run
-binary instead of using `\fI@SYSCONFDIR@/sv/\fBSERVICE\fI/run \fBCOMMAND [ARGUMENTS]\fR'.
+binary instead of using
+.B @SYSCONFDIR@/sv/SERVICE/run
+.RB \| COMMAND \|
+.RB [\| ARGUMENTS \|]
 
 .SH OPTIONS
 .TP
@@ -85,6 +88,7 @@ Enable debugging mode for services (debugging output to stderr)
 .TP
 .RB \| \-x | \-\-trace \|
 Enable shell trace for services (shell tracing)
+.TP
 .RB \| \-q | \-\-quiet \|
 Suppress verbose message
 .TP
@@ -94,42 +98,41 @@ Print the version message
 .RB \| \-h | \-\-help \|
 Print the help message
 .SH "SERVICE COMMANDS"
-Standard LSB along with extra service commands are supported.
+Standard commands along with extra service commands are supported.
 .B start
-start a service if down or stopped (supervision service wait up to 10 seconds
+Start a service if down or stopped (supervision service wait up to 10 seconds
 by default to start a service.)
 .TP
 .B stop
-stop a service if up or started (supervision service wait up to 10 seconds by
+Stop a service if up or started (supervision service wait up to 10 seconds by
 default to stop a service.)
 .TP
 .B restart
-restart a service after stopping it if started (runscript service can define
+Restart a service after stopping it if started (runscript service can define
 a particular shell function for this purpose.)
 .TP
 .B remove
-remove a supervised service from the running directory.
+Remove a supervised service from the running directory.
 This command has no effect for runscript services.
 .TP
 .B status
-report the status of service (if started or stopped.)
+Report the status of service (if started or stopped.)
 .TP
 .B zap
-remove the temporary files of a service to be able to start a fresh environment,
+Remove the temporary files of a service to be able to start a fresh environment,
 or restart a service if already started.
 .TP
 .B add
-add a service to an sv-init.sh or runlevel (stage level argument is required.)
+Add a service to an init-stage or runlevel (run level argument is required.)
 .TP
 .B del
-remove a service from an sv-init.sh or runlevel (stage level argument is required.)
+Remove a service from an sv-init.sh or runlevel (stage level argument is required.)
 .TP
 .B cgroup_remove_service
-remove the
-.B Control Group PIDs
+Remove the Control Group
 hierarchy after stopping a service. This command has no effect for runscript
 services if not used with a daemon.
-.B CGROUP_CLEANUP
+.B CGROUP_CLEANUP=ENABLE
 environmenet variable can be enabled for automatic clean up.
 .TP
 .B new
@@ -137,38 +140,45 @@ add a new supervised service from a template. This command should be run with
 `\fI@LIBDIR@/sv/bin/sv-config [--log] \fBSERVICE \fInew\fR'.
 .TP
 .B extra-commands
-extra comands defined as shell functions and added to
+Extra comands defined as shell functions and added to
 .B SVC_COMMANDS
 (command that can be executed with any service status) or
 .B SVC_STARTED_COMMANDS
-(for any command that can be executed in started service status) or
+(for any command that shooukd be executed in started service status) or
 .B SVC_STOPPED_COMMANDS
-(for command that can be executed in stopped service status)
-environment variable. Any defined command can be used like a standard LSB command.
+(for command that should be executed in stopped service status)
+environment variable. Any defined command can be used like a standard service command.
 .TP
-.B desc [COMMAND_NAME]
-print service description to standard output.
-.B COMMAND_NAME
+.B desc
+.RB [\| COMMAND \|]
+
+Print service description to standard output.
+.B COMMAND
 argument can be passed to print the description of the named command instead of the
 description of the service, `sv-run udev desc reload' for example.
+.TP
 .B scan
-update the dependency cache of a service. \fIsv-run scan \fBSERVICES\fR can be used
+Update the dependency cache of a service. \fIsv-run scan \fBSERVICES\fR can be used
 for a list of service instead.
+.TP
 .B down
-send down command to the supervisor (supervision only)
+Send down command to the supervisor (supervision only)
+.TP
 .B up
-send up command to the supervisor (supervision only)
+Send up command to the supervisor (supervision only)
 .SH CONFIGURATION
 See
 .I @SYSCONFDIR@/sv.conf
-for the global configuration file, or
+for the global configuration file; or
 .I @SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
-for runscript particular services or
-.I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fB[.INSTANCE]\fR
-for supervision services for the configuration file, or else,
+for runscript service configuration file; or
+.I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR[\fB.INSTANCE\fR]
+for supervision service configuration file; or else,
 .I @SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR
-for the local configuration file for any service type;
-and \fBsupervsion\fR(5) for settings related to
+for the local configuration file for any service type.
+See
+.BR supervsion (5)
+for settings related to
 .B sv-run
 service management.
 .SH "RETURN VALUE"
@@ -193,7 +203,7 @@ failure to lock a service lockfile for service command; or timed out when trying
 lock the lockfile.
 .TP
 .B 5
-service keywords does not permit to \fI{stat,stop}\fR the service
+service keywords does not permit to {start,stop} the service
 .TP
 .B 7
 for
@@ -219,10 +229,11 @@ Some services are added to the service directory? Try starting them then.
 It seems to work? Good, try to add them in an init runlevel with
 `\fIsv-run \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
 by running `\fIsv-rc \fBRUNLEVEL\fR' and then checkout
-\fI${SV_TMPDIR}/deps/\fBRUNLEVEL\fR to see if the service is inserted
+\fI@RUNDIR@/sv/.tmp/deps/\fBRUNLEVEL\fR to see if the service is inserted
 in the right place depending on the dependency definitions. Or better,
 check out the file beforehand. It looks weird or the order changed dramatically?
-Try removing the file altogether and try again. Else, it can be a case of cyclic
+Try removing the file altogether and try again after issuing `\fIsv-run \fBSERVICE \fIscan\fR'
+to update the dependency cache. Else, it can be a case of cyclic
 dependency definition. Major dependency redefinition is necessary.
 
 .B NOTE:
@@ -232,9 +243,9 @@ or service scheduling havoc in dependency tree files mentionned above.
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
-.RB supervision (5)
-.RB sv-rc (8)
-.RB sv-shutdown (8)
+.BR supervision (5)
+.BR sv-rc (8)
+.BR sv-shutdown (8)
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
