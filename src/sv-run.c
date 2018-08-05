@@ -650,7 +650,7 @@ supervise:
 __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags)
 {
 	int status = 0;
-	pid_t pid;
+	pid_t pid = 0;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p[=%s], %d)\n", __func__, run, run->name, flags);
 #endif
@@ -684,6 +684,9 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 		svc_lock(run->name, run->lock, 0);
 	run->cld = 0;
 
+	/* do not mark service status twice */
+	if (sv_timeout && !pid)
+		return run->status;
 	svc_mark(run, SV_SVC_MARK_WAIT, NULL);
 	if (!svc_quiet)
 		svc_end(run->name, run->status);
