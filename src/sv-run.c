@@ -581,7 +581,7 @@ runsvc:
 	/* lock the lock file before any command */
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
-		_exit(ETIMEDOUT);
+		exit(ETIMEDOUT);
 	}
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
@@ -598,20 +598,20 @@ runsvc:
 		else if (run->cld < 0) { /* child */
 			ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__,
 					strerror(errno));
-			_exit(EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 		else
 			/* restore signal mask */
 			sigprocmask(SIG_SETMASK, &ss_old, NULL);
 	}
 	else {
-		run->cld = run->pid;
+		run->cld = getpid();
 		DBG("%s:%d: executing service=%s command=%s (pid=%d)\n", __func__, __LINE__,
-				run->name, run->argv[4], run->pid);
+				run->name, run->argv[4], run->cld);
 	}
 
 	/* write the service command and the pid to the lock file */
-	snprintf(buf, sizeof(buf), "pid=%d:command=%s", getpid(), run->argv[4]);
+	snprintf(buf, sizeof(buf), "pid=%d:command=%s", run->cld, run->argv[4]);
 	len = strlen(buf);
 	do {
 		val = write(run->lock, buf+off, len);
@@ -629,7 +629,7 @@ runsvc:
 
 	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
 	ERR("%s:%d: Failed to execve(): %s\n", __func__, __LINE__, strerror(errno));
-	_exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 supervise:
 	RUN = run;
 	/* restore signal mask */
@@ -644,7 +644,7 @@ supervise:
 		DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
 		sigsuspend(&ss_old);
 	}
-	_exit(run->status);
+	exit(run->status);
 }
 
 __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags)
@@ -1425,6 +1425,8 @@ static void thread_signal_handler(siginfo_t *si)
 			pthread_rwlock_unlock(&p->lock);
 			for (i = 0; i < len && p->run[i]; i++) {
 				if (p->run[i]->pid != si->si_pid) continue;
+				DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
+						si->si_pid, p->run[i]->name);
 
 				p->run[i]->status = s;
 				r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
