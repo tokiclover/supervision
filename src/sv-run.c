@@ -21,24 +21,24 @@
 #include "sv-deps.h"
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
-#define OFFSET_T_SIZE(x)                                                               \
-	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int)) > 4U*sizeof(int) ? \
-	(x+4U)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int)) : \
-	4U*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (x*sizeof(int))
-struct runlist {
-	unsigned int rid;
+#define OFFSET_T_SIZE(align, remind)                                                   \
+	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int)) > remind*sizeof(int) ? \
+	(align+remind)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int)) : \
+	remind*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int))
+struct svcrun_list {
+	unsigned int lid;
 	int argc;
 	const char **argv;
 	SV_StringList_T *list;
 	struct svcrun **run;
 	int retval;
 	size_t job, len, siz, count;
-	struct runlist *next, *prev;
+	struct svcrun_list *next, *prev;
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 	pthread_rwlock_t lock;
 	pthread_t tid;
-	char __pad[OFFSET_T_SIZE(8U)];
+	char __pad[OFFSET_T_SIZE(8U, 4U)];
 };
 #undef THREAD_T_SIZE
 #undef OFSET_T_SIZE
@@ -46,13 +46,13 @@ struct runlist {
 extern pid_t sv_pid;
 
 static struct svcrun *RUN;
-static struct runlist *RUNLIST;
-static unsigned int RUNLIST_COUNT;
-static pthread_cond_t RUNLIST_COND = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t RUNLIST_MUTEX = PTHREAD_MUTEX_INITIALIZER;
-static pthread_attr_t  RUNLIST_ATTR;
-static pthread_mutexattr_t RUNLIST_MUTEX_ATTR;
-static pthread_t RUNLIST_SIGHANDLER_TID;
+static struct svcrun_list *RL_SVC;
+static unsigned int RL_SVC_COUNT;
+static pthread_cond_t RL_SVC_COND = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t RL_SVC_MUTEX = PTHREAD_MUTEX_INITIALIZER;
+static pthread_attr_t  RL_SVC_ATTR;
+static pthread_mutexattr_t RL_SVC_MUTEX_ATTR;
+static pthread_t RL_SIGHANDLER_TID;
 static sigset_t ss_thread;
 
 const char *progname;
@@ -83,7 +83,7 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 static void thread_signal_handler(siginfo_t *si);
 __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)));
 static void *thread_worker_handler(void *arg);
-static void  thread_worker_cleanup(struct runlist *p);
+static void  thread_worker_cleanup(struct svcrun_list *p);
 
 /* execute a service command;
  * @run: an svcrun structure;
@@ -406,7 +406,7 @@ int svc_cmd(struct svcrun *run)
 	}
 	/* get service type */
 	stat(buf, &st_buf);
-	run->tmp = S_ISDIR(st_buf.st_mode);
+	retval = S_ISDIR(st_buf.st_mode);
 
 	if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_START]) == 0) {
 		run->mark = SV_SVC_STAT_STAR;
@@ -435,7 +435,7 @@ int svc_cmd(struct svcrun *run)
 		return 0;
 	}
 	else if (strcmp(cmd, sv_svc_cmd[SV_SVC_CMD_STATUS]) == 0) {
-		return svc_print_status(run, &st_buf, buf, type[run->tmp]+2U);
+		return svc_print_status(run, &st_buf, buf, type[retval]+2U);
 	}
 
 	run->path = err_strdup(buf);
@@ -501,7 +501,7 @@ int svc_cmd(struct svcrun *run)
 		run->ARGV[i] = run->argv[i];
 
 	/* set service type */
-	if (run->tmp)
+	if (retval)
 		run->ARGV[1] = type[1];
 	else
 		run->ARGV[1] = type[0];
@@ -562,7 +562,7 @@ static int svc_run(struct svcrun *run)
 	run->pid = fork();
 	if (run->pid > 0) { /* parent */
 		/* restore signal mask */
-		if (RUNLIST_COUNT)
+		if (RL_SVC_COUNT)
 			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
 		else
 			sigprocmask(SIG_SETMASK, &ss_child, NULL);
@@ -1209,7 +1209,7 @@ static void *thread_worker_handler(void *arg)
 	long int eagain = 0;
 	int r;
 	struct svcrun *tmp;
-	struct runlist *p = arg;
+	struct svcrun_list *p = arg;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
@@ -1275,11 +1275,11 @@ static void *thread_worker_handler(void *arg)
 		if (sv_parallel) {
 			/* add the job to queue here to be sure to have any child to wait for */
 			if (!p->len) {
-				pthread_mutex_lock(&RUNLIST_MUTEX);
-				p->next = RUNLIST;
-				RUNLIST = p;
-				pthread_cond_signal(&RUNLIST_COND);
-				pthread_mutex_unlock(&RUNLIST_MUTEX);
+				pthread_mutex_lock(&RL_SVC_MUTEX);
+				p->next = RL_SVC;
+				RL_SVC = p;
+				pthread_cond_signal(&RL_SVC_COND);
+				pthread_mutex_unlock(&RL_SVC_MUTEX);
 			}
 			pthread_rwlock_wrlock(&p->lock);
 			p->run[n] = tmp;
@@ -1325,10 +1325,10 @@ retval:
 	/* have to remove job from queue */
 	pthread_mutex_lock(&p->mutex);
 	if (p->count != p->siz) {
-		pthread_mutex_lock(&RUNLIST_MUTEX);
+		pthread_mutex_lock(&RL_SVC_MUTEX);
 		if (p->prev) p->prev->next = p->next;
 		if (p->next) p->next->prev = p->prev;
-		pthread_mutex_unlock(&RUNLIST_MUTEX);
+		pthread_mutex_unlock(&RL_SVC_MUTEX);
 	}
 	pthread_mutex_unlock(&p->mutex);
 	pthread_exit((void*)&p->retval);
@@ -1340,7 +1340,7 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	int j = -1;
 	static const char *sn[] = { "SIGCONT", "SIGSTOP", "SIGTRAP" };
 	int serrno = errno;
-	struct runlist *p;
+	struct svcrun_list *p;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
@@ -1370,10 +1370,10 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 		if (i < 0) i = 2;
 		ERR("caught %s, aborting\n", signame[i]);
 
-		pthread_mutex_lock(&RUNLIST_MUTEX);
-		for (p = RUNLIST; p; p = p->next)
+		pthread_mutex_lock(&RL_SVC_MUTEX);
+		for (p = RL_SVC; p; p = p->next)
 			pthread_kill(p->tid, sig);
-		pthread_mutex_unlock(&RUNLIST_MUTEX);
+		pthread_mutex_unlock(&RL_SVC_MUTEX);
 
 		kill(0, sig);
 		exit(EXIT_FAILURE);
@@ -1382,10 +1382,10 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 			break;
 		fprintf(stderr, "%s: Aborting!\n", progname);
 
-		pthread_mutex_lock(&RUNLIST_MUTEX);
-		for (p = RUNLIST; p; p = p->next)
+		pthread_mutex_lock(&RL_SVC_MUTEX);
+		for (p = RL_SVC; p; p = p->next)
 			pthread_kill(p->tid, sig);
-		pthread_mutex_unlock(&RUNLIST_MUTEX);
+		pthread_mutex_unlock(&RL_SVC_MUTEX);
 
 		kill(0, SIGTERM);
 		exit(EXIT_FAILURE);
@@ -1398,7 +1398,7 @@ static void thread_signal_handler(siginfo_t *si)
 {
 	int i, r, s;
 	size_t len;
-	struct runlist *p, *rl;
+	struct svcrun_list *p, *rl;
 	struct timespec ts;
 
 #ifdef SV_DEBUG
@@ -1418,9 +1418,9 @@ static void thread_signal_handler(siginfo_t *si)
 	for (;;) {
 		DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, si->si_pid);
 		/* read the first job which could have been changed */
-		pthread_mutex_lock(&RUNLIST_MUTEX);
-		rl = RUNLIST;
-		pthread_mutex_unlock(&RUNLIST_MUTEX);
+		pthread_mutex_lock(&RL_SVC_MUTEX);
+		rl = RL_SVC;
+		pthread_mutex_unlock(&RL_SVC_MUTEX);
 
 		for (p = rl; p; p = p->next) {
 			pthread_rwlock_rdlock(&p->lock);
@@ -1442,10 +1442,10 @@ static void thread_signal_handler(siginfo_t *si)
 				if (r) p->retval++;
 				if (p->count == p->siz) {
 					/* remove job from queue */
-					pthread_mutex_lock(&RUNLIST_MUTEX);
+					pthread_mutex_lock(&RL_SVC_MUTEX);
 					if (p->prev) p->prev->next = p->next;
 					if (p->next) p->next->prev = p->prev;
-					pthread_mutex_unlock(&RUNLIST_MUTEX);
+					pthread_mutex_unlock(&RL_SVC_MUTEX);
 				}
 				pthread_cond_signal(&p->cond);
 				pthread_mutex_unlock(&p->mutex);
@@ -1516,7 +1516,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		goto retval;                                   \
 	} while(0)
 	int r;
-	struct runlist *p;
+	struct svcrun_list *p;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
@@ -1527,41 +1527,41 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	if (!argc || !argv)
 		return -EINVAL;
 
-	if (!RUNLIST_COUNT) {
-		if ((r = pthread_attr_init(&RUNLIST_ATTR)))
+	if (!RL_SVC_COUNT) {
+		if ((r = pthread_attr_init(&RL_SVC_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
-		if ((r = pthread_cond_init(&RUNLIST_COND, NULL)))
+		if ((r = pthread_cond_init(&RL_SVC_COND, NULL)))
 			HANDLE_ERROR(pthread_cond_init);
-		if ((r = pthread_mutexattr_init(&RUNLIST_MUTEX_ATTR)))
+		if ((r = pthread_mutexattr_init(&RL_SVC_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutexattr_init);
-		if ((r = pthread_mutexattr_settype(&RUNLIST_MUTEX_ATTR, PTHREAD_MUTEX_NORMAL)))
+		if ((r = pthread_mutexattr_settype(&RL_SVC_MUTEX_ATTR, PTHREAD_MUTEX_NORMAL)))
 			HANDLE_ERROR(pthread_mutexattr_settype);
-		if ((r = pthread_mutex_init(&RUNLIST_MUTEX, &RUNLIST_MUTEX_ATTR)))
+		if ((r = pthread_mutex_init(&RL_SVC_MUTEX, &RL_SVC_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
-		if ((r = pthread_create(&RUNLIST_SIGHANDLER_TID, &RUNLIST_ATTR,
+		if ((r = pthread_create(&RL_SIGHANDLER_TID, &RL_SVC_ATTR,
 						thread_signal_worker, NULL)))
 			HANDLE_ERROR(pthread_create);
 	}
 
-	p = err_malloc(sizeof(struct runlist));
-	memset(p, 0, sizeof(struct runlist));
+	p = err_malloc(sizeof(struct svcrun_list));
+	memset(p, 0, sizeof(struct svcrun_list));
 	if (sv_parallel) {
 		p->siz = sv_stringlist_len(list);
 		p->run = err_calloc(sizeof(void*), p->siz);
 		memset(p->run, 0, p->siz);
 	}
-	p->rid  = RUNLIST_COUNT++;
+	p->lid  = RL_SVC_COUNT++;
 	p->list = list;
 	p->argc = argc;
 	p->argv = argv;
 
 	if ((r = pthread_cond_init(&p->cond, NULL)))
 		HANDLE_ERROR(pthread_cond_init);
-	if ((r = pthread_mutex_init(&p->mutex, &RUNLIST_MUTEX_ATTR)))
+	if ((r = pthread_mutex_init(&p->mutex, &RL_SVC_MUTEX_ATTR)))
 		HANDLE_ERROR(pthread_mutex_init);
 	if ((r = pthread_rwlock_init(&p->lock, NULL)))
 		HANDLE_ERROR(pthread_rwlock_init);
-	if ((r = pthread_create(&p->tid, &RUNLIST_ATTR,
+	if ((r = pthread_create(&p->tid, &RL_SVC_ATTR,
 					thread_worker_handler, p)))
 		HANDLE_ERROR(pthread_create);
 	if ((r = pthread_join(p->tid, (void*)NULL)))
@@ -1576,7 +1576,7 @@ retval:
 #undef HANDLE_ERROR
 }
 
-static void thread_worker_cleanup(struct runlist *p)
+static void thread_worker_cleanup(struct svcrun_list *p)
 {
 	int i;
 #ifdef SV_DEBUG
