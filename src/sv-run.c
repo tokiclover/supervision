@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-run.c  0.14.0 2018/08/30
+ * @(#)sv-run.c  0.14.0 2018/08/06
  */
 
 #include <stdio.h>
@@ -19,6 +19,12 @@
 #include <time.h>
 #include <pthread.h>
 #include "sv-deps.h"
+
+struct pidstack {
+	unsigned int lid;
+	struct pidstack *prev, *next;
+	pid_t pid[];
+};
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
 #define OFFSET_T_SIZE(align, remind)                                                   \
@@ -38,7 +44,8 @@ struct svcrun_list {
 	pthread_mutex_t mutex;
 	pthread_rwlock_t lock;
 	pthread_t tid;
-	char __pad[OFFSET_T_SIZE(8U, 4U)];
+	struct pidstack *ps;
+	char __pad[OFFSET_T_SIZE(8U, 3U)];
 };
 #undef THREAD_T_SIZE
 #undef OFSET_T_SIZE
@@ -47,13 +54,18 @@ extern pid_t sv_pid;
 
 static struct svcrun *RUN;
 static struct svcrun_list *RL_SVC;
-static unsigned int RL_SVC_COUNT;
+static unsigned int RL_SVC_COUNT = 1U;
 static pthread_cond_t RL_SVC_COND = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t RL_SVC_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 static pthread_attr_t  RL_SVC_ATTR;
 static pthread_mutexattr_t RL_SVC_MUTEX_ATTR;
 static pthread_t RL_SVC_SIGHANDLER_TID;
 static sigset_t ss_thread;
+static struct pidstack *RL_PID_STACK;
+static pthread_t RL_PID_TID;
+static pthread_rwlock_t RL_PID_LOCK;
+static pthread_cond_t RL_PID_COND = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t RL_PID_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 
 const char *progname;
 const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1",
@@ -79,8 +91,9 @@ static const char *environ_list[] = {
 	NULL
 };
 
+static void thread_signal_setup(void);
 static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)));
-static void thread_signal_handler(siginfo_t *si);
+__attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __attribute__((__unused__)));
 __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)));
 static void *thread_worker_handler(void *arg);
 static void  thread_worker_cleanup(struct svcrun_list *p);
@@ -545,9 +558,12 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
-	int len, val;
+	size_t len;
+	int val;
+	int i;
 	off_t off = 0;
 	char buf[128];
+	struct pidstack *ps;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, run);
 #endif
@@ -562,8 +578,26 @@ static int svc_run(struct svcrun *run)
 	run->pid = fork();
 	if (run->pid > 0) { /* parent */
 		/* restore signal mask */
-		if (RL_SVC_COUNT)
+		if (run->lid) {
 			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
+
+			/* push the pid to the pid stack */
+			do {
+				if ((val = pthread_rwlock_wrlock(&RL_PID_LOCK))) {
+					DBG("Failed to lock pid lock (%p)\n", &RL_PID_LOCK);
+					continue;
+				}
+			} while (val);
+			for (ps = RL_PID_STACK; ps; ps = ps->next)
+				if (ps->lid == run->lid) break;
+			if (ps) {
+				for (i = 0; ps->pid[i]; i++) ;
+				ps->pid[i] = run->pid;
+			}
+			else DBG("Failed to find a pid stack for service=%s (pid=%d)\n",
+					run->name, run->pid);
+			pthread_rwlock_unlock(&RL_PID_LOCK);
+		}
 		else
 			sigprocmask(SIG_SETMASK, &ss_child, NULL);
 		return SVC_WAITPID;
@@ -1210,6 +1244,7 @@ static void *thread_worker_handler(void *arg)
 	int r;
 	struct svcrun *tmp;
 	struct svcrun_list *p = arg;
+	struct pidstack *ps;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
@@ -1223,6 +1258,7 @@ static void *thread_worker_handler(void *arg)
 		tmp->name = svc->str;
 		tmp->argc = p->argc;
 		tmp->argv = p->argv;
+		tmp->lid  = p->lid;
 		tmp->svc  = svc;
 		tmp->path = NULL;
 		tmp->dep = svc->data;
@@ -1331,6 +1367,15 @@ retval:
 		pthread_mutex_unlock(&RL_SVC_MUTEX);
 	}
 	pthread_mutex_unlock(&p->mutex);
+
+	pthread_rwlock_wrlock(&RL_PID_LOCK);
+	p->ps->next->prev = p->ps->prev;
+	p->ps->prev->next = p->ps->next;
+	if (sv_parallel) {
+		if (p->ps->next == p->ps->prev) RL_PID_STACK = NULL;
+		free((void*)p->ps);
+	}
+	pthread_rwlock_unlock(&RL_PID_LOCK);
 	pthread_exit((void*)&p->retval);
 }
 
@@ -1352,7 +1397,8 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 		case CLD_TRAPPED:
 			return;
 		}
-		thread_signal_handler(si);
+		DBG("Caught SIGCHLD from pid=%d\n", si->si_pid);
+		pthread_cond_signal(&RL_PID_COND);
 		break;
 	case SIGINT:
 		i = 1;
@@ -1372,47 +1418,88 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	}
 	errno = serrno;
 }
-static void thread_signal_handler(siginfo_t *si)
+__attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __attribute__((__unused__)))
 {
 	int i, r, s;
 	size_t len;
 	struct svcrun_list *p, *rl;
-	struct timespec ts;
+	struct pidstack *ps;
+	pid_t pid;
 
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%p)\n", __func__, si);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
-	do {
-		DBG("%s:%d: waiting for pid=%d\n", __func__, __LINE__, si->si_pid);
-		r = waitpid(si->si_pid, &s, WNOHANG|WUNTRACED);
-		if (r < 0 && errno != EINTR) {
-			LOG_ERR("%s:%d: Failed to waitpid(%d,...): %s\n",
-					__func__, __LINE__, si->si_pid, strerror(errno));
-			return;
-		}
-	} while(!WIFEXITED(s) && !WIFSIGNALED(s));
+	sigprocmask(SIG_BLOCK, &ss_thread, NULL);
+	if (pthread_sigmask(SIG_BLOCK, &ss_thread, NULL))
+		ERROR("%s:%d: pthread_sigmask", __func__, __LINE__);
 
 	for (;;) {
-		DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, si->si_pid);
+waitcond:
+		if (pthread_mutex_lock(&RL_PID_MUTEX)) {
+			DBG("Failed to lock pid mutex (%p)\n", NULL);
+			continue;
+		}
+		if (pthread_cond_wait(&RL_PID_COND, &RL_PID_MUTEX)) {
+			DBG("Failed to wait pid condition\n", NULL);
+			continue;
+		}
+		pthread_mutex_unlock(&RL_PID_MUTEX);
+waitpid:
+		do {
+			pid = waitpid(0, &s, WNOHANG|WUNTRACED);
+			if (pid < 0 && errno != EINTR) goto waitcond;
+			if (!pid) goto waitcond;
+		} while(!WIFEXITED(s) && !WIFSIGNALED(s));
+
+		DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, pid);
+stackpid:
+		do {
+			if ((r = pthread_rwlock_rdlock(&RL_PID_LOCK))) {
+				DBG("Failed to lock pid rwlock\n", NULL);
+				continue;
+			}
+		} while (r);
+		for (ps = RL_PID_STACK; ps; ps = ps->next) {
+			r = 0;
+			for (i = 0; ps->pid[i]; i++)
+				if (pid == ps->pid[i]) {
+					r = 1;
+					break;
+				}
+			if (r) break;
+		}
+		pthread_rwlock_unlock(&RL_PID_LOCK);
+		if (!ps) {
+			do {
+				if ((r = pthread_mutex_lock(&RL_PID_MUTEX))) {
+					DBG("Failed to lock pid stack mutex\n", NULL);
+					continue;
+				}
+			} while (r);
+			pthread_cond_wait(&RL_PID_COND, &RL_PID_MUTEX);
+			pthread_mutex_unlock(&RL_PID_MUTEX);
+			goto stackpid;
+		}
+
 		/* read the first job which could have been changed */
 		pthread_mutex_lock(&RL_SVC_MUTEX);
 		rl = RL_SVC;
 		pthread_mutex_unlock(&RL_SVC_MUTEX);
 
-		for (p = rl; p; p = p->next) {
+		for (p = rl; p && p->lid == ps->lid; p = p->next) {
 			pthread_rwlock_rdlock(&p->lock);
 			len = p->len;
 			pthread_rwlock_unlock(&p->lock);
 			for (i = 0; i < len && p->run[i]; i++) {
-				if (p->run[i]->pid != si->si_pid) continue;
+				if (p->run[i]->pid != pid) continue;
 				DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
-						si->si_pid, p->run[i]->name);
+						pid, p->run[i]->name);
 
 				p->run[i]->status = s;
 				r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
 				if (!p->run[i]->dep->timeout && (r == SVC_WAITPID))
-					return;
+					goto waitpid;
 
 				pthread_mutex_lock(&p->mutex);
 				p->count++;
@@ -1428,28 +1515,19 @@ static void thread_signal_handler(siginfo_t *si)
 				pthread_cond_signal(&p->cond);
 				pthread_mutex_unlock(&p->mutex);
 
-				return;
+				goto waitpid;
 			}
+			goto waitpid;
 		}
-
-		/* child not found or not yet inserted in the queue */
-		ts.tv_sec = 0;
-		ts.tv_nsec = 100000L;
-		do {
-			r = nanosleep(&ts, &ts);
-			if (r < 0 && errno != EINTR)
-				ERR("%s:%d: nanosleep: %s\n", __func__, __LINE__,
-						strerror(errno));
-		} while (r);
 	}
 }
-__attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)))
+static void thread_signal_setup(void)
 {
 	int r;
 	int *sig = (int []){ SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };
 	struct sigaction sa;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	memset(&sa, 0, sizeof(sa));
 	memcpy(&ss_thread, &ss_child, sizeof(sigset_t));
@@ -1474,14 +1552,19 @@ __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attr
 			}
 		} while (r);
 	}
+}
 
+__attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)))
+{
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("%s(void)\n", __func__);
+#endif
 	sigprocmask(SIG_BLOCK, &ss_thread, NULL);
 	if (pthread_sigmask(SIG_UNBLOCK, &ss_thread, NULL))
 		ERROR("%s:%d: pthread_sigmask", __func__, __LINE__);
 
 	for (;;) {
-		r = sigsuspend(&ss_null);
-		if (r < 0 && errno != EINTR)
+		if (sigsuspend(&ss_null) < 0 && errno != EINTR)
 			ERR("%s:%d: sigsuspend: %s\n", __func__, __LINE__, strerror(errno));
 	}
 }
@@ -1494,7 +1577,10 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		goto retval;                                   \
 	} while(0)
 	int r;
+	static unsigned int count;
+	size_t s;
 	struct svcrun_list *p;
+	struct pidstack *ps, *k;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
@@ -1505,11 +1591,11 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	if (!argc || !argv)
 		return -EINVAL;
 
-	if (!RL_SVC_COUNT) {
+	if (RL_SVC_COUNT == 1U) {
+		thread_signal_setup();
+
 		if ((r = pthread_attr_init(&RL_SVC_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
-		if ((r = pthread_cond_init(&RL_SVC_COND, NULL)))
-			HANDLE_ERROR(pthread_cond_init);
 		if ((r = pthread_mutexattr_init(&RL_SVC_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutexattr_init);
 		if ((r = pthread_mutexattr_settype(&RL_SVC_MUTEX_ATTR, PTHREAD_MUTEX_NORMAL)))
@@ -1519,19 +1605,66 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		if ((r = pthread_create(&RL_SVC_SIGHANDLER_TID, &RL_SVC_ATTR,
 						thread_signal_worker, NULL)))
 			HANDLE_ERROR(pthread_create);
+		if ((r = pthread_rwlock_init(&RL_PID_LOCK, NULL)))
+			HANDLE_ERROR(pthread_rwlock_init);
+		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_SVC_MUTEX_ATTR)))
+			HANDLE_ERROR(pthread_mutex_init);
+		if ((r = pthread_create(&RL_PID_TID, &RL_SVC_ATTR,
+						thread_sigchld_handler, NULL)))
+			HANDLE_ERROR(pthread_create);
 	}
 
 	p = err_malloc(sizeof(struct svcrun_list));
 	memset(p, 0, sizeof(struct svcrun_list));
-	if (sv_parallel) {
-		p->siz = sv_stringlist_len(list);
-		p->run = err_calloc(sizeof(void*), p->siz);
-		memset(p->run, 0, p->siz);
-	}
-	p->lid  = RL_SVC_COUNT++;
+	p->lid  = RL_SVC_COUNT;
 	p->list = list;
 	p->argc = argc;
 	p->argv = argv;
+	if (sv_parallel) {
+		p->siz = sv_stringlist_len(list);
+		s = p->siz+4LU-(p->siz % 4LU);
+		if (!(p->siz % 4U)) s += 4U;
+		p->run = err_calloc(sizeof(void*), s);
+		memset(p->run, 0, s);
+		ps = err_malloc(sizeof(ps)+sizeof(pid_t)*s);
+		memset(ps, 0, sizeof(ps)+sizeof(pid_t)*s);
+		p->ps = ps;
+
+		if (!count) {
+			if (RL_SVC_COUNT < UINT_MAX)
+				ps->lid = RL_SVC_COUNT;
+			else count++;
+		}
+		else {
+			pthread_rwlock_rdlock(&RL_PID_LOCK);
+			for (k = RL_PID_STACK; k; k = k->next) {
+				if (k->lid == RL_SVC_COUNT) {
+					RL_SVC_COUNT++;
+					if (RL_SVC_COUNT == UINT_MAX)
+						RL_SVC_COUNT = 0U;
+					k = RL_PID_STACK;
+					if (!k) {
+						RL_SVC_COUNT = 1U;
+						break;
+					}
+				}
+			}
+			if (RL_SVC_COUNT == UINT_MAX) RL_SVC_COUNT = 0U;
+			pthread_rwlock_unlock(&RL_PID_LOCK);
+			ps->lid = p->lid = RL_SVC_COUNT;
+		}
+
+		pthread_rwlock_wrlock(&RL_PID_LOCK);
+		if (RL_PID_STACK) {
+			ps->next = RL_PID_STACK;
+			ps->prev = RL_PID_STACK->prev;
+			ps->prev->next = ps;
+		}
+		else
+			RL_PID_STACK = ps->next = ps->prev = ps;
+		pthread_rwlock_unlock(&RL_PID_LOCK);
+	}
+	RL_SVC_COUNT++;
 
 	if ((r = pthread_cond_init(&p->cond, NULL)))
 		HANDLE_ERROR(pthread_cond_init);

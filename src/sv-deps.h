@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.h  0.13.0 2016/01/02
+ * @(#)rs-deps.h  0.14.0 2018/08/06
  */
 
 #ifndef SV_DEPS_H
@@ -102,8 +102,9 @@ struct svcrun {
 	const char **argv;
 	const char **envp;
 	const char **ARGV;
-	int cmd, tmp, mark,
+	int cmd, mark,
 		sig, status;
+	unsigned int lid;
 	pid_t cld;
 };
 
