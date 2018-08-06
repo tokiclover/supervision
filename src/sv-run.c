@@ -1361,25 +1361,11 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	case SIGQUIT:
 		if (i < 0) i = 2;
 		ERR("caught %s, aborting\n", signame[i]);
-
-		pthread_mutex_lock(&RL_SVC_MUTEX);
-		for (p = RL_SVC; p; p = p->next)
-			pthread_kill(p->tid, sig);
-		pthread_mutex_unlock(&RL_SVC_MUTEX);
-
-		kill(0, sig);
 		exit(EXIT_FAILURE);
 	case SIGUSR1:
 		if (!sv_pid)
 			break;
 		fprintf(stderr, "%s: Aborting!\n", progname);
-
-		pthread_mutex_lock(&RL_SVC_MUTEX);
-		for (p = RL_SVC; p; p = p->next)
-			pthread_kill(p->tid, sig);
-		pthread_mutex_unlock(&RL_SVC_MUTEX);
-
-		kill(0, SIGTERM);
 		exit(EXIT_FAILURE);
 	default:
 		ERR("caught unknown signal %d\n", sig);
