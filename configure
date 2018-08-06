@@ -77,7 +77,10 @@ Standard options:
   --sysconfdir=DIR         install system wide data in DIR [$sysconfdir_default]
 
 Component options:
+  --enable-debug           build debugging code (can be disabled at runtime)
   --enable-sysvinit        build and install SysVinit compatibility service
+  --enable-runit           install runit init-stage
+  --enable-s6              install s6 init-stage
 
 Toolchain options:
   --build=BUILD            use build C compiler for CC
@@ -518,6 +521,7 @@ HEADERS_LIST="
 	sys/wait.h
 "
 CMDLINE_ENABLE="
+	debug
 	runit
 	s6
 	sysvinit
@@ -875,6 +879,7 @@ check_CP <<EOF && _PATH_WALL=$($TMP_E)
 int main(void){puts(_PATH_WALL); return 0;}
 EOF
 
+enabled debug && add_CPPFLAGS -DSV_DEBUG
 enabled sysvinit && HEADERS_LIST="${HEADERS_LIST} initreq.h"
 for header in $HEADERS_LIST; do
 	check_header "$header" || DIE "missing $header header"
