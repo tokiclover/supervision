@@ -9,6 +9,28 @@ environment variable `SV_STAGE' to `SV_INITLEVEL';
 Renamed `OS_NAME' to `SV_UNAME' and added `SV_UNAME_RELEASE'
 (defined in `${SV_TMPDIR}/env');
 
+Manpages was cleaned and updated to v0.14.0;
+
+A few bug fixes were ported to v0.13.1 (not all the bugs which require more
+work; A nasty thread race bug was fixed lastly which was causing sv-rc to hang
+waiting a SIGCHLD from a dead child;
+
+sv-config was refactorized and coded in C; and now has a -u|--update command
+line switch; a `sv-config --update' is now required when updating an old
+install to handle the API/ABI changes from previous v0.13.0 and the changes
+between v0.12.0 and v0.13.0;
+
+The old `rs stage [COMMAND]' is now replaced with `sv-run init [COMMAND]'
+which is now discouraged from general usage;
+`sv-rc(8)' takes a runlevel argument like *standard* `rc(8)' utility;
+The old `sv-rc --RUNLEVEL' (from previous release) is also supported;
+
+New debugging code was added and can be enabled at runtime with `SV_DEBUG' or
+`SVC_DEBUG' envronment variable;
+For more verbose debugging code, configure with `--enable-debug';
+For logging debugging output: enable `SV_SYSLOG' and `SV_SYSLOG_INFO';
+and then enable `SV_LOGGER' to save logging and debugging output to
+`/var/log/sv.log';
 
 ADDIDION:
 SUPERVISION SERVICE:
