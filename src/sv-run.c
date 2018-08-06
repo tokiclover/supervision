@@ -52,7 +52,7 @@ static pthread_cond_t RL_SVC_COND = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t RL_SVC_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 static pthread_attr_t  RL_SVC_ATTR;
 static pthread_mutexattr_t RL_SVC_MUTEX_ATTR;
-static pthread_t RL_SIGHANDLER_TID;
+static pthread_t RL_SVC_SIGHANDLER_TID;
 static sigset_t ss_thread;
 
 const char *progname;
@@ -1337,8 +1337,6 @@ retval:
 static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 	int i = -1;
-	int j = -1;
-	static const char *sn[] = { "SIGCONT", "SIGSTOP", "SIGTRAP" };
 	int serrno = errno;
 	struct svcrun_list *p;
 
@@ -1350,14 +1348,8 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	case SIGCHLD:
 		switch(si->si_code) {
 		case CLD_CONTINUED:
-			if (j < 0) j = 0;
 		case CLD_STOPPED:
-			if (j < 0) j = 1;
 		case CLD_TRAPPED:
-			if (j < 0) j = 2;
-			DBG("%s:%d:service=%s: pid=%d received %s signal\n", __func__,
-					__LINE__, RUN->name, RUN->cld, sn[j]);
-			errno = serrno;
 			return;
 		}
 		thread_signal_handler(si);
@@ -1538,7 +1530,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 			HANDLE_ERROR(pthread_mutexattr_settype);
 		if ((r = pthread_mutex_init(&RL_SVC_MUTEX, &RL_SVC_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
-		if ((r = pthread_create(&RL_SIGHANDLER_TID, &RL_SVC_ATTR,
+		if ((r = pthread_create(&RL_SVC_SIGHANDLER_TID, &RL_SVC_ATTR,
 						thread_signal_worker, NULL)))
 			HANDLE_ERROR(pthread_create);
 	}
