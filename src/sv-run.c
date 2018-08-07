@@ -585,7 +585,9 @@ static int svc_run(struct svcrun *run)
 			/* push the pid to the pid stack */
 			do {
 				if ((val = pthread_rwlock_wrlock(&RL_PID_LOCK))) {
-					DBG("Failed to lock pid lock (%p)\n", &RL_PID_LOCK);
+#ifdef SV_DEBUG
+					if (sv_debug) DBG("Failed to lock pid lock (%p)\n", &RL_PID_LOCK);
+#endif
 					continue;
 				}
 			} while (val);
@@ -595,8 +597,14 @@ static int svc_run(struct svcrun *run)
 				for (i = 0; ps->pid[i]; i++) ;
 				ps->pid[i] = run->pid;
 			}
-			else DBG("Failed to find a pid stack for service=%s (pid=%d)\n",
+			else {
+#ifdef SV_DEBUG
+				if (sv_debug) DBG("Failed to find a pid stack for service=%s (pid=%d)\n",
 					run->name, run->pid);
+#else
+				;
+#endif
+			}
 			pthread_rwlock_unlock(&RL_PID_LOCK);
 		}
 		else
@@ -641,8 +649,10 @@ runsvc:
 	}
 	else {
 		run->cld = getpid();
-		DBG("%s:%d: executing service=%s command=%s (pid=%d)\n", __func__, __LINE__,
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("%s:%d: executing service=%s command=%s (pid=%d)\n", __func__, __LINE__,
 				run->name, run->argv[4], run->cld);
+#endif
 	}
 
 	/* write the service command and the pid to the lock file */
@@ -676,7 +686,9 @@ supervise:
 	if (run->dep->timeout > 0)
 		alarm(run->dep->timeout);
 	while (run->cld) {
-		DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
+#endif
 		sigsuspend(&ss_old);
 	}
 	if (run->status > 0)
@@ -697,8 +709,10 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 		status = run->status;
 	else
 	do {
-		DBG("%s:%d: waiting for pid=%d (service=%s)\n", __func__, __LINE__,
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("%s:%d: waiting for pid=%d (service=%s)\n", __func__, __LINE__,
 				run->cld, run->name);
+#endif
 		pid = waitpid(run->cld, &status, flags);
 		if (pid < 0) {
 			if (errno != EINTR) {
@@ -1129,8 +1143,10 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 			if (j < 0) j = 1;
 		case CLD_TRAPPED:
 			if (j < 0) j = 2;
+#ifdef SV_DEBUG
 			DBG("%s:%d:service=%s: pid=%d received %s signal\n", __func__,
 					__LINE__, RUN->name, RUN->cld, sn[j]);
+#endif
 			errno = serrno;
 			return;
 		}
@@ -1348,7 +1364,9 @@ static void *thread_worker_handler(void *arg)
 waitpid:
 	pthread_mutex_lock(&p->mutex);
 	while (p->job) {
-		DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, p->job);
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, p->job);
+#endif
 		pthread_cond_wait(&p->cond, &p->mutex);
 	}
 	pthread_mutex_unlock(&p->mutex);
@@ -1396,7 +1414,9 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 		case CLD_TRAPPED:
 			return;
 		}
-		DBG("Caught SIGCHLD from pid=%d\n", si->si_pid);
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("Caught SIGCHLD from pid=%d\n", si->si_pid);
+#endif
 		pthread_cond_signal(&RL_PID_COND);
 		break;
 	case SIGINT:
@@ -1435,11 +1455,15 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 	for (;;) {
 waitcond:
 		if (pthread_mutex_lock(&RL_PID_MUTEX)) {
-			DBG("Failed to lock pid mutex (%p)\n", NULL);
+#ifdef SV_DEBUG
+			if (sv_debug) DBG("Failed to lock pid mutex (%p)\n", NULL);
+#endif
 			continue;
 		}
 		if (pthread_cond_wait(&RL_PID_COND, &RL_PID_MUTEX)) {
-			DBG("Failed to wait pid condition\n", NULL);
+#ifdef SV_DEBUG
+			if (sv_debug) DBG("Failed to wait pid condition\n", NULL);
+#endif
 			continue;
 		}
 		pthread_mutex_unlock(&RL_PID_MUTEX);
@@ -1449,12 +1473,15 @@ waitpid:
 			if (pid < 0 && errno != EINTR) goto waitcond;
 			if (!pid) goto waitcond;
 		} while(!WIFEXITED(s) && !WIFSIGNALED(s));
-
-		DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, pid);
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, pid);
+#endif
 stackpid:
 		do {
 			if ((r = pthread_rwlock_rdlock(&RL_PID_LOCK))) {
-				DBG("Failed to lock pid rwlock\n", NULL);
+#ifdef SV_DEBUG
+				if (sv_debug) DBG("Failed to lock pid rwlock\n", NULL);
+#endif
 				continue;
 			}
 		} while (r);
@@ -1471,7 +1498,9 @@ stackpid:
 		if (!ps) {
 			do {
 				if ((r = pthread_mutex_lock(&RL_PID_MUTEX))) {
-					DBG("Failed to lock pid stack mutex\n", NULL);
+#ifdef SV_DEBUG
+					if (sv_debug) DBG("Failed to lock pid stack mutex\n", NULL);
+#endif
 					continue;
 				}
 			} while (r);
@@ -1491,8 +1520,10 @@ stackpid:
 			pthread_rwlock_unlock(&p->lock);
 			for (i = 0; i < len && p->run[i]; i++) {
 				if (p->run[i]->pid != pid) continue;
-				DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
+#ifdef SV_DEBUG
+				if (sv_debug) DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
 						pid, p->run[i]->name);
+#endif
 
 				p->run[i]->status = s;
 				r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
