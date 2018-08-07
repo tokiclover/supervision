@@ -1430,7 +1430,6 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
-	sigprocmask(SIG_BLOCK, &ss_thread, NULL);
 	if (pthread_sigmask(SIG_BLOCK, &ss_thread, NULL))
 		ERROR("%s:%d: pthread_sigmask", __func__, __LINE__);
 
@@ -1552,6 +1551,7 @@ static void thread_signal_setup(void)
 			}
 		} while (r);
 	}
+	sigprocmask(SIG_BLOCK, &ss_thread, NULL);
 }
 
 __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)))
@@ -1559,7 +1559,6 @@ __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attr
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
-	sigprocmask(SIG_BLOCK, &ss_thread, NULL);
 	if (pthread_sigmask(SIG_UNBLOCK, &ss_thread, NULL))
 		ERROR("%s:%d: pthread_sigmask", __func__, __LINE__);
 
@@ -1592,8 +1591,6 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		return -EINVAL;
 
 	if (RL_SVC_COUNT == 1U) {
-		thread_signal_setup();
-
 		if ((r = pthread_attr_init(&RL_SVC_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
 		if ((r = pthread_mutexattr_init(&RL_SVC_MUTEX_ATTR)))
@@ -1602,13 +1599,14 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 			HANDLE_ERROR(pthread_mutexattr_settype);
 		if ((r = pthread_mutex_init(&RL_SVC_MUTEX, &RL_SVC_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
-		if ((r = pthread_create(&RL_SVC_SIGHANDLER_TID, &RL_SVC_ATTR,
-						thread_signal_worker, NULL)))
-			HANDLE_ERROR(pthread_create);
 		if ((r = pthread_rwlock_init(&RL_PID_LOCK, NULL)))
 			HANDLE_ERROR(pthread_rwlock_init);
 		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_SVC_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
+		thread_signal_setup();
+		if ((r = pthread_create(&RL_SVC_SIGHANDLER_TID, &RL_SVC_ATTR,
+						thread_signal_worker, NULL)))
+			HANDLE_ERROR(pthread_create);
 		if ((r = pthread_create(&RL_PID_TID, &RL_SVC_ATTR,
 						thread_sigchld_handler, NULL)))
 			HANDLE_ERROR(pthread_create);
