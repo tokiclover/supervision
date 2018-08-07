@@ -56,8 +56,7 @@ dep_gen()
 
 	[ -n "${SVC_KEYWORD}" ] && echo "${SVC_NAME}:keyword=\"${SVC_KEYWORD}\"" >&4
 	[ -n "${SVC_PROVIDE}" ] && echo "${SVC_NAME}:provide=\"${SVC_PROVIDE}\"" >&4
-	[ -n "${SVC_TIMEOUT}" ] || [ -n  "${SV_TIMEOUT}" ] && \
-		echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT:-${SV_TIMEOUT}}\"" >&4
+	[ -n "${SVC_TIMEOUT}" ] && echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT}\"" >&4
 	for dep in ${__SV_DEPS_ORDER__}; do
 		eval add_dep "${SVC_NAME}" "${dep}" \"\$SVC_${dep#*:}\" >&4
 	done
