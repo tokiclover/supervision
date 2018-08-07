@@ -205,8 +205,8 @@ svc_sig()
 
 svc_wait()
 {
-	local x p t v=0 i=5 r arg pid
-	local __wait_file__=${SV_TMPDIR}/wait/${SVC_NAME}
+	local x p t v=0 i=5 r arg pid=false
+	local __wait_file__=${SV_TMPDIR}/wait/${SVC_NAME} __wait__=true
 	SVC_DEBUG "function=svc_wait( ${@} )"
 
 	for x; do
@@ -218,37 +218,49 @@ svc_wait()
 	shift
 	done
 	t="${1:-60}"
+	if [ -n "${2}" -a "${2}" != "${__wait_file__}" ]; then
+		__wait__=false
+	else
+		x=${__wait_file__}
+	fi
 	x=${2:-${__wait_file__}}
 	if ! yesno "${__SVC_WAIT__:-1}" && [ -z "${2}" ]; then
 		return 0
 	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
 
-	if [ -n "${pid}" -a -n "${arg}" ] || [ -z "${arg}" -a "${x}" = "${__waitfile__}" ]; then
+	if ( ${pid} && [ -n "${arg}" ] ) || ( [ -z "${arg}" ] && ${__wait__} ); then
 		if [ -n "${pid}" -a -n "${arg}" -a ! -e ${x} ]; then
 			return 0
 		fi
-		read pid <${x}
-		pid="${pid%:*}"
-		pid="${pid#*=}"
-		if [ -n "${pid}" ]; then
+		read p <${x}
+		p="${p%:*}"
+		p="${p#*=}"
+		if [ -n "${p}" ]; then
 			#
 			# XXX: race fix
 			#
-			if [ "${pid}" = "$$" ]; then
+			if [ "${p}" = "$$" ]; then
 				return 0
 			fi
-			if ! kill -0 ${pid} >${NULL} 2>&1; then
+			if ! kill -0 ${p} >${NULL} 2>&1; then
 				rm -f ${x}
 				[ -n "${arg}" ] && return 0
 			fi
 		fi
 	fi
 
-	while [ ${v} -le ${t} ]; do
+	while [ ${v} -lt ${t} ]; do
 		v=$((${v}+${i}))
+		#
+		# XXX: sv(8) from runit bug (unreliable with wait up command)
+		#
+		if ${pid}; then
+			svc_state -f && return 1
+		fi
+
 		if waitfile ${arg} ${i} ${x}; then
-			if [ "${x}" = "${__wait_file__}"  -a -n "${arg}" ]; then
+			if ${__wait__} && [ -n "${arg}" ]; then
 				if svc_state -w; then
 					error "service is busy -- retry later"
 					return 1
@@ -260,8 +272,8 @@ svc_wait()
 		elif [ "${?}" != "2" ]; then
 			error "unexpected \`waitfile' failure! bailing out!!!"
 			return 2
-		elif [ -n "${pid}" -a "${pid}" != "true" ]; then
-			kill -0 ${pid} || rm -f ${x}
+		elif [ -n "${p}" ]; then
+			kill -0 ${p} || rm -f ${x}
 		fi
 		info "Waiting for ${x} (${v} seconds)"
 	done
