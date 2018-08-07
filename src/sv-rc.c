@@ -845,8 +845,8 @@ sv_run_help:
 			argc--; argv++;
 			svc_sigsetup();
 			setenv("SVCDEPS_UPDATE", on, 1);
-			execv(SV_DEPGEN, argv);
-			ERROR("Failed to execv(%s, argv)", SV_DEPGEN);
+			execv(SV_DEPS_SH, argv);
+			ERROR("Failed to execv(%s, argv)", SV_DEPS_SH);
 		}
 		else if (strcmp(*argv, "init") == 0) {
 			/* compatibility with <v0.13.0 */

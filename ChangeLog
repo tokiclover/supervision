@@ -8,6 +8,7 @@ Renamed `sv-stage(8)' command to `sv-rc(8)'; along with the
 environment variable `SV_STAGE' to `SV_INITLEVEL';
 Renamed `OS_NAME' to `SV_UNAME' and added `SV_UNAME_RELEASE'
 (defined in `${SV_TMPDIR}/env');
+Renamed `depgen' shell script to `sv-deps.sh' for clarity;
 
 Manpages was cleaned and updated to v0.14.0;
 

@@ -38,7 +38,7 @@ dist_SH_BINS  = \
 	lib/sh/sv-run.sh \
 	lib/sh/sv-init.sh \
 	lib/sh/cgroup-release-agent \
-	lib/sh/depgen
+	lib/sh/sv-deps.sh
 dist_SV_SBINS = \
 	src/sv-config
 dist_SH_LIBS  = \

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) depgen     1.6 2018/07/22 21:09:26                       Exp $
+# $Id:  @(#) sv-deps.sh     1.6 2018/07/22 21:09:26                   Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -27,16 +27,11 @@ if ! . ${SV_LIBDIR}/sh/runscript-functions; then
 fi
 SV_DEPDIR="${SV_TMPDIR}/deps"
 
-add_dep()
-{
-	local svc="${1}" dep="${2%:*}" DEP="${2#*:}"
-	shift 2
-	echo "${svc}:${dep}=\"${@}\""
-}
-dep_gen()
+__svc_deps__()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
-	local dep SVC_KEYWORD SVC_PROVIDE SVC_TIMEOUT SVC_PIDFILE SV_SERVICE RC_SERVICE
+	local SVC_KEYWORD SVC_PROVIDE SVC_TIMEOUT SVC_PIDFILE SV_SERVICE RC_SERVICE
+	local dep
 
 	if   [ -d "${__svc__}" ]; then
 		SV_TYPE=sv
@@ -58,7 +53,7 @@ dep_gen()
 	[ -n "${SVC_PROVIDE}" ] && echo "${SVC_NAME}:provide=\"${SVC_PROVIDE}\"" >&4
 	[ -n "${SVC_TIMEOUT}" ] && echo "${SVC_NAME}:timeout=\"${SVC_TIMEOUT}\"" >&4
 	for dep in ${__SV_DEPS_ORDER__}; do
-		eval add_dep "${SVC_NAME}" "${dep}" \"\$SVC_${dep#*:}\" >&4
+		eval echo "\"${SVC_NAME}:${dep%:*}=\\\"\$SVC_${dep#*:}\\\"\"" >&4
 	done
 }
 
@@ -80,7 +75,7 @@ if [ "${#}" = 0 ]; then
 	exec 4>${svcdeps}
 	for dir in ${svcdirs}; do
 		for __svc__ in ${dir}/*; do
-			dep_gen
+			__svc_deps__
 		done
 	done
 	printf "${SVCLIST## }" >${svclist}
@@ -89,17 +84,17 @@ else
 	printf ""   >>${svclist}
 	read SVCLIST <${svclist}
 	TMPLIST= one=true
-	for svc; do
-		if ${SVCDEPS_UPDATE} && isin "${svc}" ${SVCLIST}; then
-			sed "/^${svc}:/d" -i ${svcdeps}
+	for SVC_NAME; do
+		if ${SVCDEPS_UPDATE} && isin "${SVC_NAME}" ${SVCLIST}; then
+			sed "/^${SVC_NAME}:/d" -i ${svcdeps}
 			append=true
 		else
 			append=false
 		fi
 		for dir in ${svcdirs}; do
-			__svc__=${dir}/${svc}
-			if dep_gen; then
-				${append} || TMPLIST="${TMPLIST} ${svc}"
+			__svc__=${dir}/${SVC_NAME}
+			if __svc_deps__; then
+				${append} || TMPLIST="${TMPLIST} ${SVC_NAME}"
 				break
 			fi
 		done

@@ -1727,16 +1727,11 @@ static void thread_worker_cleanup(struct svcrun_list *p)
 		free((void*)p->run[i]->path);
 		free((void*)p->run[i]);
 	}
-	puts(__func__);
 	free((void*)p->run);
-	puts(__func__);
 	if (sv_parallel) free((void*)p->ps);
-	puts(__func__);
 
 	pthread_cond_destroy(&p->cond);
 	pthread_mutex_destroy(&p->mutex);
 	pthread_rwlock_destroy(&p->lock);
-	puts(__func__);
 	free((void*)p);
-	puts(__func__);
 }

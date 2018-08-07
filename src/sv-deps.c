@@ -434,8 +434,8 @@ static int sv_svcdeps_gen(const char *svc)
 		} while (!WIFEXITED(status));
 	}
 	else if (!pid) { /* child */
-		if (execl(SV_DEPGEN, strrchr(SV_DEPGEN, '/')+1, svc, NULL))
-			ERROR("Failed to execute `%s'", SV_DEPGEN);
+		if (execl(SV_DEPS_SH, strrchr(SV_DEPS_SH, '/')+1, svc, NULL))
+			ERROR("Failed to execute `%s'", SV_DEPS_SH);
 	}
 	else ERROR("%s: failed to fork()", __func__);
 	return WEXITSTATUS(status);
