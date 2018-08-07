@@ -1622,7 +1622,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		s = p->siz+4LU-(p->siz % 4LU);
 		if (!(p->siz % 4U)) s += 4U;
 		p->run = err_calloc(sizeof(void*), s);
-		memset(p->run, 0, s);
+		memset(p->run, 0, sizeof(void*)*s);
 		ps = err_malloc(sizeof(ps)+sizeof(pid_t)*s);
 		memset(ps, 0, sizeof(ps)+sizeof(pid_t)*s);
 		p->ps = ps;
@@ -1691,15 +1691,16 @@ static void thread_worker_cleanup(struct svcrun_list *p)
 	if (sv_debug) DBG("%s(%p)\n", __func__, p);
 #endif
 
-	for (i = 0; i < p->len && p->run[i]; i++) {
+	for (i = 0; p->run[i]; i++) {
 		free((void*)p->run[i]->ARGV);
 		free((void*)p->run[i]->path);
-		free(p->run[i]);
+		free((void*)p->run[i]);
 	}
-	free(p->ps);
-	free(p->run);
+	free((void*)p->run);
+	if (sv_parallel) free((void*)p->ps);
 
 	pthread_cond_destroy(&p->cond);
 	pthread_mutex_destroy(&p->mutex);
 	pthread_rwlock_destroy(&p->lock);
+	free((void*)p);
 }
