@@ -25,6 +25,7 @@ struct pidstack {
 	struct pidstack *prev, *next;
 	pid_t pid[];
 };
+#define PIDSTACK_MIN_SIZE 4LU
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
 #define OFFSET_T_SIZE(align, remind)                                                   \
@@ -1370,10 +1371,8 @@ retval:
 	pthread_rwlock_wrlock(&RL_PID_LOCK);
 	p->ps->next->prev = p->ps->prev;
 	p->ps->prev->next = p->ps->next;
-	if (sv_parallel) {
-		if (p->ps->next == p->ps->prev) RL_PID_STACK = NULL;
-		free((void*)p->ps);
-	}
+	if (sv_parallel && (p->ps->next == p->ps->prev))
+		RL_PID_STACK = NULL;
 	pthread_rwlock_unlock(&RL_PID_LOCK);
 	pthread_exit((void*)&p->retval);
 }
@@ -1695,6 +1694,7 @@ static void thread_worker_cleanup(struct svcrun_list *p)
 		free((void*)p->run[i]->path);
 		free(p->run[i]);
 	}
+	free(p->ps);
 	free(p->run);
 
 	pthread_cond_destroy(&p->cond);
