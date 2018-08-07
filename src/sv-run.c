@@ -616,7 +616,7 @@ runsvc:
 	/* lock the lock file before any command */
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
-		exit(ETIMEDOUT);
+		_exit(ETIMEDOUT);
 	}
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
@@ -633,7 +633,7 @@ runsvc:
 		else if (run->cld < 0) { /* child */
 			ERR("%s:%d: Failed to fork(): %s\n", __func__, __LINE__,
 					strerror(errno));
-			exit(EXIT_FAILURE);
+			_exit(EXIT_FAILURE);
 		}
 		else
 			/* restore signal mask */
@@ -664,7 +664,7 @@ runsvc:
 
 	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
 	ERR("%s:%d: Failed to execve(): %s\n", __func__, __LINE__, strerror(errno));
-	exit(EXIT_FAILURE);
+	_exit(EXIT_FAILURE);
 supervise:
 	RUN = run;
 	/* restore signal mask */
@@ -679,7 +679,9 @@ supervise:
 		DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
 		sigsuspend(&ss_old);
 	}
-	exit(run->status);
+	if (run->status > 0)
+		_exit(run->status);
+	_exit(EXIT_FAILURE);
 }
 
 __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags)
