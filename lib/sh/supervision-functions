@@ -333,7 +333,7 @@ svc_use()
 	local ret svc
 	SVC_DEBUG "function=svc_use( ${@} )"
 	for svc in ${2:-${SVC_USE}}; do
-		service -q "${svc}" "${1:-start}"
+		sv-run -q "${svc}" "${1:-start}"
 		ret=$((${ret}+${?}))
 	done
 	return ${ret}
