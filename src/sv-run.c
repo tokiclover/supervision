@@ -1244,7 +1244,6 @@ static void *thread_worker_handler(void *arg)
 	int r;
 	struct svcrun *tmp;
 	struct svcrun_list *p = arg;
-	struct pidstack *ps;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
@@ -1383,7 +1382,6 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 {
 	int i = -1;
 	int serrno = errno;
-	struct svcrun_list *p;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
