@@ -551,7 +551,7 @@ svc_run()
 	printf "$$" >${SVC_PIDFILE}
 
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
-	svc_state -f
+	svc_mark -f
 	rm -f ${SVC_PIDFILE} ${virt} ${real}
 }
 
