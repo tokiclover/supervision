@@ -399,6 +399,8 @@ int svc_cmd(struct svcrun *run)
 	run->cmd = -1;
 	run->dep = NULL;
 	run->mark = 0;
+	if (!run->dep->timeout)
+		run->dep->timeout = sv_timeout;
 
 	/* get service path */
 	if (!run->path) {
@@ -631,7 +633,6 @@ runsvc:
 		svc_lock(run->name, run->lock, 0);
 
 	/* supervise the service */
-	if (!run->dep->timeout) run->dep->timeout = sv_timeout;
 	if (run->dep->timeout) {
 		/* block signal before fork() */
 		sigprocmask(SIG_SETMASK, &ss_full, NULL);
@@ -736,7 +737,7 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 	run->cld = 0;
 
 	/* do not mark service status twice */
-	if (sv_timeout && !pid)
+	if (run->dep->timeout && !pid)
 		return run->status;
 	svc_mark(run, SV_SVC_MARK_WAIT, NULL);
 	if (!svc_quiet)
