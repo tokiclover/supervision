@@ -1601,7 +1601,6 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	} while(0)
 	int r;
 	static unsigned int count;
-	size_t s;
 	struct svcrun_list *p;
 	struct pidstack *ps, *k;
 
@@ -1644,12 +1643,11 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	p->argv = argv;
 	if (sv_parallel) {
 		p->siz = sv_stringlist_len(list);
-		s = p->siz+4LU-(p->siz % 4LU);
-		if (!(p->siz % 4U)) s += 4U;
-		p->run = err_calloc(sizeof(void*), s);
-		memset(p->run, 0, sizeof(void*)*s);
-		ps = err_malloc(sizeof(ps)+sizeof(pid_t)*s);
-		memset(ps, 0, sizeof(ps)+sizeof(pid_t)*s);
+		p->siz += p->siz % 4LU ? 4LU-(p->siz % 4LU) : 4LU;
+		p->run = err_calloc(sizeof(void*), p->siz);
+		memset(p->run, 0, sizeof(void*)*p->siz);
+		ps = err_malloc(sizeof(ps)+sizeof(pid_t)*p->siz);
+		memset(ps, 0, sizeof(ps)+sizeof(pid_t)*p->siz);
 		p->ps = ps;
 
 		if (!count) {
