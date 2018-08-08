@@ -228,6 +228,7 @@ svc_wait()
 		return 0
 	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
+	${pid} && i=1
 
 	if ( ${pid} && [ -n "${arg}" ] ) || ( [ -z "${arg}" ] && ${__wait__} ); then
 		if [ -n "${pid}" -a -n "${arg}" -a ! -e ${x} ]; then
@@ -251,7 +252,7 @@ svc_wait()
 	fi
 
 	while [ ${v} -lt ${t} ]; do
-		v=$((${v}+${i}))
+		info "Waiting for ${x} (${v} seconds)"
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
 		#
@@ -275,7 +276,7 @@ svc_wait()
 		elif [ -n "${p}" ]; then
 			kill -0 ${p} || rm -f ${x}
 		fi
-		info "Waiting for ${x} (${v} seconds)"
+		v=$((${v}+${i}))
 	done
 	return 1
 }
