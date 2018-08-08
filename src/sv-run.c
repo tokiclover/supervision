@@ -1345,6 +1345,8 @@ static void *thread_worker_handler(void *arg)
 		}
 		else {
 			r = svc_waitpid(tmp, 0);
+			free((void*)tmp->ARGV);
+			free((void*)tmp->path);
 			if (r) p->retval++;
 		}
 	}
