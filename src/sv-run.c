@@ -632,7 +632,7 @@ runsvc:
 
 	/* supervise the service */
 	if (!run->dep->timeout) run->dep->timeout = sv_timeout;
-	if (run->dep->timeout > 0) {
+	if (run->dep->timeout) {
 		/* block signal before fork() */
 		sigprocmask(SIG_SETMASK, &ss_full, NULL);
 
@@ -682,10 +682,10 @@ supervise:
 	/* setup SIGCHILD,SIGALRM and unblock SIGCHILD */
 	rs_sigsetup();
 
-	/* setup a timeout and wait for the child */
-	if (run->dep->timeout > 0)
-		alarm(run->dep->timeout);
 	while (run->cld) {
+		/* setup a timeout and wait for the child */
+		if (run->dep->timeout)
+			alarm(run->dep->timeout);
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
 #endif
@@ -1129,7 +1129,6 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 				i = 2, RUN->sig = SIGQUIT;
 			else
 				i = 6, RUN->sig = SIGKILL;
-			alarm(RUN->dep->timeout);
 			LOG_WARN("sending %s to process PID=%d (service=%s)!!!\n", signame[i],
 					RUN->cld, RUN->name);
 			kill(RUN->cld, RUN->sig);

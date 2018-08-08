@@ -107,7 +107,7 @@ extern int sv_parallel;
 extern int sv_level;
 extern int sv_init;
 extern int sv_system;
-extern int sv_timeout;
+extern unsigned int sv_timeout;
 extern int svc_deps;
 extern int svc_quiet;
 extern const char *progname;
