@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) sv-deps.sh     1.6 2018/07/22 21:09:26                   Exp $
+# $Id:  @(#) sv-deps.sh     2.0 2018/08/07 21:09:26                   Exp $
 # $C$:  Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
