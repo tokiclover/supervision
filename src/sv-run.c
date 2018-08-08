@@ -27,7 +27,7 @@ struct pidstack {
 };
 #define PIDSTACK_MIN_SIZE 4LU
 
-#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t))
+#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t)+sizeof(pthread_t))
 #define OFFSET_T_SIZE(align, remind)                                                   \
 	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int)) > remind*sizeof(int) ? \
 	(align+remind)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int)) : \
