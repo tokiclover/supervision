@@ -1340,12 +1340,6 @@ static void *thread_worker_handler(void *arg)
 			p->len++;
 			p->job++;
 			n++;
-			/* handle service insertion oddities in deptree */
-			if (n == p->siz && TAILQ_NEXT(svc, entries)) {
-				p->siz += 8U;
-				p->run = err_realloc(p->run, p->siz*(sizeof(void*)));
-				memset(&p->run[n], 0, 8U);
-			}
 			pthread_rwlock_unlock(&p->lock);
 			if (TAILQ_NEXT(svc, entries))
 				tmp = err_malloc(sizeof(struct svcrun));
