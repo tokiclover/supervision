@@ -399,8 +399,6 @@ int svc_cmd(struct svcrun *run)
 	run->cmd = -1;
 	run->dep = NULL;
 	run->mark = 0;
-	if (!run->dep->timeout)
-		run->dep->timeout = sv_timeout;
 
 	/* get service path */
 	if (!run->path) {
@@ -462,6 +460,7 @@ int svc_cmd(struct svcrun *run)
 		retval = -ENOENT;
 		goto reterr;
 	}
+	if (!run->dep->timeout) run->dep->timeout = sv_timeout;
 
 	/* get service status */
 	switch(run->cmd) {
