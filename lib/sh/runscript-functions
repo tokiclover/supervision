@@ -252,7 +252,10 @@ svc_wait()
 	fi
 
 	while [ ${v} -lt ${t} ]; do
-		info "Waiting for ${x} (${v} seconds)"
+		if [ "${v}" = "0" -o "$((${v}%5))" = "0" ]; then
+			info "Waiting for ${x} (${v} seconds)"
+		fi
+		v=$((${v}+${i}))
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
 		#
@@ -276,7 +279,6 @@ svc_wait()
 		elif [ -n "${p}" ]; then
 			kill -0 ${p} || rm -f ${x}
 		fi
-		v=$((${v}+${i}))
 	done
 	return 1
 }
