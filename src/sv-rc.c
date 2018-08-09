@@ -745,7 +745,7 @@ int main(int argc, char *argv[])
 				setenv("SVC_DEPS", off, 1);
 				break;
 			case 'd':
-				setenv("SVC_DEBUG", on, 1);
+				sv_debug = 1;
 				break;
 			case 'x':
 				setenv("SVC_TRACE", on, 1);
@@ -826,7 +826,10 @@ int main(int argc, char *argv[])
 	setenv("SV_VERSION", SV_VERSION, 1);
 	setenv("SV_SYSBOOT_LEVEL" , sv_init_level[SV_SYSBOOT_LEVEL] , 1);
 	setenv("SV_SHUTDOWN_LEVEL", sv_init_level[SV_SHUTDOWN_LEVEL], 1);
-	sv_debug    = sv_conf_yesno("SV_DEBUG");
+	if (!sv_debug)
+		sv_debug = sv_conf_yesno("SV_DEBUG");
+	if ( sv_debug)
+		setenv("SVC_DEBUG", on, 1);
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
 	if ((ptr = sv_getconf("SV_TIMEOUT")))
 		if (!sscanf( ptr, "%u", &sv_timeout)) sv_timeout = 0;
