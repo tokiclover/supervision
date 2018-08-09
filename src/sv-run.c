@@ -37,7 +37,7 @@ struct svcrun_list {
 	int argc;
 	const char **argv;
 	SV_StringList_T *list;
-	struct svcrun **run;
+	struct svcrun *run;
 	int retval;
 	size_t job, len, siz, count;
 	struct svcrun_list *next, *prev;
@@ -1260,33 +1260,28 @@ static void *thread_worker_handler(void *arg)
 	size_t n = 0;
 	long int eagain = 0;
 	int r;
-	struct svcrun *tmp;
 	struct svcrun_list *p = arg;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
 #endif
 
-	tmp = err_malloc(sizeof(struct svcrun));
-	if (!sv_parallel)
-		*p->run = tmp, p->len = 1;
-
 	TAILQ_FOREACH(svc, p->list, entries) {
-		tmp->name = svc->str;
-		tmp->argc = p->argc;
-		tmp->argv = p->argv;
-		tmp->lid  = p->lid;
-		tmp->svc  = svc;
-		tmp->path = tmp->ARGV = NULL;
-		tmp->dep = svc->data;
+		p->run[n].name = svc->str;
+		p->run[n].argc = p->argc;
+		p->run[n].argv = p->argv;
+		p->run[n].lid  = p->lid;
+		p->run[n].svc  = svc;
+		p->run[n].path = p->run[n].ARGV = NULL;
+		p->run[n].dep = svc->data;
 
-		if (!tmp->dep)
-			tmp->dep = tmp->svc->data = sv_svcdeps_load(tmp->name);
+		if (!p->run[n].dep)
+			p->run[n].dep = p->run[n].svc->data = sv_svcdeps_load(p->run[n].name);
 		if (strcmp(p->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
-			if (tmp->dep->status == SV_SVC_STAT_STAR)
+			if (p->run[n].dep->status == SV_SVC_STAT_STAR)
 				continue;
 
-		r = svc_cmd(tmp);
+		r = svc_cmd(&p->run[n]);
 		reterr:
 		switch(r) {
 		case SVC_WAITPID:
@@ -1308,8 +1303,6 @@ static void *thread_worker_handler(void *arg)
 		case -EAGAIN: /* fork(3) failure in svc_run() */
 		case -ENOMEM:
 			if (eagain == -n) { /* something went wrong */
-				free((void*)tmp->ARGV);
-				free((void*)tmp->path);
 				pthread_mutex_lock(&p->mutex);
 				p->retval++;
 				pthread_mutex_unlock(&p->mutex);
@@ -1336,16 +1329,13 @@ static void *thread_worker_handler(void *arg)
 				pthread_mutex_unlock(&RL_SVC_MUTEX);
 			}
 			pthread_rwlock_wrlock(&p->lock);
-			p->run[n] = tmp;
 			p->len++;
 			p->job++;
 			n++;
 			pthread_rwlock_unlock(&p->lock);
 		}
 		else {
-			r = svc_waitpid(tmp, 0);
-			free((void*)tmp->ARGV);
-			free((void*)tmp->path);
+			r = svc_waitpid(&p->run[n], 0);
 			if (r) p->retval++;
 		}
 	}
@@ -1367,7 +1357,7 @@ waitpid:
 
 	if (eagain > 0) {
 		eagain = -eagain;
-		r = svc_run(tmp);
+		r = svc_run(&p->run[n]);
 		goto reterr;
 	}
 
@@ -1512,16 +1502,16 @@ stackpid:
 			pthread_rwlock_rdlock(&p->lock);
 			len = p->len;
 			pthread_rwlock_unlock(&p->lock);
-			for (i = 0; i < len && p->run[i]; i++) {
-				if (p->run[i]->pid != pid) continue;
+			for (i = 0; i < len; i++) {
+				if (p->run[i].pid != pid) continue;
 #ifdef SV_DEBUG
 				if (sv_debug) DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
-						pid, p->run[i]->name);
+						pid, p->run[i].name);
 #endif
 
-				p->run[i]->status = s;
-				r = svc_waitpid(p->run[i], WNOHANG|WUNTRACED);
-				if (!p->run[i]->dep->timeout && (r == SVC_WAITPID))
+				p->run[i].status = s;
+				r = svc_waitpid(&p->run[i], WNOHANG|WUNTRACED);
+				if (!p->run[i].dep->timeout && (r == SVC_WAITPID))
 					goto waitpid;
 
 				pthread_mutex_lock(&p->mutex);
@@ -1644,8 +1634,8 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	if (sv_parallel) {
 		p->siz = sv_stringlist_len(list);
 		p->siz += p->siz % 4LU ? 4LU-(p->siz % 4LU) : 4LU;
-		p->run = err_calloc(sizeof(void*), p->siz);
-		memset(p->run, 0, sizeof(void*)*p->siz);
+		p->run = err_calloc(sizeof(struct svcrun), p->siz);
+		memset(p->run, 0, sizeof(struct svcrun)*p->siz);
 		ps = err_malloc(sizeof(ps)+sizeof(pid_t)*p->siz);
 		memset(ps, 0, sizeof(ps)+sizeof(pid_t)*p->siz);
 		p->ps = ps;
@@ -1711,10 +1701,9 @@ static void thread_worker_cleanup(struct svcrun_list *p)
 	if (sv_debug) DBG("%s(%p)\n", __func__, p);
 #endif
 
-	for (i = 0; p->run[i]; i++) {
-		free((void*)p->run[i]->ARGV);
-		free((void*)p->run[i]->path);
-		free((void*)p->run[i]);
+	for (i = 0; i < p->len; i++) {
+		free((void*)p->run[i].ARGV);
+		free((void*)p->run[i].path);
 	}
 	free((void*)p->run);
 	if (sv_parallel) free((void*)p->ps);
