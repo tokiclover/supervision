@@ -56,10 +56,8 @@ extern pid_t sv_pid;
 static struct svcrun *RUN;
 static struct svcrun_list *RL_SVC;
 static unsigned int RL_SVC_COUNT = 1U;
-static pthread_cond_t RL_SVC_COND = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t RL_SVC_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 static pthread_attr_t  RL_SVC_ATTR;
-static pthread_mutexattr_t RL_SVC_MUTEX_ATTR;
+static pthread_rwlock_t RL_SVC_LOCK;
 static pthread_t RL_SVC_SIGHANDLER_TID;
 static sigset_t ss_thread;
 static struct pidstack *RL_PID_STACK;
@@ -67,6 +65,7 @@ static pthread_t RL_PID_TID;
 static pthread_rwlock_t RL_PID_LOCK;
 static pthread_cond_t RL_PID_COND = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t RL_PID_MUTEX = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t RL_PID_MUTEX_ATTR;
 
 const char *progname;
 const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGUSR1",
@@ -1320,13 +1319,12 @@ static void *thread_worker_handler(void *arg)
 
 		if (sv_parallel) {
 			/* add the job to queue here to be sure to have any child to wait for */
-			if (!p->len) {
-				pthread_mutex_lock(&RL_SVC_MUTEX);
+			if (!n) {
+				pthread_rwlock_wrlock(&RL_SVC_LOCK);
 				p->next = RL_SVC;
 				if (RL_SVC) RL_SVC->prev = p;
 				RL_SVC = p;
-				pthread_cond_signal(&RL_SVC_COND);
-				pthread_mutex_unlock(&RL_SVC_MUTEX);
+				pthread_rwlock_unlock(&RL_SVC_LOCK);
 			}
 			pthread_rwlock_wrlock(&p->lock);
 			p->len++;
@@ -1346,14 +1344,21 @@ static void *thread_worker_handler(void *arg)
 		goto waitpid;
 
 waitpid:
-	pthread_mutex_lock(&p->mutex);
-	while (p->job) {
+	while (1) {
+		pthread_rwlock_rdlock(&p->lock);
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, p->job);
 #endif
+		if (!p->job) {
+			pthread_rwlock_unlock(&p->lock);
+			break;
+		}
+		pthread_rwlock_unlock(&p->lock);
+
+		pthread_mutex_lock(&p->mutex);
 		pthread_cond_wait(&p->cond, &p->mutex);
+		pthread_mutex_unlock(&p->mutex);
 	}
-	pthread_mutex_unlock(&p->mutex);
 
 	if (eagain > 0) {
 		eagain = -eagain;
@@ -1363,20 +1368,26 @@ waitpid:
 
 retval:
 	/* have to remove job from queue */
-	pthread_mutex_lock(&p->mutex);
+	pthread_rwlock_rdlock(&p->lock);
 	if (p->count != p->siz) {
-		pthread_mutex_lock(&RL_SVC_MUTEX);
+		pthread_rwlock_wrlock(&RL_SVC_LOCK);
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("(p)id=%u prev=%p %p next=%p\n", p->lid, p->next, p, p->prev);
+#endif
 		if (p->prev) p->prev->next = p->next;
 		if (p->next) p->next->prev = p->prev;
-		pthread_mutex_unlock(&RL_SVC_MUTEX);
+		pthread_rwlock_unlock(&RL_SVC_LOCK);
 	}
-	pthread_mutex_unlock(&p->mutex);
+	pthread_rwlock_unlock(&p->lock);
 
 	pthread_rwlock_wrlock(&RL_PID_LOCK);
-	p->ps->next->prev = p->ps->prev;
-	p->ps->prev->next = p->ps->next;
-	if (sv_parallel && (p->ps->next == p->ps->prev))
-		RL_PID_STACK = NULL;
+	if (sv_parallel) {
+#ifdef SV_DEBUG
+		if (sv_debug)DBG ("(ps)id=%u prev=%p %p next=%p\n", p->ps->lid, p->ps->next, p->ps, p->ps->prev);
+#endif
+		if (p->ps->next) p->ps->next->prev = p->ps->prev;
+		if (p->ps->prev) p->ps->prev->next = p->ps->next;
+	}
 	pthread_rwlock_unlock(&RL_PID_LOCK);
 	pthread_exit((void*)&p->retval);
 }
@@ -1494,9 +1505,9 @@ stackpid:
 		}
 
 		/* read the first job which could have been changed */
-		pthread_mutex_lock(&RL_SVC_MUTEX);
+		pthread_rwlock_rdlock(&RL_SVC_LOCK);
 		rl = RL_SVC;
-		pthread_mutex_unlock(&RL_SVC_MUTEX);
+		pthread_rwlock_unlock(&RL_SVC_LOCK);
 
 		for (p = rl; p && p->lid == ps->lid; p = p->next) {
 			pthread_rwlock_rdlock(&p->lock);
@@ -1514,19 +1525,21 @@ stackpid:
 				if (!p->run[i].dep->timeout && (r == SVC_WAITPID))
 					goto waitpid;
 
-				pthread_mutex_lock(&p->mutex);
+				pthread_rwlock_wrlock(&p->lock);
 				p->count++;
 				p->job--;
 				if (r) p->retval++;
 				if (p->count == p->siz) {
 					/* remove job from queue */
-					pthread_mutex_lock(&RL_SVC_MUTEX);
+					pthread_rwlock_wrlock(&RL_SVC_LOCK);
 					if (p->prev) p->prev->next = p->next;
 					if (p->next) p->next->prev = p->prev;
-					pthread_mutex_unlock(&RL_SVC_MUTEX);
+					pthread_rwlock_unlock(&RL_SVC_LOCK);
 				}
+				pthread_mutex_lock(&p->mutex);
 				pthread_cond_signal(&p->cond);
 				pthread_mutex_unlock(&p->mutex);
+				pthread_rwlock_unlock(&p->lock);
 
 				goto waitpid;
 			}
@@ -1606,15 +1619,17 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	if (RL_SVC_COUNT == 1U) {
 		if ((r = pthread_attr_init(&RL_SVC_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
-		if ((r = pthread_mutexattr_init(&RL_SVC_MUTEX_ATTR)))
+		if ((r = pthread_mutexattr_init(&RL_PID_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutexattr_init);
-		if ((r = pthread_mutexattr_settype(&RL_SVC_MUTEX_ATTR, PTHREAD_MUTEX_NORMAL)))
+		if ((r = pthread_mutexattr_settype(&RL_PID_MUTEX_ATTR, PTHREAD_MUTEX_NORMAL)))
 			HANDLE_ERROR(pthread_mutexattr_settype);
-		if ((r = pthread_mutex_init(&RL_SVC_MUTEX, &RL_SVC_MUTEX_ATTR)))
+		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_PID_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
+		if ((r = pthread_rwlock_init(&RL_SVC_LOCK, NULL)))
+			HANDLE_ERROR(pthread_rwlock_init);
 		if ((r = pthread_rwlock_init(&RL_PID_LOCK, NULL)))
 			HANDLE_ERROR(pthread_rwlock_init);
-		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_SVC_MUTEX_ATTR)))
+		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_PID_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
 		thread_signal_setup();
 		if ((r = pthread_create(&RL_SVC_SIGHANDLER_TID, &RL_SVC_ATTR,
@@ -1671,11 +1686,16 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		RL_PID_STACK = ps;
 		pthread_rwlock_unlock(&RL_PID_LOCK);
 	}
+	else {
+		p->run = err_malloc(sizeof(struct svcrun));
+		memset(p->run, 0, sizeof(struct svcrun));
+		p->siz = 0LU;
+	}
 	RL_SVC_COUNT++;
 
 	if ((r = pthread_cond_init(&p->cond, NULL)))
 		HANDLE_ERROR(pthread_cond_init);
-	if ((r = pthread_mutex_init(&p->mutex, &RL_SVC_MUTEX_ATTR)))
+	if ((r = pthread_mutex_init(&p->mutex, &RL_PID_MUTEX_ATTR)))
 		HANDLE_ERROR(pthread_mutex_init);
 	if ((r = pthread_rwlock_init(&p->lock, NULL)))
 		HANDLE_ERROR(pthread_rwlock_init);
