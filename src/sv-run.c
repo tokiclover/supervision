@@ -1330,6 +1330,7 @@ static void *thread_worker_handler(void *arg)
 			if (!p->len) {
 				pthread_mutex_lock(&RL_SVC_MUTEX);
 				p->next = RL_SVC;
+				if (RL_SVC) RL_SVC->prev = p;
 				RL_SVC = p;
 				pthread_cond_signal(&RL_SVC_COND);
 				pthread_mutex_unlock(&RL_SVC_MUTEX);
@@ -1340,8 +1341,6 @@ static void *thread_worker_handler(void *arg)
 			p->job++;
 			n++;
 			pthread_rwlock_unlock(&p->lock);
-			if (TAILQ_NEXT(svc, entries))
-				tmp = err_malloc(sizeof(struct svcrun));
 		}
 		else {
 			r = svc_waitpid(tmp, 0);
