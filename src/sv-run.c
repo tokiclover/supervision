@@ -751,7 +751,7 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 static int svc_depend(struct svcrun *run)
 {
 	int type, val = 0, retval = 0;
-	int p = 0;
+	int p;
 	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
 
 #ifdef SV_DEBUG
@@ -765,6 +765,9 @@ static int svc_depend(struct svcrun *run)
 		/* build a deptree to avoid segfault because cyclical dependencies */
 		deptree.list = run->dep->deps[type];
 		svc_deptree_load(&deptree);
+		if (!strcmp(run->argv[4], sv_svc_cmd[SV_SVC_CMD_START]))
+			p = deptree.size;
+		else p = 0;
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(deptree.tree[p]))
 				val += svc_execl(deptree.tree[p], run->argc, run->argv);
