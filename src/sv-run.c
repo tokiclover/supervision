@@ -586,7 +586,7 @@ static int svc_run(struct svcrun *run)
 			do {
 				if ((val = pthread_rwlock_wrlock(&RL_PID_LOCK))) {
 #ifdef SV_DEBUG
-					if (sv_debug) DBG("Failed to lock pid lock (%p)\n", &RL_PID_LOCK);
+					if (sv_debug) DBG("Failed to lock pid lock (RL_PID_LOCK)\n", NULL);
 #endif
 					continue;
 				}
@@ -1457,13 +1457,13 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 waitcond:
 		if (pthread_mutex_lock(&RL_PID_MUTEX)) {
 #ifdef SV_DEBUG
-			if (sv_debug) DBG("Failed to lock pid mutex (%p)\n", NULL);
+			if (sv_debug) DBG("Failed to lock pid mutex (RL_PID_MUTEX)\n", NULL);
 #endif
 			continue;
 		}
 		if (pthread_cond_wait(&RL_PID_COND, &RL_PID_MUTEX)) {
 #ifdef SV_DEBUG
-			if (sv_debug) DBG("Failed to wait pid condition\n", NULL);
+			if (sv_debug) DBG("Failed to wait pid condition (RL_PID_MUTEX)\n", NULL);
 #endif
 			continue;
 		}
@@ -1475,13 +1475,13 @@ waitpid:
 			if (!pid) goto waitcond;
 		} while(!WIFEXITED(s) && !WIFSIGNALED(s));
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("%s:%d: looking for pid=%d\n", __func__, __LINE__, pid);
+		if (sv_debug) DBG("Looking for pid=%d\n", pid);
 #endif
 stackpid:
 		do {
 			if ((r = pthread_rwlock_rdlock(&RL_PID_LOCK))) {
 #ifdef SV_DEBUG
-				if (sv_debug) DBG("Failed to lock pid rwlock\n", NULL);
+				if (sv_debug) DBG("Failed to lock pid rwlock (RL_PID_LOCK)\n", NULL);
 #endif
 				continue;
 			}
@@ -1505,7 +1505,7 @@ stackpid:
 			do {
 				if ((r = pthread_mutex_lock(&RL_PID_MUTEX))) {
 #ifdef SV_DEBUG
-					if (sv_debug) DBG("Failed to lock pid stack mutex\n", NULL);
+					if (sv_debug) DBG("Failed to lock pid stack mutex (RL_PID_MUTEX)\n", NULL);
 #endif
 					continue;
 				}
