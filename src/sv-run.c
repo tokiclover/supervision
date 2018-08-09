@@ -1504,6 +1504,7 @@ stackpid:
 			goto stackpid;
 		}
 
+rl_svc:
 		/* read the first job which could have been changed */
 		pthread_rwlock_rdlock(&RL_SVC_LOCK);
 		rl = RL_SVC;
@@ -1545,6 +1546,7 @@ stackpid:
 			}
 			goto waitpid;
 		}
+		goto rl_svc;
 	}
 }
 static void thread_signal_setup(void)
