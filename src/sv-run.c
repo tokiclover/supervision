@@ -1676,13 +1676,10 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		}
 
 		pthread_rwlock_wrlock(&RL_PID_LOCK);
-		if (RL_PID_STACK) {
-			ps->next = RL_PID_STACK;
-			ps->prev = RL_PID_STACK->prev;
-			ps->prev->next = ps;
-		}
-		else
-			RL_PID_STACK = ps->next = ps->prev = ps;
+		ps->next = RL_PID_STACK;
+		if (RL_PID_STACK)
+			RL_PID_STACK->prev = ps;
+		RL_PID_STACK = ps;
 		pthread_rwlock_unlock(&RL_PID_LOCK);
 	}
 	RL_SVC_COUNT++;
