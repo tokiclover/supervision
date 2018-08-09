@@ -1664,8 +1664,8 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		p->siz += p->siz % 4LU ? 4LU-(p->siz % 4LU) : 4LU;
 		p->run = err_calloc(sizeof(struct svcrun), p->siz);
 		memset(p->run, 0, sizeof(struct svcrun)*p->siz);
-		ps = err_malloc(sizeof(ps)+sizeof(pid_t)*p->siz);
-		memset(ps, 0, sizeof(ps)+sizeof(pid_t)*p->siz);
+		ps = err_malloc(PIDSTACK_MIN_SIZE+sizeof(pid_t)*p->siz);
+		memset(ps, 0, PIDSTACK_MIN_SIZE+sizeof(pid_t)*p->siz);
 		p->ps = ps;
 
 		if (!count) {
