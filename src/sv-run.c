@@ -1282,6 +1282,9 @@ static void *thread_worker_handler(void *arg)
 		if (strcmp(p->argv[4], sv_svc_cmd[SV_SVC_CMD_START]) == 0)
 			if (p->run[n].dep->status == SV_SVC_STAT_STAR)
 				continue;
+		if (strcmp(p->argv[4], sv_svc_cmd[SV_SVC_CMD_STOP]) == 0)
+			if (p->run[n].dep->status == SV_SVC_MARK_STAR)
+				continue;
 
 		r = svc_cmd(&p->run[n]);
 		reterr:
