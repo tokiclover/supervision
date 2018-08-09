@@ -63,7 +63,7 @@ SVCLIST=
 svcdeps=${SV_DEPDIR}/svcdeps
 svclist=${SV_DEPDIR}/svclist
 svcdirs="${SV_SVCDIR}"
-if [ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" -a "${__PREFIX__}" != "/usr" ]; then
+if [ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" -a "${__SV_PREFIX__}" != "/usr" ]; then
 	svcdirs="${svcdirs} ${__SV_PREFIX__}${SV_SVCDIR}"
 fi
 if [ -n "${SV_PREFIX}" -a -d "${SV_PREFIX}" ]; then
