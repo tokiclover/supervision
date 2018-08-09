@@ -1486,14 +1486,19 @@ stackpid:
 				continue;
 			}
 		} while (r);
+		r = 0;
 		for (ps = RL_PID_STACK; ps; ps = ps->next) {
-			r = 0;
 			for (i = 0; ps->pid[i]; i++)
 				if (pid == ps->pid[i]) {
-					r = 1;
+					r = -1;
 					break;
 				}
-			if (r) break;
+			if (r < 0) break;
+			if (r && ps == RL_PID_STACK) {
+				ps = NULL;
+				break;
+			}
+			r++;
 		}
 		pthread_rwlock_unlock(&RL_PID_LOCK);
 		if (!ps) {
