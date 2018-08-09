@@ -766,7 +766,7 @@ static int svc_depend(struct svcrun *run)
 		deptree.list = run->dep->deps[type];
 		svc_deptree_load(&deptree);
 		if (!strcmp(run->argv[4], sv_svc_cmd[SV_SVC_CMD_START]))
-			p = deptree.size;
+			p = deptree.size-1;
 		else p = 0;
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(deptree.tree[p]))
