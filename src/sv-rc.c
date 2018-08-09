@@ -62,7 +62,8 @@ static const char *const sv_run_level[][8] = {
 	{ NULL },
 	{ NULL },
 	{ "clock", "hostname", NULL },
-	{ NULL },
+	{ "dev", "checkfs", "rootfs", "localfs", "miscfs", "console", "net",
+		"networkfs", "logger", NULL },
 	{ NULL },
 	{ NULL },
 };
@@ -122,7 +123,7 @@ static void svc_init(const char *cmd);
  * to finish/start particular init levels or stages
  * @return 0 on success or number of failed services
  */
-static int svc_init_command(int level, int argc, const char *argv[]);
+static int svc_init_level(int level, int argc, const char *argv[]);
 
 /* simple rc compatible runlevel handler*/
 static void svc_level(void);
@@ -485,9 +486,9 @@ static int sv_system_detect(void)
 	return 0;
 }
 
-static int svc_init_command(int level, int argc, const char *argv[])
+static int svc_init_level(int level, int argc, const char *argv[])
 {
-	int i, retval;
+	int i, retval = 0;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, level, argc, argv);
 #endif
@@ -499,7 +500,13 @@ static int svc_init_command(int level, int argc, const char *argv[])
 	for (i = 0; sv_run_level[level][i]; i++)
 		sv_stringlist_add(DEPTREE.list, sv_run_level[level][i]);
 
-	retval = svc_execl(DEPTREE.list, argc, argv);
+	svc_deptree_load(&DEPTREE);
+	for (i = DEPTREE.size-1; i >= 0; i--) {
+		/* PRIORITY_LEVEL_LOOP */
+		if (!TAILQ_EMPTY(DEPTREE.tree[i]))
+			retval += svc_execl(DEPTREE.tree[i], argc, argv);
+	}
+	sv_deptree_free(&DEPTREE);
 	sv_stringlist_free(&DEPTREE.list);
 	return retval;
 }
@@ -705,8 +712,8 @@ static void svc_init(const char *cmd)
 		sv_deptree_free(&DEPTREE);
 		sv_stringlist_free(&DEPTREE.list);
 
-		if (svc_start && *sv_run_level[sv_init])
-			svc_init_command(sv_init, 8, argv);
+		if (svc_start)
+			svc_init_level(sv_init, 8, argv);
 		/* break shutdown loop */
 		if (!level)
 			break;
