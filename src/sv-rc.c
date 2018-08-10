@@ -632,12 +632,12 @@ static void svc_init(const char *cmd)
 		}
 		else if (sv_init == SV_DEFAULT_LEVEL && !level) {
 			/* start sysboot runlevel only when service command is NULL */
-			if (!cmd && (!runlevel ||
+			if (!cmd && !runlevel ||
 						(strcmp(runlevel, sv_init_level[SV_SYSBOOT_LEVEL]) &&
-						 strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL])))) {
+						 strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL]))) {
 			level = sv_level;
 			/* do nothing with a subsystem */ 
-			if (getenv("SV_SYSTEM")) continue;
+			if (getenv("SV_SYSTEM") || getenv("SV_PREFIX")) continue;
 			sv_level = sv_init = SV_SYSBOOT_LEVEL;
 			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
@@ -652,12 +652,9 @@ static void svc_init(const char *cmd)
 			svc_environ_update(ENVIRON_OFF);
 		}
 		else if (sv_init == SV_SINGLE_LEVEL) {
-			/* stop default runlevel only when service command is NULL */
-			if (!cmd && !strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL])) {
+			/* stop runlevel only when service command is NULL */
+			if (!cmd) {
 			level = sv_init;
-			/* do nothing if the runlevel is different than sysinit */
-			if (runlevel && !strcmp(runlevel, sv_init_level[SV_SYSINIT_LEVEL]))
-					continue;
 			sv_init = SV_DEFAULT_LEVEL;
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
@@ -811,8 +808,6 @@ int main(int argc, char *argv[])
 	/* set this to avoid double waiting for a lockfile for supervision */
 	setenv("__SVC_WAIT__", off, 1);
 	setenv("SVC_DEPS", off, 1);
-	setenv("SV_SYSTEM", "", 1);
-	setenv("SV_PREFIX", "", 1);
 	if ((ptr = (char*)sv_getconf("SV_SYSTEM"))) {
 		for (opt = SV_KEYWORD_SUPERVISION; sv_keywords[opt]; opt++)
 			if (strcmp(ptr, sv_keywords[opt]) == 0) {
@@ -890,6 +885,17 @@ sv_run:
 	else if (!strcmp(progname, "sv-rc")) {
 		if (sv_init >= 0) {
 sv_rc_init:
+			if (getenv("SV_SYSTEM") || getenv("SV_PREFX")) {
+				switch(sv_init) {
+				case SV_SINGLE_LEVEL:
+				case SV_SYSINIT_LEVEL:
+				case SV_NOWNETWORK_LEVEL:
+				case SV_SYSBOOT_LEVEL:
+					ERR("invalid usage with SV_{SYSTEM|PREX} system\n", NULL);
+					fprintf(stderr, "Usage: %s (default|shutdown|reboot)\n", progname);
+					exit(EXIT_FAILURE);
+				}
+			}
 			setenv("SVC_TRACE", off, 1);
 			if (sv_init >= 0) {
 				svc_init(*argv);
