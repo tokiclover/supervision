@@ -1231,7 +1231,7 @@ int svc_exec(int argc, const char *argv[]) {
 static void *thread_worker_handler(void *arg)
 {
 	SV_String_T *svc;
-	size_t n = 0;
+	size_t j = 0, n = 0;
 	long int eagain = 0;
 	int r;
 	struct svcrun_list *p = arg;
@@ -1306,8 +1306,9 @@ static void *thread_worker_handler(void *arg)
 			pthread_rwlock_wrlock(&p->lock);
 			p->len++;
 			p->job++;
-			n++;
+			j = p->job;
 			pthread_rwlock_unlock(&p->lock);
+			n++;
 		}
 		else {
 			r = svc_waitpid(&p->run[n], 0);
@@ -1321,18 +1322,11 @@ static void *thread_worker_handler(void *arg)
 		goto waitpid;
 
 waitpid:
-	while (1) {
-		pthread_rwlock_rdlock(&p->lock);
+	if (j) {
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, p->job);
+		if (sv_debug) DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, j);
 #endif
-		if (!p->job) {
-			pthread_rwlock_unlock(&p->lock);
-			break;
-		}
-		pthread_rwlock_unlock(&p->lock);
-
-		pthread_mutex_lock(&p->mutex);
+		pthread_mutex_lock  (&p->mutex);
 		pthread_cond_wait(&p->cond, &p->mutex);
 		pthread_mutex_unlock(&p->mutex);
 	}
@@ -1445,45 +1439,41 @@ rl_svc:
 			pthread_rwlock_rdlock(&p->lock);
 			len = p->len;
 			pthread_rwlock_unlock(&p->lock);
+			pthread_mutex_lock(&p->rl_mutex);
 			for (i = 0; i < len; i++) {
-				pthread_mutex_lock(&p->rl_mutex);
-				if (p->run[i].pid != pid) {
-					pthread_mutex_unlock(&p->rl_mutex);
-					continue;
-				}
-				pthread_rwlock_unlock(&RL_SVC_LOCK);
+				if (p->run[i].pid != pid) continue;
 				pthread_mutex_unlock(&p->rl_mutex);
 #ifdef SV_DEBUG
 				if (sv_debug) DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
 						pid, p->run[i].name);
 #endif
-
 				p->run[i].status = s;
-				r = svc_waitpid(&p->run[i], WNOHANG|WUNTRACED);
-				if (!p->run[i].dep->timeout && (r == SVC_WAITPID))
-					goto waitpid;
-
 				pthread_rwlock_wrlock(&p->lock);
 				p->count++;
 				p->job--;
+				len = p->job;
 				if (r) p->retval++;
 				if (p->count == p->siz) {
 					/* remove job from queue */
+					pthread_rwlock_unlock(&RL_SVC_LOCK);
 					pthread_rwlock_wrlock(&RL_SVC_LOCK);
 					if (p->prev) p->prev->next = p->next;
 					if (p->next) p->next->prev = p->prev;
-					pthread_rwlock_unlock(&RL_SVC_LOCK);
 				}
 				pthread_rwlock_unlock(&p->lock);
-				pthread_mutex_lock(&p->mutex);
-				pthread_cond_signal(&p->cond);
-				pthread_mutex_unlock(&p->mutex);
-
+				pthread_rwlock_unlock(&RL_SVC_LOCK);
+				if (!len) {
+					pthread_mutex_lock(&p->mutex);
+					pthread_cond_signal(&p->cond);
+					pthread_mutex_unlock(&p->mutex);
+				}
 				goto waitpid;
 			}
-			goto waitpid;
 		}
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
+#ifdef SV_DEBUG
+		DBG("Failed to found pid=%d\n", pid);
+#endif
 		goto rl_svc;
 	}
 }
