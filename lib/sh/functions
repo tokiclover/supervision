@@ -37,7 +37,7 @@ error()
 {
 	local message="${*}"
 	if yesno ${SVC_SYSLOG}; then
-		logger "${name}: error: ${@}"
+		"${name}: error: ${@}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_mag}${name}}"
@@ -50,7 +50,7 @@ error()
 info()
 {
 	local message="${*}"
-	if yesno ${SVC_SYSLOG_INFO}; then
+	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: info: ${message}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -64,7 +64,7 @@ info()
 warn()
 {
 	local message="${*}"
-	if yesno ${SVC_SYSLOG}; then
+	if ${SVC_SYSLOG}; then
 		logger "${name}: warning: ${message}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -78,7 +78,7 @@ warn()
 begin()
 {
 	local message="${*}"
-	if yesno ${SVC_SYSLOG_INFO}; then
+	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${message}"
 	fi
 	printf "${__print_eol__}"
@@ -97,7 +97,7 @@ end()
 	local suffix ret="${1:-0}"
 	shift
 	local message="${*}"
-	if yesno ${SVC_SYSLOG_INFO}; then
+	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${message}"
 	fi
 	case "${ret}" in
