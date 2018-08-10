@@ -439,6 +439,7 @@ if yesno "${SVC_SYSLOG_INFO:-${SV_SYSLOG_INFO}}"; then
 else
 	SVC_SYSLOG_INFO=false
 fi
+readonly SVC_DEBUG SVC_SYSLOG SVC_SYSLOG_INFO
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
