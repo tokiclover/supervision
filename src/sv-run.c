@@ -20,18 +20,12 @@
 #include <pthread.h>
 #include "sv-deps.h"
 
-struct pidstack {
-	unsigned int lid;
-	struct pidstack *prev, *next;
-	pid_t pid[];
-};
-#define PIDSTACK_MIN_SIZE 4LU
+#define OFFSET_T_SIZE(SIZE, align, remind)                                   \
+	(SIZE-(SIZE % sizeof(int))) % (align*sizeof(int)) > remind*sizeof(int) ? \
+	(align+remind)*sizeof(int)-(SIZE-(SIZE % sizeof(int))) % (align*sizeof(int)) : \
+	remind*sizeof(int)-(SIZE-(SIZE % sizeof(int))) % (align*sizeof(int))
 
-#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)+sizeof(pthread_rwlock_t)+sizeof(pthread_t))
-#define OFFSET_T_SIZE(align, remind)                                                   \
-	(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int)) > remind*sizeof(int) ? \
-	(align+remind)*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int)) : \
-	remind*sizeof(int)-(THREAD_T_SIZE-(THREAD_T_SIZE % sizeof(int))) % (align*sizeof(int))
+#define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)*2LU+sizeof(pthread_rwlock_t)+sizeof(pthread_t))
 struct svcrun_list {
 	unsigned int lid;
 	int argc;
@@ -45,8 +39,8 @@ struct svcrun_list {
 	pthread_mutex_t mutex;
 	pthread_rwlock_t lock;
 	pthread_t tid;
-	struct pidstack *ps;
-	char __pad[OFFSET_T_SIZE(8U, 3U)];
+	pthread_mutex_t rl_mutex;
+	char __pad[OFFSET_T_SIZE(THREAD_T_SIZE, 4LU, 4LU)];
 };
 #undef THREAD_T_SIZE
 #undef OFSET_T_SIZE
@@ -60,9 +54,7 @@ static pthread_attr_t  RL_SVC_ATTR;
 static pthread_rwlock_t RL_SVC_LOCK;
 static pthread_t RL_SVC_SIGHANDLER_TID;
 static sigset_t ss_thread;
-static struct pidstack *RL_PID_STACK;
 static pthread_t RL_PID_TID;
-static pthread_rwlock_t RL_PID_LOCK;
 static pthread_cond_t RL_PID_COND = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t RL_PID_MUTEX = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutexattr_t RL_PID_MUTEX_ATTR;
@@ -561,10 +553,9 @@ static int svc_run(struct svcrun *run)
 {
 	size_t len;
 	int val;
-	int i;
 	off_t off = 0;
 	char buf[128];
-	struct pidstack *ps;
+	pid_t pid;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, run);
 #endif
@@ -576,39 +567,19 @@ static int svc_run(struct svcrun *run)
 
 	/* block signal before fork() */
 	sigprocmask(SIG_SETMASK, &ss_full, NULL);
-	run->pid = fork();
-	if (run->pid > 0) { /* parent */
+	pid = fork();
+	if (pid > 0) { /* parent */
 		/* restore signal mask */
-		if (run->lid) {
+		if (run->srl) {
 			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
-
-			/* push the pid to the pid stack */
-			do {
-				if ((val = pthread_rwlock_wrlock(&RL_PID_LOCK))) {
-#ifdef SV_DEBUG
-					if (sv_debug) DBG("Failed to lock pid lock (RL_PID_LOCK)\n", NULL);
-#endif
-					continue;
-				}
-			} while (val);
-			for (ps = RL_PID_STACK; ps; ps = ps->next)
-				if (ps->lid == run->lid) break;
-			if (ps) {
-				for (i = 0; ps->pid[i]; i++) ;
-				ps->pid[i] = run->pid;
-			}
-			else {
-#ifdef SV_DEBUG
-				if (sv_debug) DBG("Failed to find a pid stack for service=%s (pid=%d)\n",
-					run->name, run->pid);
-#else
-				;
-#endif
-			}
-			pthread_rwlock_unlock(&RL_PID_LOCK);
+			pthread_mutex_lock  (&((struct svcrun_list*)(run->srl))->rl_mutex);
+			run->pid = pid;
+			pthread_mutex_unlock(&((struct svcrun_list*)(run->srl))->rl_mutex);
 		}
-		else
+		else {
 			sigprocmask(SIG_SETMASK, &ss_child, NULL);
+			run->pid = pid;
+		}
 		return SVC_WAITPID;
 	}
 	else if (run->pid == 0) /* child */
@@ -1205,6 +1176,7 @@ int svc_exec(int argc, const char *argv[]) {
 	if (sv_debug) DBG("%s(%d, %p)\n", __func__, argc, argv);
 #endif
 	memset(&svc, 0, sizeof(svc));
+	memset(&run, 0, sizeof(run));
 
 	run.argc = argc+8+8-(argc % 8);
 	run.argv = err_malloc(run.argc*sizeof(void*));
@@ -1272,9 +1244,8 @@ static void *thread_worker_handler(void *arg)
 		p->run[n].name = svc->str;
 		p->run[n].argc = p->argc;
 		p->run[n].argv = p->argv;
-		p->run[n].lid  = p->lid;
 		p->run[n].svc  = svc;
-		p->run[n].path = p->run[n].ARGV = NULL;
+		p->run[n].srl = p;
 		p->run[n].dep = svc->data;
 
 		if (!p->run[n].dep)
@@ -1385,16 +1356,6 @@ retval:
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 	}
 	pthread_rwlock_unlock(&p->lock);
-
-	pthread_rwlock_wrlock(&RL_PID_LOCK);
-	if (sv_parallel) {
-#ifdef SV_DEBUG
-		if (sv_debug)DBG ("(ps)id=%u prev=%p %p next=%p\n", p->ps->lid, p->ps->next, p->ps, p->ps->prev);
-#endif
-		if (p->ps->next) p->ps->next->prev = p->ps->prev;
-		if (p->ps->prev) p->ps->prev->next = p->ps->next;
-	}
-	pthread_rwlock_unlock(&RL_PID_LOCK);
 	pthread_exit((void*)&p->retval);
 }
 
@@ -1442,8 +1403,7 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 {
 	int i, r, s;
 	size_t len;
-	struct svcrun_list *p, *rl;
-	struct pidstack *ps;
+	struct svcrun_list *p;
 	pid_t pid;
 
 #ifdef SV_DEBUG
@@ -1477,56 +1437,22 @@ waitpid:
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("Looking for pid=%d\n", pid);
 #endif
-stackpid:
-		do {
-			if ((r = pthread_rwlock_rdlock(&RL_PID_LOCK))) {
-#ifdef SV_DEBUG
-				if (sv_debug) DBG("Failed to lock pid rwlock (RL_PID_LOCK)\n", NULL);
-#endif
-				continue;
-			}
-		} while (r);
-		r = 0;
-		for (ps = RL_PID_STACK; ps; ps = ps->next) {
-			for (i = 0; ps->pid[i]; i++)
-				if (pid == ps->pid[i]) {
-					r = -1;
-					break;
-				}
-			if (r < 0) break;
-			if (r && ps == RL_PID_STACK) {
-				ps = NULL;
-				break;
-			}
-			r++;
-		}
-		pthread_rwlock_unlock(&RL_PID_LOCK);
-		if (!ps) {
-			do {
-				if ((r = pthread_mutex_lock(&RL_PID_MUTEX))) {
-#ifdef SV_DEBUG
-					if (sv_debug) DBG("Failed to lock pid stack mutex (RL_PID_MUTEX)\n", NULL);
-#endif
-					continue;
-				}
-			} while (r);
-			pthread_cond_wait(&RL_PID_COND, &RL_PID_MUTEX);
-			pthread_mutex_unlock(&RL_PID_MUTEX);
-			goto stackpid;
-		}
 
 rl_svc:
 		/* read the first job which could have been changed */
 		pthread_rwlock_rdlock(&RL_SVC_LOCK);
-		rl = RL_SVC;
-		pthread_rwlock_unlock(&RL_SVC_LOCK);
-
-		for (p = rl; p && p->lid == ps->lid; p = p->next) {
+		for (p = RL_SVC; p; p = p->next) {
 			pthread_rwlock_rdlock(&p->lock);
 			len = p->len;
 			pthread_rwlock_unlock(&p->lock);
 			for (i = 0; i < len; i++) {
-				if (p->run[i].pid != pid) continue;
+				pthread_mutex_lock(&p->rl_mutex);
+				if (p->run[i].pid != pid) {
+					pthread_mutex_unlock(&p->rl_mutex);
+					continue;
+				}
+				pthread_rwlock_unlock(&RL_SVC_LOCK);
+				pthread_mutex_unlock(&p->rl_mutex);
 #ifdef SV_DEBUG
 				if (sv_debug) DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
 						pid, p->run[i].name);
@@ -1548,15 +1474,16 @@ rl_svc:
 					if (p->next) p->next->prev = p->prev;
 					pthread_rwlock_unlock(&RL_SVC_LOCK);
 				}
+				pthread_rwlock_unlock(&p->lock);
 				pthread_mutex_lock(&p->mutex);
 				pthread_cond_signal(&p->cond);
 				pthread_mutex_unlock(&p->mutex);
-				pthread_rwlock_unlock(&p->lock);
 
 				goto waitpid;
 			}
 			goto waitpid;
 		}
+		pthread_rwlock_unlock(&RL_SVC_LOCK);
 		goto rl_svc;
 	}
 }
@@ -1617,8 +1544,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	} while(0)
 	int r;
 	static unsigned int count;
-	struct svcrun_list *p;
-	struct pidstack *ps, *k;
+	struct svcrun_list *p, *k;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
@@ -1639,8 +1565,6 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_PID_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
 		if ((r = pthread_rwlock_init(&RL_SVC_LOCK, NULL)))
-			HANDLE_ERROR(pthread_rwlock_init);
-		if ((r = pthread_rwlock_init(&RL_PID_LOCK, NULL)))
 			HANDLE_ERROR(pthread_rwlock_init);
 		if ((r = pthread_mutex_init(&RL_PID_MUTEX, &RL_PID_MUTEX_ATTR)))
 			HANDLE_ERROR(pthread_mutex_init);
@@ -1664,40 +1588,31 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		p->siz += p->siz % 4LU ? 4LU-(p->siz % 4LU) : 4LU;
 		p->run = err_calloc(sizeof(struct svcrun), p->siz);
 		memset(p->run, 0, sizeof(struct svcrun)*p->siz);
-		ps = err_malloc(PIDSTACK_MIN_SIZE+sizeof(pid_t)*p->siz);
-		memset(ps, 0, PIDSTACK_MIN_SIZE+sizeof(pid_t)*p->siz);
-		p->ps = ps;
+		pthread_mutex_init(&p->rl_mutex, &RL_PID_MUTEX_ATTR);
 
 		if (!count) {
 			if (RL_SVC_COUNT < UINT_MAX)
-				ps->lid = RL_SVC_COUNT;
+				p->lid = RL_SVC_COUNT;
 			else count++;
 		}
 		else {
-			pthread_rwlock_rdlock(&RL_PID_LOCK);
-			for (k = RL_PID_STACK; k; k = k->next) {
+			pthread_rwlock_rdlock(&RL_SVC_LOCK);
+			for (k = RL_SVC; k; k = k->next) {
 				if (k->lid == RL_SVC_COUNT) {
 					RL_SVC_COUNT++;
 					if (RL_SVC_COUNT == UINT_MAX)
-						RL_SVC_COUNT = 0U;
-					k = RL_PID_STACK;
+						RL_SVC_COUNT = 1U;
+					k = RL_SVC;
 					if (!k) {
 						RL_SVC_COUNT = 1U;
 						break;
 					}
 				}
 			}
-			if (RL_SVC_COUNT == UINT_MAX) RL_SVC_COUNT = 0U;
-			pthread_rwlock_unlock(&RL_PID_LOCK);
-			ps->lid = p->lid = RL_SVC_COUNT;
+			if (RL_SVC_COUNT == UINT_MAX) RL_SVC_COUNT = 1U;
+			p->lid = RL_SVC_COUNT;
+			pthread_rwlock_unlock(&RL_SVC_LOCK);
 		}
-
-		pthread_rwlock_wrlock(&RL_PID_LOCK);
-		ps->next = RL_PID_STACK;
-		if (RL_PID_STACK)
-			RL_PID_STACK->prev = ps;
-		RL_PID_STACK = ps;
-		pthread_rwlock_unlock(&RL_PID_LOCK);
 	}
 	else {
 		p->run = err_malloc(sizeof(struct svcrun));
@@ -1739,10 +1654,10 @@ static void thread_worker_cleanup(struct svcrun_list *p)
 		free((void*)p->run[i].path);
 	}
 	free((void*)p->run);
-	if (sv_parallel) free((void*)p->ps);
 
 	pthread_cond_destroy(&p->cond);
 	pthread_mutex_destroy(&p->mutex);
 	pthread_rwlock_destroy(&p->lock);
+	pthread_mutex_destroy(&p->rl_mutex);
 	free((void*)p);
 }
