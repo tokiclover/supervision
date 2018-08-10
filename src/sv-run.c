@@ -1448,6 +1448,7 @@ rl_svc:
 						pid, p->run[i].name);
 #endif
 				p->run[i].status = s;
+				r = svc_waitpid(&p->run[i], 0);
 				pthread_rwlock_wrlock(&p->lock);
 				p->count++;
 				p->job--;
