@@ -632,9 +632,9 @@ static void svc_init(const char *cmd)
 		}
 		else if (sv_init == SV_DEFAULT_LEVEL && !level) {
 			/* start sysboot runlevel only when service command is NULL */
-			if (!cmd && !runlevel ||
+			if (!cmd && (!runlevel ||
 						(strcmp(runlevel, sv_init_level[SV_SYSBOOT_LEVEL]) &&
-						 strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL]))) {
+						 strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL])))) {
 			level = sv_level;
 			/* do nothing with a subsystem */ 
 			if (getenv("SV_SYSTEM") || getenv("SV_PREFIX")) continue;
@@ -806,6 +806,7 @@ int main(int argc, char *argv[])
 	argc -= optind, argv += optind;
 
 	/* set this to avoid double waiting for a lockfile for supervision */
+	svc_log("\n");
 	setenv("__SVC_WAIT__", off, 1);
 	setenv("SVC_DEPS", off, 1);
 	if ((ptr = (char*)sv_getconf("SV_SYSTEM"))) {
