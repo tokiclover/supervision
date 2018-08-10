@@ -98,7 +98,7 @@ end()
 	shift
 	local message="${*}"
 	if ${SVC_SYSLOG_INFO}; then
-		logger "${name}: notice: ${message}"
+		logger "${name}: notice: ${message} [${ret}]"
 	fi
 	case "${ret}" in
 		(0) suffix="${color_fg_blu}(${name}) [${color_fg_grn}ok${color_fg_blu}]${color_rst}";;
