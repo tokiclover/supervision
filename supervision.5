@@ -1041,14 +1041,6 @@ runlevel.
 .RB [\| sulogin \|]\ \c
 .RB [\| udev \|]\ \c
 .RB [\| udev-monitor \|])
-.TP
-.I @SYSCONFDIR@/runit/{1,2,3,ctraltdel}
-init-stage-{1,2,3} files to handle system boot/shutdown and supervisor; and
-C-ALT-DEL signal handler for shutdown and reboot.
-.TP
-.I @SYSCONFDIR@/s6/{init,crash,finish}
-Init-stage-{1,2,3} files to handle system boot, reboot and shutdown and
-supervisor crashes.
 .SS SV_RUNDIR: @RUNDIR@/sv
 Default run time '/service/' directory
 .SS SV_LIBDIR: \fI@LIBDIR@/sv\fR
@@ -1140,19 +1132,6 @@ Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .BR sv-run (8),
 .BR sv-rc (8),
 .BR sv-shutdown (8),
-.BR sh (1);
-.B daemontools[encore]:
-.BR \%svc (8),
-.BR \%multilog (8),
-.BR \%svscan (8);
-.B runit:
-.BR \%sv (8),
-.BR \%svlogd (8),
-.BR \%runsvdir (8);
-.B s6:
-.BR \%s6-svc (8),
-.BR \%s6-log (8),
-.BR \%s6-svscan (8),
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"

@@ -53,7 +53,6 @@ dist_SV_BINS  = \
 	src/fstabinfo \
 	src/mountinfo \
 	src/waitfile
-dist_SCRIPTS  = $(dist_INIT_SH)
 dist_SV_SVCS  = \
 	$(EXTRA_SUPERVISION_SERVICES) \
 	apache2 \
@@ -217,13 +216,13 @@ dist_DIRS += $(PREFIX)$(SV_SVCDIR)
 endif
 endif
 
-ifeq ($(RUNIT_INIT_SH),yes)
+ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
-dist_DIRS    += $(SYSCONFDIR)/runit
+dist_DIRS    += $(DATADIR)/$(PACKAGE)/runit
 endif
-ifeq ($(S6_INIT_SH),yes)
+ifeq ($(S6_INIT_STAGE),yes)
 dist_INIT_SH += s6/crash s6/finish s6/init
-dist_DIRS    += $(SYSCONFDIR)/s6
+dist_DIRS    += $(DATADIR)/$(PACKAGE)/s6
 endif
 
 ifeq ($(SYSVINIT),yes)
@@ -310,7 +309,7 @@ ifneq ($(dist_SVC_SED),)
 		   $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%/OPTIONS*)
 endif
 	sed $(INIT_SH_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/sv-init.sh \
-		$(dist_INIT_SH:%=$(DESTDIR)$(SYSCONFDIR)/%)
+		$(dist_INIT_SH:%=$(DESTDIR)$(DATADIR)/$(PACKAGE)/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		echo $(LN_S) "$${svc#*:}" "$(DESTDIR)$(SV_SVCDIR)/$${svc%:*}"; \
 		$(LN_S) "$${svc#*:}" "$(DESTDIR)$(SV_SVCDIR)/$${svc%:*}"; \
@@ -336,8 +335,9 @@ $(dist_SV_LOGS): install-dir
 	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/run
 	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/finish
 
-$(dist_SCRIPTS): FORCE
-	$(install_SCRIPT) $@ $(DESTDIR)$(SYSCONFDIR)/$@
+$(dist_INIT_SH): install-dir
+	$(install_SCRIPT) $@ $(DESTDIR)$(DATADIR)/$(PACKAGE)/$@
+
 $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
 
@@ -349,8 +349,8 @@ uninstall: uninstall-doc
 		$(DESDIR)$(SBINDIR)/sv-rc $(DESTDIR)$(SBINDIR)/sv-run \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
 		$(DESTDIR)$(MANDIR)/man8/sv-rc.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
-		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
-	rm -f $(dist_SCRIPTS:%=$(DESTDIR)$(SYSCONFDIR)/%)
+		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8 \
+		$(dist_INIT_SH:%=$(DESTDIR)$(DATADIR)/$(PACKAGE)/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(SV_SVCDIR).conf.local.d/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
