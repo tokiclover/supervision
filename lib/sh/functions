@@ -36,8 +36,8 @@ logger()
 error()
 {
 	local message="${*}"
-	if yesno ${SVC_SYSLOG}; then
-		"${name}: error: ${@}"
+	if ${SVC_SYSLOG}; then
+		logger "${name}: error: ${@}"
 	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_mag}${name}}"
