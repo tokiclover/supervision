@@ -1382,7 +1382,6 @@ retval:
 #endif
 		if (p->prev) p->prev->next = p->next;
 		if (p->next) p->next->prev = p->prev;
-		if (!p->next && !p->prev) RL_SVC = NULL;
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 	}
 	pthread_rwlock_unlock(&p->lock);
@@ -1394,7 +1393,6 @@ retval:
 #endif
 		if (p->ps->next) p->ps->next->prev = p->ps->prev;
 		if (p->ps->prev) p->ps->prev->next = p->ps->next;
-		if (!p->ps->next && !p->ps->prev) RL_PID_STACK = NULL;
 	}
 	pthread_rwlock_unlock(&RL_PID_LOCK);
 	pthread_exit((void*)&p->retval);
@@ -1548,7 +1546,6 @@ rl_svc:
 					pthread_rwlock_wrlock(&RL_SVC_LOCK);
 					if (p->prev) p->prev->next = p->next;
 					if (p->next) p->next->prev = p->prev;
-					if (!p->next && !p->prev) RL_SVC = NULL;
 					pthread_rwlock_unlock(&RL_SVC_LOCK);
 				}
 				pthread_mutex_lock(&p->mutex);
