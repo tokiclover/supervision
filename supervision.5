@@ -920,6 +920,24 @@ Multi-purpose binary to run either an init stage or run level or service command
 .B zramfs
 service to systeme boot runlevel); `\fBsv-run acpid start\fR' or `\fBsv-rc default\fR' to start
 daemons and default services (default runlevel) in multi users mode.
+.TP
+.I @EXEC_PREFIX@@SBINDIR@/sv-rc
+.RB [\| sv\- \|] rc (8)
+init-stage or runlevel handler;
+see
+.BR sv-rc (8)
+for more information.
+.TP
+.I @EXEC_PREFIX@@SBINDIR@/sv-shutdown
+System
+.BR shutdown (8),
+.BR reboot (8),
+.BR halt (8),
+.BR poweroff (8)
+handlers;
+see
+.BR sv-shutdown (8)
+for more information.
 .SS @SYSCONFDIR@
 .TP
 .I @SYSCONFDIR@/sv.conf
@@ -1109,7 +1127,7 @@ Simple script to list dependencies
 CGroup Release Agent script
 .TP
 .I @LIBDIR@/sv/sh/sv-init.sh
-Init-stage-{1,2,3} handler for supervision
+Init-stage or runlevel handler for supervision
 .TP
 .I @LIBDIR@/sv/sh/cgroup-functions
 CGroup Functions/helper library
