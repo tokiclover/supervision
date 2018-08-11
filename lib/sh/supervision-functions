@@ -60,7 +60,7 @@ svc_start()
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
-	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}"; then
+	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}" >${NULL} 2>&1; then
 		val=0
 	elif svc_state -f; then
 		:;
@@ -102,7 +102,7 @@ svc_stop()
 	if ! svc_command stop_pre; then
 		return 2
 	fi
-	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}"; then
+	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}" >${NULL} 2>&1; then
 		val=0
 	#
 	# XXX: wait pidfile because sv(8) is unreliable with false negative failures

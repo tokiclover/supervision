@@ -920,6 +920,24 @@ Multi-purpose binary to run either an init stage or run level or service command
 .B zramfs
 service to systeme boot runlevel); `\fBsv-run acpid start\fR' or `\fBsv-rc default\fR' to start
 daemons and default services (default runlevel) in multi users mode.
+.TP
+.I @EXEC_PREFIX@@SBINDIR@/sv-rc
+.RB [\| sv\- \|] rc (8)
+init-stage or runlevel handler;
+see
+.BR sv-rc (8)
+for more information.
+.TP
+.I @EXEC_PREFIX@@SBINDIR@/sv-shutdown
+System
+.BR shutdown (8),
+.BR reboot (8),
+.BR halt (8),
+.BR poweroff (8)
+handlers;
+see
+.BR sv-shutdown (8)
+for more information.
 .SS @SYSCONFDIR@
 .TP
 .I @SYSCONFDIR@/sv.conf
@@ -1041,14 +1059,6 @@ runlevel.
 .RB [\| sulogin \|]\ \c
 .RB [\| udev \|]\ \c
 .RB [\| udev-monitor \|])
-.TP
-.I @SYSCONFDIR@/runit/{1,2,3,ctraltdel}
-init-stage-{1,2,3} files to handle system boot/shutdown and supervisor; and
-C-ALT-DEL signal handler for shutdown and reboot.
-.TP
-.I @SYSCONFDIR@/s6/{init,crash,finish}
-Init-stage-{1,2,3} files to handle system boot, reboot and shutdown and
-supervisor crashes.
 .SS SV_RUNDIR: @RUNDIR@/sv
 Default run time '/service/' directory
 .SS SV_LIBDIR: \fI@LIBDIR@/sv\fR
@@ -1117,7 +1127,7 @@ Simple script to list dependencies
 CGroup Release Agent script
 .TP
 .I @LIBDIR@/sv/sh/sv-init.sh
-Init-stage-{1,2,3} handler for supervision
+Init-stage or runlevel handler for supervision
 .TP
 .I @LIBDIR@/sv/sh/cgroup-functions
 CGroup Functions/helper library
@@ -1140,19 +1150,6 @@ Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .BR sv-run (8),
 .BR sv-rc (8),
 .BR sv-shutdown (8),
-.BR sh (1);
-.B daemontools[encore]:
-.BR \%svc (8),
-.BR \%multilog (8),
-.BR \%svscan (8);
-.B runit:
-.BR \%sv (8),
-.BR \%svlogd (8),
-.BR \%runsvdir (8);
-.B s6:
-.BR \%s6-svc (8),
-.BR \%s6-log (8),
-.BR \%s6-svscan (8),
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"

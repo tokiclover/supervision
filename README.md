@@ -46,6 +46,9 @@ And *do not forget* to run `${LIBDIR}/sv/sbin/sv-config --config ARG` afterwards
 Or, if updating an old installation *do not forget* to run
 `${LIBDIR}/sv/sbin/sv-config --update` afterwards!
 
+If *runit* was enabled, copy `/usr/share/supervision/runit` to `/etc`;
+If *s6* was enabled, copy `/usr/share/supervision/s6` to `/etc`.
+
 APPLICATION USAGE
 -----------------
 

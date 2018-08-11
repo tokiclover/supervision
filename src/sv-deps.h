@@ -102,9 +102,9 @@ struct svcrun {
 	const char **argv;
 	const char **envp;
 	const char **ARGV;
-	int cmd, mark,
-		sig, status;
-	unsigned int lid;
+	int cmd, mark, sig,
+		status;
+	void *srl;
 	pid_t cld;
 };
 
