@@ -337,9 +337,9 @@ __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 	else
 		logpath = SV_LOGFILE;
 	if (!logfd) {
-		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
+		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR, 0644);
 		if (logfd < 0)
-			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR|O_CLOEXEC, 0644);
+			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR, 0644);
 		if (logfd > 0) {
 			logfp = fdopen(logfd, "a+");
 			debugfp = logfp;
@@ -579,6 +579,8 @@ static void svc_init(const char *cmd)
 	sv_pid    = getpid();
 	setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 	setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
+	snprintf(buf, sizeof(buf), "%d", logfd);
+	setenv("__SV_DEBUG_FD__", buf, 1);
 	snprintf(buf, sizeof(buf), "%d", sv_pid);
 	setenv("SV_PID", buf, 1);
 	if ((r = open(SV_PIDFILE, O_CREAT|O_RDWR|O_TRUNC|O_CLOEXEC, 0644)) > 0) {
@@ -805,8 +807,9 @@ int main(int argc, char *argv[])
 	}
 	argc -= optind, argv += optind;
 
+	/* setup the logfile */
+	svc_log("");
 	/* set this to avoid double waiting for a lockfile for supervision */
-	svc_log("\n");
 	setenv("__SVC_WAIT__", off, 1);
 	setenv("SVC_DEPS", off, 1);
 	if ((ptr = (char*)sv_getconf("SV_SYSTEM"))) {
