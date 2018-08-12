@@ -1321,7 +1321,7 @@ static void *thread_worker_handler(void *arg)
 waitpid:
 	if (j) {
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("waiting %ld jobs\n", j);
+		if (sv_debug) DBG("lid=%u waiting %ld jobs\n", p->lid, j);
 #endif
 		pthread_mutex_lock  (&p->mutex);
 		pthread_cond_wait(&p->cond, &p->mutex);
@@ -1340,7 +1340,7 @@ retval:
 	if (p->count != p->siz) {
 		pthread_rwlock_wrlock(&RL_SVC_LOCK);
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("(p)id=%u prev=%p %p next=%p\n", p->lid, p->next, p, p->prev);
+		if (sv_debug) DBG("lid=%u prev=%p %p next=%p\n", p->lid, p->next, p, p->prev);
 #endif
 		if (p->prev) p->prev->next = p->next;
 		if (p->next) p->next->prev = p->prev;
