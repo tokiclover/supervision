@@ -74,7 +74,7 @@ static const char *const environ_whitelist[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID", NULL
+	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID",  "__SV_DEBUG_FD__", NULL
 };
 static const char *environ_list[] = {
 	"COLUMNS", "SVC_DEBUG", "SVC_TRACE", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
@@ -641,10 +641,12 @@ runsvc:
 	/* restore previous default signal handling */
 	svc_sigsetup();
 
+	fprintf(debugfp, "%s\n", buf);
 	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
 	ERR("%s:%d: Failed to execve(): %s\n", __func__, __LINE__, strerror(errno));
 	_exit(EXIT_FAILURE);
 supervise:
+	fprintf(debugfp, "%s\n", buf);
 	RUN = run;
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
@@ -1444,7 +1446,6 @@ rl_svc:
 			len = p->rl_len;
 			pthread_rwlock_unlock(&p->rl_lock);
 			pthread_mutex_lock(&p->rl_pid);
-			DBG("lid=%u p=%p len=0\n", p->rl_lid, p, len);
 			for (i = 0; i < len; i++) {
 				if (p->run[i].pid != pid) continue;
 				pthread_mutex_unlock(&p->rl_pid);
