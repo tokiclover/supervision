@@ -1114,7 +1114,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 		case CLD_TRAPPED:
 			if (j < 0) j = 2;
 #ifdef SV_DEBUG
-			if (sv_debug) DBG("pid=%d received %s signal\n", RUN->name, RUN->cld, sn[j]);
+			if (sv_debug) DBG("pid=%d (service=%s) received %s signal\n", RUN->cld, RUN->name, sn[j]);
 #endif
 			errno = serrno;
 			return;
