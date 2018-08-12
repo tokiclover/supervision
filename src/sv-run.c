@@ -417,7 +417,6 @@ int svc_cmd(struct svcrun *run)
 		run->mark = SV_SVC_STAT_STAR;
 		if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 			svc_state(run->name, SV_SVC_STAT_PIDS)) {
-			LOG_WARN("%s: service started\n", run->name);
 			return -EBUSY;
 		}
 		run->cmd  = SV_SVC_CMD_START;
@@ -426,7 +425,6 @@ int svc_cmd(struct svcrun *run)
 		run->mark = SV_SVC_MARK_STAR;
 		if (!(svc_state(run->name, SV_SVC_STAT_STAR) ||
 			  svc_state(run->name, SV_SVC_STAT_PIDS))) {
-			LOG_WARN("%s: service stopped\n", run->name);
 			return -EINVAL;
 		}
 		run->cmd  = SV_SVC_CMD_STOP;
