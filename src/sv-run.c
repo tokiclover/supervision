@@ -1298,6 +1298,9 @@ static void *thread_worker_handler(void *arg)
 				p->rl_next = RL_SVC;
 				if (RL_SVC) RL_SVC->rl_prev = p;
 				RL_SVC = p;
+#ifdef SV_DEBUG
+				if (sv_debug) DBG("[add]lid=%u prev=%p %p next=%p\n", p->rl_lid, p->rl_prev, p, p->rl_next);
+#endif
 				pthread_rwlock_unlock(&RL_SVC_LOCK);
 			}
 			pthread_rwlock_wrlock(&p->rl_lock);
@@ -1339,6 +1342,9 @@ retval:
 	pthread_rwlock_rdlock(&p->rl_lock);
 	if (p->rl_count != p->rl_siz) {
 		pthread_rwlock_wrlock(&RL_SVC_LOCK);
+#ifdef SV_DEBUG
+		if (sv_debug) DBG("[del]lid=%u prev=%p %p next=%p\n", p->rl_lid, p->rl_prev, p, p->rl_next);
+#endif
 		if (RL_SVC == p) RL_SVC = p->rl_next;
 		else {
 			if (p->rl_prev) p->rl_prev->rl_next = p->rl_next;
