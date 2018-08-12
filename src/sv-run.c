@@ -27,19 +27,19 @@
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)*2LU+sizeof(pthread_rwlock_t)+sizeof(pthread_t))
 struct svcrun_list {
-	unsigned int lid;
+	unsigned int rl_lid;
 	int argc;
 	const char **argv;
 	SV_StringList_T *list;
 	struct svcrun *run;
 	int retval;
-	size_t job, len, siz, count;
-	struct svcrun_list *next, *prev;
-	pthread_cond_t cond;
-	pthread_mutex_t mutex;
-	pthread_rwlock_t lock;
-	pthread_t tid;
+	size_t rl_job, rl_len, rl_siz, rl_count;
+	struct svcrun_list *rl_next, *rl_prev;
+	pthread_cond_t rl_cond;
 	pthread_mutex_t rl_mutex;
+	pthread_rwlock_t rl_lock;
+	pthread_t rl_tid;
+	pthread_mutex_t rl_pid;
 	char __pad[OFFSET_T_SIZE(THREAD_T_SIZE, 4LU, 4LU)];
 };
 #undef THREAD_T_SIZE
@@ -49,7 +49,7 @@ extern pid_t sv_pid;
 
 static struct svcrun *RUN;
 static struct svcrun_list *RL_SVC;
-static unsigned int RL_SVC_COUNT = 1U;
+static unsigned int RL_COUNT = 1U;
 static pthread_attr_t  RL_SVC_ATTR;
 static pthread_rwlock_t RL_SVC_LOCK;
 static pthread_t RL_SVC_SIGHANDLER_TID;
@@ -572,9 +572,9 @@ static int svc_run(struct svcrun *run)
 		/* restore signal mask */
 		if (run->rl_svc) {
 			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
-			pthread_mutex_lock  (&((struct svcrun_list*)(run->rl_svc))->rl_mutex);
+			pthread_mutex_lock  (&((struct svcrun_list*)(run->rl_svc))->rl_pid);
 			run->pid = pid;
-			pthread_mutex_unlock(&((struct svcrun_list*)(run->rl_svc))->rl_mutex);
+			pthread_mutex_unlock(&((struct svcrun_list*)(run->rl_svc))->rl_pid);
 		}
 		else {
 			sigprocmask(SIG_SETMASK, &ss_child, NULL);
@@ -1114,7 +1114,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 		case CLD_TRAPPED:
 			if (j < 0) j = 2;
 #ifdef SV_DEBUG
-			DBG("pid=%d received %s signal\n", RUN->name, RUN->cld, sn[j]);
+			if (sv_debug) DBG("pid=%d received %s signal\n", RUN->name, RUN->cld, sn[j]);
 #endif
 			errno = serrno;
 			return;
@@ -1262,23 +1262,23 @@ static void *thread_worker_handler(void *arg)
 		case -ENOENT:
 		case -ECANCELED:
 		case -EPERM:
-			pthread_mutex_lock(&p->mutex);
-			p->count++;
+			pthread_mutex_lock(&p->rl_mutex);
+			p->rl_count++;
 			p->retval++;
-			pthread_mutex_unlock(&p->mutex);
+			pthread_mutex_unlock(&p->rl_mutex);
 			continue;
 		case -EBUSY:
 		case -EINVAL:
-			pthread_mutex_lock(&p->mutex);
-			p->count++;
-			pthread_mutex_unlock(&p->mutex);
+			pthread_mutex_lock(&p->rl_mutex);
+			p->rl_count++;
+			pthread_mutex_unlock(&p->rl_mutex);
 			continue;
 		case -EAGAIN: /* fork(3) failure in svc_run() */
 		case -ENOMEM:
 			if (eagain == -n) { /* something went wrong */
-				pthread_mutex_lock(&p->mutex);
+				pthread_mutex_lock(&p->rl_mutex);
 				p->retval++;
-				pthread_mutex_unlock(&p->mutex);
+				pthread_mutex_unlock(&p->rl_mutex);
 				goto retval;
 			}
 			else  eagain = 0;
@@ -1295,16 +1295,16 @@ static void *thread_worker_handler(void *arg)
 			/* add the job to queue here to be sure to have any child to wait for */
 			if (!n) {
 				pthread_rwlock_wrlock(&RL_SVC_LOCK);
-				p->next = RL_SVC;
-				if (RL_SVC) RL_SVC->prev = p;
+				p->rl_next = RL_SVC;
+				if (RL_SVC) RL_SVC->rl_prev = p;
 				RL_SVC = p;
 				pthread_rwlock_unlock(&RL_SVC_LOCK);
 			}
-			pthread_rwlock_wrlock(&p->lock);
-			p->len++;
-			p->job++;
-			j = p->job;
-			pthread_rwlock_unlock(&p->lock);
+			pthread_rwlock_wrlock(&p->rl_lock);
+			p->rl_len++;
+			p->rl_job++;
+			j = p->rl_job;
+			pthread_rwlock_unlock(&p->rl_lock);
 			n++;
 		}
 		else {
@@ -1321,11 +1321,11 @@ static void *thread_worker_handler(void *arg)
 waitpid:
 	if (j) {
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("lid=%u waiting %ld jobs\n", p->lid, j);
+		if (sv_debug) DBG("lid=%u waiting %ld jobs\n", p->rl_lid, j);
 #endif
-		pthread_mutex_lock  (&p->mutex);
-		pthread_cond_wait(&p->cond, &p->mutex);
-		pthread_mutex_unlock(&p->mutex);
+		pthread_mutex_lock  (&p->rl_mutex);
+		pthread_cond_wait(&p->rl_cond, &p->rl_mutex);
+		pthread_mutex_unlock(&p->rl_mutex);
 	}
 
 	if (eagain > 0) {
@@ -1336,20 +1336,17 @@ waitpid:
 
 retval:
 	/* have to remove job from queue */
-	pthread_rwlock_rdlock(&p->lock);
-	if (p->count != p->siz) {
+	pthread_rwlock_rdlock(&p->rl_lock);
+	if (p->rl_count != p->rl_siz) {
 		pthread_rwlock_wrlock(&RL_SVC_LOCK);
-#ifdef SV_DEBUG
-		if (sv_debug) DBG("lid=%u prev=%p %p next=%p\n", p->lid, p->next, p, p->prev);
-#endif
-		if (RL_SVC == p) RL_SVC = p->next;
+		if (RL_SVC == p) RL_SVC = p->rl_next;
 		else {
-			if (p->prev) p->prev->next = p->next;
-			if (p->next) p->next->prev = p->prev;
+			if (p->rl_prev) p->rl_prev->rl_next = p->rl_next;
+			if (p->rl_next) p->rl_next->rl_prev = p->rl_prev;
 		}
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 	}
-	pthread_rwlock_unlock(&p->lock);
+	pthread_rwlock_unlock(&p->rl_lock);
 	pthread_exit((void*)&p->retval);
 }
 
@@ -1398,6 +1395,7 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 	int i, r, s;
 	size_t len;
 	struct svcrun_list *p;
+	struct timespec ts = { 0L, 0L };
 	pid_t pid;
 
 #ifdef SV_DEBUG
@@ -1435,49 +1433,52 @@ waitpid:
 rl_svc:
 		/* read the first job which could have been changed */
 		pthread_rwlock_rdlock(&RL_SVC_LOCK);
-		for (p = RL_SVC; p; p = p->next) {
-			pthread_rwlock_rdlock(&p->lock);
-			len = p->len;
-			pthread_rwlock_unlock(&p->lock);
-			pthread_mutex_lock(&p->rl_mutex);
+		for (p = RL_SVC; p; p = p->rl_next) {
+			pthread_rwlock_rdlock(&p->rl_lock);
+			len = p->rl_len;
+			pthread_rwlock_unlock(&p->rl_lock);
+			pthread_mutex_lock(&p->rl_pid);
+			DBG("lid=%u p=%p len=0\n", p->rl_lid, p, len);
 			for (i = 0; i < len; i++) {
 				if (p->run[i].pid != pid) continue;
-				pthread_mutex_unlock(&p->rl_mutex);
+				pthread_mutex_unlock(&p->rl_pid);
 #ifdef SV_DEBUG
 				if (sv_debug) DBG("Found pid=%d service=%s\n", pid, p->run[i].name);
 #endif
 				p->run[i].status = s;
 				r = svc_waitpid(&p->run[i], 0);
-				pthread_rwlock_wrlock(&p->lock);
-				p->count++;
-				p->job--;
-				len = p->job;
+				pthread_rwlock_wrlock(&p->rl_lock);
+				p->rl_count++;
+				p->rl_job--;
+				len = p->rl_job;
 				if (r) p->retval++;
-				if (p->count == p->siz) {
+				if (p->rl_count == p->rl_siz) {
 					/* remove job from queue */
 					pthread_rwlock_unlock(&RL_SVC_LOCK);
 					pthread_rwlock_wrlock(&RL_SVC_LOCK);
-					if (RL_SVC == p) RL_SVC = p->next;
+					if (RL_SVC == p) RL_SVC = p->rl_next;
 					else {
-						if (p->prev) p->prev->next = p->next;
-						if (p->next) p->next->prev = p->prev;
+						if (p->rl_prev) p->rl_prev->rl_next = p->rl_next;
+						if (p->rl_next) p->rl_next->rl_prev = p->rl_prev;
 					}
 				}
-				pthread_rwlock_unlock(&p->lock);
 				pthread_rwlock_unlock(&RL_SVC_LOCK);
+				pthread_rwlock_unlock(&p->rl_lock);
 				if (!len) {
-					pthread_mutex_lock(&p->mutex);
-					pthread_cond_signal(&p->cond);
-					pthread_mutex_unlock(&p->mutex);
+					pthread_mutex_lock(&p->rl_mutex);
+					pthread_cond_signal(&p->rl_cond);
+					pthread_mutex_unlock(&p->rl_mutex);
 				}
 				goto waitpid;
 			}
-			pthread_mutex_unlock(&p->rl_mutex);
+			pthread_mutex_unlock(&p->rl_pid);
 		}
-		pthread_rwlock_unlock(&RL_SVC_LOCK);
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("Failed to found pid=%d\n", pid);
 #endif
+		pthread_rwlock_unlock(&RL_SVC_LOCK);
+		ts.tv_nsec = 10L;
+		while (nanosleep(&ts, &ts)) ;
 		goto rl_svc;
 	}
 }
@@ -1549,7 +1550,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	if (!argc || !argv)
 		return -EINVAL;
 
-	if (RL_SVC_COUNT == 1U) {
+	if (RL_COUNT == 1U) {
 		if ((r = pthread_attr_init(&RL_SVC_ATTR)))
 			HANDLE_ERROR(pthread_attr_init);
 		if ((r = pthread_mutexattr_init(&RL_PID_MUTEX_ATTR)))
@@ -1573,58 +1574,59 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 
 	p = err_malloc(sizeof(struct svcrun_list));
 	memset(p, 0, sizeof(struct svcrun_list));
-	p->lid  = RL_SVC_COUNT;
+	p->rl_lid  = RL_COUNT;
 	p->list = list;
 	p->argc = argc;
 	p->argv = argv;
 	if (sv_parallel) {
-		p->siz = sv_stringlist_len(list);
-		p->siz += p->siz % 4LU ? 4LU-(p->siz % 4LU) : 4LU;
-		p->run = err_calloc(sizeof(struct svcrun), p->siz);
-		memset(p->run, 0, sizeof(struct svcrun)*p->siz);
-		pthread_mutex_init(&p->rl_mutex, &RL_PID_MUTEX_ATTR);
+		p->rl_siz = sv_stringlist_len(list);
+		p->rl_siz += p->rl_siz % 4LU ? 4LU-(p->rl_siz % 4LU) : 4LU;
+		p->run = err_calloc(sizeof(struct svcrun), p->rl_siz);
+		memset(p->run, 0, sizeof(struct svcrun)*p->rl_siz);
+		pthread_mutex_init(&p->rl_pid, &RL_PID_MUTEX_ATTR);
 
 		if (!count) {
-			if (RL_SVC_COUNT < UINT_MAX)
-				p->lid = RL_SVC_COUNT;
+			if (RL_COUNT < UINT_MAX)
+				p->rl_lid = RL_COUNT;
 			else count++;
 		}
 		else {
 			pthread_rwlock_rdlock(&RL_SVC_LOCK);
-			for (k = RL_SVC; k; k = k->next) {
-				if (k->lid == RL_SVC_COUNT) {
-					RL_SVC_COUNT++;
-					if (RL_SVC_COUNT == UINT_MAX)
-						RL_SVC_COUNT = 1U;
+			for (k = RL_SVC; k; k = k->rl_next) {
+				if (k->rl_lid == RL_COUNT) {
+					RL_COUNT++;
+					if (RL_COUNT == UINT_MAX)
+						RL_COUNT = 1U;
 					k = RL_SVC;
 					if (!k) {
-						RL_SVC_COUNT = 1U;
+						RL_COUNT = 1U;
 						break;
 					}
 				}
 			}
-			if (RL_SVC_COUNT == UINT_MAX) RL_SVC_COUNT = 1U;
-			p->lid = RL_SVC_COUNT;
+			if (RL_COUNT == UINT_MAX) RL_COUNT = 1U;
+			p->rl_lid = RL_COUNT;
 			pthread_rwlock_unlock(&RL_SVC_LOCK);
 		}
 	}
 	else {
 		p->run = err_malloc(sizeof(struct svcrun));
 		memset(p->run, 0, sizeof(struct svcrun));
-		p->siz = 0LU;
+		p->rl_siz = 0LU;
+		p->rl_lid= RL_COUNT;
 	}
-	RL_SVC_COUNT++;
+	RL_COUNT++;
 
-	if ((r = pthread_cond_init(&p->cond, NULL)))
+	if ((r = pthread_cond_init(&p->rl_cond, NULL)))
 		HANDLE_ERROR(pthread_cond_init);
-	if ((r = pthread_mutex_init(&p->mutex, &RL_PID_MUTEX_ATTR)))
+	if ((r = pthread_mutex_init(&p->rl_mutex, &RL_PID_MUTEX_ATTR)))
 		HANDLE_ERROR(pthread_mutex_init);
-	if ((r = pthread_rwlock_init(&p->lock, NULL)))
+	if ((r = pthread_rwlock_init(&p->rl_lock, NULL)))
 		HANDLE_ERROR(pthread_rwlock_init);
-	if ((r = pthread_create(&p->tid, &RL_SVC_ATTR,
+	if ((r = pthread_create(&p->rl_tid, &RL_SVC_ATTR,
 					thread_worker_handler, p)))
 		HANDLE_ERROR(pthread_create);
-	if ((r = pthread_join(p->tid, (void*)NULL)))
+	if ((r = pthread_join(p->rl_tid, (void*)NULL)))
 		HANDLE_ERROR(pthread_join);
 retval:
 	if (r)
@@ -1643,15 +1645,15 @@ static void thread_worker_cleanup(struct svcrun_list *p)
 	if (sv_debug) DBG("%s(%p)\n", __func__, p);
 #endif
 
-	for (i = 0; i < p->len; i++) {
+	for (i = 0; i < p->rl_len; i++) {
 		free((void*)p->run[i].ARGV);
 		free((void*)p->run[i].path);
 	}
 	free((void*)p->run);
 
-	pthread_cond_destroy(&p->cond);
-	pthread_mutex_destroy(&p->mutex);
-	pthread_rwlock_destroy(&p->lock);
+	pthread_cond_destroy(&p->rl_cond);
 	pthread_mutex_destroy(&p->rl_mutex);
+	pthread_rwlock_destroy(&p->rl_lock);
+	pthread_mutex_destroy(&p->rl_pid);
 	free((void*)p);
 }
