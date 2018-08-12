@@ -620,7 +620,7 @@ runsvc:
 	else {
 		run->cld = getpid();
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("%s:%d: executing service=%s command=%s (pid=%d)\n", __func__, __LINE__,
+		if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
 				run->name, run->argv[4], run->cld);
 #endif
 	}
@@ -657,7 +657,7 @@ supervise:
 		if (run->dep->timeout)
 			alarm(run->dep->timeout);
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("%s:%d: waiting pid=%d (service=%s)\n", __func__, __LINE__, run->cld, run->name);
+		if (sv_debug) DBG("waiting pid=%d (service=%s)\n", run->cld, run->name);
 #endif
 		sigsuspend(&ss_old);
 	}
@@ -680,8 +680,7 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 	else
 	do {
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("%s:%d: waiting for pid=%d (service=%s)\n", __func__, __LINE__,
-				run->cld, run->name);
+		if (sv_debug) DBG("waiting for pid=%d (service=%s)\n", run->cld, run->name);
 #endif
 		pid = waitpid(run->cld, &status, flags);
 		if (pid < 0) {
@@ -1116,8 +1115,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 		case CLD_TRAPPED:
 			if (j < 0) j = 2;
 #ifdef SV_DEBUG
-			DBG("%s:%d:service=%s: pid=%d received %s signal\n", __func__,
-					__LINE__, RUN->name, RUN->cld, sn[j]);
+			DBG("pid=%d received %s signal\n", RUN->name, RUN->cld, sn[j]);
 #endif
 			errno = serrno;
 			return;
@@ -1324,7 +1322,7 @@ static void *thread_worker_handler(void *arg)
 waitpid:
 	if (j) {
 #ifdef SV_DEBUG
-		if (sv_debug) DBG("%s:%d: waiting %ld jobs\n", __func__, __LINE__, j);
+		if (sv_debug) DBG("waiting %ld jobs\n", j);
 #endif
 		pthread_mutex_lock  (&p->mutex);
 		pthread_cond_wait(&p->cond, &p->mutex);
@@ -1444,8 +1442,7 @@ rl_svc:
 				if (p->run[i].pid != pid) continue;
 				pthread_mutex_unlock(&p->rl_mutex);
 #ifdef SV_DEBUG
-				if (sv_debug) DBG("%s:%d: found pid=%d service=%s\n", __func__, __LINE__,
-						pid, p->run[i].name);
+				if (sv_debug) DBG("Found pid=%d service=%s\n", pid, p->run[i].name);
 #endif
 				p->run[i].status = s;
 				r = svc_waitpid(&p->run[i], 0);
@@ -1473,7 +1470,7 @@ rl_svc:
 		}
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 #ifdef SV_DEBUG
-		DBG("Failed to found pid=%d\n", pid);
+		if (sv_debug) DBG("Failed to found pid=%d\n", pid);
 #endif
 		goto rl_svc;
 	}
