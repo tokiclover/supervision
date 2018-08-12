@@ -1342,8 +1342,11 @@ retval:
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("lid=%u prev=%p %p next=%p\n", p->lid, p->next, p, p->prev);
 #endif
-		if (p->prev) p->prev->next = p->next;
-		if (p->next) p->next->prev = p->prev;
+		if (RL_SVC == p) RL_SVC = p->next;
+		else {
+			if (p->prev) p->prev->next = p->next;
+			if (p->next) p->next->prev = p->prev;
+		}
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 	}
 	pthread_rwlock_unlock(&p->lock);
@@ -1454,8 +1457,11 @@ rl_svc:
 					/* remove job from queue */
 					pthread_rwlock_unlock(&RL_SVC_LOCK);
 					pthread_rwlock_wrlock(&RL_SVC_LOCK);
-					if (p->prev) p->prev->next = p->next;
-					if (p->next) p->next->prev = p->prev;
+					if (RL_SVC == p) RL_SVC = p->next;
+					else {
+						if (p->prev) p->prev->next = p->next;
+						if (p->next) p->next->prev = p->prev;
+					}
 				}
 				pthread_rwlock_unlock(&p->lock);
 				pthread_rwlock_unlock(&RL_SVC_LOCK);
