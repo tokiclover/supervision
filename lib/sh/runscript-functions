@@ -84,6 +84,9 @@ SVC_DEBUG()
 	if ${SVC_SYSLOG}; then
 		logger "${name}: debug: ${@}"
 	fi
+	if ${SVC_DEBUG_INFO}; then
+		printf "${name}: debug: ${@}\n" >&${__SV_DEBUG_FD__}
+	fi
 	if ${SVC_DEBUG}; then
 		local message="${*}"
 		__print_len__=$((${#message}+${#name}+9))
@@ -252,9 +255,6 @@ svc_wait()
 	fi
 
 	while [ ${v} -lt ${t} ]; do
-		if [ "${v}" = "0" -o "$((${v}%5))" = "0" ]; then
-			info "Waiting for ${x} (${v} seconds)"
-		fi
 		v=$((${v}+${i}))
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
@@ -278,6 +278,9 @@ svc_wait()
 			return 2
 		elif [ -n "${p}" ]; then
 			kill -0 ${p} || rm -f ${x}
+		fi
+		if [ "$((${v}%5))" = "0" ]; then
+			info "Waiting for ${x} (${v} seconds)"
 		fi
 	done
 	return 1
@@ -345,7 +348,6 @@ if yesno "${RC_OPTS}"; then
 :	${RC_INITDIR:=/etc/init.d}
 	DOT ${RC_CONFDIR}/${SVC_NAME}
 fi
-
 
 if [ -n "${__svc__}" ]; then
 #
@@ -439,7 +441,13 @@ if yesno "${SVC_SYSLOG_INFO:-${SV_SYSLOG_INFO}}"; then
 else
 	SVC_SYSLOG_INFO=false
 fi
-readonly SVC_DEBUG SVC_SYSLOG SVC_SYSLOG_INFO
+if yesno "${SVC_DEBUG_INFO:-${SV_DEBUG_INFO}}" && [ -n "${SV_INITLEVEL}" ] && \
+	[ -n "${__SV_DEBUG_FD__}" ]; then
+	SVC_DEBUG_INFO=true
+else
+	SVC_DEBUG_INFO=false
+fi
+readonly SVC_DEBUG SVC_DEbUG_INFO SVC_SYSLOG SVC_SYSLOG_INFO
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
