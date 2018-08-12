@@ -618,15 +618,14 @@ runsvc:
 			sigprocmask(SIG_SETMASK, &ss_old, NULL);
 	}
 	else {
-		run->cld = getpid();
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
-				run->name, run->argv[4], run->cld);
+				run->name, run->argv[4], getpid());
 #endif
 	}
 
 	/* write the service command and the pid to the lock file */
-	snprintf(buf, sizeof(buf), "pid=%d:command=%s", run->cld, run->argv[4]);
+	snprintf(buf, sizeof(buf), "pid=%d:command=%s", getpid(), run->argv[4]);
 	len = strlen(buf);
 	do {
 		val = write(run->lock, buf+off, len);
