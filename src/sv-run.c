@@ -639,7 +639,6 @@ runsvc:
 	/* restore previous default signal handling */
 	svc_sigsetup();
 
-	fprintf(debugfp, "%s\n", buf);
 	execve(SV_RUN_SH, (char *const*)run->ARGV, (char *const*)run->envp);
 	ERR("%s:%d: Failed to execve(): %s\n", __func__, __LINE__, strerror(errno));
 	_exit(EXIT_FAILURE);
