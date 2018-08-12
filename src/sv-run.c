@@ -570,11 +570,11 @@ static int svc_run(struct svcrun *run)
 	pid = fork();
 	if (pid > 0) { /* parent */
 		/* restore signal mask */
-		if (run->srl) {
+		if (run->rl_svc) {
 			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
-			pthread_mutex_lock  (&((struct svcrun_list*)(run->srl))->rl_mutex);
+			pthread_mutex_lock  (&((struct svcrun_list*)(run->rl_svc))->rl_mutex);
 			run->pid = pid;
-			pthread_mutex_unlock(&((struct svcrun_list*)(run->srl))->rl_mutex);
+			pthread_mutex_unlock(&((struct svcrun_list*)(run->rl_svc))->rl_mutex);
 		}
 		else {
 			sigprocmask(SIG_SETMASK, &ss_child, NULL);
@@ -1245,7 +1245,7 @@ static void *thread_worker_handler(void *arg)
 		p->run[n].argc = p->argc;
 		p->run[n].argv = p->argv;
 		p->run[n].svc  = svc;
-		p->run[n].srl = p;
+		p->run[n].rl_svc = p;
 		p->run[n].dep = svc->data;
 
 		if (!p->run[n].dep)
