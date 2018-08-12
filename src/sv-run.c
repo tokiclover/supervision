@@ -1467,6 +1467,7 @@ rl_svc:
 				}
 				goto waitpid;
 			}
+			pthread_mutex_unlock(&p->rl_mutex);
 		}
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 #ifdef SV_DEBUG
