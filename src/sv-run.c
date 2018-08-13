@@ -1589,35 +1589,35 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 		memset(p->run, 0, sizeof(struct svcrun)*p->rl_siz);
 		pthread_mutex_init(&p->rl_pid, &RL_PID_MUTEX_ATTR);
 
-		if (!count) {
-			if (RL_COUNT < UINT_MAX)
-				p->rl_lid = RL_COUNT;
-			else count++;
-		}
-		else {
+		if (count) {
 			pthread_rwlock_rdlock(&RL_SVC_LOCK);
-			for (k = RL_SVC; k; k = k->rl_next) {
-				if (k->rl_lid == RL_COUNT) {
-					RL_COUNT++;
-					if (RL_COUNT == UINT_MAX)
-						RL_COUNT = 1U;
-					k = RL_SVC;
-					if (!k) {
-						RL_COUNT = 1U;
-						break;
+			if (RL_SVC) {
+				for (k = RL_SVC; k; k = k->rl_next) {
+					if (k->rl_lid == RL_COUNT) {
+						if (RL_COUNT == UINT_MAX) {
+							RL_COUNT = 1U;
+							k = RL_SVC;
+						}
+						else RL_COUNT++;
+						continue;
 					}
+					break;
 				}
 			}
-			if (RL_COUNT == UINT_MAX) RL_COUNT = 1U;
-			p->rl_lid = RL_COUNT;
+			else count = 0U;
 			pthread_rwlock_unlock(&RL_SVC_LOCK);
 		}
+		p->rl_lid = RL_COUNT;
 	}
 	else {
 		p->run = err_malloc(sizeof(struct svcrun));
 		memset(p->run, 0, sizeof(struct svcrun));
 		p->rl_siz = 0LU;
 		p->rl_lid= RL_COUNT;
+	}
+	if (RL_COUNT == UINT_MAX) {
+		count++;
+		RL_COUNT = 0U;
 	}
 	RL_COUNT++;
 
