@@ -226,7 +226,7 @@ svc_init_default()
 		fi
 	fi
 
-	sv-rc default || sv-rc single || svc_rescue_shell
+	sv-rc -q default || sv-rc -q single || svc_rescue_shell
 }
 
 case ${SV_CMD} in
@@ -260,7 +260,7 @@ elif [ "${1}" = "--sysinit" ]; then
 	fi
 	early_console
 	svc_init
-	[ "${2}" = "--background" ] || sv-rc sysinit
+	[ "${2}" = "--background" ] || sv-rc -q sysinit
 elif [ "${1}" = "--default" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	#
@@ -296,7 +296,7 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 		(--reboot|--shutdown)  ;;
 		(*) ACTION="--shutdown";;
 	esac
-	sv-rc ${ACTION#--}
+	sv-rc -q ${ACTION#--}
 	if [ -n "${SV_SYSTEM}" ]; then
 		return 0
 	fi
