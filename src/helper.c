@@ -100,8 +100,6 @@ __attribute__((__unused__)) int file_test(const char *pathname, int mode)
 			   X = S_IXUSR | S_IXGRP | S_IXOTH;
 	size_t len;
 
-	if (access(pathname, F_OK))
-		return 0;
 	if (path == NULL) {
 		len = strlen(pathname);
 		path = err_malloc(len+1);
