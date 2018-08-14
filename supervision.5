@@ -969,95 +969,95 @@ can be modified to include services like
 and so on; likewise for
 .B default
 runlevel.
-.TP
-.B "RUNSCRIPT SERVICES"
-.RB [\| clock \|]\ \c
-.RB [\| console \|]\ \c
-.RB [\| devfs \|]\ \c
-.RB [\| dmesg \|]\ \c
-.RB [\| hostname \|]\ \c
-.RB [\| kmod-static-nodes \|]\ \c
-.RB [\| local \|]\ \c
-.RB [\| localfs \|]\ \c
-.RB [\| loopback \|]\ \c
-.RB [\| miscfs \|]\ \c
-.RB [\| mtab \|]\ \c
-.RB [\| networkfs \|]\ \c
-.RB [\| nginx \|]\ \c
-.RB [\| nrpe \|]\ \c
-.RB [\| procfs \|]\ \c
-.RB [\| rootfs \|]\ \c
-.RB [\| swaps \|]\ \c
-.RB [\| swapfiles \|]\ \c
-.RB [\| sysctl \|]\ \c
-.RB [\| sysfs \|]\ \c
-.RB [\| tmpdirs \|]\ \c
-.RB [\| tmpfiles.dev \|]\ \c
-.RB [\| tmpfiles.setup \|]\ \c
-.RB [\| zfs \|]\ \c
-.RB [\| zfs-share \|]\ \c
-.RB [\| zpool \|]\ \c
-.RB (LINUX:[\| device-mapper \|]\ \c
-.RB [\| dmcrypt \|]\ \c
-.RB [\| dmraid \|]\ \c
-.RB [\| kmod \|]\ \c
-.RB [\| ipset \|]\ \c
-.RB [\| ip[6]tables \|]\ \c
-.RB [\| lvm \|]\ \c
-.RB [\| lvm-monitor \|]\ \c
-.RB [\| mdadm \|]\ \c
-.RB [\| mdev \|]\ \c
-.RB [\| qemu-binfmt \|]\ \c
-.RB [\| qemu-vlan.vnet{0,4} \|]\ \c
-.RB [\| unionfs \|]\ \c
+
+.B RUNSCRIPT\-SERVICES:
+.RB [\| clock \|]
+.RB [\| console \|]
+.RB [\| devfs \|]
+.RB [\| dmesg \|]
+.RB [\| hostname \|]
+.RB [\| kmod-static-nodes \|]
+.RB [\| local \|]
+.RB [\| localfs \|]
+.RB [\| loopback \|]
+.RB [\| miscfs \|]
+.RB [\| mtab \|]
+.RB [\| networkfs \|]
+.RB [\| nginx \|]
+.RB [\| nrpe \|]
+.RB [\| procfs \|]
+.RB [\| rootfs \|]
+.RB [\| swaps \|]
+.RB [\| swapfiles \|]
+.RB [\| sysctl \|]
+.RB [\| sysfs \|]
+.RB [\| tmpdirs \|]
+.RB [\| tmpfiles.dev \|]
+.RB [\| tmpfiles.setup \|]
+.RB [\| zfs \|]
+.RB [\| zfs-share \|]
+.RB [\| zpool \|]
+.RB (LINUX:[\| device-mapper \|]
+.RB [\| dmcrypt \|]
+.RB [\| dmraid \|]
+.RB [\| kmod \|]
+.RB [\| ipset \|]
+.RB [\| ip[6]tables \|]
+.RB [\| lvm \|]
+.RB [\| lvm-monitor \|]
+.RB [\| mdadm \|]
+.RB [\| mdev \|]
+.RB [\| qemu-binfmt \|]
+.RB [\| qemu-vlan.vnet{0,4} \|]
+.RB [\| unionfs \|]
 .RB [\| zramfs \|])
-.TP
-.B "SUPERVISION SERVICES"
-.RB [\| apache2 \|]\ \c
-.RB [\| atd \|]\ \c
-.RB [\| cron \|]\ \c
-.RB [\| cupsd \|]\ \c
-.RB [\| cups-browsed \|]\ \c
-.RB [\| dhcp \|]\ \c
-.RB [\| dhcpd \|]\ \c
-.RB [\| dhcrelay \|]\ \c
-.RB [\| dbus \|]\ \c
-.RB [\| dns \|]\ \c
-.RB [\| getty \|]\ \c
-.RB [\| git-daemon \|]\ \c
-.RB [\| gpm \|]\ \c
-.RB [\| hostapd \|]\ \c
-.RB [\| inetd \|]\ \c
-.RB [\| initctl \|]\ \c
-.RB [\| libvirtd \|]\ \c
-.RB [\| httpd \|]\ \c
-.RB [\| mysql \|]\ \c
-.RB [\| nagios \|]\ \c
-.RB [\| npcd \|]\ \c
-.RB [\| ntp \|]\ \c
-.RB [\| pcscd \|]\ \c
-.RB [\| php-fpm \|]\ \c
-.RB [\| postgresql \|]\ \c
-.RB [\| rrdcached \|]\ \c
-.RB [\| rsync-daemon \|]\ \c
-.RB [\| saned \|]\ \c
-.RB [\| sshd \|]\ \c
-.RB [\| spawn-fcgi.nginx \|]\ \c
-.RB [\| snmpd \|]\ \c
-.RB [\| snmptrapd \|]\ \c
-.RB [\| syslog \|]\ \c
-.RB [\| virtlockd \|]\ \c
-.RB [\| virtlogd \|]\ \c
-.RB [\| wpa_supplicant \|]\ \c
-.RB [\| xdm \|]\ \c
-.RB [\| zed \|]\ \c
-.RB (LINUX:\ [\| acpid \|]\ \c
-.RB [\| cgred \|]\ \c
-.RB [\| docker \|]\ \c
-.RB [\| dmeventd \|]\ \c
-.RB [\| lvmetad \|]\ \c
-.RB [\| sulogin \|]\ \c
-.RB [\| udev \|]\ \c
+
+.B SUPERVISION\-SERVICES:
+.RB [\| apache2 \|]
+.RB [\| atd \|]
+.RB [\| cron \|]
+.RB [\| cupsd \|]
+.RB [\| cups-browsed \|]
+.RB [\| dhcp \|]
+.RB [\| dhcpd \|]
+.RB [\| dhcrelay \|]
+.RB [\| dbus \|]
+.RB [\| dns \|]
+.RB [\| getty \|]
+.RB [\| git-daemon \|]
+.RB [\| gpm \|]
+.RB [\| hostapd \|]
+.RB [\| inetd \|]
+.RB [\| initctl \|]
+.RB [\| libvirtd \|]
+.RB [\| httpd \|]
+.RB [\| mysql \|]
+.RB [\| nagios \|]
+.RB [\| npcd \|]
+.RB [\| ntp \|]
+.RB [\| pcscd \|]
+.RB [\| php-fpm \|]
+.RB [\| postgresql \|]
+.RB [\| rrdcached \|]
+.RB [\| rsync-daemon \|]
+.RB [\| saned \|]
+.RB [\| sshd \|]
+.RB [\| spawn-fcgi.nginx \|]
+.RB [\| snmpd \|]
+.RB [\| snmptrapd \|]
+.RB [\| syslog \|]
+.RB [\| virtlockd \|]
+.RB [\| virtlogd \|]
+.RB [\| wpa_supplicant \|]
+.RB [\| xdm \|]
+.RB [\| zed \|]
+.RB (LINUX:\ [\| acpid \|]
+.RB [\| cgred \|]
+.RB [\| docker \|]
+.RB [\| dmeventd \|]
+.RB [\| lvmetad \|]
+.RB [\| sulogin \|]
+.RB [\| udev \|]
 .RB [\| udev-monitor \|])
 .SS SV_RUNDIR: @RUNDIR@/sv
 Default run time '/service/' directory
@@ -1078,12 +1078,12 @@ Simple and cheap mountpoints utility
 Simple and cheap wait file utility (the binary behind \fIsvc_wait\fR shell function)
 .TP
 .B SYMLINKS\ \fR(binary symlinks)
-.RB \| @LIBDIR@/sv/bin/envdir \|\ \c
-.RB \| @LIBDIR@/sv/bin/envuidgid \|\ \c
-.RB \| @LIBDIR@/sv/bin/fghack \|\ \c
-.RB \| @LIBDIR@/sv/bin/pgrphack \|\ \c
-.RB \| @LIBDIR@/sv/bin/setlock \|\ \c
-.RB \| @LIBDIR@/sv/bin/setuidgid \|\ \c
+.RB \| @LIBDIR@/sv/bin/envdir \|
+.RB \| @LIBDIR@/sv/bin/envuidgid \|
+.RB \| @LIBDIR@/sv/bin/fghack \|
+.RB \| @LIBDIR@/sv/bin/pgrphack \|
+.RB \| @LIBDIR@/sv/bin/setlock \|
+.RB \| @LIBDIR@/sv/bin/setuidgid \|
 .RB \| @LIBDIR@/sv/bin/softlimit \|
 .SS SV_LIBDIR/sbin: \fI@LIBDIR@/sv/sbin\fR
 .TP
