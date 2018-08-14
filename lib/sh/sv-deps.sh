@@ -62,15 +62,11 @@ SVCDEPS_UPDATE=${SVCDEPS_UPDATE:+true}
 SVCLIST=
 svcdeps=${SV_DEPDIR}/svcdeps
 svclist=${SV_DEPDIR}/svclist
-svcdirs="${SV_SVCDIR} ${SV_SVCDIR_LOCAL}"
-if [ -n "${SV_PREFIX}" -a -d "${SV_PREFIX}" ]; then
-	svcdirs="${svcdirs} ${SV_PREFIX}${SV_SVCDIR}"
-fi
 
 append=false
 if [ "${#}" = 0 ]; then
 	exec 4>${svcdeps}
-	for dir in ${svcdirs}; do
+	for dir in ${SV_SVCDIR} ${SV_SVCDIR_LOCAL}; do
 		for __svc__ in ${dir}/*; do
 			__svc_deps__
 		done
@@ -88,7 +84,7 @@ else
 		else
 			append=false
 		fi
-		for dir in ${svcdirs}; do
+		for dir in ${SV_SVCDIR} ${SV_SVCDIR_LOCAL}; do
 			__svc__=${dir}/${SVC_NAME}
 			if __svc_deps__; then
 				${append} || TMPLIST="${TMPLIST} ${SVC_NAME}"
