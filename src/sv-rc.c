@@ -246,7 +246,7 @@ static const char *svc_run_level(const char *level)
 {
 	static char buf[16], path[] = SV_TMPDIR "/softlevel";
 	const char *retval;
-	int fd, flags = O_NONBLOCK|O_CREAT, len;
+	int fd, flags = O_CREAT, len;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%s)\n", __func__, level);
 #endif
@@ -302,7 +302,7 @@ static void svc_level(void)
 		svc_mark_simple("net", SV_SVC_STAT_STAR, NULL);
 	}
 	else if ((entry && strcmp(entry, sv_init_level[SV_SINGLE_LEVEL]) == 0)) {
-		sv_level = SV_SINGLE_LEVEL;
+		sv_init = sv_level = SV_SINGLE_LEVEL;
 	}
 
 	if (entry) free(entry);
@@ -337,9 +337,9 @@ __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 	else
 		logpath = SV_LOGFILE;
 	if (!logfd) {
-		logfd = open(logpath, O_NONBLOCK|O_CREAT|O_RDWR, 0644);
+		logfd = open(logpath, O_DSYNC|O_CREAT|O_RDWR, 0644);
 		if (logfd < 0)
-			logfd = open(SV_LOGFILE, O_NONBLOCK|O_CREAT|O_RDWR, 0644);
+			logfd = open(SV_LOGFILE, O_DSYNC|O_CREAT|O_RDWR, 0644);
 		if (logfd > 0) {
 			logfp = fdopen(logfd, "a+");
 			debugfp = logfp;
@@ -643,6 +643,7 @@ static void svc_init(const char *cmd)
 			sv_level = sv_init = SV_SYSBOOT_LEVEL;
 			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
+			goto sysboot;
 			}
 		}
 		else if (level == SV_DEFAULT_LEVEL) {
@@ -672,7 +673,11 @@ static void svc_init(const char *cmd)
 			svc_start = 1;
 		}
 		else if (sv_init == SV_SYSBOOT_LEVEL) {
+sysboot:
+			if (!cmd && (runlevel && !strcmp(runlevel, sv_init_level[SV_SYSINIT_LEVEL]))) {
 			svc_level(); /* make SystemV compatible runlevel */
+			if (sv_level == SV_SINGLE_LEVEL) level = 0;
+			}
 		}
 		argv[4] = command;
 
