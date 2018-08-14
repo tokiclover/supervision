@@ -209,7 +209,7 @@ static char *get_cmdline_option(const char *ent)
 	char *line = NULL, *ptr, path[] = "/proc/cmdline", *val = NULL;
 	size_t len = 0;
 
-	if (access(path, F_OK))
+	if (!file_test(path, 'e'))
 		return NULL;
 	if (!(fp = fopen(path, "r")))
 		return NULL;
@@ -253,7 +253,7 @@ static const char *svc_run_level(const char *level)
 
 	if (level)
 		flags |= O_TRUNC|O_WRONLY;
-	else if (access(path, F_OK))
+	else if (!file_test(path, 'e'))
 		return NULL;
 	else
 		flags |= O_RDONLY;
@@ -364,9 +364,9 @@ void sv_cleanup(void)
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
-	if (!access(SV_ENVIRON, F_OK))
+	if (file_test(SV_ENVIRON, 'e'))
 		unlink(SV_ENVIRON);
-	if (!access(SV_PIDFILE, F_OK))
+	if (file_test(SV_PIDFILE, 'e'))
 		unlink(SV_PIDFILE);
 }
 
@@ -445,9 +445,9 @@ static int sv_system_detect(void)
 #endif
 
 #ifdef __NetBSD__
-	if (!access("/kern/xen/privcmd", F_OK))
+	if (file_test("/kern/xen/privcmd", 'e'))
 		return SV_KEYWORD_XEN0;
-	if (!access("/kern/xen", F_OK))
+	if (file_test("/kern/xen", 'e'))
 		return SV_KEYWORD_XENU;
 #endif
 
@@ -468,7 +468,7 @@ static int sv_system_detect(void)
 			return *cid;
 	} while (*++cid);
 
-	if (!access("/proc/xen", F_OK)) {
+	if (file_test("/proc/xen", 'e')) {
 		if (!file_regex("/proc/xen/capabilities", "control_d"))
 			return SV_KEYWORD_XEN0;
 		return SV_KEYWORD_XENU;
@@ -477,7 +477,7 @@ static int sv_system_detect(void)
 		return SV_KEYWORD_UML;
 	else if (!file_regex("/proc/self/status", "(s_context|VxID):[[:space:]]*[1-9]"))
 		return SV_KEYWORD_VSERVER;
-	else if (!access("/proc/vz/veinfo", F_OK) && access("/proc/vz/version", F_OK))
+	else if (file_test("/proc/vz/veinfo", 'e') && !file_test("/proc/vz/version", 'e'))
 		return SV_KEYWORD_OPENVZ;
 	else if (!file_regex("/proc/self/status", "envID:[[:space:]]*[1-9]"))
 		return SV_KEYWORD_OPENVZ;

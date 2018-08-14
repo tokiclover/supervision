@@ -401,7 +401,7 @@ int svc_cmd(struct svcrun *run)
 				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
 			else
 				break;
-			if (!access(buf, F_OK)) {
+			if (file_test(buf, 'e')) {
 				retval = 0;
 				break;
 			}
@@ -466,7 +466,7 @@ int svc_cmd(struct svcrun *run)
 
 		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR, sv_init_level[sv_init],
 				run->name);
-		if (!access(buf, F_OK)) {
+		if (file_test(buf, 'e')) {
 			if (run->cmd == SV_SVC_CMD_DEL)
 				unlink(buf);
 			return 0;
@@ -844,7 +844,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, svc);
 
 	if (lock_fd == SVC_LOCK) {
-		if (!(w = access(f_path, F_OK))) {
+		if ((w = file_test(f_path, 'e'))) {
 			/* check the holder of the lock file */
 			SVC_WAIT_LOCK;
 		}
@@ -864,7 +864,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 				default:
 					return -1;
 			}
-			if (!access(f_path, F_OK))
+			if (file_test(f_path, 'e'))
 				unlink(f_path);
 			fd = open(f_path, f_flags, f_mode);
 		}
@@ -889,7 +889,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout)
 	}
 	else if (lock_fd > 0)
 		close(lock_fd);
-	if (!access(f_path, F_OK))
+	if (file_test(f_path, 'e'))
 		unlink(f_path);
 	return 0;
 }
@@ -948,7 +948,7 @@ static void svc_zap(const char *svc)
 
 	for (i = 0; dirs[i]; i++) {
 		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
-		if (!access(path, F_OK))
+		if (file_test(path, 'e'))
 			unlink(path);
 	}
 }
@@ -1026,13 +1026,13 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 
 				if (fd == 1) {
 					snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
-					if (!access(path, F_OK))
+					if (file_test(path, 'e'))
 						unlink(path);
 				}
 			}
 		default:
 			snprintf(path, sizeof(path), "%s/%s", ptr, run->name);
-			if (!access(path, F_OK))
+			if (file_test(path, 'e'))
 				return unlink(path);
 			else
 				return 0;
@@ -1077,7 +1077,7 @@ static int svc_state(const char *svc, int status)
 			return 0;
 	}
 	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
-	if (access(path, F_OK)) return 0;
+	if (!file_test(path, 'e')) return 0;
 	return 1;
 }
 
@@ -1200,7 +1200,7 @@ int svc_exec(int argc, const char *argv[]) {
 	sv_svcdeps_load(NULL);
 
 	retval = svc_cmd(&run);
-	if (access(SV_PIDFILE, F_OK))
+	if (!file_test(SV_PIDFILE, 'e'))
 		atexit(sv_cleanup);
 	switch(retval) {
 	case -EBUSY:
