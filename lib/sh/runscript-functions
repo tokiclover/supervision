@@ -410,7 +410,6 @@ fi # __cmd__
 SV_SERVICE=${__svc__}
 RC_SERVICE=${__svc__}
 export SV_SERVICE RC_SERVICE
-readonly SV_SERVICE RC_SERVICE
 
 fi # __svc__
 
@@ -428,6 +427,8 @@ fi # __environ__
 if yesno "${SVC_TRACE}"; then
 	set -x
 fi
+if [ "${__RUNSCRIPT_FUNCTIONS__}" = "1" ]; then
+__RUNSCRIPT_FUNCTIONS__=2
 if yesno "${SVC_DEBUG:-${SV_DEBUG}}"; then
 	SVC_DEBUG=true
 else
@@ -450,6 +451,7 @@ else
 	SVC_DEBUG_INFO=false
 fi
 readonly SVC_DEBUG SVC_DEbUG_INFO SVC_SYSLOG SVC_SYSLOG_INFO
+fi # __RUNSCRIPT_FUNCTIONS__
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
