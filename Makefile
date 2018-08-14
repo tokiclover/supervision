@@ -210,12 +210,6 @@ dist_SV_RUN_SYMLINKS = rc service
 dist_SHUTDOWN_SYMLINKS = halt poweroff reboot shutdown
 dist_BINS_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
 
-ifneq ($(PREFIX),)
-ifneq ($(OS),Linux)
-dist_DIRS += $(PREFIX)$(SV_SVCDIR)
-endif
-endif
-
 ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_RUNIT_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
 dist_RUNIT_INIT_D += $(DATADIR)/$(PACKAGE)/runit
@@ -240,13 +234,13 @@ dist_DIRS  += \
 	$(DATADIR)/$(PACKAGE)
 DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
-ifneq ($(PREFIX),/usr)
-dist_DIRS += $(PREFIX)$(SV_SVCDIR)
-endif
-
 dist_SVC_SED  =
 ifneq ($(OS),Linux)
-dist_SVC_SED += -e 's|/usr/|$(PREFIX)/|g'
+ifneq ($(PREFIX),/usr)
+dist_SVC_SED = -e 's|/usr/|$(PREFIX)/|g'
+else
+dist_SVC_SED =
+endif
 endif
 ifneq ($(EXEC_PREFIX),)
 dist_SVC_SED += 's|/sbin/sv-run|$(SBINDIR)/sv-run|g'
