@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "error.h"
 
 #define VERSION "0.2.0"
 
@@ -29,17 +30,10 @@
 
 const char *progname;
 
-#define ERR(fmt, ...)  fprintf(stderr, "%s: error: "   fmt, progname, __VA_ARGS__)
-#define WARN(fmt, ...) fprintf(stderr, "%s: warning: " fmt, progname, __VA_ARGS__)
-#if defined SV_DEBUG
-#  define DBG(fmt, ...) fprintf(stderr, "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
-#else
-#  define DBG(fmt, ...)
-#endif
-
 static const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGKILL" };
 static void sighandler(int sig);
 static void sigsetup(void);
+__attribute__((__unused__)) extern int file_test(const char *pathname, int mode);
 
 enum {
 	FILE_EXIST = 0x01,
@@ -135,8 +129,8 @@ static int waitfile(const char *file, long unsigned int timeout, int flags)
 
 	for (i = 0; i < timeout; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
-			r = access(file, F_OK);
-			if ((r && e) || (!r && !e))
+			r = file_test(file, 'e');
+			if ((!r && e) || (r && !e))
 				return 0;
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
@@ -146,8 +140,8 @@ static int waitfile(const char *file, long unsigned int timeout, int flags)
 			WARN("waiting for %s (%d seconds)\n", file, i);
 	}
 
-	r = access(file, F_OK);
-	if ((r && flags) || (!r && !e))
+	r = file_test(file, 'e');
+	if ((!r && flags) || (r && !e))
 		return 0;
 	else
 		return 2;
