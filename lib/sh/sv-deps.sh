@@ -62,10 +62,7 @@ SVCDEPS_UPDATE=${SVCDEPS_UPDATE:+true}
 SVCLIST=
 svcdeps=${SV_DEPDIR}/svcdeps
 svclist=${SV_DEPDIR}/svclist
-svcdirs="${SV_SVCDIR}"
-if [ -n "${__SV_PREFIX__}" -a -d "${__SV_PREFIX__}" -a "${__SV_PREFIX__}" != "/usr" ]; then
-	svcdirs="${svcdirs} ${__SV_PREFIX__}${SV_SVCDIR}"
-fi
+svcdirs="${SV_SVCDIR} ${SV_SVCDIR_LOCAL}"
 if [ -n "${SV_PREFIX}" -a -d "${SV_PREFIX}" ]; then
 	svcdirs="${svcdirs} ${SV_PREFIX}${SV_SVCDIR}"
 fi

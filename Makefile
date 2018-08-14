@@ -241,12 +241,18 @@ dist_SVC_SED = -e 's|/usr/|$(PREFIX)/|g'
 else
 dist_SVC_SED =
 endif
+ifneq ($(PREFIX),/usr/local)
+dist_LOCAL_SED = -e 's|/usr/local|$(PREFIX)|g'
+else
+dist_LOCAL_SED =
+endif
 endif
 ifneq ($(EXEC_PREFIX),)
 dist_SVC_SED += 's|/sbin/sv-run|$(SBINDIR)/sv-run|g'
 endif
 
 dist_MAN_SED += \
+	$(dist_LOCAL_SED) \
 	-e 's,@EXEC_PREFIX@,$(EXEC_PREFIX),g' \
 	-e 's|@SYSCONFDIR@|$(SYSCONFDIR)|g' \
 	-e 's|@RUNDIR@|$(RUNDIR)|g' \
@@ -308,6 +314,7 @@ endif
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|\(_PATH_STDPATH=\).*$$|\1$(_PATH_STDPATH)|g' \
 		-e 's|\(__SV_PREFIX__=\).*$$|\1$(PREFIX)|g' \
+		$(dist_LOCAL_SED) \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/runscript-functions \
 		   $(DESTDIR)$(SYSCONFDIR)/sv.conf
 ifneq ($(dist_SVC_SED),)

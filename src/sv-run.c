@@ -381,10 +381,10 @@ int svc_cmd(struct svcrun *run)
 		stat(SV_SVCDEPS_FILE, &st_dep);
 #if defined(PREFIX) && !defined(__linux__)
 		svcd[1] = PREFIX;
-		svcd[2] = sv_getconf("SV_PREFIX");
 #else
-		svcd[1] = sv_getconf("SV_PREFIX");
+		svcd[1] = "/usr/local";
 #endif
+		svcd[2] = sv_getconf("SV_PREFIX");
 	}
 	run->ARGV = NULL;
 	run->cmd = -1;
@@ -645,7 +645,6 @@ runsvc:
 	ERR("%s:%d: Failed to execve(): %s\n", __func__, __LINE__, strerror(errno));
 	_exit(EXIT_FAILURE);
 supervise:
-	fprintf(debugfp, "%s\n", buf);
 	RUN = run;
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);

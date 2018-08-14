@@ -25,6 +25,8 @@ NULL='/dev/null'
 
 __SV_DEPS_ORDER__='need:NEED use:USE before:BEFORE after:AFTER'
 __SV_PREFIX__=/usr
+SV_SVCDIR_LOCAL=/usr/local/${SV_SVCDIR}
+readonly SV_SVCDIR_LOCAL
 
 _PATH_STDPATH=/usr/bin:/bin:/usr/sbin:/sbin
 case "${__SV_PREFIX__}" in
