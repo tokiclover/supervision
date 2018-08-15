@@ -39,6 +39,9 @@ error()
 	if ${SVC_SYSLOG}; then
 		logger "${name}: error: ${@}"
 	fi
+	if ${SVC_DEBUG_INFO}; then
+		printf "${name}: error: ${@}\n" >&${__SV_DEBUG_FD__}
+	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_mag}${name}}"
 	printf "${__print_eol__}${prefix} ${color_fg_red}error${color_rst}: ${message}${__eol_print__}" >&2
@@ -52,6 +55,9 @@ info()
 	local message="${*}"
 	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: info: ${message}"
+	fi
+	if ${SVC_DEBUG_INFO}; then
+		printf "${name}: info: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_ylw}${name}}"
@@ -67,6 +73,9 @@ warn()
 	if ${SVC_SYSLOG}; then
 		logger "${name}: warning: ${message}"
 	fi
+	if ${SVC_DEBUG_INFO}; then
+		printf "${name}: warn: ${@}\n" >&${__SV_DEBUG_FD__}
+	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_red}${name}}"
 	printf "${__print_eol__}${prefix} ${color_fg_ylw}warning${color_rst}: ${message}${__eol_print__}" >&2
@@ -80,6 +89,9 @@ begin()
 	local message="${*}"
 	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${message}"
+	fi
+	if ${SVC_DEBUG_INFO}; then
+		printf "${name}: notice: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	printf "${__print_eol__}"
 	__eol_print__=
@@ -99,6 +111,9 @@ end()
 	local message="${*}"
 	if ${SVC_SYSLOG_INFO}; then
 		logger "${name}: notice: ${message} [${ret}]"
+	fi
+	if ${SVC_DEBUG_INFO}; then
+		printf "${name}: notice: ${@} [${ret}]\n" >&${__SV_DEBUG_FD__}
 	fi
 	case "${ret}" in
 		(0) suffix="${color_fg_blu}(${name}) [${color_fg_grn}ok${color_fg_blu}]${color_rst}";;
