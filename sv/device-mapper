@@ -5,7 +5,7 @@
 #
 
 description="Set up device-mapper"
-SVC_AFTER="kmod"
+SVC_AFTER="dev mdev udev kmod"
 SVC_BEFORE="checkfs"
 SVC_USE="dmcrypt"
 SVC_KEYWORD="docker jail openvz prefix systemd-nspawn timeout uml vserver xenu lxc"
