@@ -751,9 +751,21 @@ static int svc_depend(struct svcrun *run)
 	/* check if the direct service dependencies are started */
 	if (retval) {
 		retval = 0;
-		TAILQ_FOREACH(svc, run->dep->deps[SV_SVCDEPS_NEED], entries)
-			if (!svc_state(svc->str, SV_SVC_STAT_STAR))
+		TAILQ_FOREACH(svc, run->dep->deps[SV_SVCDEPS_NEED], entries) {
+			if (svc->data && ((SV_SvcDeps_T *)(svc->data))->status) {
+				if (!strcmp(run->argv[4], sv_svc_cmd[SV_SVC_CMD_START])) {
+					if (((SV_SvcDeps_T *)(svc->data))->status == SV_SVC_STAT_STAR)
+						continue;
+				}
+				else if (!strcmp(run->argv[4], sv_svc_cmd[SV_SVC_CMD_STOP])) {
+					if (((SV_SvcDeps_T*)(svc->data))->status == SV_SVC_MARK_STAR)
+						continue;
+				}
 				retval++;
+			}
+			else if (!svc_state(svc->str, SV_SVC_STAT_STAR))
+				retval++;
+		}
 	}
 
 	return retval;
