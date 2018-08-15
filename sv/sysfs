@@ -8,9 +8,13 @@
 :	${SYSFS_OPTS:=nodev,nosuid,noexec}
 
 description='Set up /sys/MISCELLANEOUS filesystems'
-SVC_COMMANDS=mount_cgroup
+SVC_STARTED_COMMANDS=mount_cgroup
 SVC_KEYWORD="docker lxc prefix supervision systemd-nspawn uml vserver"
 
+mount_cgroup()
+{
+	cgroup_start_sys
+}
 mount_sys()
 {
 	mountinfo --quiet /sys && return 0
