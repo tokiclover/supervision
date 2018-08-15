@@ -239,9 +239,11 @@ svc_wait()
 		if [ -n "${pid}" -a -n "${arg}" -a ! -e ${x} ]; then
 			return 0
 		fi
+		if [ -e ${x} ]; then
 		read p <${x}
 		p="${p%:*}"
 		p="${p#*=}"
+		fi
 		if [ -n "${p}" ]; then
 			#
 			# XXX: race fix
