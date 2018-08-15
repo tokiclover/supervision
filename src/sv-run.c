@@ -78,7 +78,7 @@ static const char *const environ_whitelist[] = {
 };
 static const char *environ_list[] = {
 	"__SV_DEBUG_FD__",
-	"COLUMNS", "SVC_DEBUG", "SVC_TRACE", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
+	"SVC_DEBUG", "SVC_TRACE", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION",
 	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_INITLEVEL",
 	NULL
@@ -797,7 +797,7 @@ static void svc_env(void)
 	for (j = 0; environ_whitelist[j]; j++) {
 		ptr = getenv(environ_whitelist[j]);
 		if (ptr) {
-			snprintf(buf, sizeof(buf), "%s='%s'", environ_whitelist[j], ptr);
+			snprintf(buf, sizeof(buf), "%s=%s", environ_whitelist[j], ptr);
 			svc_environ[i++] = err_strdup(buf);
 		}
 		if (i == len) {
