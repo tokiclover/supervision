@@ -25,17 +25,17 @@ start_pre()
 start()
 {
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
-	${lvm} pvscan
-	${lvm} vgscan --mknodes
-	${lvm} vgchange --noudevsync --sysinit --activate ly
+	${lvm} pvscan >${NULL} 2>&1
+	${lvm} vgscan --mknodes >${NULL} 2>&1
+	${lvm} vgchange --noudevsync --sysinit --activate ly >${NULL} 2>&1
 }
 
 stop()
 {
 	[ "${SV_INITLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
-	${lvm} lvchange --noudevsync --sysinit --activate ln
-	${lvm} vgchange --noudevsync --sysinit --activate ln
+	${lvm} lvchange --noudevsync --sysinit --activate ln >${NULL} 2>&1
+	${lvm} vgchange --noudevsync --sysinit --activate ln >${NULL} 2>&1
 }
 
 #
