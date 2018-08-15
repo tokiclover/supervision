@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include "error.h"
 
-#define VERSION "0.2.0"
+#define VERSION "0.3.0"
 
 #define WAIT_SECS 60    /* default delay */
 #define WAIT_MSEC 1000  /* interval for displaying warning */
@@ -33,7 +33,6 @@ const char *progname;
 static const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGKILL" };
 static void sighandler(int sig);
 static void sigsetup(void);
-__attribute__((__unused__)) extern int file_test(const char *pathname, int mode);
 
 enum {
 	FILE_EXIST = 0x01,
@@ -71,9 +70,6 @@ static void help_message(int status)
 static void sighandler(int sig)
 {
 	int i = -1, serrno = errno;
-#ifdef SV_DEBUG
-	DBG("%s(%d)\n", __func__, sig);
-#endif
 
 	switch (sig) {
 	case SIGHUP:
@@ -100,24 +96,23 @@ static void sigsetup(void)
 {
 	int *sig = (int []){ SIGHUP, SIGINT, SIGQUIT, SIGTERM, 0 };
 	struct sigaction sa;
-#ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
-#endif
 	memset(&sa, 0, sizeof(sa));
 	sigemptyset(&sa.sa_mask);
 	sa.sa_handler = sighandler;
 	for ( ; *sig; sig++)
 		if (sigaction(*sig, &sa, NULL)) {
-			ERR("%s: sigaction(%d,..): %s\n", __func__, *sig, strerror(errno));
-			exit(EXIT_FAILURE);
+			ERROR("%s: sigaction(%d,..)", __func__, *sig);
 		}
 }
 
 static int waitfile(const char *file, long unsigned int timeout, int flags)
 {
-	int i, j, r;
-	int e = flags & FILE_EXIST, m = flags & FILE_MESG;
-	long unsigned int msec = WAIT_MSEC, nsec, ssec = 10;
+	int i, j;
+	int e = flags & FILE_EXIST;
+	int m = flags & FILE_MESG;
+	int f_flags;
+	int fd;
+	long unsigned int msec = WAIT_MSEC, nsec, ssec = 1;
 
 	if (timeout < ssec) {
 		nsec = timeout;
@@ -127,24 +122,33 @@ static int waitfile(const char *file, long unsigned int timeout, int flags)
 		nsec = timeout % ssec;
 	nsec = nsec ? nsec : ssec;
 
+	if (e) f_flags = O_RDONLY;
+	else   f_flags = O_WRONLY | O_EXCL | O_CREAT;
 	for (i = 0; i < timeout; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
-			r = file_test(file, 'e');
-			if ((!r && e) || (r && !e))
+			fd = open(file, f_flags, 0644);
+			if (fd < 0 &&  e) return 0;
+			if (fd > 0 && !e) {
+				(void)close(fd);
+				(void)unlink(file);
 				return 0;
+			}
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
 				return EXIT_FAILURE;
 		}
 		if (!(++i % ssec) && m)
-			WARN("waiting for %s (%d seconds)\n", file, i);
+			INFO("waiting for `%s' (%d seconds)\n", file, i);
 	}
 
-	r = file_test(file, 'e');
-	if ((!r && flags) || (r && !e))
+	fd = open(file, f_flags, 0644);
+	if (fd < 0 &&  e) return 0;
+	if (fd > 0 && !e) {
+		(void)close(fd);
+		(void)unlink(file);
 		return 0;
-	else
-		return 2;
+	}
+	return 2;
 }
 
 int main(int argc, char *argv[])

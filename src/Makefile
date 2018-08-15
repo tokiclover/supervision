@@ -12,7 +12,7 @@ sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
 fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
-waitfile_SRCS  := error.c file-test.c waitfile.c
+waitfile_SRCS  := error.c waitfile.c
 
 sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c
 sv-run_HDRS   := sv.h
