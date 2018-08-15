@@ -77,6 +77,7 @@ static const char *const environ_whitelist[] = {
 	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID",  "__SV_DEBUG_FD__", NULL
 };
 static const char *environ_list[] = {
+	"__SV_DEBUG_FD__",
 	"COLUMNS", "SVC_DEBUG", "SVC_TRACE", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION",
 	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_INITLEVEL",
@@ -592,6 +593,7 @@ runsvc:
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
+	debugfp = fdopen(debugfd, "a+");
 	/* lock the lock file before any command */
 	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);

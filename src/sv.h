@@ -72,6 +72,7 @@ extern "C" {
 
 #if defined(ERROR_H) && defined(SV_DEBUG)
 #include <stdio.h>
+extern int debugfd;
 extern FILE *debugfp;
 #  undef ERR
 #  define ERR(fmt, ...) do {              \

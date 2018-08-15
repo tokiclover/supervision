@@ -50,8 +50,8 @@ int svc_deps  = 1;
 int svc_quiet = 1;
 SV_DepTree_T DEPTREE = { NULL, NULL, 0, 0 };
 
-FILE *debugfp;
-static int debugfd = STDERR_FILENO;
+FILE *debugfp = NULL;
+int debugfd = STDERR_FILENO;
 static FILE *logfp;
 static int logfd;
 
