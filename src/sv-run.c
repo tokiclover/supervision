@@ -1322,10 +1322,15 @@ static void *thread_worker_handler(void *arg)
 		goto waitpid;
 
 waitpid:
-	if (j) {
+	while (j) {
 #ifdef SV_DEBUG
 		if (sv_debug) DBG("lid=%u waiting %ld jobs\n", p->rl_lid, j);
 #endif
+		pthread_rwlock_rdlock(&p->rl_lock);
+		j = p->rl_job;
+		pthread_rwlock_unlock(&p->rl_lock);
+		if (!j) break;
+
 		pthread_mutex_lock  (&p->rl_mutex);
 		pthread_cond_wait(&p->rl_cond, &p->rl_mutex);
 		pthread_mutex_unlock(&p->rl_mutex);
