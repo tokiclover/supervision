@@ -5,7 +5,7 @@
 #
 
 description="Set up LVM2 devices"
-SVC_AFTER="kmod device-mapper lvmetad"
+SVC_AFTER="dev mdev udev kmod device-mapper lvmetad"
 SVC_BEFORE="checkfs"
 SVC_USE="lvmetad"
 SVC_CONFIGFILE="/etc/lvm/lvm.conf"

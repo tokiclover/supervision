@@ -7,6 +7,7 @@ description="LVM metadata cache daemon"
 pidfile="/run/lvmetad.pid"
 SVC_CMD=/sbin/lvmetad
 SVC_OPTS="-f -p ${pidfile}"
+SVC_AFTER="dev mdev udev"
 SVC_BEFORE="lvm"
 SVC_KEYWORD="docker jail openvz prefix systemd-nspawn timeout uml vserver xenu lxc"
 
