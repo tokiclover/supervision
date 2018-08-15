@@ -601,7 +601,7 @@ runsvc:
 	}
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
-		svc_lock(run->name, run->lock, 0);
+		(void)close(run->lock);
 
 	/* supervise the service */
 	if (run->dep->timeout) {
