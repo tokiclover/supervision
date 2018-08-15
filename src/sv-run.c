@@ -132,7 +132,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what);
  * @timeout: timeout to use to poll the lockfile (SVC_TIMEOUT_SECS);
  * @return: fd >= 0 on success; negative (usually -errno) on failure;
  */
-static int svc_lock(const char *svc, int lock_fd, int timeout);
+static int svc_lock(struct svcrun *run, int timeout);
 #define SVC_LOCK -1 /* magic number to lock a service */
 
 /*
@@ -141,7 +141,7 @@ static int svc_lock(const char *svc, int lock_fd, int timeout);
  * @timeout: timeout to use to poll the lockfile;
  * @return: 0 on success (lockfile available);
  */
-static int svc_wait(const char *svc, int timeout, int lock_fd, pid_t pid);
+static int svc_wait(struct svcrun *run, int timeout);
 #define SVC_TIMEOUT_SECS 60    /* default delay */
 #define SVC_TIMEOUT_MSEC 1000  /* interval for displaying warning */
 #define SVC_TIMEOUT_POLL 100   /* poll interval */
@@ -595,7 +595,8 @@ runsvc:
 
 	debugfp = fdopen(debugfd, "a+");
 	/* lock the lock file before any command */
-	if ((run->lock = svc_lock(run->name, SVC_LOCK, SVC_TIMEOUT_SECS)) < 0) {
+	run->lock = SVC_LOCK;
+	if ((run->lock = svc_lock(run, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		_exit(ETIMEDOUT);
 	}
@@ -700,7 +701,7 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 	else if (WIFSIGNALED(status))
 		run->status = WTERMSIG(status);
 	if (run->lock)
-		svc_lock(run->name, run->lock, 0);
+		svc_lock(run, 0);
 	run->cld = 0;
 
 	/* do not mark service status twice */
@@ -838,92 +839,62 @@ int svc_environ_update(off_t off)
 	return 0;
 }
 
-#define SVC_WAIT_LOCK                                    \
-	if ((fp = fopen(f_path, "r"))) {                     \
-		if (fscanf(fp, "pid=%d:", &pd) && !kill(pd, 0))  \
-			w = svc_wait(svc, timeout, 0, pd);           \
-		fclose(fp);                                      \
-	}                                                    \
-	else LOG_ERR("Failed to `fopen(%s,..)': %s\n", f_path, strerror(errno));
-
-static int svc_lock(const char *svc, int lock_fd, int timeout)
+static int svc_lock(struct svcrun *run, int timeout)
 {
 	char f_path[PATH_MAX];
-	int fd;
 	FILE *fp;
-	pid_t pd;
-	int w;
 	mode_t m;
 	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY | O_CLOEXEC;
 	static mode_t f_mode = 0644;
 
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%s, %d, %d)\n", __func__, svc, lock_fd, timeout);
+	if (sv_debug) DBG("%s(%p[%s], %d)\n", __func__, run, run->name, timeout);
 #endif
 
-	if (svc == NULL)
+	if (run == NULL)
 		return -ENOENT;
-	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, svc);
+	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, run->name);
 
-	if (lock_fd == SVC_LOCK) {
-		if ((w = file_test(f_path, 'e'))) {
+	if (run->lock == SVC_LOCK) {
+		if ((run->lock = open(f_path, O_RDONLY, 0644)) > 0) {
 			/* check the holder of the lock file */
-			SVC_WAIT_LOCK;
+			if (svc_wait(run, timeout))
+				return -1;
+			(void)close(run->lock);
+			(void)unlink(f_path);
 		}
 		m = umask(0);
-		fd = open(f_path, f_flags, f_mode);
-		/* got different behaviours of open(3p)/O_CREAT when the file is locked
-		 * (try that mode | S_ISGID hack of SVR3 to enable mandatory lock?)
-		 */
-		if (!w && fd < 0) {
-			switch (errno) {
-				case EWOULDBLOCK:
-				case EEXIST:
-					SVC_WAIT_LOCK;
-					if (w < 0)
-						return -1;
-					break;
-				default:
-					return -1;
-			}
-			if (file_test(f_path, 'e'))
-				unlink(f_path);
-			fd = open(f_path, f_flags, f_mode);
-		}
+		run->lock = open(f_path, f_flags, f_mode);
 		umask(m);
-		if (fd < 0) {
+		if (run->lock < 0) {
 			ERR("Failed to open(%s...): %s\n", f_path, strerror(errno));
-			return fd;
+			return -1;
 		}
 
-		if (flock(fd, LOCK_EX|LOCK_NB) == -1)
-			switch(errno) {
-			case EWOULDBLOCK:
-				if (svc_wait(svc, timeout, lock_fd, 0) > 0)
-					return fd;
-			default:
-				LOG_ERR("%s: Failed to flock(%d, LOCK_EX...): %s\n", svc, fd,
-							strerror(errno));
-				close(fd);
-				return -1;
-			}
-		return fd;
+		if (flock(run->lock, LOCK_EX|LOCK_NB) == -1) {
+			LOG_ERR("%s: Failed to flock(): %s\n", run->name, strerror(errno));
+			close(run->lock);
+			return -1;
+		}
+		return run->lock;
 	}
-	else if (lock_fd > 0)
-		close(lock_fd);
-	if (file_test(f_path, 'e'))
-		unlink(f_path);
+	else if (run->lock > 0) {
+		close(run->lock);
+		(void)unlink(f_path);
+	}
 	return 0;
 }
 #undef SVC_WAIT_LOCK
 
-static int svc_wait(const char *svc, int timeout, int lock_fd, pid_t pid)
+static int svc_wait(struct svcrun *run, int timeout)
 {
+	FILE *fp;
 	int i, j;
+	pid_t pid = 0;
 	int err;
 	int msec = SVC_TIMEOUT_MSEC, nsec, ssec = 10;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%s, %d, %d)\n", __func__, svc, timeout, lock_fd);
+	if (sv_debug) DBG("%s(%p[%s], %d)\n", __func__, run, run->name, timeout);
 #endif
 	if (timeout < ssec) {
 		nsec = timeout;
@@ -933,27 +904,23 @@ static int svc_wait(const char *svc, int timeout, int lock_fd, pid_t pid)
 		nsec = timeout % ssec;
 	nsec = nsec ? nsec : ssec;
 
+	if ((fp = fdopen(run->lock, "r")))
+		if (!fscanf(fp, "pid=%d:", &pid)) pid = 0;
+
 	for (i = 0; i < timeout; ) {
 		for (j = SVC_TIMEOUT_POLL; j <= msec; j += SVC_TIMEOUT_POLL) {
-			if (svc_state(svc, SV_SVC_STAT_WAIT) < 1)
+			if (!svc_state(run->name, SV_SVC_STAT_WAIT))
 				return 0;
 			if (pid && kill(pid, 0))
 				return 0;
-			/* add some insurence for failed services */
-			if (lock_fd) {
-				err = errno;
-				if (flock(lock_fd, LOCK_EX|LOCK_NB) == 0)
-					return lock_fd;
-				errno = err;
-			}
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, SVC_TIMEOUT_POLL) < 0)
 				return -1;
 		}
 		if (!(++i % ssec))
-			WARN("waiting for %s (%d seconds)\n", svc, i);
+			INFO("waiting for %s (%d seconds)\n", run->name, i);
 	}
-	return svc_state(svc, SV_SVC_STAT_WAIT) ? -1 : 0;
+	return svc_state(run->name, SV_SVC_STAT_WAIT) ? -1 : 0;
 }
 
 static void svc_zap(const char *svc)
