@@ -598,7 +598,7 @@ runsvc:
 	run->lock = SVC_LOCK;
 	if ((run->lock = svc_lock(run, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
-		_exit(ETIMEDOUT);
+		_exit(4);
 	}
 	/* close the lockfile to be able to mount rootfs read-only */
 	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
