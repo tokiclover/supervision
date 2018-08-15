@@ -75,6 +75,9 @@ enum {
 #define WARN(fmt, ...) fprintf(stderr, "%s: %swarning%s: " fmt, progname, \
 		print_color(COLOR_YLW, COLOR_FG), \
 		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
+#define INFO(fmt, ...) fprintf(stdout, "%s: %sinfo%s: " fmt, progname, \
+		print_color(COLOR_BLU, COLOR_FG), \
+		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
 #define ERROR(fmt, ...)  error(-errno, "%s: %serror%s: "   fmt, progname, \
 		print_color(COLOR_RED, COLOR_FG), \
 		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
