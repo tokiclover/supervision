@@ -619,12 +619,6 @@ runsvc:
 			/* restore signal mask */
 			sigprocmask(SIG_SETMASK, &ss_old, NULL);
 	}
-	else {
-#ifdef SV_DEBUG
-		if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
-				run->name, run->argv[4], getpid());
-#endif
-	}
 
 	/* write the service command and the pid to the lock file */
 	snprintf(buf, sizeof(buf), "pid=%d:command=%s", getpid(), run->argv[4]);
@@ -639,6 +633,10 @@ runsvc:
 			}
 		off += val; len -= val;
 	} while (len);
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
+			run->name, run->argv[4], getpid());
+#endif
 
 	/* restore previous default signal handling */
 	svc_sigsetup();
