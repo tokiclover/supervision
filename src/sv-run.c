@@ -375,7 +375,7 @@ int svc_cmd(struct svcrun *run)
 	char buf[10124] = { "" };
 
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%p)\n", __func__, run);
+	if (sv_debug) DBG("%s(%p[%s])\n", __func__, run, run->name);
 #endif
 
 	if (!st_dep.st_mtime) {
@@ -558,7 +558,7 @@ static int svc_run(struct svcrun *run)
 	char buf[128];
 	pid_t pid;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%p)\n", __func__, run);
+	if (sv_debug) DBG("%s(%p[%s])\n", __func__, run, run->name);
 #endif
 
 	if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_TIMEOUT))
@@ -1308,6 +1308,9 @@ static void *thread_worker_handler(void *arg)
 			p->rl_job++;
 			j = p->rl_job;
 			pthread_rwlock_unlock(&p->rl_lock);
+#ifdef SV_DEBUG
+			if (sv_debug) DBG("[job]lid=%u service=%s\n", p->rl_lid, p->run[n].name);
+#endif
 			n++;
 		}
 		else {
