@@ -1,4 +1,4 @@
-Header: supervision/ChangeLog, 2015/04/24
+Header: supervision/ChangeLog, 2018/08/16
 
 0.14.0:
 
@@ -11,8 +11,11 @@ Renamed `OS_NAME' to `SV_UNAME' and added `SV_UNAME_RELEASE'
 Renamed `depgen' shell script to `sv-deps.sh' for clarity;
 Renamed `runscript' shell script to `sv-run.sh';
 Renamed `init-stage' shell script to `sv-init.sh';
+Renamed `depgen' shell script to `sv-deps.sh';
 
 Manpages was cleaned and updated to v0.14.0;
+See `supervision(5)' manual page for more information about the changes;
+And alos, `sv-run(8)' and `sv-rc(8)' manual pages;
 
 A few bug fixes were ported to v0.13.1 (not all the bugs which require more
 work; A nasty thread race bug was fixed lastly which was causing `sv-rc' to hang
