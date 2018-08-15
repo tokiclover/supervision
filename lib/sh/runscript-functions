@@ -83,13 +83,13 @@ svc_add()
 }
 SVC_DEBUG()
 {
-	if ${SVC_SYSLOG}; then
+	if ${__SVC_SYSLOG__}; then
 		logger "${name}: debug: ${@}"
 	fi
-	if ${SVC_DEBUG_INFO}; then
+	if ${__SVC_DEBUG_INFO__}; then
 		printf "${name}: debug: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
-	if ${SVC_DEBUG}; then
+	if ${__SVC_DEBUG__}; then
 		local message="${*}"
 		__print_len__=$((${#message}+${#name}+9))
 		printf "${__print_eol__}${name}: debug: ${@}${__eol_print__}" >&2
@@ -430,27 +430,27 @@ fi
 if [ "${__RUNSCRIPT_FUNCTIONS__}" = "1" ]; then
 __RUNSCRIPT_FUNCTIONS__=2
 if yesno "${SVC_DEBUG:-${SV_DEBUG}}"; then
-	SVC_DEBUG=true
+	__SVC_DEBUG__=true
 else
-	SVC_DEBUG=false
+	__SVC_DEBUG__=false
 fi
 if yesno "${SVC_SYSLOG:-${SV_SYSLOG}}"; then
-	SVC_SYSLOG=true
+	__SVC_SYSLOG__=true
 else
-	SVC_SYSLOG=false
+	__SVC_SYSLOG__=false
 fi
 if yesno "${SVC_SYSLOG_INFO:-${SV_SYSLOG_INFO}}"; then
-	SVC_SYSLOG_INFO=true
+	__SVC_SYSLOG_INFO__=true
 else
-	SVC_SYSLOG_INFO=false
+	__SVC_SYSLOG_INFO__=false
 fi
 if yesno "${SVC_DEBUG_INFO:-${SV_DEBUG_INFO}}" && [ -n "${SV_INITLEVEL}" ] && \
 	[ -n "${__SV_DEBUG_FD__}" ]; then
-	SVC_DEBUG_INFO=true
+	__SVC_DEBUG_INFO__=true
 else
-	SVC_DEBUG_INFO=false
+	__SVC_DEBUG_INFO__=false
 fi
-readonly SVC_DEBUG SVC_DEbUG_INFO SVC_SYSLOG SVC_SYSLOG_INFO
+readonly __SVC_DEBUG__ __SVC_DEbUG_INFO__ __SVC_SYSLOG__ __SVC_SYSLOG_INFO__
 fi # __RUNSCRIPT_FUNCTIONS__
 
 #

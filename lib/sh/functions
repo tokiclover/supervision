@@ -36,10 +36,10 @@ logger()
 error()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG}; then
+	if ${__SVC_SYSLOG__}; then
 		logger "${name}: error: ${@}"
 	fi
-	if ${SVC_DEBUG_INFO}; then
+	if ${__SVC_DEBUG_INFO__}; then
 		printf "${name}: error: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -53,10 +53,10 @@ error()
 info()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG_INFO}; then
+	if ${__SVC_SYSLOG_INFO__}; then
 		logger "${name}: info: ${message}"
 	fi
-	if ${SVC_DEBUG_INFO}; then
+	if ${__SVC_DEBUG_INFO__}; then
 		printf "${name}: info: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -70,10 +70,10 @@ info()
 warn()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG}; then
+	if ${__SVC_SYSLOG__}; then
 		logger "${name}: warning: ${message}"
 	fi
-	if ${SVC_DEBUG_INFO}; then
+	if ${__SVC_DEBUG_INFO__}; then
 		printf "${name}: warn: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
@@ -87,10 +87,10 @@ warn()
 begin()
 {
 	local message="${*}"
-	if ${SVC_SYSLOG_INFO}; then
+	if ${__SVC_SYSLOG_INFO__}; then
 		logger "${name}: notice: ${message}"
 	fi
-	if ${SVC_DEBUG_INFO}; then
+	if ${__SVC_DEBUG_INFO__}; then
 		printf "${name}: notice: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	printf "${__print_eol__}"
@@ -109,10 +109,10 @@ end()
 	local suffix ret="${1:-0}"
 	shift
 	local message="${*}"
-	if ${SVC_SYSLOG_INFO}; then
+	if ${__SVC_SYSLOG_INFO__}; then
 		logger "${name}: notice: ${message} [${ret}]"
 	fi
-	if ${SVC_DEBUG_INFO}; then
+	if ${__SVC_DEBUG_INFO__}; then
 		printf "${name}: notice: ${@} [${ret}]\n" >&${__SV_DEBUG_FD__}
 	fi
 	case "${ret}" in
