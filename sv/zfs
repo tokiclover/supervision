@@ -5,7 +5,7 @@
 #
 
 description="Set up zpools and zfs volumes"
-SVC_AFTER="checkfs"
+SVC_AFTER="checkfs dev mdev udev"
 SVC_BEFORE="logger"
 SVC_NEED="zpool"
 SVC_KEYWORD="docker lxc openvz supervision prefix systemd-nspawn uml vserver"
