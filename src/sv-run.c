@@ -418,7 +418,7 @@ int svc_cmd(struct svcrun *run)
 		run->mark = SV_SVC_STAT_STAR;
 		if (svc_state(run->name, SV_SVC_STAT_STAR) ||
 			svc_state(run->name, SV_SVC_STAT_PIDS)) {
-			LOG_WARN("%s: service started\n", run->name);
+			LOG_INFO("%s: service started\n", run->name);
 			return -EBUSY;
 		}
 		run->cmd  = SV_SVC_CMD_START;
@@ -427,7 +427,7 @@ int svc_cmd(struct svcrun *run)
 		run->mark = SV_SVC_MARK_STAR;
 		if (!(svc_state(run->name, SV_SVC_STAT_STAR) ||
 			  svc_state(run->name, SV_SVC_STAT_PIDS))) {
-			LOG_WARN("%s: service stopped\n", run->name);
+			LOG_INFO("%s: service stopped\n", run->name);
 			return -EINVAL;
 		}
 		run->cmd  = SV_SVC_CMD_STOP;
@@ -517,7 +517,7 @@ int svc_cmd(struct svcrun *run)
 
 	/* check service mtime */
 	if (st_buf.st_mtime > st_dep.st_mtime)
-		LOG_WARN("%s was updated -- `scan' command might be necessary?\n",
+		LOG_INFO("%s was updated -- `scan' command might be necessary?\n",
 				run->name);
 
 	/* setup dependencies */
