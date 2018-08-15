@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include "error.h"
 
-#define VERSION "0.3.0"
+#define VERSION "0.4.0"
 
 #define WAIT_SECS 60    /* default delay */
 #define WAIT_MSEC 1000  /* interval for displaying warning */
@@ -34,13 +34,15 @@ static const char *signame[] = { "SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM", "SIGK
 static void sighandler(int sig);
 static void sigsetup(void);
 
-enum {
-	FILE_EXIST = 0x01,
-	FILE_MESG  = 0x02,
-};
+static char *NM, *FP;
+static int EF, MF, PF;
+static unsigned long int TM;
 
-static const char *shortopts = "Ehmv";
+static const char *shortopts = "Ef:hmn:t:v";
 static const struct option longopts[] = {
+	{ "file"   ,  0, NULL, 'f' },
+	{ "name"   ,  0, NULL, 'n' },
+	{ "timeout",  0, NULL, 't' },
 	{ "noexits",  0, NULL, 'E' },
 	{ "message",  0, NULL, 'm' },
 	{ "help",     0, NULL, 'h' },
@@ -48,6 +50,9 @@ static const struct option longopts[] = {
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
+	"File path to check",
+	"Name [tail] to display",
+	"Timeout in second(s)",
 	"Check file no-existance",
 	"Print wait massage",
 	"Print help massage",
@@ -59,7 +64,7 @@ static void help_message(int status)
 {
 	int i = 0;
 
-	printf("Usage: %s [-E] [-m] TIMEOUT FILENAME\n", progname);
+	printf("Usage: %s [OPTIONS] [-t] TIMEOUT [-f] FILENAME\n", progname);
 	for ( ; longopts_help[i]; i++)
 		printf("    -%c, --%-12s %s\n", longopts[i].val, longopts[i].name,
 				longopts_help[i]);
@@ -105,47 +110,53 @@ static void sigsetup(void)
 		}
 }
 
-static int waitfile(const char *file, long unsigned int timeout, int flags)
+static int waitfile(void)
 {
 	int i, j;
-	int e = flags & FILE_EXIST;
-	int m = flags & FILE_MESG;
-	int f_flags;
 	int fd;
+	int FF;
 	long unsigned int msec = WAIT_MSEC, nsec, ssec = 1;
 
-	if (timeout < ssec) {
-		nsec = timeout;
-		msec = 1000*timeout;
+	if (TM < ssec) {
+		nsec = TM;
+		msec = 1000LU*TM;
 	}
 	else
-		nsec = timeout % ssec;
+		nsec = TM % ssec;
 	nsec = nsec ? nsec : ssec;
 
-	if (e) f_flags = O_RDONLY;
-	else   f_flags = O_WRONLY | O_EXCL | O_CREAT;
-	for (i = 0; i < timeout; ) {
+	if (EF) FF = O_RDONLY;
+	else    FF = O_WRONLY | O_EXCL | O_CREAT;
+	for (i = 0; i < TM; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
-			fd = open(file, f_flags, 0644);
-			if (fd < 0 &&  e) return 0;
-			if (fd > 0 && !e) {
+			fd = open(FP, FF, 0644);
+			if (fd < 0 &&  EF) return 0;
+			if (fd > 0 && !EF) {
 				(void)close(fd);
-				(void)unlink(file);
+				(void)unlink(FP);
 				return 0;
 			}
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
 				return EXIT_FAILURE;
 		}
-		if (!(++i % ssec) && m)
-			INFO("waiting for `%s' (%d seconds)\n", file, i);
+		if (!(++i % ssec) && MF) {
+			if (NM)
+				printf("%s%s%s: %sinfo%s: waiting for `%s' (%d seconds)\n",
+						print_color(COLOR_YLW, COLOR_FG), NM,
+						print_color(COLOR_RST, COLOR_RST),
+						print_color(COLOR_BLU, COLOR_FG),
+						print_color(COLOR_RST, COLOR_RST), FP, i);
+			else
+				INFO("waiting for `%s' (%d seconds)\n", FP, i);
+		}
 	}
 
-	fd = open(file, f_flags, 0644);
-	if (fd < 0 &&  e) return 0;
-	if (fd > 0 && !e) {
+	fd = open(FP, FF, 0644);
+	if (fd < 0 &&  EF) return 0;
+	if (fd > 0 && !EF) {
 		(void)close(fd);
-		(void)unlink(file);
+		(void)unlink(FP);
 		return 0;
 	}
 	return 2;
@@ -153,8 +164,7 @@ static int waitfile(const char *file, long unsigned int timeout, int flags)
 
 int main(int argc, char *argv[])
 {
-	int flags = 0, opt;
-	long unsigned int timeout;
+	int opt;
 
 	sigsetup();
 	progname = strrchr(argv[0], '/');
@@ -166,10 +176,20 @@ int main(int argc, char *argv[])
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (opt) {
 		case 'E':
-			flags |= FILE_EXIST;
+			EF++;
 			break;
 		case 'm':
-			flags |= FILE_MESG;
+			MF++;
+			break;
+		case 'n':
+			NM = optarg;
+			break;
+		case 't':
+			TM = strtoul(optarg, NULL, 10);
+			if (errno == ERANGE) {
+				ERR("Invalid agument -- `%s'\n", *argv);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'v':
 			printf("%s version %s\n", progname, VERSION);
@@ -184,15 +204,21 @@ int main(int argc, char *argv[])
 
 	if (argc < 2) {
 		ERR("Insufficient number of arguments -- `%d' (two required)\n", argc);
-		fprintf(stderr, "usage: %s [-E] TIMEOUT FILENAME\n", progname);
+		fprintf(stderr, "usage: %s [OPTIONS] [-t] TIMEOUT [-f] FILENAME\n", progname);
 		exit(EXIT_FAILURE);
 	}
 
-	timeout = strtoul(*argv, NULL, 10);
+	TM = strtoul(*argv, NULL, 10);
 	if (errno == ERANGE) {
 		ERR("Invalid agument -- `%s'\n", *argv);
 		exit(EXIT_FAILURE);
 	}
 
-	return waitfile(*++argv, timeout, flags);
+	FP = *++argv;
+	if (!FP || !strlen(FP)) {
+		ERR("invalid file -- a file path is required\n", NULL);
+		exit(EXIT_FAILURE);
+	}
+
+	return waitfile();
 }
