@@ -1,0 +1,102 @@
+41:
+
+Bug fixes of r40: properly mark service state after {stop,start}; stop
+services properly if started only;
+
+Improvements: added -q|--quiet to mountinfo; and added -E|--force to
+sv-shutdown (to be able to write rs.d/checkfs service properly).
+
+40:
+
+Critical bug fix of r39 (bug introduced since r35): initialize static buffers
+in file_test();
+
+39:
+
+Added C variant of mount_info() shell function (WARN: command line arguments
+changed!) named simply mountinfo to get current mountpoints info; and
+fstabinfo to get fstab(5) information with ease and simplicity.
+
+Bug-fix of previous release (retun value of svc_{mark,state}()); removed
+usage of getopt(1) for portability compliance.
+
+38:
+
+Bug-fix of r37: fix checkpath return value, and static /service/ installation.
+
+37:
+
+Added C conversion to sv/.lib/bin/{checkpath,sv-shutdown} for efficiency;
+various minor bug fixes of r36 (notably, satisfy {after,before}
+dependencies before {use,need} to attempt to get everything in
+the right order.
+
+Renamed sv/.lib/bin/{sp,sv-config} for clarity.
+
+36:
+
+r35 bug fixes:
+install runscript with execute permission (critical fix);
+mark service status properly (rs binary) by using the right return value.
+
+Added optional sv/.lib/bin/initctl binary and sv/initctl service; for
+SysVinit reboot/shutdocn compatibility. Add SYSVINIT=1 to make to get
+everything.
+
+35:
+
+Added a new rs binary to manage properly service scheduling and start/stop
+functionality after renaming sv/.lib/bin/rs to sv/.lib/sh/runscript.
+WARN: New utility reverse the order of argument! (compared to the rs old
+rs script).
+
+Added a tiny utility to get terminal columns, so, printing utility can
+format nicely output.
+
+34:
+
+Bug fix of r33 (use of command builtin instead of type builtin--zsh fix);
+and init stage fix (handle `/var/SYMLINKS' to `/run').
+
+33:
+
+Bug fix of r32: extra service command support, tiny service lock. 
+SERVICE/RUNSCRIPT: Added {dev,sys}fs
+
+32:
+
+Added runscript service support with a simple API which brings service
+dependencies scheduling; supervision service is now scheduled with
+{after,before,need,use} style dependencies.
+Added praticable {boot,default,nonetwork,single} RUNLEVELS support.
+Improved the manual with {BUILTINS,DEPENDENCIES,INIT-STAGE,RUNLEVELS}
+sections; and numerous RUNSCRIPTS sub-sections.
+
+Unified {supervision-backend,svc} scripts to sv/.bin/sp;
+Unified Init-Stage-[123] into sv/.lib/sh/init-stage;
+converted mdev-start-dev to runscript service.
+Moved sv/.{bin,lib/bin} & library files from sv/.opt to sv/.lib/sh
+to keep system configuration directory clean of extraneous files.
+
+SERVICE/RUNSCRIPT: Added mdev, squashdir, tmpdir, zram
+SERVICE/SUPERVISION: Added sulogin
+
+31:
+
+Added SCANCMD support to trigger re-scan (to get *hard* style dependencies
+and a functional LSB start command.)
+
+SERVICES: Moved lighttpd to virtual httpd/({busybox-,lig}http)
+
+30:
+
+First release with {runit,s6}/Init-Stage-[123];
+supervision.{conf,init}d init service & SERVICES.
+
+SERVICES: acpid, cupsd, getty, inetd, udev, sshd, syslog,
+atd, dbus, git-daemon, ntp, rsync-daemon, wpa_supplicant,
+cgred, dhcp, gpm, pcscd, saned, cron, dns, hostapd, lighttpd, snmpd
+
+VIRTUAL SERVICES: ntp/({busybox-,}ntpd), net/(dhcp/dhcp{,c}d...)
+SERVICE INSTANCES: syslog/{rsyslog,socklog,syslog-ng}
+SERVICE PROVIDERS:  cron/{d,f,vixie-}cron,cronie, inetd/{ipsvd,xinetd}

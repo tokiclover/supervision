@@ -31,6 +31,7 @@ dist_EXTRA  = \
 	README.md \
 	TODO \
 	BUGS.md \
+	ChangeLog-v00 ChangeLog-v0.12 \
 	ChangeLog
 dist_SH_BINS  = \
 	lib/sh/cmd \
