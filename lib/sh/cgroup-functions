@@ -31,7 +31,7 @@ cgroup_mount_sys()
 			(1)
 			mountinfo --quiet ${__CGROUP_ROOT__}/${ctrl} && continue
 			mkdir -p ${__CGROUP_ROOT__}/${ctrl}
-			mount ${arg} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
+			mount ${opt} -t cgroup -o ${SYSFS_OPTS},${ctrl} \
 				${ctrl} ${__CGROUP_ROOT__}/${ctrl}
 			;;
 		esac
@@ -41,10 +41,10 @@ cgroup_mount_sys()
 
 cgroup_start_sys()
 {
-	cgroup_mount_sys || return 1
-
 	local opt
 	[ -w /etc/mtab ] || opt=-n
+	cgroup_mount_sys || return 1
+
 	if ! mountinfo -q ${__CGROUP_PATH__}; then
 		mkdir -p ${__CGROUP_PATH__}
 		mount ${opt} -o none,${SYSFS_OPTS},name=${__CGROUP_NAME__},release_agent=${__CGROUP_RELEASE_AGENT__} \
