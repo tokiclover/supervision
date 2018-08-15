@@ -702,6 +702,11 @@ sysboot:
 				ctime_r(&t, b);
 				svc_log("\n\tpriority-level-%d started at %s\n", p,	b);
 				r = svc_execl(DEPTREE.tree[p], 8, argv);
+				/* enable dependency tracking only if needed */
+				if (r)
+					svc_deps = 1;
+				else
+					svc_deps = 0;
 			}
 			if (svc_start)
 				--p;
