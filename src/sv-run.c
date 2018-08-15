@@ -722,6 +722,7 @@ static int svc_depend(struct svcrun *run)
 	int type, val = 0, retval = 0;
 	int p;
 	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
+	SV_String_T *svc;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, run);
@@ -746,6 +747,15 @@ static int svc_depend(struct svcrun *run)
 		if (val > 0 && type == SV_SVCDEPS_NEED)
 			retval = val;
 	}
+
+	/* check if the direct service dependencies are started */
+	if (retval) {
+		retval = 0;
+		TAILQ_FOREACH(svc, run->dep->deps[SV_SVCDEPS_NEED], entries)
+			if (!svc_state(svc->str, SV_SVC_STAT_STAR))
+				retval++;
+	}
+
 	return retval;
 }
 
