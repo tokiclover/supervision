@@ -141,7 +141,7 @@ static int svc_lock(struct svcrun *run, int timeout);
  * @timeout: timeout to use to poll the lockfile;
  * @return: 0 on success (lockfile available);
  */
-static int svc_wait(struct svcrun *run, int timeout);
+static int svc_wait(struct svcrun *run, int timeout, char *path);
 #define SVC_TIMEOUT_SECS 60    /* default delay */
 #define SVC_TIMEOUT_MSEC 1000  /* interval for displaying warning */
 #define SVC_TIMEOUT_POLL 100   /* poll interval */
@@ -842,7 +842,6 @@ int svc_environ_update(off_t off)
 static int svc_lock(struct svcrun *run, int timeout)
 {
 	char f_path[PATH_MAX];
-	FILE *fp;
 	mode_t m;
 	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY | O_CLOEXEC;
 	static mode_t f_mode = 0644;
@@ -856,15 +855,15 @@ static int svc_lock(struct svcrun *run, int timeout)
 	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, run->name);
 
 	if (run->lock == SVC_LOCK) {
+		m = umask(0);
 		if ((run->lock = open(f_path, O_RDONLY, 0644)) > 0) {
 			/* check the holder of the lock file */
-			if (svc_wait(run, timeout))
+			if (svc_wait(run, timeout, f_path))
 				return -1;
-			(void)close(run->lock);
 			(void)unlink(f_path);
 		}
-		m = umask(0);
-		run->lock = open(f_path, f_flags, f_mode);
+		if (run->lock < 0)
+			run->lock = open(f_path, f_flags, f_mode);
 		umask(m);
 		if (run->lock < 0) {
 			ERR("Failed to open(%s...): %s\n", f_path, strerror(errno));
@@ -886,12 +885,11 @@ static int svc_lock(struct svcrun *run, int timeout)
 }
 #undef SVC_WAIT_LOCK
 
-static int svc_wait(struct svcrun *run, int timeout)
+static int svc_wait(struct svcrun *run, int timeout, char *path)
 {
 	FILE *fp;
 	int i, j;
 	pid_t pid = 0;
-	int err;
 	int msec = SVC_TIMEOUT_MSEC, nsec, ssec = 10;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p[%s], %d)\n", __func__, run, run->name, timeout);
@@ -906,10 +904,12 @@ static int svc_wait(struct svcrun *run, int timeout)
 
 	if ((fp = fdopen(run->lock, "r")))
 		if (!fscanf(fp, "pid=%d:", &pid)) pid = 0;
+	(void)close(run->lock);
+	run->lock = -1;
 
 	for (i = 0; i < timeout; ) {
 		for (j = SVC_TIMEOUT_POLL; j <= msec; j += SVC_TIMEOUT_POLL) {
-			if (!svc_state(run->name, SV_SVC_STAT_WAIT))
+			if ((run->lock = open(path, O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0644)) > 0)
 				return 0;
 			if (pid && kill(pid, 0))
 				return 0;
