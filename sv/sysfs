@@ -54,11 +54,17 @@ mount_sysfs()
 
 start()
 {
-	local arg fs
+	local arg fs ret
 	[ -w /etc/mtab ] || arg=-n
 
 	mount_sys
 	mount_sysfs
+	ret="${?}"
+	if mount_cgroup; then
+		SV_CGROUP=ENABLE
+		ENV_SVC SV_CGROUP
+	fi
+	return ${ret}
 }
 
 #
