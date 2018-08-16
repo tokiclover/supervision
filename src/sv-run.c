@@ -1193,7 +1193,7 @@ int svc_exec(int argc, const char *argv[]) {
 	sv_svcdeps_load(NULL);
 
 	retval = svc_cmd(&run);
-	if (!file_test(SV_PIDFILE, 'e'))
+	if (access(SV_PIDFILE, F_OK))
 		atexit(sv_cleanup);
 	switch(retval) {
 	case -EBUSY:
