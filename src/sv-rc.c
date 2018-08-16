@@ -364,9 +364,9 @@ void sv_cleanup(void)
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
-	if (file_test(SV_ENVIRON, 'e'))
+	if (!access(SV_ENVIRON, F_OK))
 		unlink(SV_ENVIRON);
-	if (file_test(SV_PIDFILE, 'e'))
+	if (!access(SV_PIDFILE, F_OK))
 		unlink(SV_PIDFILE);
 }
 
