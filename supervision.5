@@ -682,81 +682,83 @@ and
 for white.
 
 .SH BUILTINS
-.TS
-tab (@);
-l lx.
-\fBinfo [MESSAGE]\fR@T{
+.TP
+.B info
+.RB [\| MESSAGE \|]
 Print notice message to standard output
-T}
-\fBwarn [MESSAGE]\fR@T{
+.TP
+.B warn
+.RB [\| MESSAGE \|]
 Print warning message to standard output
-T}
-\fBerror [MESSAGE]\fR@T{
+.TP
+.B error
+.RB [\| MESSAGE \|]
 Print error message to standard error
-T}
-\fBbegin [MESSAGE]\fR@T{
+.TP
+.B begin
+.RB [\| MESSAGE \|]
 Print beginning message to standard output
-T}
-\fBend [MESSAGE]\fR@T{
+.TP
+.B end
+.RB [\| MESSAGE \|]
 Print ending message to standard output
-T}
-\fBfstabinfo [OPTIONS] MOUNTPOINTS\fR@T{
+.TP
+.BR fstabinfo \ \| [ OPTIONS ] \ MOUNTPOINTS \|
 Get information of
 .BR fstab (5)
 entries
 (see \fB@LIBDIR@/sv/bin/fstabinfo --help\fR for more inforamtion)
-T}
-\fBmountinfo [OPTIONS] MOUNTPOINTS\fR@T{
+.TP
+.BR mountinfo \ \| [ OPTIONS ] \ MOUNTPOINTS \|
 Get information of current
 .BR mount (8)
 points
 (see \fB@LIBDIR@/sv/bin/mountinfo --help\fR for more information)
-T}
-\fBdevice_info [-a|--all] DEVICES\fR@T{
+.TP
+.BR device_info \ \| [ \-a | \-\-all ] \ DEVICES \|
 Probe /proc/{devices,misc} device info
-T}
-\fBDOT [-e|-d] FILES\fR@T{
+.TP
+.BR DOT \ \| [ \-e | \-d ] \ FILES \|
 Dot or source builtin wrapper (\fI-e|-d\fR to print errors and \fI-d\fR to return ASAP
 if an error occur); \fBSOURCE\fR is an alias of this builtin
-T}
-\fBENV_SET VARS...\fR@T{
+.TP
+.BR ENV_SET \ \| VAR \ ... \|
 Save persistent environment variables (\fIenv_svc\fR alias)
-T}
-\fBsvc_cmd\fR@T{
+.TP
+.B svc_cmd
 Run a supported service command
-T}
-\fBENV_DEL VARS...\fR@T{
+.TP
+.BR ENV_DEL \ \| VAR \ ... \|
 Remove persistent environment variables (\fIenv_del\fR alias)
-T}
-\fBsvc_down -(d|r)\fR@T{
+.TP
+.BR svc_down \ (\| \-d | \-r \|)
 Set up a service as down (SUPERVISION)
-T}
-\fBsvc_mark -(S|d|f|s|u)\fR@T{
+.TP
+.BR svc_mark \ (\| \-S | \-d | \-f | \-s | \-u \|)
 Set defined service status
-T}
-\fBsvc_state -(a|d|e|f|s)\fR@T{
+.TP
+.BR svc_state \ (\| \-a | \-d | \-e | \-f | \-s \|)
 Get defined service status
-T}
-\fBsvc_del\fR@T{
+.TP
+.B svc_del
 Remove service from runlevel directory
-T}
-\fBsvc_remove\fR@T{
+.TP
+.B svc_remove
 Clean up service from running directory
-T}
-\fBsvc_sig -SIGNAL\fR@T{
+.TP
+.BR svc_sig \ \| \-SIGNAL \|
 Send a particular SIGNAL to the daemon service
-T}
-\fBsvc_wait [-E] [-p] TIMEOUT FILE\fR@T{
+.TP
+.BR svc_wait \ \| [ \-E ] \ [ \-p ] \ TIMEOUT \ FILE \|
 Wait a service file to appear or disapear--with \fI-E\fR option; add \fI-p\fR for
-PID[file] checking
-T}
-\fBsvc_zap\fR@T{
+PID checking
+.TP
+.B svc_zap
 Remove temporary service files
-T}
-\fBwaitfile [-m] [-E] TIMEOUT FILE\fR@T{
-Wait for file to appear or disapear--with \fI-E\fR option
-T}
-.TE
+.TP
+.BR waitfile \ \| [ OPTIONS ] \ [ \-E ] \ [ \-t ] \  TIMEOUT \ [ \-f ] \  FILE \|
+Wait for file to appear or disapear--with \fI-E\fR argument;
+see \fI@LIBDIR@/sv/bin/waitfile --help\fR for more information.
 
 .SH RUNLEVELS
 Superivision is organized in seven distinct runlevels like the classic SystemV
@@ -1080,7 +1082,7 @@ Simple and cheap mountpoints utility
 .I @LIBDIR@/sv/bin/waitfile
 Simple and cheap wait file utility (the binary behind \fIsvc_wait\fR shell function)
 .TP
-.B SYMLINKS\ \fR(binary symlinks)
+.B SYMLINKS:
 .RB \| @LIBDIR@/sv/bin/envdir \|
 .RB \| @LIBDIR@/sv/bin/envuidgid \|
 .RB \| @LIBDIR@/sv/bin/fghack \|
