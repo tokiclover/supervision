@@ -1031,6 +1031,7 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 static int svc_state(const char *svc, int status)
 {
 	char path[PATH_MAX], *ptr = NULL;
+	int fd;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%s, %c)\n", __func__, svc, status);
@@ -1066,8 +1067,11 @@ static int svc_state(const char *svc, int status)
 			return 0;
 	}
 	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
-	if (!file_test(path, 'e')) return 0;
-	return 1;
+	if ((fd = open(path, O_RDONLY, 0644)) > 0) {
+		(void)close(fd);
+		return 1;
+	}
+	return 0;
 }
 
 static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
