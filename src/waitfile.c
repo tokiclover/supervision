@@ -36,13 +36,14 @@ static void sighandler(int sig);
 static void sigsetup(void);
 
 static char *NM, *FP;
-static int EF, MF;
+static int EF, MF, PF;
 static unsigned long int TM;
 
-static const char *shortopts = "Ef:hmn:t:v";
+static const char *shortopts = "Ef:hmn:p:t:v";
 static const struct option longopts[] = {
 	{ "file"   ,  0, NULL, 'f' },
 	{ "name"   ,  0, NULL, 'n' },
+	{ "pid"    ,  0, NULL, 'p' },
 	{ "timeout",  0, NULL, 't' },
 	{ "noexits",  0, NULL, 'E' },
 	{ "message",  0, NULL, 'm' },
@@ -53,6 +54,7 @@ static const struct option longopts[] = {
 static const char *longopts_help[] = {
 	"File path to check",
 	"Name [tail] to display",
+	"Check PID existance",
 	"Timeout in second(s)",
 	"Check file no-existance",
 	"Print wait massage",
@@ -140,13 +142,19 @@ static int waitfile(void)
 	if (FP == WF || !strcmp(WF, FP)) {
 		PF++;
 		wf++;
+getpid:
 		if ((fd = open(FP, O_RDONLY, 0644)) < 0)
 			return 0;
 		if ((fp = fdopen(fd, "r"))) {
 			if (!fscanf(fp, "pid=%d:", &pid)) pid = 0;
 			(void)close(fd);
 		}
+		if ((pid == getpid())) {
+			(void)unlink(FP);
+			return 0;
+		}
 	}
+	else if (PF) goto getpid;
 
 	for (i = 0; i < TM; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
@@ -162,14 +170,17 @@ static int waitfile(void)
 				(void)unlink(FP);
 				return 0;
 			}
-			if (pid && kill(pid, 0)) return 0;
+			if (pid && kill(pid, 0)) {
+				(void)unlink(FP);
+				return 0;
+			}
 
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
 				return EXIT_FAILURE;
 		}
 		if (!(++i % ssec) && MF) {
-			if (NM)
+			if (wf)
 				printf("%s%s%s: %sinfo%s: waiting for `%s' (%d seconds)\n",
 						print_color(COLOR_YLW, COLOR_FG), NM,
 						print_color(COLOR_RST, COLOR_RST),
@@ -211,6 +222,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'n':
 			NM = optarg;
+			break;
+		case 'p':
+			PF++;
 			break;
 		case 't':
 			TM = strtoul(optarg, NULL, 10);
