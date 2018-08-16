@@ -351,6 +351,9 @@ svc_env()
 		(*) opt="opts/${SVC_NAME}";;
 	esac
 	for env; do
+		sed "/^${env}=/d" -i ${SV_TMPDIR}/env >${NULL} 2>&1
+	done
+	for env; do
 		eval echo "${env}=\"'\$${env}'\""
 	done >>"${SV_TMPDIR}/${opt}"
 }
