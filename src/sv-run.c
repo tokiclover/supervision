@@ -937,7 +937,7 @@ static void svc_zap(const char *svc)
 
 	for (i = 0; dirs[i]; i++) {
 		snprintf(path, sizeof(path), "%s/%s", dirs[i], svc);
-		if (file_test(path, 'e'))
+		if (!access(path, F_OK))
 			unlink(path);
 	}
 }
