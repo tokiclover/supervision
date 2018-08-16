@@ -209,7 +209,7 @@ static char *get_cmdline_option(const char *ent)
 	char *line = NULL, *ptr, path[] = "/proc/cmdline", *val = NULL;
 	size_t len = 0;
 
-	if (!file_test(path, 'e'))
+	if (access(path, F_OK))
 		return NULL;
 	if (!(fp = fopen(path, "r")))
 		return NULL;
