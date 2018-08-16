@@ -402,7 +402,7 @@ int svc_cmd(struct svcrun *run)
 				snprintf(buf, sizeof(buf), "%s/%s", SV_SVCDIR, run->name);
 			else
 				break;
-			if (file_test(buf, 'e')) {
+			if (!access(buf, F_OK)) {
 				retval = 0;
 				break;
 			}
@@ -467,7 +467,7 @@ int svc_cmd(struct svcrun *run)
 
 		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR, sv_init_level[sv_init],
 				run->name);
-		if (file_test(buf, 'e')) {
+		if (!access(buf, F_OK)) {
 			if (run->cmd == SV_SVC_CMD_DEL)
 				unlink(buf);
 			return 0;
