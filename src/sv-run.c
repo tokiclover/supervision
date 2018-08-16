@@ -1015,13 +1015,13 @@ static int svc_mark(struct svcrun *run, int status, const char *what)
 
 				if (fd == 1) {
 					snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
-					if (file_test(path, 'e'))
+					if (!access(path, F_OK))
 						unlink(path);
 				}
 			}
 		default:
 			snprintf(path, sizeof(path), "%s/%s", ptr, run->name);
-			if (file_test(path, 'e'))
+			if (!access(path, F_OK))
 				return unlink(path);
 			else
 				return 0;
