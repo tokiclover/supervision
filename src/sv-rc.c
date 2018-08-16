@@ -445,9 +445,9 @@ static int sv_system_detect(void)
 #endif
 
 #ifdef __NetBSD__
-	if (file_test("/kern/xen/privcmd", 'e'))
+	if (!access("/kern/xen/privcmd", F_OK))
 		return SV_KEYWORD_XEN0;
-	if (file_test("/kern/xen", 'e'))
+	if (!access("/kern/xen", F_OK))
 		return SV_KEYWORD_XENU;
 #endif
 
@@ -468,7 +468,7 @@ static int sv_system_detect(void)
 			return *cid;
 	} while (*++cid);
 
-	if (file_test("/proc/xen", 'e')) {
+	if (!access("/proc/xen", F_OK)) {
 		if (!file_regex("/proc/xen/capabilities", "control_d"))
 			return SV_KEYWORD_XEN0;
 		return SV_KEYWORD_XENU;
@@ -477,7 +477,7 @@ static int sv_system_detect(void)
 		return SV_KEYWORD_UML;
 	else if (!file_regex("/proc/self/status", "(s_context|VxID):[[:space:]]*[1-9]"))
 		return SV_KEYWORD_VSERVER;
-	else if (file_test("/proc/vz/veinfo", 'e') && !file_test("/proc/vz/version", 'e'))
+	else if (!access("/proc/vz/veinfo", F_OK) && access("/proc/vz/version", F_OK))
 		return SV_KEYWORD_OPENVZ;
 	else if (!file_regex("/proc/self/status", "envID:[[:space:]]*[1-9]"))
 		return SV_KEYWORD_OPENVZ;
