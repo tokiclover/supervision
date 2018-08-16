@@ -253,7 +253,7 @@ static const char *svc_run_level(const char *level)
 
 	if (level)
 		flags |= O_TRUNC|O_WRONLY;
-	else if (!file_test(path, 'e'))
+	else if (access(path, F_OK))
 		return NULL;
 	else
 		flags |= O_RDONLY;
