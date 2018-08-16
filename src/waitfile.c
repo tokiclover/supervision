@@ -9,6 +9,7 @@
  * @(#)waitfile.c  0.2.0 2016/12/24
  */
 
+#include "config.h"
 #include <errno.h>
 #include <getopt.h>
 #include <poll.h>
@@ -115,7 +116,12 @@ static int waitfile(void)
 	int i, j;
 	int fd;
 	int FF;
+	int wf = 0;
 	long unsigned int msec = WAIT_MSEC, nsec, ssec = 1;
+	char WF[512] = RUNDIR "/sv/.tmp/wait/";
+	size_t len = strlen(WF);
+	FILE * fp;
+	pid_t pid = 0;
 
 	if (TM < ssec) {
 		nsec = TM;
@@ -127,15 +133,37 @@ static int waitfile(void)
 
 	if (EF) FF = O_RDONLY;
 	else    FF = O_WRONLY | O_EXCL | O_CREAT;
+
+	if (!NM) NM = strrchr(FP, '/')+1LU;
+	snprintf(WF+len, sizeof(WF)-len, "%s", NM);
+	if (!FP) FP = WF;
+	if (FP == WF || !strcmp(WF, FP)) {
+		PF++;
+		wf++;
+		if ((fd = open(FP, O_RDONLY, 0644)) < 0)
+			return 0;
+		if ((fp = fdopen(fd, "r"))) {
+			if (!fscanf(fp, "pid=%d:", &pid)) pid = 0;
+			(void)close(fd);
+		}
+	}
+
 	for (i = 0; i < TM; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
 			fd = open(FP, FF, 0644);
 			if (fd < 0 &&  EF) return 0;
 			if (fd > 0 && !EF) {
+				if (wf) {
+					if ((fp = fdopen(fd, "w"))) {
+						fprintf(fp, "pid=%d:command=wait", getpid());
+					}
+				}
 				(void)close(fd);
 				(void)unlink(FP);
 				return 0;
 			}
+			if (pid && kill(pid, 0)) return 0;
+
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
 				return EXIT_FAILURE;
@@ -211,8 +239,8 @@ int main(int argc, char *argv[])
 	}
 	argc--; argv++;
 	if (!FP) FP = *argv;
-	if (!FP) {
-		ERR("FILENAME argument is required!\n", NULL);
+	if (!FP && !NM) {
+		ERR("`[-f] FILENAME' or `-n NAME' argument is required!\n", NULL);
 		goto reterr;
 	}
 
