@@ -35,7 +35,7 @@ static void sighandler(int sig);
 static void sigsetup(void);
 
 static char *NM, *FP;
-static int EF, MF, PF;
+static int EF, MF;
 static unsigned long int TM;
 
 static const char *shortopts = "Ef:hmn:t:v";
@@ -202,23 +202,23 @@ int main(int argc, char *argv[])
 	}
 	argc -= optind, argv += optind;
 
-	if (argc < 2) {
-		ERR("Insufficient number of arguments -- `%d' (two required)\n", argc);
-		fprintf(stderr, "usage: %s [OPTIONS] [-t] TIMEOUT [-f] FILENAME\n", progname);
-		exit(EXIT_FAILURE);
+	if (!TM) {
+		TM = strtoul(*argv, NULL, 10);
+		if (errno == ERANGE) {
+			ERR("TIMOUT argument is required!\n", NULL);
+			goto reterr;
+		}
 	}
-
-	TM = strtoul(*argv, NULL, 10);
-	if (errno == ERANGE) {
-		ERR("Invalid agument -- `%s'\n", *argv);
-		exit(EXIT_FAILURE);
-	}
-
-	FP = *++argv;
-	if (!FP || !strlen(FP)) {
-		ERR("invalid file -- a file path is required\n", NULL);
-		exit(EXIT_FAILURE);
+	argc--; argv++;
+	if (!FP) FP = *argv;
+	if (!FP) {
+		ERR("FILENAME argument is required!\n", NULL);
+		goto reterr;
 	}
 
 	return waitfile();
+reterr:
+	ERR("invalid agument -- `%s'\n", *argv);
+	fprintf(stderr, "usage: %s [OPTIONS] [-t] TIMEOUT [-f] FILENAME\n", progname);
+	exit(EXIT_FAILURE);
 }
