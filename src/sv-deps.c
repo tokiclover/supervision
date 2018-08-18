@@ -500,7 +500,9 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		SERVICES.svcdeps = sv_svcdeps_new();
 
 	/* initialize SV_RUNDIR and start _SVSCAN_ if necessary */
-	if (!file_test(SV_TMPDIR_DEPS, 'd')) {
+	snprintf(cmd, sizeof(cmd), "%s/svscan.pid", SV_TMPDIR);
+	if (access(cmd, F_OK)) {
+svscan:
 		if (sv_level == SV_SYSINIT_LEVEL) {
 			arg = "--background";
 			ptr = (char*)sv_init_level[sv_level];
@@ -517,6 +519,25 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		}
 		else {
 			EXEC_SVSCAN;
+		}
+	}
+	else {
+		if ((fp = fopen(cmd, "r"))) {
+			if (fscanf(fp, "%d", &p)) {
+				if (kill(p, 0)) goto svscan;
+			}
+			else {
+#ifdef SV_DEBUG
+				if (sv_debug) DBG("Failed to read svscan pid from `%s'\n", cmd);
+#endif
+				goto svscan;
+			}
+		}
+		else {
+#ifdef SV_DEBUG
+			if (sv_debug) DBG("Failed to open svscan pidfile `%s'\n", cmd);
+#endif
+			goto svscan;
 		}
 	}
 
