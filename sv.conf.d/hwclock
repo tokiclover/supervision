@@ -2,6 +2,21 @@
 # $Id: /etc/sv.conf.d/hwclock, 2016/06/06           Exp $
 # 
 #
+# *** IMPORTANT NOTE: ***
+#
+# When using hardware time to synchronize system time, with a modern kernel
+# (v3.9 or latter), the Linux kernel handle the synchronization internally.
+# So, checkout if CONFIG_RTC_HCTOSYS is enabled; if so, remove the service
+# from sysboot runlevel by issuing `sv-run --sysboot clock del'.
+#
+# If a ntp daemon is used to keep the system clock in synchronisation with
+# a server, CONFIG_RTC_SYSTOHC should be enabled.
+#
+# See https://wiki.gentoo.org/wiki/System_time for more information.
+#
+# *** END OF THE NOTE ***
+#
+#
 # Set clock to 'UTC' (also known as Greenwich Mean Time or GMT for short)
 # if the hardware is set up to UTC. Else, set clock to 'local' if the hardware
 # clock is set to 'local'; e.g. Windows dual boot users shall set the clock to
