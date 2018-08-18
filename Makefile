@@ -187,6 +187,7 @@ dist_SYSINIT = \
 dist_SYSBOOT = \
 	$(EXTRA_SYSBOOT_SERVICES) \
 	checkfs \
+	hostname \
 	localfs \
 	loopback \
 	miscfs \
