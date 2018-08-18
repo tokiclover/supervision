@@ -257,6 +257,8 @@ svc_wait()
 				rm -f ${x}
 				[ -n "${arg}" ] && return 0
 			fi
+		elif [ -z "${arg}" ] && ${__wait__}; then
+			return 0
 		fi
 	fi
 
