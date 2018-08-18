@@ -117,7 +117,7 @@ static int waitfile(void)
 {
 	int i, j;
 	int fd;
-	int FF;
+	int FF = O_RDONLY;
 	int wf = 0;
 	long unsigned int msec = WAIT_MSEC, nsec, ssec = 1;
 	char WF[512] = RUNDIR "/sv/.tmp/wait/";
@@ -133,13 +133,11 @@ static int waitfile(void)
 		nsec = TM % ssec;
 	nsec = nsec ? nsec : ssec;
 
-	if (EF) FF = O_RDONLY;
-	else    FF = O_WRONLY | O_EXCL | O_CREAT;
-
 	if (!NM) NM = strrchr(FP, '/')+1LU;
 	snprintf(WF+len, sizeof(WF)-len, "%s", NM);
 	if (!FP) FP = WF;
 	if (FP == WF || !strcmp(WF, FP)) {
+		FF = O_WRONLY | O_EXCL | O_CREAT;
 		PF++;
 		wf++;
 getpid:
@@ -153,6 +151,7 @@ getpid:
 			(void)unlink(FP);
 			return 0;
 		}
+		if (wf && !pid) return 0;
 	}
 	else if (PF) goto getpid;
 
@@ -166,8 +165,6 @@ getpid:
 						fprintf(fp, "pid=%d:command=wait", getpid());
 					}
 				}
-				(void)close(fd);
-				(void)unlink(FP);
 				return 0;
 			}
 			if (pid && kill(pid, 0)) {
