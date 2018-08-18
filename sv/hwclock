@@ -1,8 +1,8 @@
 #!/sbin/sv-run
 #
-# $Id: @(#) /etc/sv/clock   2017/01/12                                Exp $
+# $Id: @(#) /etc/sv/hwclock   2018/08/18                              Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $
-# $C$: Copyright (c) 2015-2017 tokiclover <tokiclover@gmail.com>      Exp $
+# $C$: Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>      Exp $
 # $C$: Copyright (c) 2007-2008 Roy Marples <roy@marples.name>         Exp $
 #
 
@@ -10,6 +10,7 @@ description="Set up hardware/system clock"
 description_save="Save the current system clock to hardware clock"
 description_show="Display the current hardware time"
 SVC_BEFORE="*"
+SVC_PROVIDE="clock"
 SVC_COMMANDS="show"
 SVC_STARTED_COMMANDS="save"
 SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver xenu"

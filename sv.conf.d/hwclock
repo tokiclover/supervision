@@ -1,6 +1,7 @@
 #
-# $Id: /etc/sv.conf.d/clock, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.d/hwclock, 2016/06/06           Exp $
 # 
+#
 # Set clock to 'UTC' (also known as Greenwich Mean Time or GMT for short)
 # if the hardware is set up to UTC. Else, set clock to 'local' if the hardware
 # clock is set to 'local'; e.g. Windows dual boot users shall set the clock to

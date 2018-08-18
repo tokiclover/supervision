@@ -554,7 +554,7 @@ LINUX_DIST_EXTRA="
 "
 LINUX_RUNSCRIPT_SERVICES="
 	alsasound
-	clock
+	hwclock
 	console
 	device-mapper
 	dmcrypt
