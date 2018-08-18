@@ -66,7 +66,7 @@ dist_SV_SVCS  = \
 	dhcrelay \
 	dbus \
 	dns \
-	getty-tty1 \
+	getty.tty1 \
 	git-daemon \
 	gpm \
 	hostapd \
@@ -123,9 +123,9 @@ dist_SV_LOGS = \
 	zed/log
 dist_SVC_INSTANCES  = \
 	$(EXTRA_SERVICE_INSTANCES) \
-	getty-tty6:getty-tty1 getty-tty5:getty-tty1 getty-tty4:getty-tty1 \
-	getty-tty3:getty-tty1 getty-ttyS0:getty-tty1 getty-ttyS1:getty-tty1 \
-	getty-tty2:getty-tty1 \
+	getty.tty6:getty.tty1 getty.tty5:getty.tty1 getty.tty4:getty.tty1 \
+	getty.tty3:getty.tty1 getty.ttyS0:getty.tty1 getty.ttyS1:getty.tty1 \
+	getty.tty2:getty.tty1 \
 	tmpfiles.setup:tmpfiles.dev \
 	rrdcached.nagios:rrdcached \
 	spawn-fcgi.lighttpd:spawn-fcgi.nginx \
@@ -202,7 +202,7 @@ dist_DEFAULT = \
 	$(EXTRA_DEFAULT_SERVICES) \
 	local \
 	sshd \
-	getty-tty6 getty-tty5 getty-tty4 getty-tty3 getty-tty2 getty-tty1
+	getty.tty6 getty.tty5 getty.tty4 getty.tty3 getty.tty2 getty.tty1
 dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
@@ -378,7 +378,7 @@ uninstall: uninstall-doc
 		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SH_BINS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
 		$(dist_SH_LIBS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
-		$(DESTDIR)$(SV_SVCDIR)/getty-tty*
+		$(DESTDIR)$(SV_SVCDIR)/getty.tty*
 ifeq ($(RUNIT_INIT_STAGE),yes)
 	rm -fr $(DESTDIR)$(dist_RUNIT_INIT_D)
 endif

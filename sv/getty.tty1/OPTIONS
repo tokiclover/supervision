@@ -1,13 +1,13 @@
 #
-# $Id: @(#) /etc/sv/getty-tty1/OPTIONS                                Exp $
+# $Id: @(#) /etc/sv/getty.tty1/OPTIONS                                Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 #
 
-TTY="${SVC_NAME#*-}"
+TTY="${SVC_NAME#*.}"
 #
 # XXX: chose a getty ommand or the first found will be used;
 #      or else, make symbolic links with command name prefix
-#      instead of the generic `getty' name like 'agetty-tty<N>'
+#      instead of the generic `getty' name like 'agetty.tty<N>'
 SVC_CMD=/sbin/agetty
 #SVC_CMD=/sbin/mgetty
 #SVC_CMD=/sbin/mingetty

@@ -12,6 +12,14 @@ Renamed `depgen' shell script to `sv-deps.sh' for clarity;
 Renamed `runscript' shell script to `sv-run.sh';
 Renamed `init-stage' shell script to `sv-init.sh';
 Renamed `depgen' shell script to `sv-deps.sh';
+Renamed `getty' service instances rightly with a `.' (dot)
+instead of a hyphen;
+
+*IMPORTANT NOTE**: if getty service are started, the sysadmin should add
+the old symbolc links with
+`for s in /etc/sv/getty-tty{2,3,4,5,6,S0,S1}; do ln -fs getty.tty1 $d; done'
+before shuting down the service or system!
+
 
 Manpages was cleaned and updated to v0.14.0;
 See `supervision(5)' manual page for more information about the changes;
