@@ -207,7 +207,7 @@ svc_init_default()
 {
 	local args cmd dir pid count
 	SVC_DEBUG "function=svc_init_default( ${@} )"
-	svc_wait 30 ${SV_PIDFILE}
+	svc_wait 30 ${SV_PIDFILE} || svc_rescue_shell
 
 	if [ "${SV_CMD}" = "runsvdir" ]; then
 		if [ "${SV_UNAME}" = "Linux" ]; then
