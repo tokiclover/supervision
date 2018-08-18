@@ -708,12 +708,83 @@ Get information of
 .BR fstab (5)
 entries
 (see \fB@LIBDIR@/sv/bin/fstabinfo --help\fR for more inforamtion)
+
+
+.RB \| \-m | \-\-mount \|
+Mount the entry;
+.rb
+.RB \| \-r | \-\-remount \|
+Remount the entry;
+.rb
+.RB \| \-d | \-\-device \|
+Print device node;
+.rb
+.RB \| \-o | \-\-options \|
+Print the mount options;
+.rb
+.RB \| \-t | \-\-fstype \|
+Print the file system type;
+.rb
+.RB \| \-a | \-\-mntargs \|
+Print
+.BR mount (8)
+command line arguments;
+.rb
+.RB \| \-q | \-\-quiet \|
+Enable quiet mode;
+
 .TP
 .BR mountinfo \ \| [ OPTIONS ] \ MOUNTPOINTS \|
 Get information of current
 .BR mount (8)
 points
 (see \fB@LIBDIR@/sv/bin/mountinfo --help\fR for more information)
+
+.RB \| \-D | \-\-device-skip-regex \ ARGUMENT \|
+Device node regex to skip;
+.rb
+.RB \| \-O | \-\-optionsèskip-regex \ ARGUMANT \|
+Mount options regex to skip;
+.rb
+.RB \| \-T | \-\-fstype-skip-regex \ ARGUMENT \|
+File system type regex to skip;
+.rb
+.RB \| \-P | \-\-mpoint-skip-regex \ ARGUMENT \|
+Mount point regex to skip;
+.rb
+.RB \| \-d | \-\-device-regex \ ARGUMENT \|
+Device regex to match;
+.rb
+.RB \| \-o | \-\-options-regex \ ARGUMENT \|
+Mount options regex to match;
+.rb
+.RB \| \-t | \-\-fstype-regex \ ARGUMENT \|
+File system type regex to match;
+.rb
+.RB \| \-p | \-\-mpoint-regx \|
+Mount point regex to match;
+.rb
+.RB \| \-m | \-\-options \|
+Print mount options;
+.rb
+.RB \| \-b | \-\-device \|
+Print device node;
+.rb
+.RB \| \-f | \-\-fstype \|
+Print file system type;
+.rb
+.RB \| \-n | \-\-netdev \|
+Match network device(s);
+.rb
+.RB \| \-N | \-\-nonetdev \|
+Match no network devices(s);
+.rb
+.RB \| \-q | \-\-quiet \|
+Enable quiet mode;
+.rb
+.RB \| \-r | \-\-reverse \|
+Print in reverse order;
+
 .TP
 .BR device_info \ \| [ \-a | \-\-all ] \ DEVICES \|
 Probe /proc/{devices,misc} device info
@@ -722,13 +793,13 @@ Probe /proc/{devices,misc} device info
 Dot or source builtin wrapper (\fI-e|-d\fR to print errors and \fI-d\fR to return ASAP
 if an error occur); \fBSOURCE\fR is an alias of this builtin
 .TP
-.BR ENV_SET \ \| VAR \ ... \|
+.BR ENV_SET \ \| VAR1 \ VAR2 \ ... \|
 Save persistent environment variables (\fIenv_svc\fR alias)
 .TP
 .B svc_cmd
 Run a supported service command
 .TP
-.BR ENV_DEL \ \| VAR \ ... \|
+.BR ENV_DEL \ \| VAR1 \ VAR2 \ ... \|
 Remove persistent environment variables (\fIenv_del\fR alias)
 .TP
 .BR svc_down \ (\| \-d | \-r \|)
@@ -736,9 +807,41 @@ Set up a service as down (SUPERVISION)
 .TP
 .BR svc_mark \ (\| \-S | \-d | \-f | \-s | \-u \|)
 Set defined service status
+
+.RB \| \-S \|
+Set service status to \fIstopped\fR;
+.rb
+.RB \| \-d \|
+Set the service status to \fIdown\fR;
+.rb
+.RB \| \-f \|
+Set service status to \ffailed\fR;
+.rb
+.RB \| \-s \|
+Set service status to \fIstarted\fR;
+.rb
+.RB \| \-u \|
+Set service status to \fIup\fR;
+
 .TP
 .BR svc_state \ (\| \-a | \-d | \-e | \-f | \-s \|)
 Get defined service status
+
+.RB \| \-S \|
+Test service status to \fIstopped\fR;
+.rb
+.RB \| \-d \|
+Test the service status to \fIdown\fR;
+.rb
+.RB \| \-f \|
+Test service status to \ffailed\fR;
+.rb
+.RB \| \-s \|
+Test service status to \fIstarted\fR;
+.rb
+.RB \| \-u \|
+Test service status to \fIup\fR;
+
 .TP
 .B svc_del
 Remove service from runlevel directory
@@ -758,6 +861,19 @@ Remove temporary service files
 .TP
 .BR waitfile \ \| [ OPTIONS ] \ [ \-E ] \ [ \-t ] \  TIMEOUT \ [ \-f ] \  FILE \|
 Wait for file to appear or disapear--with \fI-E\fR argument;
+
+.RB \| \-E | \-\-noexist \|
+Wait the disppearance of the file instead of the appearance;
+.rb
+.RB [\| \-p | \-\-pid \|]
+Check the pid(file);
+.rb
+.RB \| [ \-t | \-\-timeout ] \ TIMEOUT \|
+Timeout to use in seconds;
+.rb
+.RB \| [ \-f | \-\-file ] \ FILE \|
+File name to wait for;
+
 see \fI@LIBDIR@/sv/bin/waitfile --help\fR for more information.
 
 .SH RUNLEVELS
