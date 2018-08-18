@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-rc.c  0.14.0 2018/07/26
+ * @(#)sv-rc.c  0.14.0 2018/08/18
  */
 
 #include <stdio.h>
@@ -488,7 +488,9 @@ static int sv_system_detect(void)
 
 static int svc_init_level(int level, int argc, const char *argv[])
 {
-	int i, retval = 0;
+	int i, j, retval = 0;
+	char buf[512];
+	SV_String_T *s;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, level, argc, argv);
 #endif
@@ -497,8 +499,22 @@ static int svc_init_level(int level, int argc, const char *argv[])
 		return -ENOENT;
 
 	DEPTREE.list = sv_stringlist_new();
-	for (i = 0; sv_run_level[level][i]; i++)
+	for (i = 0; sv_run_level[level][i]; i++) {
+		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR,
+				sv_init_level[sv_level], sv_run_level[level][i]);
+		if (access(buf, F_OK)) {
+			for (j = 0; j < SERVICES.virt_count; j++)
+				if (!strcmp(SERVICES.virt_svcdeps[j]->virt, sv_run_level[level][i])) {
+					snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR,
+							sv_init_level[sv_level], SERVICES.virt_svcdeps[j]->svc);
+					if (access(buf, F_OK)) continue;
+					s = sv_stringlist_add(DEPTREE.list, SERVICES.virt_svcdeps[j]->svc);
+					s->data = SERVICES.virt_svcdeps[j];
+				}
+			continue;
+		}
 		sv_stringlist_add(DEPTREE.list, sv_run_level[level][i]);
+	}
 
 	svc_deptree_load(&DEPTREE);
 	for (i = DEPTREE.size-1; i >= 0; i--) {
