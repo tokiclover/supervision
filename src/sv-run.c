@@ -906,6 +906,7 @@ static int svc_wait(struct svcrun *run, int timeout, char *path)
 		if (!fscanf(fp, "pid=%d:", &pid)) pid = 0;
 	(void)close(run->lock);
 	run->lock = -1;
+	if (!pid) return 0;
 
 	for (i = 0; i < timeout; ) {
 		for (j = SVC_TIMEOUT_POLL; j <= msec; j += SVC_TIMEOUT_POLL) {
