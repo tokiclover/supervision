@@ -194,6 +194,7 @@ rs_cmd()
 
 svc_sig()
 {
+	local pid
 	SVC_DEBUG "function=svc_sig( ${@} )"
 	if [ -z "${1}" ]; then
 		error "insufficient/invalid argument"
@@ -201,7 +202,8 @@ svc_sig()
 	fi
 
 	if [ -n "${SVC_PIDFILE}" -a -e "${SVC_PIDFILE}" ]; then
-		pkill -${1} -F ${SVC_PIDFILE} -x ${SVC_CMD##*/}
+		read pid <${SVC_PIDFILE}
+		kill -${1} ${pid}
 	else
 		error "no pidfile found -- SVC_PIDFILE should be defined"
 		return 1
