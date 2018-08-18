@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv.h  0.14.0 2018/08/06
+ * @(#)sv.h  0.14.0 2018/08/18
  */
 
 #ifndef SV_H
@@ -22,6 +22,7 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+#include "sv-conf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -133,18 +134,6 @@ enum {
 extern const char *const sv_init_level[];
 
 extern void sv_cleanup(void);
-
-/*
- * retrieve a configuration value like getenv(3)
- * @envp: configuration list;
- * @env: configuration name;
- */
-extern const char *sv_getconf(const char *env);
-/*
- * simple helper to ease yes/no querries of config settings
- * @return: true/false;
- */
-extern int sv_conf_yesno(const char *env);
 
 /* tiny function to print end string like the shell end() counterpart */
 extern int svc_end(const char *svc, int status);
