@@ -25,17 +25,22 @@ start_pre()
 start()
 {
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
-	${lvm} pvscan >${NULL} 2>&1
-	${lvm} vgscan --mknodes >${NULL} 2>&1
-	${lvm} vgchange --noudevsync --sysinit --activate ly >${NULL} 2>&1
+	if [ -e ${SV_RUNDIR} ]; then
+		sv-run -q udev start >${NULL} 2>&1 || UDEV_ARGS=--noudevsync
+		ENV_SET UDEV_ARGS
+	fi
+
+	${lvm} pvscan
+	${lvm} vgscan --mknodes
+	${lvm} vgchange ${args} --sysinit --activate ly
 }
 
 stop()
 {
 	[ "${SV_INITLEVEL}" = "${SV_SHUTDOWN_LEVEL}" ] || return
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
-	${lvm} lvchange --noudevsync --sysinit --activate ln >${NULL} 2>&1
-	${lvm} vgchange --noudevsync --sysinit --activate ln >${NULL} 2>&1
+	${lvm} lvchange ${UDEV_ARGS} --sysinit --activate ln
+	${lvm} vgchange ${UDEV_ARGS} --sysinit --activate ln
 }
 
 #
