@@ -12,6 +12,7 @@ Renamed `depgen' shell script to `sv-deps.sh' for clarity;
 Renamed `runscript' shell script to `sv-run.sh';
 Renamed `init-stage' shell script to `sv-init.sh';
 Renamed `depgen' shell script to `sv-deps.sh';
+Renamed `cmd' (supervision shell script) to `run';
 Renamed `getty' service instances rightly with a `.' (dot)
 instead of a hyphen;
 

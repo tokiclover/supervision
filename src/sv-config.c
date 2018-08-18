@@ -325,7 +325,7 @@ static int svupdate(void)
 	if (sv_debug) DBG("updating `./{run,finish}' files\n", NULL);
 #endif
 	/* update ./{run,finish} symlinks to v0.14.0 */
-	snprintf(np, sizeof(np), "%s/sh/cmd", SV_LIBDIR);
+	snprintf(np, sizeof(np), "%s/sh/run", SV_LIBDIR);
 	for (j = 0; j < 4; j++) {
 		if (!dir[j] || access(dir[j], F_OK)) continue;
 		if (!(od = opendir(dir[j])))
@@ -350,7 +350,7 @@ static int svupdate(void)
 				snprintf(op+len, sizeof(op)-len, "/%s", *cmd);
 				sz = len+5U;
 				if ((readlinkat(ofd, op, op+sz, sizeof(op)-sz) > 0) &&
-					!(strstr(op+sz, "/.opt/")))
+					!(strstr(op+sz, "/.opt/") || strstr(op+sz, "/cmd")))
 					continue;
 				*(op+len) = '\0';
 			}
@@ -474,11 +474,11 @@ static int newsvc(const char *svc)
 	for (i = 0; i < 2; i++) {
 		if (access(buf, F_OK))
 			if (mkdir(buf, 0755))
-				ERROR("Failed to create `%s' directoryn", buf);
+				ERROR("Failed to create `%s' directory", buf);
 		for (j = 0; j < 2; j++) {
 			snprintf(buf+len, sizeof(buf)-len, "/%s", cmd[j]);
 			if (access(buf, F_OK))
-				if (symlink(SV_LIBDIR "/sh/cmd", buf))
+				if (symlink(SV_LIBDIR "/sh/run", buf))
 					ERROR("Failed to create `%s'", buf);
 		}
 		if (log > 0) {

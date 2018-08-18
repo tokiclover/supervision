@@ -34,7 +34,7 @@ dist_EXTRA  = \
 	ChangeLog-v00 ChangeLog-v0.12 \
 	ChangeLog
 dist_SH_BINS  = \
-	lib/sh/cmd \
+	lib/sh/run \
 	lib/sh/tmpfiles \
 	lib/sh/sv-run.sh \
 	lib/sh/sv-init.sh \
@@ -307,7 +307,7 @@ endif
 	$(install_EXEC) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
 	$(install_DATA) -D README.local $(DESTDIR)/usr/local$(SV_SVCDIR).local.d/README
 	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
-		-i $(DESTDIR)$(SV_LIBDIR)/sh/cmd
+		-i $(DESTDIR)$(SV_LIBDIR)/sh/run
 	sed $(dist_MAN_SED) sv-run.8 >$(DESTDIR)$(MANDIR)/man8/sv-run.8
 	sed $(dist_MAN_SED) sv-rc.8 >$(DESTDIR)$(MANDIR)/man8/sv-rc.8
 	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
@@ -341,14 +341,14 @@ install-dir :
 
 $(dist_SV_SVCS): install-dir
 	$(MKDIR_P) $(DESTDIR)$(SV_SVCDIR)/$@
-	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/run
-	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/finish
+	$(LN_S) $(SV_LIBDIR)/sh/run $(DESTDIR)$(SV_SVCDIR)/$@/run
+	$(LN_S) $(SV_LIBDIR)/sh/run $(DESTDIR)$(SV_SVCDIR)/$@/finish
 	$(install_DATA) sv/$@/OPTIONS $(DESTDIR)$(SV_SVCDIR)/$@/
 
 $(dist_SV_LOGS): install-dir
 	$(MKDIR_P) $(DESTDIR)$(SV_SVCDIR)/$@
-	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/run
-	$(LN_S) $(SV_LIBDIR)/sh/cmd $(DESTDIR)$(SV_SVCDIR)/$@/finish
+	$(LN_S) $(SV_LIBDIR)/sh/run $(DESTDIR)$(SV_SVCDIR)/$@/run
+	$(LN_S) $(SV_LIBDIR)/sh/run $(DESTDIR)$(SV_SVCDIR)/$@/finish
 
 $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@

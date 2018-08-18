@@ -4,7 +4,7 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2018-08-04" "0.14.0" "File Format Manual"
+.TH SUPERVISION 5 "2018-08-18" "0.14.0" "File Format Manual"
 .SH NAME
 supervision \- supervision framework init-system and service-manager
 .SH DESCRIPTION
@@ -25,7 +25,7 @@ deamontools[-encore], runit and s6 supervisor are actually supported.
 file for service definition
 and
 .RB \./{\| finish , run \|}
-command files symlinked to \fI@LIBDIR@/sv/sh/cmd\fR.
+command files symlinked to \fI@LIBDIR@/sv/sh/run\fR.
 The same goes for the log directory for \fI./{run,finish}\fR command files.
 .I Envdir
 directory with a global \fI@SYSCONFDIR@/sv/.env/\fR and local
@@ -424,7 +424,7 @@ T}
 The following environment variables are only relevant for
 .B SUPERVISION
 services; many of which have default sane values (see
-.I @SV_LIBDIR@/sh/cmd
+.I @SV_LIBDIR@/sh/run
 for the default values before overriding any.)
 Unless runscript services is used to start daemons that cannot be kept in the
 foreground, defining the following variables are useless for runscript services.
@@ -553,7 +553,7 @@ T}
 .TE
 
 See
-.RB @EXEC_PREFIX@@LIBDIR@/sv/sh/cmd
+.RB @EXEC_PREFIX@@LIBDIR@/sv/sh/run
 for the default and
 .I OPTIONS
 file for services like
@@ -1238,7 +1238,7 @@ standard aliases for system shutdown (with default action.)
 .I @LIBDIR@/sv/sh/SV-CONFIG
 Specific supervision environment configuration file
 .TP
-.I @LIBDIR@/sv/sh/cmd
+.I @LIBDIR@/sv/sh/run
 Default @SYSCONFDIR@/sv/SERVICE/{,log/}{finish,run} command file
 .TP
 .I @LIBDIR@/sv/sh/depgen
