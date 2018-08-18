@@ -263,6 +263,23 @@ static int svupdate(void)
 	DBG("%s(void)\n", __func__);
 #endif
 
+	/* remove outdated cache */
+	snprintf(op, sizeof(op), "%s/.tmp/deps", SV_RUNDIR);
+	if (!access(op, F_OK)) {
+		if (!(od = opendir(op))) {
+			ERR("\007*** Failed to `opendir(%s)': %s\007***\n", op, strerror(errno));
+			WARN("*** Remove the files in `%s'!***", op);
+		}
+		else {
+			if ((ofd = dirfd(od)) < 0)
+				ERROR("failed to `dirfd(%s)'", op);
+			while ((ent = readdir(od))) {
+				if (*ent->d_name == '.') continue;
+				(void)unlinkat(ofd, ent->d_name, 0);
+			}
+		}
+	}
+
 	/* move v0.1[23].0 run level dirs to new v0.14.0 location */
 	for (j = 0; sv_init_level[j]; j++) {
 		snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, j);
