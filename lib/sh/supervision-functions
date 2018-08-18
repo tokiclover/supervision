@@ -307,8 +307,8 @@ svc_depend()
 
 :	${RET_NEED:=0}
 	if [ "${SV_TYPE}" = "sv" ]; then
-		__SVC_DEPEND__="${RET_NEED}"
-		ENV_SET __SVC_DEPEND__
+		SVC_DEPS="${RET_NEED}"
+		ENV_SET SVC_DEPS
 	fi
 	if [ "${RET_NEED}" != 0 ]; then
 		error "Failed to set up service dependencies"
@@ -517,7 +517,7 @@ svc_run()
 		return
 	fi
 	svc_start_pre || return
-	[ "${__SVC_DEPEND__}" = 0 ] || svc_depend || return
+	[ "${SVC_DEPS}" = 0 ] || svc_depend || return
 	#
 	# this is done internaly (rs) already
 	#
