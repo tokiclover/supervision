@@ -79,15 +79,13 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	SV_String_T *ent;
 	int add, pri;
 	int p, t, r;
+	unsigned int l;
+	static unsigned int *DID;
+	static size_t SIZE;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(type=%d, prio=%d, svc=%s, deptree=%p)\n", __func__, type, prio, svc->str, deptree);
 #endif
-
-	/* add service to list if and only if, either a service is {use,need}ed or
-	 * belongs to this particular init level/run level */
-	if (type < SV_SVCDEPS_USE && !sv_stringlist_find(deptree->list, s))
-		return -1;
 
 	if (!d) svc->data = d = sv_svcdeps_find(s);
 	/* insert the real service instead of a virtual one */
@@ -96,6 +94,18 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 			s = d->svc;
 		else return -1;
 	}
+
+	/* add service to list if and only if, either a service is {use,need}ed; or
+	 * belongs to this particular init level/run level; or is already added;
+	 */
+	if (type < SV_SVCDEPS_USE) {
+		if (!sv_stringlist_find(deptree->list, s)) {
+			for (l = 0U; l < SIZE; l++)
+				if (d->did == *(DID+l)) break;
+			if (l == SIZE) return -1;
+		}
+	}
+
 	if (prio < 0) {
 		if (d->deps[SV_SVCDEPS_BEFORE]) prio = 1;
 		else prio = 0;
@@ -107,8 +117,14 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 #endif
 
 	/* expand the list when needed */
-	if (pri > deptree->size && deptree->size < SV_DEPTREE_MAX)
+	if (pri > deptree->size && deptree->size < SV_DEPTREE_MAX) {
+		if (!deptree->size) {
+			SIZE = 128LU;
+			DID = err_realloc(DID, SIZE*sizeof(int));
+			memset(DID, 0, SIZE*sizeof(int));
+		}
 		sv_deptree_alloc(deptree);
+	}
 
 	if (pri < SV_DEPTREE_MAX) {
 		/* handle {after,use,need} type  which insert dependencies above */
@@ -172,8 +188,19 @@ static int sv_deptree_add(int type, int prio, SV_String_T *svc, SV_DepTree_T *de
 	ent = sv_stringlist_add(deptree->tree[prio], s);
 	ent->data = d;
 #ifdef SV_DEBUG
-			if (sv_debug) DBG("add  : p=%-4d s=%-8s d=%p\n", prio, s, d);
+	if (sv_debug) DBG("add  : p=%-4d s=%-8s d=%p\n", prio, s, d);
 #endif
+
+	/* add the new entry to the DID table */
+	for (l = 0U; l < SIZE; l++)
+		if (!*(DID+l)) break;
+	if (SIZE == l) {
+		SIZE += 128U;
+		DID = err_realloc(DID, sizeof(int)*SIZE);
+		memset(DID+SIZE-128LU, 0, 128LU);
+	}
+	*(DID+l) = d->did;
+
 	return prio;
 }
 
@@ -256,7 +283,6 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 void svc_deptree_load(SV_DepTree_T *deptree)
 {
 	SV_String_T *ent;
-	sv_deptree_alloc(deptree);
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
 #endif
@@ -276,8 +302,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 #endif
 
 	/* load previous deptree file if any, or initialize a new list */
-	if (sv_deptree_file_load(deptree))
-		sv_deptree_alloc(deptree);
+	sv_deptree_file_load(deptree);
 	if (!deptree->list)
 		deptree->list = sv_svclist_load(NULL);
 	sv_svcdeps_load(NULL);
