@@ -61,7 +61,7 @@ static const char *const sv_run_level[][8] = {
 	{ NULL },
 	{ NULL },
 	{ NULL },
-	{ "hwclock", "hostname", NULL },
+	{ "clock", "hostname", NULL },
 	{ "dev", "checkfs", "rootfs", "localfs", "miscfs", "console", "net",
 		"networkfs", "logger", NULL },
 	{ NULL },
