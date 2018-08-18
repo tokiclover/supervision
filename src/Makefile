@@ -7,7 +7,7 @@ dist_HDRS := error.h helper.h
 
 .SECONDEXPANSION:
 checkpath_SRCS := checkpath.c error.c
-sv-config_SRCS := sv-config.c error.c file-test.c
+sv-config_SRCS := $(dist_SRCS) sv-config.c sv-conf.c
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
 fstabinfo_SRCS := fstabinfo.c error.c
@@ -15,7 +15,7 @@ mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
 
 sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c
-sv-run_HDRS   := sv.h
+sv-run_HDRS   := sv.h sv-conf.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
@@ -41,7 +41,7 @@ sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(sv-run_HDRS)
 checkpath: $(checkpath_SRCS:%.c=%.o) error.h
 fstabinfo: $(fstabinfo_SRCS:%.c=%.o) error.h
 mountinfo: $(mountinfo_SRCS:%.c=%.o) sv-list.h
-sv-config: $(sv-config_SRCS:%.c=%.o) error.h
+sv-config: $(sv-config_SRCS:%.c=%.o) $(dist_HDRS) sv-conf.h
 sv-shutdown: $(sv-shutdown_SRCS:%.c=%.o) error.h
 $(simple_BINS): $$@.o $($$@_SRCS:%.c=%.o)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)

@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-config.c  0.14.0 2018/07/18
+ * @(#)sv-config.c  0.14.0 2018/08/18
  */
 
 #include <errno.h>
@@ -24,6 +24,8 @@
 #include <paths.h>
 #include "config.h"
 #include "error.h"
+#include "helper.h"
+#include "sv-conf.h"
 
 #define VERSION "0.14.0"
 #define SV_SVCDIR SYSCONFDIR "/sv"
@@ -31,9 +33,9 @@
 #define SV_RUNDIR RUNDIR "/sv"
 #define SV_CONFIG SV_LIBDIR "/sh/SV-CONFIG"
 
-__attribute__((__unused__)) extern int file_test(const char *pathname, int mode);
-
 const char *progname;
+int sv_debug;
+FILE *debugfp;
 
 #define SV_SYSINIT_LEVEL 2
 #define SV_SYSBOOT_LEVEL 3
@@ -115,7 +117,7 @@ static int svconfig(void)
 	FILE *fp;
 	bin = ptr = _PATH_STDPATH;
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if(sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
 	while ((ptr = strchr(ptr, ':'))) {
@@ -253,16 +255,25 @@ static int svconfig(void)
 static int svupdate(void)
 {
 	char op[512], np[512];
-	char const*const dir[2] = { SV_SVCDIR, SV_RUNDIR };
+	char *dir[4] = { SV_SVCDIR, SV_RUNDIR };
 	DIR *nd, *od;
 	int i, j, k, ofd, nfd;
 	size_t sz;
 	struct dirent *ent;
 	struct utsname un;
 #ifdef SV_DEBUG
-	DBG("%s(void)\n", __func__);
+	if(sv_debug) DBG("%s(void)\n", __func__);
 #endif
+#if defined(PREFIX) && !defined(__linux__)
+	dir[2] = PREFIX;
+#else
+	dir[2] = "/usr/local";
+#endif
+	dir[3] = sv_getconf("SV_PREFIX");
 
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("cleaning dependecy cache files\n", NULL);
+#endif
 	/* remove outdated cache */
 	snprintf(op, sizeof(op), "%s/.tmp/deps", SV_RUNDIR);
 	if (!access(op, F_OK)) {
@@ -280,6 +291,9 @@ static int svupdate(void)
 		}
 	}
 
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("moving init run level files\n", NULL);
+#endif
 	/* move v0.1[23].0 run level dirs to new v0.14.0 location */
 	for (j = 0; sv_init_level[j]; j++) {
 		snprintf(op, sizeof(op), "%s/.stage-%d", SV_SVCDIR, j);
@@ -306,9 +320,14 @@ static int svupdate(void)
 		(void)closedir(nd);
 		(void)rmdir(op);
 	}
+
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("updating `./{run,finish}' files\n", NULL);
+#endif
 	/* update ./{run,finish} symlinks to v0.14.0 */
 	snprintf(np, sizeof(np), "%s/sh/cmd", SV_LIBDIR);
-	for (j = 0; j < 2; j++) {
+	for (j = 0; j < 4; j++) {
+		if (!dir[j] || access(dir[j], F_OK)) continue;
 		if (!(od = opendir(dir[j])))
 			ERROR("Failed to `opendir(%s)'", dir[j]);
 		if ((ofd = dirfd(od)) < 0)
@@ -353,6 +372,9 @@ static int svupdate(void)
 		(void)closedir(od);
 	}
 
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("moving old `SERVICE_{ENV,OPTS}' files\n", NULL);
+#endif
 	/* update SERVICE_{ENV,OPTIONS} to v0.13.0 format */
 	snprintf(np, sizeof(np), "%s/.tmp", SV_RUNDIR);
 	if (access(np, F_OK))
@@ -395,6 +417,9 @@ static int svupdate(void)
 		}
 	}
 
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("updating `SV_TMPDIR/env' cache files\n", NULL);
+#endif
 	/* update SV_TMPDIR/env environment file */
 	if ((ofd = openat(nfd, "env", O_CREAT|O_TRUNC|O_RDWR, 0644)) > 0) {
 		if (uname(&un) == -1)
@@ -435,7 +460,7 @@ static int newsvc(const char *svc)
 	char *pt;
 	char buf[BUFSIZ];
 #ifdef SV_DEBUG
-	DBG("%s(%s)\n", __func__, svc);
+	if(sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 
 	if (!svc) {
@@ -534,6 +559,8 @@ int main(int argc, char *argv[])
 		progname = *argv;
 	else
 		progname++;
+	debugfp = stderr;
+	sv_debug = sv_conf_yesno("SV_DEBUG");
 
 	while ((opt = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
 	{
