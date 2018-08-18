@@ -86,8 +86,9 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	   [ "${__cmd__}" = "up"    -o "${__cmd__}" = "down" ]; then
 	trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" INT TERM QUIT
 	while read line; do
-		printf "${line}\n"
+		echo "${line}"
 	done <${SV_TMPDIR}/environ >${SV_TMPDIR}/envs/${SVC_NAME}
+	ENV_SET SVC_DEPS
 	else
 	rm -f ${SV_TMPDIR}/envs/${SVC_NAME}
 	fi
