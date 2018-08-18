@@ -5,21 +5,23 @@
 
 SVC_CMD=/sbin/udevd
 SVC_OPTS=
-SVC_BEFORE='checkfs device-mapper dmcrypt dmraid lvm lvmetad mdadm udev-monitor'
+SVC_BEFORE='checkfs device-mapper dmcrypt dmraid kmod lvm lvmetad mdadm udev-monitor'
 SVC_NEED='devfs sysfs'
 SVC_PROVIDE='dev'
 SVC_STARTED_COMMANDS='reload'
 SVC_KEYWORD="lxc supervision vserver"
 description="udev device manager daemon"
 description_reload="Reload the udev rules and databases"
-UDEV_DEBUG=No
-
+#
+# Set up udev debug level from empty to (emerg|alert|crit|err|warning|notice|info|debug)
+#
+UDEV_DEBUG="info"
+#
+# Extra udev debug options can be added
+#
+UDEV_DEBUG_OPTS=""
 udevadm="$(command -v udevadm 2>${NULL})"
 
-start_exec()
-{
-	${udevadm} control --start-exec-queue --timeout=${UDEV_START_TIMEOUT:-60}
-}
 
 reload()
 {
@@ -30,14 +32,12 @@ start_pre()
 {
 	if ! grep -q devtmpfs /proc/filesystems; then
 		if yesno "${USE_MDEV:-YES}"; then
-			begin "Starting mdev\n"
 			sv-run mdev start
-			end "${?}"
 		fi
 		error "DevtmpFS is not supported"
 		return 1
 	fi
-	if ! mountinfo -q /dev; then
+	if ! mountinfo -q -t devtmpfs /dev; then
 		mount -t devtmpfs -o nosuid,mode=755,size=${DEV_FS_SIZE:-10M} \
 			dev /dev >${NULL} 2>&1 ||
 			{ error "Failed to setup devtmpfs"; return 2; }
@@ -52,11 +52,23 @@ start_pre()
 	if [ -e /proc/sys/kernel/hotplug ]; then
 		echo '' >/proc/sys/kernel/hotplug
 	fi
-	if yesno "${UDEV_DEBUG}"; then
-		CMD_OPTS="${CMD_OPTS} --debug 2> /run/udevdebug.log"
-	else
-		return 0
+	if [ -n "${UDEV_DEBUG}" ]; then
+		SVC_OPTS="${SVC_OPTS} --debug 2>/run/udevdebug.log"
+		PRE_CMD=/usr/bin/env
+		PRE_OPTS="- UDEV_DEBUG=${UDEV_DEBUG}"
 	fi
+	if [ -e ${SV_RUNDIR}/udev-monitor ]; then
+		sv-run -q udev-monitor up >${NULL} 2>&1
+		UDEV_MONITOR=true
+	else
+		begin "Starting udev-monitor"
+		sv-run -q udev-monitor start >${NULL} 2>&1
+		end "${?}"
+		UDEV_MONITOR=false
+	fi
+	ENV_SET UDEV_MONITOR
+
+	return 0
 }
 
 start_post()
@@ -65,6 +77,9 @@ start_post()
 		error "No udevadm/udev command found"
 		return 1
 	fi
+	begin "Starting to execute queue events"
+	${udevadm} control --start-exec-queue --timeout=${UDEV_START_TIMEOUT:-60}
+	end "${?}"
 
 	if yesno "${DEV_ROOT_SYMLINK:-1}"; then
 		local RULESDIR=/run/udev/rules.d
@@ -75,26 +90,20 @@ start_post()
 		fi
 	fi
 
-	#
-	# XXX: this necessary to get a function udev early (see BUGS.md)
-	#
-	local count=1
-	begin "Starting to process events"
-	while ! start_exec; do
-		count=$((${count}+1))
-		[ "${count}" = 50 ] && break
-		sleep 0.2
-	done
+	begin "Populating /dev with uevents"
+	${udevadm} trigger --type=subsystems --action=add
+	${udevadm} trigger --type=devices --action=add
 	end "${?}"
 
 	begin "Waiting uevents to be processed"
 	${udevadm} settle --timeout=${UDEV_SETTLE_TIMEOUT:-60}
 	end "${?}"
 
-	begin "Populating /dev with uevents"
-	${udevadm} trigger --type=subsystems --action=add
-	${udevadm} trigger --type=devices --action=add
-	end "${?}"
+	if ! ${UDEV_MONITOR}; then
+		begin "Stopping udev-monitor"
+		sv-run -q udev-monitor stop >${NULL} 2>&1
+		end "${?}"
+	fi
 
 	return 0
 }
