@@ -606,6 +606,7 @@ LINUX_SYSINIT_SERVICES="
 LINUX_SYSBOOT_SERVICES="
 	console
 	dmcrypt
+	hwclock
 	kmod 
 	ipset
 	iptables
