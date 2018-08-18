@@ -91,6 +91,7 @@ stop()
 		clock_opts="${clock_opts} --noadjfile"
 	fi
 	begin "Setting up hardware clock from system clock (${clock_message})"
+	printf "\n\t"
 	HWCLOCK ${clock_opts} ${CLOCK_ARGS}
 	end "${?}"
 	return 0
@@ -105,6 +106,7 @@ save()
 show()
 {
 	start_pre
+	printf "\n\t"
 	hwclock --show ${clock_opts} ${CLOCK_ARGS}
 }
 
