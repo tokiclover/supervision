@@ -260,7 +260,7 @@ elif [ "${1}" = "--sysinit" ]; then
 	fi
 	early_console
 	svc_init
-	[ "${2}" = "--background" ] || sv-rc -q sysinit
+	[ "${2}" = "--background" ] || sv-rc -q sysinit || sv-rc -q single || sv-shutdown --force --halt
 elif [ "${1}" = "--default" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	#
