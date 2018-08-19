@@ -164,7 +164,7 @@ __attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
 		exit(EXIT_FAILURE);
 }
 
-void *err_malloc(size_t size)
+__attribute__((__unused__)) void *err_malloc(size_t size)
 {
 	void *ptr = malloc(size);
 	if (ptr)
@@ -172,7 +172,7 @@ void *err_malloc(size_t size)
 	ERR_EXIT;
 }
 
-void *err_calloc(size_t num, size_t size)
+__attribute__((__unused__)) void *err_calloc(size_t num, size_t size)
 {
 	void *ptr = calloc(num, size);
 	if (ptr)
@@ -180,7 +180,7 @@ void *err_calloc(size_t num, size_t size)
 	ERR_EXIT;
 }
 
-void *err_realloc(void *ptr, size_t size)
+__attribute__((__unused__)) void *err_realloc(void *ptr, size_t size)
 {
 	ptr = realloc(ptr, size);
 	if (ptr || size == 0)
@@ -188,7 +188,7 @@ void *err_realloc(void *ptr, size_t size)
 	ERR_EXIT;
 }
 
-char *err_strdup(const char* str)
+__attribute__((__unused__)) char *err_strdup(const char* str)
 {
 	char *ptr = strdup(str);
 	if (!str)
