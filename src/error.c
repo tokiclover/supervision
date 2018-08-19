@@ -151,7 +151,7 @@ __attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
 
 	vsnprintf(buf, BUFSIZ-1, fmt, va);
 	if (errno) {
-		int len = strlen(buf);
+		unsigned long int len = strlen(buf);
 		snprintf(buf+len, BUFSIZ-len-1, ": %s", strerror(errno));
 	}
 	fprintf(stderr, "%s\n", buf);
