@@ -261,6 +261,7 @@ static int svupdate(void)
 	size_t sz;
 	struct dirent *ent;
 	struct utsname un;
+	char lsd[128], psd[128];
 #ifdef SV_DEBUG
 	if(sv_debug) DBG("%s(void)\n", __func__);
 #endif
@@ -270,6 +271,12 @@ static int svupdate(void)
 	dir[2] = "/usr/local";
 #endif
 	dir[3] = sv_getconf("SV_PREFIX");
+	snprintf(lsd, sizeof(lsd), "%s%s", dir[2], SV_SVCDIR);
+	if (dir[3]) {
+	snprintf(psd, sizeof(psd), "%s%s", dir[3], SV_SVCDIR);
+	dir[3] = psd;
+	}
+	dir[2] = lsd;
 
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("cleaning dependecy cache files\n", NULL);
