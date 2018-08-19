@@ -25,14 +25,14 @@ start_pre()
 start()
 {
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
-	if [ -e ${SV_RUNDIR} ]; then
+	if [ -e ${SV_RUNDIR}/udev ]; then
 		sv-run -q udev start >${NULL} 2>&1 || UDEV_ARGS=--noudevsync
 		ENV_SET UDEV_ARGS
 	fi
 
 	${lvm} pvscan
 	${lvm} vgscan --mknodes
-	${lvm} vgchange ${args} --sysinit --activate ly
+	${lvm} vgchange ${UDEV_ARGS} --sysinit --activate ly
 }
 
 stop()
