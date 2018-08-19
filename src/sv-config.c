@@ -164,8 +164,8 @@ static int svconfig(void)
 		CMDENT[2].val = "sv"; CMDENT[2].arg = "check";
 		CMDENT[3].val = "sv";
 		CMDENT[4].val = "svlogd";
-		CMDENT[5].var = "__SCANCMD__"; CMDENT[5].val = "kill";
-		CMDENT[5].arg = "-CONT -F $(cat ${SV_TMPDIR}/runsvdir.pid)";
+		CMDENT[5].var = "__SCANCMD__"; CMDENT[5].val = "pkill";
+		CMDENT[5].arg = "-CONT -F ${SV_TMPDIR}/runsvdir.pid";
 		CMDENT[6].var = "__PRECMD__"; CMDENT[6].val = "chpst";
 		CMDENT[7].var = CMDENT[7].val = CMDENT[7].arg = NULL;
 	}
