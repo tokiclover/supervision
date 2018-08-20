@@ -183,6 +183,28 @@ for supervision services configuration files; and lastly
 for configration settings related to services and
 .BR sv-run (8)
 service-manager utility.
+.SH FILES
+.SS @SYSCONFDIR@
+.TP
+.I @SYSCONFDIR@/sv.conf
+Supervision global configuration file
+.TP
+.I @SYSCONFDIR@/sv/\fBSERVICE\fR
+Service file or directory for supervision
+.TP
+.I @SYSCONFDIR@/sv/DEFAULT
+Default runlevel check-point
+.TP
+.I @SYSCONFDIR@/sv/SYSBOOT
+Sysboot runlevel check-point
+.TP
+.I @SYSCONFDIR@/sv.init.d/\fBRUNLEVEL\fR
+Init run level directory
+.SS @LIBDIR@/sv
+.TP
+.I @LIBDIR@/sv/sh/sv-init.sh
+Init-stage or runlevel handler for supervision
+
 .SH "RETURN VALUE"
 .TP
 .B 0
