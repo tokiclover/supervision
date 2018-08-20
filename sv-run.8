@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-RUN 8 "2018-08-04" "0.14.0" "System Manager's Manual"
+.TH SV-RUN 8 "2018-08-20" "0.14.0" "System Manager's Manual"
 .SH NAME
 sv-run \- manage runscript and supervision services
 .SH DESCRIPTION
@@ -181,6 +181,52 @@ See
 for settings related to
 .B sv-run
 service management.
+.SH FILES
+.SS @SYSCONFDIR@
+.TP
+.I @SYSCONFDIR@/sv.conf
+Supervision global configuration file
+.TP
+.B @SYSCONFDIR@/sv/SERVICE
+Service file or directory for supervision
+.TP
+.B @SYSCONFDIR@/sv.conf.d/SERVICE
+Service configuration file (RUNSCRIPT SERVICE)
+.TP
+.RB \| @SYSCONFDIR@/sv/SERVICE/OPTIONS [ .INSTANCE ] \|
+Service configuration file (SUPERVISION SERVICE)
+.TP
+.B @SYSCONFDIR@/sv.conf.local.d/SERVICE
+Local service configuration file (for any service type)
+.SS @LIBDIR@/sv
+.TP
+.I @LIBDIR@/sv/sh/SV-CONFIG
+Specific supervision environment configuration file
+.TP
+.B @LIBDIR@/sv/sh/run
+Default
+.B @SYSCONFDIR@/sv/\c
+.RB \| SERVICE/ { log/ }{ finish , run } \|
+command utility
+.TP
+.B @LIBDIR@/sv/sh/sv-deps.sh
+Simple script to list dependencies
+.TP
+.B @LIBDIR@/sv/sh/cgroup-release-agent
+CGroup Release Agent script
+.TP
+.B @LIBDIR@/sv/sh/cgroup-functions
+CGroup Functions/helper library
+.TP
+.B @LIBDIR@/sv/sh/functions
+Generic Functions/Helpers library
+.TP
+.B @LIBDIR@/sv/sh/sv-run.sh
+Runscript shell script utility
+.TP
+.B @LIBDIR@/sv/sh/runscript-functions
+Run-script Functions/helpers library
+
 .SH "RETURN VALUE"
 .TP
 .B 0
