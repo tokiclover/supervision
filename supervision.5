@@ -1239,7 +1239,10 @@ standard aliases for system shutdown (with default action.)
 Specific supervision environment configuration file
 .TP
 .I @LIBDIR@/sv/sh/run
-Default @SYSCONFDIR@/sv/SERVICE/{,log/}{finish,run} command file
+Default
+.B @SYSCONFDIR@/sv/\c
+.RB \| SERVICE/ { log/ }{ finish , run } \|
+command utility
 .TP
 .I @LIBDIR@/sv/sh/sv-deps.sh
 Simple script to list dependencies
@@ -1257,7 +1260,7 @@ CGroup Functions/helper library
 Generic Functions/Helpers library
 .TP
 .I @LIBDIR@/sv/sh/sv-run.sh
-Run-script helper utility
+Runscript shell script utility
 .TP
 .I @LIBDIR@/sv/sh/runscript-functions
 Run-script Functions/helpers library
