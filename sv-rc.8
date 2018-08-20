@@ -5,7 +5,7 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SV-RC 8 "2018-08-04" "0.14.0" "System Manager's Manual"
+.TH SV-RC 8 "2018-08-20" "0.14.0" "System Manager's Manual"
 .SH NAME
 sv-rc \- utility to manage init system
 .SH DESCRIPTION
@@ -145,6 +145,30 @@ Print the help message
 .TP
 .RB \| \-q | \-\-quiet \|
 Suppress verbose message
+.SH CHECK-POINT SERVICES
+Each run level has an optional check point service; to ensure that, the most essential
+services are started before leaving the run level. Note that, services in each
+check-point should be added to the run level of the check-point service. Otherwise,
+the service will not be started if necessary.
+
+.B **NOTE:**
+Unlike BSD like systems, services needed by other services would be checked
+several times in the init process. So, check points are not strictly needed.
+However, a few services like
+.I loopback
+or
+.I miscfs
+should be started to get a functional system.
+So, the check-point services can be trimmed safely to the strict minimum without
+any noticeable issue. Service like
+.I dmraid
+needed or used by dozens of services would be checked and started dozen of times
+before the end of the init process.
+
+Check-point services are named like the run level in all upper case. See
+.RB \| DEFAULT , SYSBOOT \|
+for more information or pratical example for check-point services.
+
 .SH CONFIGURATION
 See
 .I @SYSCONFDIR@/sv.conf
