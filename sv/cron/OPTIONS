@@ -7,6 +7,7 @@
 #
 name=fcron
 SVC_USE=logger
+SVC_PROVIDE=cron
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
