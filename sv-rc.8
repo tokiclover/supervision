@@ -7,7 +7,7 @@
 .pc
 .TH SV-RC 8 "2018-08-20" "0.14.0" "System Manager's Manual"
 .SH NAME
-sv-rc \- utility to manage init system
+sv-rc \- init-system utility
 .SH DESCRIPTION
 .B sv-rc
 is a utility to manage init system
@@ -17,38 +17,30 @@ This utility is used in conjunction with supervsion utilities like
 ,
 .B s6
 or even
-.B daemontools[-encore]
+.RB \| daemontools [ \-encore ] \|
 to get a fully supervised init-system and service-manager.
 Supported supervision utilities
 can be configured to work with this utility by running
 `\fI@LIBDIR@/sv/sbin/sv-config --config \fBSUPERVISOR\fR'.
 And then, the recommended way to use this utility is to use the included
-`\fI@LIBDIR@/sv/sh/sv-init.sh\fR' init-stage handler or \fBrc\fR script for BSD like
+`\fI@LIBDIR@/sv/sh/sv-init.sh\fR' init-stage handler or
+.BR rc (8)
+script for BSD like
 systems for system boot up; or else, `\fI@SYSCONFDIR@/runit/{1,2,3}\fR'
 or \fI@SYSCONFDIR@/s6/{finish,crash,init}\fR init-stage for
-runit and s6.
+runit and s6 supervisors.
 
 Or else, use
 .B sv-rc
 utility directly for a SystemV or BSD like init-system.
 So, using this utility for a replacement of SystemV or BSD like
-.B rc
+.BR rc (8)
 utility would work out of the box in a standard SystemV or BSD like system.
 Still, there are still some work to be done to be totaly compatible with BSD like
-systems init-system
-and testing.
+system init-systems.
 .SH SYNOPSIS
-.TP
-.B sv-rc
-.RB [\| OPTIONS \| ]
-.RB (\| RUNLEVEL \|)
-.TP
-.B sv-rc
-.RB [\| \-h | \-\-help \|]
-.RB [\| \-v | \-\-version \|]
-
 Either an init stage or a run level is passed as a command line argument (like
-.B rc
+.BR rc (8)
 utility does.)
 When a runlevel is passed as an argument runlevel will
 be switched; e.g. requiring
@@ -71,6 +63,15 @@ environment variable; or else, copy the symlink to
 for example to get the same behaviour; or else use
 .B sv-rc
 instead.
+
+.TP
+.B sv-rc
+.RB [\| OPTIONS \| ]
+.RB (\| RUNLEVEL \|)
+.TP
+.B sv-rc
+.RB [\| \-h | \-\-help \|]
+.RB [\| \-v | \-\-version \|]
 
 .SH SYSTEM-V OR BSD LIKE RC USAGE
 .RB [\| sv\- \|] rc
@@ -135,7 +136,8 @@ prefix is also suported.)
 Select a particular init stage or runlevel (short options aliases)
 .TP
 .RB \| \-d | \-\-debug \|
-Enable debugging output to stderr and to @RUNDIR@/sv/.tmp/sv.log
+Enable debugging output to stderr and to
+.I @RUNDIR@/sv/.tmp/sv.log
 .TP
 .RB \| \-v | \-\-version \|
 Print the version message
