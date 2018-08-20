@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.c  0.14.0 2018/08/06
+ * @(#)rs-deps.c  0.14.0 2018/08/18
  */
 
 #include <string.h>
@@ -267,11 +267,10 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	}
 
 	for (p = 0; p <= deptree->prio; p++) {
-		fprintf(fp, "dep_%04d=\"", p);
+		fprintf(fp, "deps-prio_%04d=\"", p);
 		TAILQ_FOREACH(ent, deptree->tree[p], entries)
 			fprintf(fp, "%s ", ent->str);
 		fseek(fp, -1L, SEEK_CUR);
-		if (getc(fp) != '"') fseek(fp, -1L, SEEK_CUR);
 		fprintf(fp, "\"\n");
 	}
 	fflush(fp);
