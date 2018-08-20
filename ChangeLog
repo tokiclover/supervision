@@ -24,7 +24,7 @@ before shuting down the service or system!
 
 Manpages was cleaned and updated to v0.14.0;
 See `supervision(5)' manual page for more information about the changes;
-And alos, `sv-run(8)' and `sv-rc(8)' manual pages;
+And also, `sv-run(8)' and `sv-rc(8)' manual pages;
 
 A few bug fixes were ported to v0.13.1 (not all the bugs which require more
 work; A nasty thread race bug was fixed lastly which was causing `sv-rc' to hang
