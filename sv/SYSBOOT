@@ -1,0 +1,13 @@
+#!/sbin/sv-run
+#
+# $Id: @(#) /etc/sv/SYSBOOT                                           Exp $
+# $L$: 2-clause/new/simplified BSD License                            Exp $
+#
+
+description='SYSBOOT check-point (DUMMY SERVICE)'
+SVC_NEED='dev clock hostname localfs miscfs console net networkfs logger'
+SVC_PROVIDE='SYSBBOT'
+
+#
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
+#

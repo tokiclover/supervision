@@ -148,6 +148,7 @@ dist_SV_OPTS  = \
 
 dist_RS_SVCS = \
 	$(EXTRA_RUNSCRIPT_SERVICES) \
+	SYSBOOT \
 	DEFAULT \
 	checkfs \
 	devfs \
