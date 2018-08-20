@@ -7,16 +7,16 @@
 .pc
 .TH SV-RUN 8 "2018-08-20" "0.14.0" "System Manager's Manual"
 .SH NAME
-sv-run \- manage runscript and supervision services
+sv-run \- service manager utility
 .SH DESCRIPTION
 .B sv-run
 is a utility to manage runscript and supervision services.
-This utility is used in conjunction with a supervsor like
+This utility is used in conjunction with a supervisor like
 .B runit
 ,
 .B s6
 or
-.B daemontools[\-encore]
+.RB \| daemontools [ \-encore ] \|
 to get a fully supervised init-system and service-manager.
 .SH SYNOPSIS
 .B sv-run
@@ -29,14 +29,15 @@ to get a fully supervised init-system and service-manager.
 .RB [\| \-h|\-\-help \|]
 .RB [\| \-v|\-\-version \|]
 
-.B SERVICE
-name can be replaced by
+.SH SERVICE
+Service name can be replaced by
 .B scan
 to update the dependency cache of services passed as arguments
 like \fBsv-run scan \fIspawn-fcgi.{lighttpd,nginx}\fR.
+When no service name is specified in the command line, the whole service
+dependency cache is updated.
 
-.B SERVICE
-name can be replaced by the special use case
+Service name can be replaced by the special use case
 .B init
 to manage a whole bundle of services instead of a single service; for example,
 `sv-run --default init' to bring the system to default runlevel.
@@ -97,8 +98,9 @@ Print the version message
 .TP
 .RB \| \-h | \-\-help \|
 Print the help message
-.SH "SERVICE COMMANDS"
-Standard commands along with extra service commands are supported.
+.SH COMMANDS
+Standard service commands along with extra service commands are supported.
+.TP
 .B start
 Start a service if down or stopped (supervision service wait up to 10 seconds
 by default to start a service.)
@@ -123,28 +125,28 @@ Remove the temporary files of a service to be able to start a fresh environment,
 or restart a service if already started.
 .TP
 .B add
-Add a service to an init-stage or runlevel (run level argument is required.)
+Add a service to an init-stage or runlevel (RUNLEVEL argument is required.)
 .TP
 .B del
-Remove a service from an sv-init.sh or runlevel (stage level argument is required.)
+Remove a service from an init-stage or runlevel (stage level argument is required.)
 .TP
 .B cgroup_remove_service
 Remove the Control Group
 hierarchy after stopping a service. This command has no effect for runscript
-services if not used with a daemon.
+services if not used to manage a daemon.
 .B CGROUP_CLEANUP=ENABLE
 environmenet variable can be enabled for automatic clean up.
 .TP
 .B new
 add a new supervised service from a template. This command should be run with
-`\fI@LIBDIR@/sv/bin/sv-config [--log] \fBSERVICE \fInew\fR'.
+`\fI@LIBDIR@/sv/bin/sv-config \fR[\fI\-\-log\fR] \fBSERVICE \fInew\fR'.
 .TP
-.B extra-commands
+.B EXTRA_COMMANDS
 Extra comands defined as shell functions and added to
 .B SVC_COMMANDS
 (command that can be executed with any service status) or
 .B SVC_STARTED_COMMANDS
-(for any command that shooukd be executed in started service status) or
+(for any command that shoould be executed in started service status) or
 .B SVC_STOPPED_COMMANDS
 (for command that should be executed in stopped service status)
 environment variable. Any defined command can be used like a standard service command.
@@ -209,12 +211,6 @@ Default
 .RB \| SERVICE/ { log/ }{ finish , run } \|
 command utility
 .TP
-.B @LIBDIR@/sv/sh/sv-deps.sh
-Simple script to list dependencies
-.TP
-.B @LIBDIR@/sv/sh/cgroup-release-agent
-CGroup Release Agent script
-.TP
 .B @LIBDIR@/sv/sh/cgroup-functions
 CGroup Functions/helper library
 .TP
@@ -225,7 +221,10 @@ Generic Functions/Helpers library
 Runscript shell script utility
 .TP
 .B @LIBDIR@/sv/sh/runscript-functions
-Run-script Functions/helpers library
+Runscript Functions/helpers library
+.TP
+.B @LIBDIR@/sv/sh/supervision-functions
+Supervision Functions/helpers library
 
 .SH "RETURN VALUE"
 .TP
@@ -289,9 +288,9 @@ or service scheduling havoc in dependency tree files mentionned above.
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
-.BR supervision (5)
-.BR sv-rc (8)
-.BR sv-shutdown (8)
+.BR supervision (5),
+.BR sv-rc (8),
+.BR sv-shutdown (8),
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
