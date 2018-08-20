@@ -55,16 +55,11 @@ int debugfd = STDERR_FILENO;
 static FILE *logfp;
 static int logfd;
 
-/* list of service to start/stop before|after a init level */
-static const char
-*const restrict sv_sysboot_run_level[16] = { "dev", "clock", "hostname",
-	"localfs", "miscfs", "console", "net", "networkfs", "logger" },
-*const restrict sv_default_run_level[8] = { "cron", "getty.tty1", "sshd" };
-static const char **restrict sv_run_level[8] = {
-	[SV_SYSBOOT_LEVEL] = sv_sysboot_run_level,
-	[SV_DEFAULT_LEVEL] = sv_default_run_level,
+/* run level check-point */
+static const char *const restrict sv_run_level[8] = {
+	"SHUTDOWN", "SINGLE", "NONETWORK",
+	"DEFAULT", "SYSINIT", "SYSBOOT",
 };
-
 /* !!! order matter (defined constant/enumeration) !!! */
 const char *const sv_init_level[] = { "shutdown", "single", "nonetwork",
 	"default", "sysinit", "sysboot", "reboot", NULL
@@ -487,30 +482,35 @@ static int svc_init_level(int argc, const char *argv[])
 {
 	int i, j, retval = 0;
 	char buf[512];
-	SV_String_T *s;
+	SV_SvcDeps_T *dep;
+	SV_String_T *svc;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, argc, argv);
 #endif
 
+	if (sv_init == SV_SHUTDOWN_LEVEL)
+		return -EINVAL;
 	if (!sv_run_level[sv_init])
+		return -ENOENT;
+	if (!(dep = sv_svcdeps_load(sv_run_level[sv_init])))
 		return -ENOENT;
 
 	DEPTREE.list = sv_stringlist_new();
-	for (i = 0; sv_run_level[sv_init][i]; i++) {
+	TAILQ_FOREACH(svc, dep->deps[SV_SVCDEPS_NEED], entries) {
 		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR,
-				sv_init_level[sv_init], sv_run_level[sv_init][i]);
+				sv_init_level[sv_init], svc->str);
 		if (access(buf, F_OK)) {
 			for (j = 0; j < SERVICES.virt_count; j++)
-				if (!strcmp(SERVICES.virt_svcdeps[j]->virt, sv_run_level[sv_init][i])) {
+				if (!strcmp(SERVICES.virt_svcdeps[j]->virt, svc->str)) {
 					snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR,
 							sv_init_level[sv_level], SERVICES.virt_svcdeps[j]->svc);
 					if (access(buf, F_OK)) continue;
-					s = sv_stringlist_add(DEPTREE.list, SERVICES.virt_svcdeps[j]->svc);
-					s->data = SERVICES.virt_svcdeps[j];
+					svc = sv_stringlist_add(DEPTREE.list, SERVICES.virt_svcdeps[j]->svc);
+					svc->data = SERVICES.virt_svcdeps[j];
 				}
 			continue;
 		}
-		sv_stringlist_add(DEPTREE.list, sv_run_level[sv_init][i]);
+		sv_stringlist_add(DEPTREE.list, svc->str);
 	}
 
 	svc_deptree_load(&DEPTREE);
