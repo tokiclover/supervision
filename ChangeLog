@@ -51,7 +51,7 @@ and then enable `SV_LOGGER' to save logging and debugging output to
 
 ADDIDION:
 SUPERVISION SERVICE:
-RUNSCRIPT SERVICE: local, qemu-vlan.vnet{0,4};
+RUNSCRIPT SERVICE: DEFAULT, local, qemu-vlan.vnet{0,4};
 
 0.13.1:
 
