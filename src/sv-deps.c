@@ -267,6 +267,7 @@ static int sv_deptree_file_save(SV_DepTree_T *deptree)
 	}
 
 	for (p = 0; p <= deptree->prio; p++) {
+		if (TAILQ_EMPTY(deptree->tree[p])) continue;
 		fprintf(fp, "deps-prio_%04d=\"", p);
 		TAILQ_FOREACH(ent, deptree->tree[p], entries)
 			fprintf(fp, "%s ", ent->str);
