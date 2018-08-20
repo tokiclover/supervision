@@ -56,16 +56,13 @@ static FILE *logfp;
 static int logfd;
 
 /* list of service to start/stop before|after a init level */
-static const char *const sv_run_level[][8] = {
-	{ NULL },
-	{ NULL },
-	{ NULL },
-	{ NULL },
-	{ "clock", "hostname", NULL },
-	{ "dev", "localfs", "miscfs", "console", "net",
-		"networkfs", "logger", NULL },
-	{ NULL },
-	{ NULL },
+static const char
+*const restrict sv_sysboot_run_level[16] = { "dev", "clock", "hostname",
+	"localfs", "miscfs", "console", "net", "networkfs", "logger" },
+*const restrict sv_default_run_level[8] = { "cron", "getty.tty1", "sshd" };
+static const char **restrict sv_run_level[8] = {
+	[SV_SYSBOOT_LEVEL] = sv_sysboot_run_level,
+	[SV_DEFAULT_LEVEL] = sv_default_run_level,
 };
 
 /* !!! order matter (defined constant/enumeration) !!! */
@@ -123,7 +120,7 @@ static void svc_init(const char *cmd);
  * to finish/start particular init levels or stages
  * @return 0 on success or number of failed services
  */
-static int svc_init_level(int level, int argc, const char *argv[]);
+static int svc_init_level(int argc, const char *argv[]);
 
 /* simple rc compatible runlevel handler*/
 static void svc_level(void);
@@ -486,25 +483,25 @@ static int sv_system_detect(void)
 	return 0;
 }
 
-static int svc_init_level(int level, int argc, const char *argv[])
+static int svc_init_level(int argc, const char *argv[])
 {
 	int i, j, retval = 0;
 	char buf[512];
 	SV_String_T *s;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, level, argc, argv);
+	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, argc, argv);
 #endif
 
-	if (!*sv_run_level[level])
+	if (!sv_run_level[sv_init])
 		return -ENOENT;
 
 	DEPTREE.list = sv_stringlist_new();
-	for (i = 0; sv_run_level[level][i]; i++) {
+	for (i = 0; sv_run_level[sv_init][i]; i++) {
 		snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR,
-				sv_init_level[sv_level], sv_run_level[level][i]);
+				sv_init_level[sv_init], sv_run_level[sv_init][i]);
 		if (access(buf, F_OK)) {
 			for (j = 0; j < SERVICES.virt_count; j++)
-				if (!strcmp(SERVICES.virt_svcdeps[j]->virt, sv_run_level[level][i])) {
+				if (!strcmp(SERVICES.virt_svcdeps[j]->virt, sv_run_level[sv_init][i])) {
 					snprintf(buf, sizeof(buf), "%s.init.d/%s/%s", SV_SVCDIR,
 							sv_init_level[sv_level], SERVICES.virt_svcdeps[j]->svc);
 					if (access(buf, F_OK)) continue;
@@ -513,7 +510,7 @@ static int svc_init_level(int level, int argc, const char *argv[])
 				}
 			continue;
 		}
-		sv_stringlist_add(DEPTREE.list, sv_run_level[level][i]);
+		sv_stringlist_add(DEPTREE.list, sv_run_level[sv_init][i]);
 	}
 
 	svc_deptree_load(&DEPTREE);
@@ -733,7 +730,7 @@ sysboot:
 		sv_stringlist_free(&DEPTREE.list);
 
 		if (svc_start)
-			svc_init_level(sv_init, 8, argv);
+			svc_init_level(8, argv);
 		/* break shutdown loop */
 		if (!level)
 			break;
