@@ -12,7 +12,7 @@ touch /etc/runit/stopit
 chmod 100 /etc/runit/stopit
 if [ -x ${SV_SHUTDOWN} ]; then
 	[ -x /etc/runit/reboot ] && ARG=-r || ARG=-p
-	${SV_SHUTDOWN} ${ARG} -l -m now
+	${SV_SHUTDOWN} ${ARG} -l now
 else
 
 echo "System is going down in 3 seconds..." | ${_PATH_WALL:-busybox wall}
