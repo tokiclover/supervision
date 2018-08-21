@@ -875,6 +875,27 @@ Timeout to use in seconds;
 File name to wait for;
 
 see \fI@LIBDIR@/sv/bin/waitfile --help\fR for more information.
+.TP
+.B svc_started
+Test service status to started status (\fB svc_state -s\fR alias)
+.TP
+.B svc_stopped
+Test service status to stopped status (\fB!svc_state -s\fR alias)
+.TP
+.B svc_active
+Test service status to active status (\fBsvc_state -a\fR alias) {SUPERVISION}
+.TP
+.B svc_status_down
+Test service status to down status (\fBsvc_state -d\fR alias) {SUPERVISION}
+.TP
+.B svc_status_up
+Test service status to up status (\fB!svc_stat -d\fR alias) {SUPERVISION}
+.TP
+.B svc_exist
+Test service status to exist status (\fBsvc_state -e\fR alias)
+.TP
+.B svc_status_pid
+Test service status to pidfile status (\fBsvc_state -p\fR alias)
 
 .SH RUNLEVELS
 Superivision is organized in seven distinct runlevels like the classic SystemV
