@@ -1,6 +1,6 @@
 #!/sbin/sv-run
 #
-# $Id: @(#) /etc/sv/hwclock   2018/08/18                              Exp $
+# $Id: @(#) /etc/sv/hwclock   2018/08/20                              Exp $
 # $L$: 2-clause/new/simplified BSD License                            Exp $
 # $C$: Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>      Exp $
 # $C$: Copyright (c) 2007-2008 Roy Marples <roy@marples.name>         Exp $
@@ -15,13 +15,13 @@ SVC_COMMANDS="show"
 SVC_STARTED_COMMANDS="save"
 SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver xenu"
 
-:	${CLOCK:=UTC}
-if [ "${CLOCK}" = "UTC" ]; then
-	clock_message="UTC"
-	clock_opts="--utc"
+:	$HWCLOCK:=UTC}
+if [ "$HWCLOCK}" = "UTC" ]; then
+	HWCLOCK_MESSAGE="UTC"
+	HWCLOCK_OPTS="--utc"
 else
-	clock_message="Local Time"
-	clock_opts="--local"
+	HWCLOCK_MESSAGE="Local Time"
+	HWCLOCK_OPTS="--local"
 fi
 
 #
@@ -39,19 +39,19 @@ HWCLOCK()
 start_pre()
 {
 	case "${SV_UNAME}" in
-		(s930) clock_message="s390";;
-		(*) device_info "cobd" && clock_message="coLinux";;
+		(s930) HWCLOCK_MESSAGE="s390";;
+		(*) device_info "cobd" && HWCLOCK_MESSAGE="coLinux";;
 	esac
-	case "${clock_message}" in
+	case "${HWCLOCK_MESSAGE}" in
 		(UTC|'Local Time') ;;
-		(*) clock_opts=;;
+		(*) HWCLOCK_OPTS=;;
 	esac
 }
 
 start()
 {
-	if [ -z "${clock_opts}" ]; then
-		warn "Not setting up clock for ${clock_message}"
+	if [ -z "${HWCLOCK_OPTS}" ]; then
+		warn "Not setting up clock for ${HWCLOCK_MESSAGE}"
 		return 0
 	fi
 
@@ -66,16 +66,16 @@ start()
 		done
 	fi
 
-	begin "Setting up system clock (${clock_message})"
-	HWCLOCK --systz ${clock_opts} ${CLOCK_ARGS}
+	begin "Setting up system clock (${HWCLOCK_MESSAGE})"
+	HWCLOCK --systz ${HWCLOCK_OPTS} $HWCLOCK_ARGS}
 	end "${?}" "Hardware Clock"
 
-	if [ -e /etc/adjtime ] && yesno "${CLOCK_ADJTIME}"; then
-		HWCLOCK --adjust ${clock_opts}
+	if [ -e /etc/adjtime ] && yesno "$HWCLOCK_ADJTIME}"; then
+		HWCLOCK --adjust ${HWCLOCK_OPTS}
 		end "${?}" "Adjust Clock"
 	fi
-	if yesno "${CLOCK_HCTOSYS}"; then
-		HWCLOCK --hctosys ${clock_opts} ${CLOCK_ARGS}
+	if yesno "$HWCLOCK_HCTOSYS}"; then
+		HWCLOCK --hctosys ${HWCLOCK_OPTS} $HWCLOCK_ARGS}
 		end "${?}" "System Clock"
 	fi
 	return 0
@@ -83,17 +83,17 @@ start()
 
 stop()
 {
-	yesno "${CLOCK_SYSTOHC}" || return 0
+	yesno "$HWCLOCK_SYSTOHC}" || return 0
 	start_pre
-	[ -n "${clock_opts}" ] || return 0
+	[ -n "${HWCLOCK_OPTS}" ] || return 0
 
-	yesno "${CLOCK_ADJTIME}" ||
+	yesno "$HWCLOCK_ADJTIME}" ||
 	if LC_ALL=C hwclock --help 2>&1 | grep -qsw "\-\-noadjfile"; then
-		clock_opts="${clock_opts} --noadjfile"
+		HWCLOCK_OPTS="${HWCLOCK_OPTS} --noadjfile"
 	fi
-	begin "Setting up hardware clock from system clock (${clock_message})"
+	begin "Setting up hardware clock from system clock (${HWCLOCK_MESSAGE})"
 	printf "\n\t"
-	HWCLOCK ${clock_opts} ${CLOCK_ARGS}
+	HWCLOCK ${HWCLOCK_OPTS} $HWCLOCK_ARGS}
 	end "${?}"
 	return 0
 }
@@ -108,7 +108,7 @@ show()
 {
 	start_pre
 	printf "\n\t"
-	hwclock --show ${clock_opts} ${CLOCK_ARGS}
+	hwclock --show ${HWCLOCK_OPTS} $HWCLOCK_ARGS}
 }
 
 #

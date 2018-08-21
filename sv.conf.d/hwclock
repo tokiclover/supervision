@@ -1,5 +1,5 @@
 #
-# $Id: /etc/sv.conf.d/hwclock, 2016/06/06           Exp $
+# $Id: /etc/sv.conf.d/hwclock, 2018/08/20           Exp $
 # 
 #
 # *** IMPORTANT NOTE: ***
@@ -22,7 +22,7 @@
 # clock is set to 'local'; e.g. Windows dual boot users shall set the clock to
 # 'local'.
 #
-CLOCK="UTC"
+HWCLOCK="UTC"
 
 #
 # Enable this to set the system time from the current hardware time.
@@ -40,7 +40,7 @@ CLOCK="UTC"
 # Append extra argument to pass to hwclock. Alpha users may append --arc or
 # --srm.
 #
-CLOCK_ARGS=""
+HWCLOCK_ARGS=""
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
