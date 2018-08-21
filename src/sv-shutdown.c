@@ -503,7 +503,7 @@ shutdown:
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || \
 	  defined(__DragonFly__)
 		bsd_init_signal:
-# ifdef SV_DEBUG
+# ifdef SHUTDOWN_DEBUG
 		switch (init_signal) {
 		case SIGINT : init_signal = 0; break;
 		case SIGTERM: init_signal = 1; break;
@@ -519,7 +519,7 @@ shutdown:
 			sighandler(SIGUSR1, NULL, NULL);
 		}
 		exit(EXIT_SUCCESS);
-# endif /* SV_DEBUG */
+# endif /* SHUTDOWN_DEBUG */
 #else
 		*argv = "init";
 		sprintf(arg, "%d", shutdown_action);
@@ -570,7 +570,7 @@ shutdown:
 		}
 	}
 
-#ifdef SV_DEBUG
+#ifdef SHUTDOWN_DEBUG
 	if (reboot_force)
 		(void)DBG("reboot(%X)\n", reboot_action);
 	else
@@ -607,7 +607,7 @@ shutdown:
 	ERR("Failed to execvp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
 	sighandler(SIGUSR1, NULL, NULL);
 	exit(EXIT_FAILURE);
-#endif
+#endif /* SHUTDOWN_DEBUG */
 }
 
 int main(int argc, char *argv[])
