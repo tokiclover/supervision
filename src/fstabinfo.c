@@ -107,10 +107,10 @@ __attribute__((__noreturn__)) static void help_message(int status)
 
 static void endent(void)
 {
-	while (mntcnt)
 #ifdef SV_DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
+	while (mntcnt)
 		free(mnttab[--mntcnt]);
 	free(mnttab);
 	ENDMNTENT;
