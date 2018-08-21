@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) supervision-functions    4.5 2018/08/02 21:09:26         Exp $
+# $Id:  @(#) supervision-functions    4.5 2018/08/20 21:09:26         Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -602,6 +602,42 @@ svc_log_finish()
 	svc_command log_stop_post
 	[ -n "${LOG_FIN_CMD}" ] || return 0
 	exec ${LOG_FIN_CMD} ${LOG_FIN_OPTS}
+}
+
+#
+# @FUNCTIONS: service status functions
+#
+svc_started()
+{
+	svc_state -s
+}
+svc_stopped()
+{
+	svc_started && return 1 || return 0
+}
+svc_active()
+{
+	svc_state -a
+}
+svc_status_down()
+{
+	svc_state -d
+}
+svc_status_up()
+{
+	if svc_active; then
+		svc_status_down && return 1 || return 0
+	else
+		return 1
+	fi
+}
+svc_exist()
+{
+	svc_state -e
+}
+svc_status_pid()
+{
+	svc_state -p
 }
 
 #
