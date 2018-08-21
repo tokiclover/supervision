@@ -917,6 +917,7 @@ static int sv_nologin(void)
 		unlink(_PATH_NOLOGIN);
 	if ((fd = open(_PATH_NOLOGIN, O_WRONLY|O_CREAT|O_TRUNC, 0664)) > 0)
 		return err_write(fd, message, _PATH_NOLOGIN);
+	return -1;
 }
 
 static void sv_timewarn(unsigned long int timeleft)
