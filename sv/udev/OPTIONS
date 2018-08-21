@@ -6,7 +6,7 @@
 SVC_CMD=/sbin/udevd
 SVC_OPTS=
 SVC_BEFORE='checkfs device-mapper dmcrypt dmraid kmod lvm lvmetad mdadm udev-monitor'
-SVC_NEED='devfs sysfs'
+SVC_NEED='devfs sysfs logger'
 SVC_PROVIDE='dev'
 SVC_STARTED_COMMANDS='reload'
 SVC_KEYWORD="lxc supervision vserver"
