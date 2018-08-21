@@ -1,0 +1,19 @@
+     The following key points apply to old-style or simplified scripts in
+     /usr/local/etc/sv.local.d/:
+
+     ++	 Scripts are only executed if they are executable.  Any other files or
+	 directories present within the	directory are silently ignored.
+
+     ++	 When a	script is executed at boot time, it is passed the string
+	 `start' as its first	and only argument.  At shutdown	time, it is
+	 passed	the string `stop' as its first and only argument.  All `sv/'
+	 scripts are expected to handle	these arguments	appropriately.	If no
+	 action	needs to be taken at a given time (either boot time or shut-
+	 down time), the script	should exit successfully and without producing
+	 an error message.
+
+     ++	 The scripts within each directory are executed	in lexicographical
+	 order.	 If a specific order is	required, numbers may be used as a
+	 prefix	to the existing	filenames, so for example 100.foo would	be
+	 executed before 200.bar; without the numeric prefixes the opposite
+	 would be true.
