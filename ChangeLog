@@ -8,7 +8,6 @@ Renamed `sv-stage(8)' command to `sv-rc(8)'; along with the
 environment variable `SV_STAGE' to `SV_INITLEVEL';
 Renamed `OS_NAME' to `SV_UNAME' and added `SV_UNAME_RELEASE'
 (defined in `${SV_TMPDIR}/env');
-Renamed `depgen' shell script to `sv-deps.sh' for clarity;
 Renamed `runscript' shell script to `sv-run.sh';
 Renamed `init-stage' shell script to `sv-init.sh';
 Renamed `depgen' shell script to `sv-deps.sh';
@@ -19,7 +18,7 @@ instead of a hyphen;
 *IMPORTANT NOTE**: if getty service are started, the sysadmin should add
 the old symbolc links with
 `for s in /etc/sv/getty-tty{2,3,4,5,6,S0,S1}; do ln -fs getty.tty1 $d; done'
-before shuting down the service or system!
+before shutting down the service or system!
 
 
 Manpages was cleaned and updated to v0.14.0;
