@@ -71,10 +71,11 @@ extern "C" {
 #define SV_SVC_STAT_WAIT 'w'
 #define SV_SVC_MARK_WAIT 'W'
 
-#if defined(ERROR_H) && defined(SV_DEBUG)
-#include <stdio.h>
 extern int debugfd;
 extern FILE *debugfp;
+
+#if defined(ERROR_H) && defined(SV_DEBUG)
+#include <stdio.h>
 #  undef ERR
 #  define ERR(fmt, ...) do {              \
 	fprintf(stderr, "%s: %serror%s: "    fmt, progname, \
