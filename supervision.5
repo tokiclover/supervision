@@ -804,43 +804,6 @@ Remove persistent environment variables (\fIenv_del\fR alias)
 .TP
 .BR svc_down \ (\| \-d | \-r \|)
 Set up a service as down (SUPERVISION)
-.TP
-.BR svc_mark \ (\| \-S | \-d | \-f | \-s | \-u \|)
-Set defined service status
-
-.RB \| \-S \|
-Set service status to \fIstopped\fR;
-.rb
-.RB \| \-d \|
-Set the service status to \fIdown\fR;
-.rb
-.RB \| \-f \|
-Set service status to \ffailed\fR;
-.rb
-.RB \| \-s \|
-Set service status to \fIstarted\fR;
-.rb
-.RB \| \-u \|
-Set service status to \fIup\fR;
-
-.TP
-.BR svc_state \ (\| \-a | \-d | \-e | \-f | \-s \|)
-Get defined service status
-
-.RB \| \-S \|
-Test service status to \fIstopped\fR;
-.rb
-.RB \| \-d \|
-Test the service status to \fIdown\fR;
-.rb
-.RB \| \-f \|
-Test service status to \ffailed\fR;
-.rb
-.RB \| \-s \|
-Test service status to \fIstarted\fR;
-.rb
-.RB \| \-u \|
-Test service status to \fIup\fR;
 
 .TP
 .B svc_del
@@ -876,26 +839,54 @@ File name to wait for;
 
 see \fI@LIBDIR@/sv/bin/waitfile --help\fR for more information.
 .TP
+.BR svc_status \ [ \-\-set | \-\-del ] \ (\| \-a | \-d | \-e | \-f | | \-p | \-s \|)
+Get, set (with
+.RB \| \-\-set \|
+command line argument)
+or delete (with
+.RB \| \-\-del \|
+command line argument)
+defined service status.
+
+.RB \| \-s | \-\-start \|
+Test, set or delete service status to \fIstart\fR;
+.rb
+.RB \| \-d | \-\-down \|
+Test, set or delete the service status to \fIdown\fR;
+.rb
+.RB \| \-f | \-\-fail \|
+Test, set or delete service status to \ffail\fR;
+.rb
+.RB \| \-u | \-\-up \|
+Test, set or delete service status to \fIup\fR;
+.rb
+.RB \| \-a | \-\-active\|
+Test service status to \fIactive\fR;
+.rb
+.RB \| \-p | \-\-pid \|
+Test service status to pid(file);
+
+.TP
 .B svc_status_start
-Test service status to started status (\fB svc_state -s\fR alias)
+Test service status to started status (\fB svc_status \-\-start\fR alias)
 .TP
 .B svc_status_stop
-Test service status to stopped status (\fB!svc_state -s\fR alias)
+Test service status to stopped status (\fB!svc_status \-\-start\fR alias)
 .TP
 .B svc_status_active
-Test service status to active status (\fBsvc_state -a\fR alias) {SUPERVISION}
+Test service status to active status (\fBsvc_status \-\-active\fR alias) {SUPERVISION}
 .TP
 .B svc_status_down
-Test service status to down status (\fBsvc_state -d\fR alias) {SUPERVISION}
+Test service status to down status (\fBsvc_status \-\-down\fR alias) {SUPERVISION}
 .TP
 .B svc_status_up
-Test service status to up status (\fB!svc_stat -d\fR alias) {SUPERVISION}
+Test service status to up status (\fB!svc_stat \-\-down\fR alias) {SUPERVISION}
 .TP
 .B svc_status_exist
-Test service status to exist status (\fBsvc_state -e\fR alias)
+Test service status to exist status (\fBsvc_status \-\-exist\fR alias)
 .TP
 .B svc_status_pid
-Test service status to pidfile status (\fBsvc_state -p\fR alias)
+Test service status to pidfile status (\fBsvc_status \-\-pid\fR alias)
 
 .SH RUNLEVELS
 Superivision is organized in seven distinct runlevels like the classic SystemV

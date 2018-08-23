@@ -70,7 +70,7 @@ rs_status()
 {
 	local msg
 	SVC_DEBUG "function=rs_status( ${@} )"
-	svc_state -s && msg=started || msg=stopped
+	svc_status -s && msg=started || msg=stopped
 	echo -n ${msg}
 	[ "${msg}" = "started" ]
 }
@@ -79,7 +79,7 @@ svc_add()
 {
 	SVC_DEBUG "function=svc_add( ${@} )"
 	[ -n "${SV_INITLEVEL}" ] || return
-	svc_state -e && ln -fns ${__svc__} ${SV_SVCDIR}.init.d/${SV_INITLEVEL}
+	svc_status -e && ln -fns ${__svc__} ${SV_SVCDIR}.init.d/${SV_INITLEVEL}
 }
 SVC_DEBUG()
 {
@@ -265,13 +265,13 @@ svc_wait()
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
 		#
-		if ${pid} && [ "${__SV_NAM__}" = "runit" ] && svc_state -f; then
+		if ${pid} && [ "${__SV_NAM__}" = "runit" ] && svc_status -f; then
 			return 1
 		fi
 
 		if waitfile ${arg} ${i} ${x}; then
 			if ${__wait__} && [ -n "${arg}" ]; then
-				if svc_state -w; then
+				if svc_status -w; then
 					error "service is busy -- retry later"
 					return 1
 				fi
