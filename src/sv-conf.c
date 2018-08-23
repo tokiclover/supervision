@@ -41,11 +41,10 @@ const char *sv_getconf(const char *env)
 		return NULL;
 
 	const char *ptr;
-	size_t len = strlen(env);
 	int i = 0;
 
 	while ((ptr = SV_CONFIG_ARRAY[i]))
-		if (strncmp(SV_CONFIG_ARRAY[i++], env, len) == 0)
+		if (!strcmp(SV_CONFIG_ARRAY[i++], env))
 			break;
 
 	if (!ptr)
