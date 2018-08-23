@@ -547,10 +547,6 @@ reterr:
 
 static int svc_run(struct svcrun *run)
 {
-	size_t len;
-	int val;
-	off_t off = 0;
-	char buf[128];
 	pid_t pid;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(%p[%s])\n", __func__, run, run->name);
@@ -617,18 +613,7 @@ runsvc:
 	}
 
 	/* write the service command and the pid to the lock file */
-	snprintf(buf, sizeof(buf), "pid=%d:command=%s", getpid(), run->argv[4]);
-	len = strlen(buf);
-	do {
-		val = write(run->lock, buf+off, len);
-		if (val < 0)
-			if (errno != EINTR) {
-				LOG_ERR("Failed to write service command to `%s/%s': %s\n",
-					SV_TMPDIR_WAIT, run->name, strerror(errno));
-				break;
-			}
-		off += val; len -= val;
-	} while (len);
+	dprintf(run->lock, "pid=%d:command=%s", getpid(), run->argv[4]);
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
 			run->name, run->argv[4], getpid());
