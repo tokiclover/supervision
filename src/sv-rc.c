@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-rc.c  0.14.0 2018/08/18
+ * @(#)sv-rc.c  0.14.0 2018/08/22
  */
 
 #include <stdio.h>
@@ -30,7 +30,8 @@ extern int svc_exec (int argc, const char *argv[]);
 /* the same for a list of service */
 extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
 /* mark service status */
-static int svc_mark_simple(char *svc, int status, const char *what);
+__attribute__((__unused__))
+static int svc_status_simple(char *restrict svc, int status, int flag, char *restrict what);
 
 /* signal handleer/setup */
 sigset_t ss_child, ss_full, ss_null, ss_old;
@@ -121,54 +122,56 @@ static int svc_init_level(int argc, const char *argv[]);
 static void svc_level(void);
 static char *get_cmdline_option(const char *entry);
 
-static int svc_mark_simple(char *svc, int status, const char *what)
+__attribute__((__unused__))
+static int svc_status_simple(char *restrict svc, int status, int flag, char *restrict what)
 {
 	char path[PATH_MAX], *ptr;
 	int fd;
+	int open_flags = O_RDONLY;
 	mode_t m;
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("%s(%s, %c, %s)\n", __func__, svc, status, what);
+#endif
 
 	if (!svc)
 		return -ENOENT;
+	if (!status)
+		return -EINVAL;
+	if (flag == SVC_STATUS_SET)
+		open_flags = O_CREAT | O_WRONLY | O_NONBLOCK;
 
 	switch(status) {
-		case SV_SVC_STAT_FAIL:
-		case SV_SVC_MARK_FAIL:
+		case SV_SVC_STATUS_FAIL:
 			ptr = SV_TMPDIR_FAIL;
 			break;
-		case SV_SVC_STAT_DOWN:
-		case SV_SVC_MARK_DOWN:
+		case SV_SVC_STATUS_DOWN:
 			ptr = SV_TMPDIR_DOWN;
 			break;
-		case SV_SVC_STAT_STAR:
-		case SV_SVC_MARK_STAR:
+		case SV_SVC_STATUS_STAR:
 			ptr = SV_TMPDIR_STAR;
 			break;
-		case SV_SVC_STAT_WAIT:
-		case SV_SVC_MARK_WAIT:
+		case SV_SVC_STATUS_WAIT:
 			ptr = SV_TMPDIR_WAIT;
 			break;
 		default:
 			return -EINVAL;
 	}
 
-	switch (status) {
-		case SV_SVC_STAT_STAR:
-		case SV_SVC_STAT_DOWN:
-		case SV_SVC_STAT_FAIL:
-		case SV_SVC_STAT_WAIT:
-			snprintf(path, sizeof(path), "%s/%s", ptr, svc);
-			m = umask(0);
-			fd = open(path, O_CREAT|O_WRONLY|O_NONBLOCK, 0644);
-			umask(m);
-			if (fd > 0) {
-				if (what)
-					(void)err_write(fd, (const char*)what, (const char*)path);
-				close(fd);
-				return 0;
-			}
-		default:
-			return -1;
+	snprintf(path, sizeof(path), "%s/%s", ptr, svc);
+	if (flag == SVC_STATUS_DEL)
+		return unlink(path);
+	m = umask(0);
+	fd = open(path, open_flags, 0644);
+	umask(m);
+	if (fd > 0) {
+		if ((flag == SVC_STATUS_SET) && what)
+			(void)err_write(fd, (const char*)what, (const char*)path);
+		close(fd);
+		if (flag == SVC_STATUS_GET) return 1;
+		return 0;
 	}
+	if (flag == SVC_STATUS_GET) return 0;
+	return -1;
 }
 /* simple helper to set/get runlevel
  * @level: runlevel to set, or NULL to get the current runlevel;
@@ -290,8 +293,9 @@ static void svc_level(void)
 		sv_level = SV_NOWNETWORK_LEVEL;
 		for (i = 0; i < SERVICES.virt_count; i++)
 			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
-				svc_mark_simple(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STAT_STAR, NULL);
-		svc_mark_simple("net", SV_SVC_STAT_STAR, NULL);
+				svc_status_simple(SERVICES.virt_svcdeps[i]->svc,
+						SV_SVC_STATUS_STAR, SVC_STATUS_SET, NULL);
+		svc_status_simple("net", SV_SVC_STATUS_STAR, SVC_STATUS_SET, NULL);
 	}
 	else if ((entry && strcmp(entry, sv_init_level[SV_SINGLE_LEVEL]) == 0)) {
 		sv_init = sv_level = SV_SINGLE_LEVEL;
@@ -302,7 +306,7 @@ static void svc_level(void)
 	/* mark no started services as stopped */
 	if (entry) {
 		while ((ptr = strsep(&ent, ",")))
-			svc_mark_simple(ptr, SV_SVC_STAT_STAR, NULL);
+			svc_status_simple(ptr, SV_SVC_STATUS_STAR, SVC_STATUS_SET, NULL);
 		free(entry);
 	}
 }
