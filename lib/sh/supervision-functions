@@ -362,9 +362,9 @@ svc_env()
 		eval echo "${env}=\"'\$${env}'\""
 	done >>"${SV_TMPDIR}/${opt}"
 }
-env_svc()
+env_set()
 {
-	SVC_DEBUG "function=env_svc( ${@} )"
+	SVC_DEBUG "function=env_set( ${@} )"
 	[ -n "${*}" ] && svc_env "opts/${SVC_NAME}" "${@}"
 }
 ENV_DEL()
@@ -375,7 +375,7 @@ ENV_DEL()
 ENV_SET()
 {
 	SVC_DEBUG "function=ENV_SET( ${@} )"
-	env_svc "${@}"
+	env_set "${@}"
 }
 ENV_SVC()
 {

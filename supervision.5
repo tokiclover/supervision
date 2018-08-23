@@ -510,7 +510,7 @@ A few functions starting with
 prefix are used for internal usage (see \fBBUILTINS\fR);
 and thus are reserved for futur usage;
 use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
-.RB {\| env_del , env_svc \|}
+.RB {\| env_del , env_set \|}
 shell functions are also reserved for internal usage.
 .RB {\| checkpath , fstabinfo , mountinfo , service , waitfile \|}
 have shell functions of the
@@ -794,7 +794,7 @@ Dot or source builtin wrapper (\fI-e|-d\fR to print errors and \fI-d\fR to retur
 if an error occur); \fBSOURCE\fR is an alias of this builtin
 .TP
 .BR ENV_SET \ \| VAR1 \ VAR2 \ ... \|
-Save persistent environment variables (\fIenv_svc\fR alias)
+Save persistent environment variables (\fIenv_set\fR alias)
 .TP
 .B svc_cmd
 Run a supported service command
