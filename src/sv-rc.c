@@ -118,6 +118,9 @@ static void svc_init(const char *cmd);
  */
 static int svc_init_level(int argc, const char *argv[]);
 
+/* print init runlevel order */
+static void svc_init_order(char *arg);
+
 /* simple rc compatible runlevel handler*/
 static void svc_level(void);
 static char *get_cmdline_option(const char *entry);
@@ -528,6 +531,41 @@ static int svc_init_level(int argc, const char *argv[])
 	return retval;
 }
 
+static svc_init_order(char *arg)
+{
+	char b[128];
+	int p;
+	SV_String_T *s;
+#ifdef SV_DEBUG
+	if (sv_debug) DBG("%s(arg)\n", __func__);
+#endif
+
+	snprintf(b, sizeof(b), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
+	if (arg && !strcmp(arg, "update")) {
+		if (geteuid()) {
+require_root:
+			ERR("super user proviledge is required!\n", NULL);
+			exit(EXIT_FAILURE);
+		}
+		if (unlink(b)) ERROR("Failed to `unlink(%s)'", b);
+	}
+	if (access(b, F_OK)) goto require_root;
+
+	sv_svcdeps_load(NULL);
+	sv_deptree_load(&DEPTREE);
+	if (!svc_quiet) return;
+
+	for (p = 0; p <= DEPTREE.prio; p++) {
+		if (TAILQ_EMPTY(DEPTREE.tree[p])) continue;
+		printf("sched-priority_%04d=\"", p);
+		TAILQ_FOREACH(s, DEPTREE.tree[p], entries) {
+			printf("%s", s->str);
+			if (TAILQ_NEXT(s, entries)) putchar(' ');
+		}
+		puts("\"");
+	}
+}
+
 __attribute__((__noreturn__)) static void sv_init_status(void)
 {
 	const char *argv[8];
@@ -908,6 +946,7 @@ sv_run:
 	}
 	else if (!strcmp(progname, "service")) goto sv_run;
 	else if (!strcmp(progname, "rc")) goto sv_rc;
+	else if (!strcmp(progname, "rcorder")) goto sv_rcorder;
 	else if (!strcmp(progname, "sv-rc")) {
 		if (sv_init >= 0) {
 sv_rc_init:
@@ -967,6 +1006,27 @@ sv_rc_help:
 
 		ERR("invalid argument -- `%s'\n", *argv);
 		goto sv_rc_help;
+	}
+	else if (!strcmp(progname, "sv-rcorder")) {
+sv_rcorder:
+		if (sv_init >= 0) {
+				switch(sv_init) {
+				case SV_SYSBOOT_LEVEL:
+				case SV_SYSINIT_LEVEL:
+				case SV_DEFAULT_LEVEL:
+				case SV_SHUTDOWN_LEVEL:
+					svc_init_order(*argv);
+					exit(EXIT_SUCCESS);
+				default:
+					goto sv_rcorder;
+			}
+		}
+		else {
+sv_rcorder_helep:
+			fprintf(stderr, "Usage: %s [OPTIONS] --(sysinit|sysboot|default|"
+					"shutdown) [update]\n", progname);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	ERR("nothing to do -- invalid usage!!!\n", NULL);
