@@ -1,0 +1,101 @@
+.\"
+.\" CopyLeft (c) 2016-2018 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH SV-RCORDER 8 "2018-08-20" "0.14.0" "System Manager's Manual"
+.SH NAME
+sv-rc \-  print a dependency ordering of interdependent services
+.SH DESCRIPTION
+.B sv-rcorder
+is a utility to print the scheduling order ot dependency ordering of interdependent
+services of supervision init-system
+for SystemV or BSD like systems.
+This utility is used in conjunction with supervsion utility
+.BR sv-rc (8)
+
+This utility is provided for debugging and testing purpose, because
+.BR sv-rc (8)
+utility has the the functionality of this utility built in.
+.SH SYNOPSIS
+Either an init stage or a run level is passed as a command line argument in short
+or long option format.
+
+.B sv-rcorder
+.RB [\| OPTIONS \| ]
+.RB \| \-\-RUNLEVEL \|
+
+.B sv-rcorder
+.RB [\| \-h | \-\-help \|]
+.RB [\| \-v | \-\-version \|]
+
+.SH OPTIONS
+.TP
+.RB (\| \-\-sysinit | \-\-sysboot | \-\-default | \-\-shutdown \|)
+Select a particular init stage or runlevel (a long option with \fI--\fR
+prefix is also suported.)
+.TP
+.RB (\| \-0 | \-3 | \-4 | \-5 ) | ( \-p | \-l | \-S |  \-b \|)
+Select a particular init stage or runlevel (short options aliases)
+.TP
+.RB \| \-d | \-\-debug \|
+Enable debugging output to stderr and to
+.I @RUNDIR@/sv/.tmp/sv.log
+.TP
+.RB \| \-v | \-\-version \|
+Print the version message
+.TP
+.RB \| \-h | \-\-help \|
+Print the help message
+.TP
+.RB \| \-q | \-\-quiet \|
+Suppress verbose message
+
+.SH CONFIGURATION
+See
+.I @SYSCONFDIR@/sv.conf
+for the global configuration file, or
+.I @SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR
+for local service configuration file; or else,
+.I @SYSCONFDIR@/sv.conf.d/\fBSERVICE\fR
+for runscript services, or
+.I @SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fB[.INSTANCE]\fR
+for supervision services configuration files; and lastly
+.BR supervsion (5)
+for configration settings related to services and
+.BR sv-run (8)
+service-manager utility.
+.SH FILES
+.SS @SYSCONFDIR@
+.TP
+.I @SYSCONFDIR@/sv.conf
+Supervision global configuration file
+.TP
+.I @SYSCONFDIR@/sv/\fBSERVICE\fR
+Service file or directory for supervision
+
+.SH "RETURN VALUE"
+.TP
+.B 0
+success
+.TP
+.B 1
+miscellaneous operational failures (failure to read the dependency file...);
+.SH "APPLICATION USAGE"
+Refer to 
+.BR sv-run (8)
+section for more information.
+.SH "FUTURE DIRECTIONS"
+None.
+.SH "SEE ALSO"
+.BR sv-rc (8),
+.BR sv-run (8),
+.BR supervision (5),
+.BR sv-shutdown (8),
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"
