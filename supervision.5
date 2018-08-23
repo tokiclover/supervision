@@ -796,8 +796,8 @@ if an error occur); \fBSOURCE\fR is an alias of this builtin
 .BR ENV_SET \ \| VAR1 \ VAR2 \ ... \|
 Save persistent environment variables (\fIenv_set\fR alias)
 .TP
-.B svc_cmd
-Run a supported service command
+.RB \| svc_cmd | rs_cmd \|
+Run a supported service command (the first for SUPERVISION and the second for RUNSCRIPT service)
 .TP
 .BR ENV_DEL \ \| VAR1 \ VAR2 \ ... \|
 Remove persistent environment variables (\fIenv_del\fR alias)
