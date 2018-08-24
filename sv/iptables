@@ -92,7 +92,7 @@ set_policy()
 
 reload()
 {
-	if svc_state -s && check; then
+	if svc_status_start && check; then
 		begin "Reloading IP tables rules"
 		set_policy DROP
 		start

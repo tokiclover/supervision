@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.h  0.14.0 2018/08/06
+ * @(#)rs-deps.h  0.14.0 2018/08/22
  */
 
 #ifndef SV_DEPS_H
@@ -67,11 +67,12 @@ typedef struct SV_SvcDeps {
 	unsigned long int options;
 	unsigned long int keyword;
 	int status;
+	int command;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;
 	/* align on 16 words */
-	int __pad[3];
+	int __pad[2];
 } SV_SvcDeps_T;
 typedef TAILQ_HEAD(SV_SvcDepsList, SV_SvcDeps) SV_SvcDepsList_T;
 

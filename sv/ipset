@@ -76,7 +76,7 @@ stop()
 
 reload()
 {
-	svc_state -s || return
+	svc_status_start || return
 	#
 	# XXX: There is no way to reload IP sets if used in IPTables;
 	# so, remain only trying to swap existant rules if possible

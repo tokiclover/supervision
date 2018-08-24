@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv.h  0.14.0 2018/08/18
+ * @(#)sv.h  0.14.0 2018/08/22
  */
 
 #ifndef SV_H
@@ -60,16 +60,15 @@ extern "C" {
 /* status command to issue to svc_{mark,state} when the STAT querry the status
  * and MARK command remove the status; so the command is only valid with svc_mark
  */
-#define SV_SVC_STAT_ACTIVE 'a'
-#define SV_SVC_STAT_FAIL 'f'
-#define SV_SVC_MARK_FAIL 'F'
-#define SV_SVC_STAT_DOWN 'd'
-#define SV_SVC_MARK_DOWN 'D'
-#define SV_SVC_STAT_PIDS 'p'
-#define SV_SVC_STAT_STAR 's'
-#define SV_SVC_MARK_STAR 'S'
-#define SV_SVC_STAT_WAIT 'w'
-#define SV_SVC_MARK_WAIT 'W'
+#define SV_SVC_STATUS_ACTIVE 'a'
+#define SV_SVC_STATUS_FAIL 'f'
+#define SV_SVC_STATUS_DOWN 'd'
+#define SV_SVC_STATUS_PIDS 'p'
+#define SV_SVC_STATUS_STAR 's'
+#define SV_SVC_STATUS_WAIT 'w'
+#define SVC_STATUS_GET 0x00
+#define SVC_STATUS_SET 0x01
+#define SVC_STATUS_DEL 0x02
 
 extern int debugfd;
 extern FILE *debugfp;

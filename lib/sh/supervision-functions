@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) supervision-functions    4.5 2018/08/20 21:09:26         Exp $
+# $Id:  @(#) supervision-functions    4.5 2018/08/22 21:09:26         Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -40,14 +40,14 @@ svc_down()
 	SVC_DEBUG "function=svc_down( ${@} )"
 	echo "" >${SV_RUNDIR}/${SVC_NAME}/down
 	eval ${__SVCCMD__} ${__SIGSTOP__} ${SV_RUNDIR}/${SVC_NAME} &&
-	svc_mark -d
+	svc_status --set -d
 }
 svc_up()
 {
 	SVC_DEBUG "function=svc_up( ${@} )"
 	rm -f ${SV_RUNDIR}/${SVC_NAME}/down
 	eval ${__SVCCMD__} ${__SIGSTRT__} ${SV_RUNDIR}/${SVC_NAME} &&
-	svc_mark -u
+	svc_status --set -u
 }
 
 svc_start()
@@ -55,14 +55,14 @@ svc_start()
 	local val=1 check_pid
 	SVC_DEBUG "function=svc_start( ${@} )"
 
-	svc_state -p && return 0
+	svc_status -p && return 0
 	rm -f ${SV_TMPDIR}/fail/${SVC_NAME}
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
 	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}" >${NULL} 2>&1; then
 		val=0
-	elif svc_state -f; then
+	elif svc_status -f; then
 		:;
 	#
 	# XXX: wait pidfile because sv(8) is unreliable with false negative failures
@@ -83,9 +83,9 @@ svc_start()
 		fi
 		if [ -e "${SVC_PIDFILE}" ] && eval ${check_pid}; then
 			if svc_command start_post; then
-				svc_mark -s
+				svc_status --set -s
 			else
-				svc_mark -f
+				svc_status --set -f
 				val=2
 			fi
 		fi
@@ -98,7 +98,7 @@ svc_stop()
 	local val=1
 	SVC_DEBUG "function=svc_stop( ${@} )"
 
-	svc_state -p || return 0
+	svc_status -p || return 0
 
 	if ! svc_command stop_pre; then
 		return 2
@@ -113,7 +113,7 @@ svc_stop()
 	fi
 	if [ "${val}" = "0" ]; then
 		if svc_command stop_post; then
-			svc_mark -S
+			svc_status --del -s
 			val=0
 		else
 			val=2
@@ -130,10 +130,10 @@ svc_restart()
 	svc_start
 }
 
-svc_status()
+svc_state()
 {
-	SVC_DEBUG "function=svc_status( ${@} )"
-	svc_state -p && eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}" ||
+	SVC_DEBUG "function=svc__status_( ${@} )"
+	svc_status -p && eval ${__CHKCMD__} "${SV_RUNDIR}/${SVC_NAME}" ||
 		{ echo -n stopped; return 1; }
 }
 
@@ -158,23 +158,26 @@ svc_reload()
 	fi
 }
 
-svc_mark()
+svc_status()
 {
-	SVC_DEBUG "function=svc_mark( ${@} )"
+	local arg="${1}"
+	SVC_DEBUG "function=svc_status( ${@} )"
+	shift
+	if [ "${arg}" = "--set" ]; then
 	case "${1}" in
 		(-f|--fail*) printf "${__cmd__:-$2}" >"${SV_TMPDIR}/fail/${SVC_NAME}";;
 		(-d|--down*) printf "" >"${SV_TMPDIR}/down/${SVC_NAME}";;
 		(-s|--star*) printf "" >"${SV_TMPDIR}/star/${SVC_NAME}";;
-		(-u|--up*)   rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
-		(-S|--stop*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
-		(-w|--wait*) rm -f "${SV_TMPDIR}/wait/${SVC_NAME}";;
+		(-u|--up*)    rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
 	esac
-}
-
-svc_state()
-{
-	SVC_DEBUG "function=svc_state( ${@} )"
+	elif [ "${arg}" = "--del" ]; then
 	case "${1}" in
+		(-d|--down*)  rm -f "${SV_TMPDIR}/down/${SVC_NAME}";;
+		(-f|--fail*)  rm -f "${SV_TMPDIR}/fail/${SVC_NAME}";;
+		(-s|--start*) rm -f "${SV_TMPDIR}/star/${SVC_NAME}";;
+	esac
+	else
+	case "${1:-$arg}" in
 		(-e|--exist) [ -e "${SV_SVCDIR}/${SVC_NAME}" ];;
 		(-a|--acti*) [ -e "${SV_RUNDIR}/${SVC_NAME}" ];;
 		(-f|--fail*) [ -e "${SV_TMPDIR}/fail/${SVC_NAME}" ];;
@@ -183,6 +186,7 @@ svc_state()
 		(-w|--wait*) [ -e "${SV_TMPDIR}/wait/${SVC_NAME}" ];;
 		(-p|--pid*)  [ -e "${SV_TMPDIR}/pids/${SVC_NAME}" ];;
 	esac
+	fi
 }
 
 #
@@ -221,7 +225,7 @@ svc_config()
 svc_start_pre()
 {
 	local SVC_FAILURE val=0
-	SVC_FAILURE='{ svc_remove; svc_mark -f; return ${val}; }'
+	SVC_FAILURE='{ svc_remove; svc_status --set -f; return ${val}; }'
 	SVC_DEBUG "function=svc_add( ${@} )"
 
 	if [ "${SVC_CMD#/}" = "${SVC_CMD}" ]; then
@@ -284,7 +288,7 @@ svc_stop_post()
 		ENV_SET __SVC_TRY__
 		if [ ${__SVC_TRY__:-0} -ge ${SVC_TRY} ]; then
 			svc_remove
-			svc_mark -f
+			svc_status --set -f
 			error "Maximum number of starting attempts reached."
 		fi
 		return 1
@@ -358,9 +362,9 @@ svc_env()
 		eval echo "${env}=\"'\$${env}'\""
 	done >>"${SV_TMPDIR}/${opt}"
 }
-env_svc()
+env_set()
 {
-	SVC_DEBUG "function=env_svc( ${@} )"
+	SVC_DEBUG "function=env_set( ${@} )"
 	[ -n "${*}" ] && svc_env "opts/${SVC_NAME}" "${@}"
 }
 ENV_DEL()
@@ -371,7 +375,7 @@ ENV_DEL()
 ENV_SET()
 {
 	SVC_DEBUG "function=ENV_SET( ${@} )"
-	env_svc "${@}"
+	env_set "${@}"
 }
 ENV_SVC()
 {
@@ -427,7 +431,7 @@ svc_commands()
 	local cmd="${1}" started=false
 	SVC_DEBUG "function=svc_commands( ${@} )"
 
-	svc_state -s || svc_state -p && started=true
+	svc_status -s || svc_status -p && started=true
 
 	if     isin ${cmd} ${SVC_STARTED_COMMANDS}; then
 		if ! ${started}; then
@@ -462,9 +466,9 @@ svc_cmd()
 	for arg; do
 		case "${1}" in
 			(add|del|desc|down|remove|up|zap)  cmd="${1}" ;;
-			(reload|restart|start|stop|status) cmd="${1}" ;;
+			(reload|restart|start|stop|scan) cmd="${1}" ;;
 			(cgroup_remove_service) cmd="${1}" pfx= ;;
-			(scan) cmd=scan ;;
+			(status) cmd=state ;;
 			(*) opt='"${@}"' cmd=commands; break  ;;
 		esac
 		shift
@@ -479,7 +483,7 @@ svc_cmd()
 	fi
 	case "${cmd}" in
 		(down|remove|up)
-		svc_state -a || { error "Inactive service"  ; return 3; };;
+		svc_status -a || { error "Inactive service"  ; return 3; };;
 	esac
 
 	#
@@ -554,7 +558,7 @@ svc_run()
 	printf "$$" >${SVC_PIDFILE}
 
 	eval exec ${ENV_CMD} ${ENV_OPTS} ${PRE_CMD} ${PRE_OPTS} ${SVC_CMD:-${SVC_NAME}} ${SVC_OPTS}
-	svc_mark -f
+	svc_status --set -f
 	rm -f ${SVC_PIDFILE} ${virt} ${real}
 }
 
@@ -607,21 +611,21 @@ svc_log_finish()
 #
 # @FUNCTIONS: service status functions
 #
-svc_started()
+svc_status_start()
 {
-	svc_state -s
+	svc_status -s
 }
-svc_stopped()
+svc_status_stop()
 {
 	svc_started && return 1 || return 0
 }
-svc_active()
+svc_status_active()
 {
-	svc_state -a
+	svc_status --set
 }
 svc_status_down()
 {
-	svc_state -d
+	svc_status -d
 }
 svc_status_up()
 {
@@ -631,13 +635,13 @@ svc_status_up()
 		return 1
 	fi
 }
-svc_exist()
+svc_status_exist()
 {
-	svc_state -e
+	svc_status -e
 }
 svc_status_pid()
 {
-	svc_state -p
+	svc_status -p
 }
 
 #

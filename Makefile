@@ -210,9 +210,9 @@ dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
-dist_SV_RUN_SYMLINKS = rc service
-dist_SHUTDOWN_SYMLINKS = halt poweroff reboot shutdown
-dist_BINS_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
+dist_SV_RUN_LIBEXEC_SYMLINKS = rc service
+dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS = halt poweroff reboot shutdown
+dist_SV_LIBEXEC_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
 
 ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_RUNIT_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
@@ -296,9 +296,8 @@ endif
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_EXEC) src/sv-run $(DESTDIR)$(SBINDIR)
 	$(install_EXEC) src/sv-shutdown $(DESTDIR)$(SBINDIR)
-	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/sv-rc
-	$(dist_SV_RUN_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
-	$(dist_SV_SHUTDOWN_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
+	$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
+	$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_EXEC) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
 	$(install_EXEC) $(dist_SH_BINS) $(DESTDIR)$(SV_LIBDIR)/sh
@@ -360,7 +359,7 @@ $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
 		$(DESTDIR)$(SBINDIR)/sv-shutdown \
-		$(DESTDIR)$(SBINDIR)/sv-rc $(DESTDIR)$(SBINDIR)/sv-run \
+		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SBINDIR)/%) $(DESTDIR)$(SBINDIR)/sv-run \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
 		$(DESTDIR)$(MANDIR)/man8/sv-rc.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
 		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
@@ -373,12 +372,12 @@ uninstall: uninstall-doc
 	       $(dist_RS_OPTS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%)
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
 	rm -fr $(DESTDIR)$(SV_LIBDIR)/cache/* $(dist_INITD:%=$(DESTDIR)$(SV_SVCDIR).init.d/%)
-	rm -f $(dist_BINS_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
-		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SHUTDOWN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+	rm -f $(dist_SV_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
+		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SV_BINS:src/%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
 		$(dist_SV_SBINS:src/%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SH_BINS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
 		$(dist_SH_LIBS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
 		$(DESTDIR)$(SV_SVCDIR)/getty.tty*
