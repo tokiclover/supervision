@@ -10,7 +10,7 @@
 sv-rc \-  print a dependency ordering of interdependent services
 .SH DESCRIPTION
 .B sv-rcorder
-is a utility to print the scheduling order ot dependency ordering of interdependent
+is a utility to print the scheduling order of dependency ordering of interdependent
 services of supervision init-system
 for SystemV or BSD like systems.
 This utility is used in conjunction with supervsion utility
@@ -22,10 +22,15 @@ utility has the the functionality of this utility built in.
 .SH SYNOPSIS
 Either an init stage or a run level is passed as a command line argument in short
 or long option format.
+When
+.B scan
+is appended to the command line argument, the ordering cache is updated
+(synchronized to the current dependency definitions).
 
 .B sv-rcorder
 .RB [\| OPTIONS \| ]
 .RB \| \-\-RUNLEVEL \|
+.RB [\| scan \|]
 
 .B sv-rcorder
 .RB [\| \-h | \-\-help \|]
@@ -34,11 +39,10 @@ or long option format.
 .SH OPTIONS
 .TP
 .RB (\| \-\-sysinit | \-\-sysboot | \-\-default | \-\-shutdown \|)
-Select a particular init stage or runlevel (a long option with \fI--\fR
-prefix is also suported.)
+Select a particular init stage or runlevel (long option)
 .TP
 .RB (\| \-0 | \-3 | \-4 | \-5 ) | ( \-p | \-l | \-S |  \-b \|)
-Select a particular init stage or runlevel (short options aliases)
+Select a particular init stage or runlevel (short options)
 .TP
 .RB \| \-d | \-\-debug \|
 Enable debugging output to stderr and to
@@ -75,6 +79,10 @@ Supervision global configuration file
 .TP
 .I @SYSCONFDIR@/sv/\fBSERVICE\fR
 Service file or directory for supervision
+.SS @LIBDIR@/sv
+.TP
+.I @LIBDIR@/sv/sh/sv-deps.sh
+Shell script to list dependencies
 
 .SH "RETURN VALUE"
 .TP
