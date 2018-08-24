@@ -313,6 +313,7 @@ endif
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/run
 	sed $(dist_MAN_SED) sv-run.8 >$(DESTDIR)$(MANDIR)/man8/sv-run.8
 	sed $(dist_MAN_SED) sv-rc.8 >$(DESTDIR)$(MANDIR)/man8/sv-rc.8
+	sed $(dist_MAN_SED) sv-rcorder.8 >$(DESTDIR)$(MANDIR)/man8/sv-rcorder.8
 	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed $(dist_MAN_SED) sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
