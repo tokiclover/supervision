@@ -210,6 +210,7 @@ dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
+dist_SV_RUN_SYMLINKS = sv-rc
 dist_SV_RUN_LIBEXEC_SYMLINKS = rc service
 dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS = halt poweroff reboot shutdown
 dist_SV_LIBEXEC_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
@@ -296,6 +297,7 @@ endif
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_EXEC) src/sv-run $(DESTDIR)$(SBINDIR)
 	$(install_EXEC) src/sv-shutdown $(DESTDIR)$(SBINDIR)
+	$(dist_SV_RUN_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/%;)
 	$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
 	$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
