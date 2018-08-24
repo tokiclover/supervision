@@ -376,6 +376,7 @@ uninstall: uninstall-doc
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
 	rm -fr $(DESTDIR)$(SV_LIBDIR)/cache/* $(dist_INITD:%=$(DESTDIR)$(SV_SVCDIR).init.d/%)
 	rm -f $(dist_SV_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
+		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
 		$(dist_SV_BINS:src/%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
