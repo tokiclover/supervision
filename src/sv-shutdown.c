@@ -71,7 +71,7 @@ static int aiocb_count;
 #define SV_CONFIG LIBDIR "/sv/sh/SV-CONFIG"
 #define SD_PIDFILE _PATH_VARRUN "sv-shutdown.pid"
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 # undef  _PATH_NOLOGIN
 # define _PATH_NOLOGIN "./nologin"
 # define BOOTFILE "./fastboot"
@@ -212,7 +212,7 @@ __attribute__((__noreturn__)) static void help_message(int status)
 
 static void sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 	int i = -1;
@@ -267,7 +267,7 @@ static int sigsetup(void)
 	struct sigaction act;
 	int sigvalue[] = { SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
 	int i;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -282,7 +282,7 @@ static int sigsetup(void)
 
 static int sv_wall(void)
 {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 	int i;
@@ -406,7 +406,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	struct utmpx ut;
 	int init_signal = 0;
 	int action_force = 0;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -909,7 +909,7 @@ time_error:
 static int sv_nologin(void)
 {
 	int fd;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
 
@@ -923,7 +923,7 @@ static int sv_nologin(void)
 static void sv_timewarn(unsigned long int timeleft)
 {
 	static char *ptr;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	DBG("%s(%lu)\n", __func__, timeleft);
 #endif
 	if (!ptr) ptr = message+timer_pos;

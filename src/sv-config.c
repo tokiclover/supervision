@@ -116,7 +116,7 @@ static int svconfig(void)
 	int i = 0, j;
 	FILE *fp;
 	bin = ptr = _PATH_STDPATH;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if(sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
@@ -262,7 +262,7 @@ static int svupdate(void)
 	struct dirent *ent;
 	struct utsname un;
 	char lsd[128], psd[128];
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if(sv_debug) DBG("%s(void)\n", __func__);
 #endif
 #if defined(PREFIX) && !defined(__linux__)
@@ -278,7 +278,7 @@ static int svupdate(void)
 	}
 	dir[2] = lsd;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("cleaning dependecy cache files\n", NULL);
 #endif
 	/* remove outdated cache */
@@ -298,7 +298,7 @@ static int svupdate(void)
 		}
 	}
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("moving init run level files\n", NULL);
 #endif
 	/* move v0.1[23].0 run level dirs to new v0.14.0 location */
@@ -328,7 +328,7 @@ static int svupdate(void)
 		(void)rmdir(op);
 	}
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("updating `./{run,finish}' files\n", NULL);
 #endif
 	/* update ./{run,finish} symlinks to v0.14.0 */
@@ -379,7 +379,7 @@ static int svupdate(void)
 		(void)closedir(od);
 	}
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("moving old `SERVICE_{ENV,OPTS}' files\n", NULL);
 #endif
 	/* update SERVICE_{ENV,OPTIONS} to v0.13.0 format */
@@ -424,7 +424,7 @@ static int svupdate(void)
 		}
 	}
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("updating `SV_TMPDIR/env' cache files\n", NULL);
 #endif
 	/* update SV_TMPDIR/env environment file */
@@ -466,7 +466,7 @@ static int newsvc(const char *svc)
 	struct stat st;
 	char *pt;
 	char buf[BUFSIZ];
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if(sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 

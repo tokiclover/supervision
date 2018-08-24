@@ -82,7 +82,7 @@ enum {
 		print_color(COLOR_RED, COLOR_FG), \
 		print_color(COLOR_RST, COLOR_RST), __VA_ARGS__)
 #define ERR_EXIT ERROR("", NULL)
-#if defined SV_DEBUG
+#if defined DEBUG
 #  define DBG(fmt, ...) fprintf(stderr, "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define DBG(fmt, ...)

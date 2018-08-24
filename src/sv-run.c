@@ -184,7 +184,7 @@ static int svc_print_status(struct svcrun *run, struct stat *st_buf, char *buf, 
 	strftime(ptr, STRFTIME_OFF, "%F %T", (const struct tm*)&lt);    \
 } while (0/*CONST COND*/)
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p, %p, %p)\n", __func__, run, st_buf, buf);
 #endif
 
@@ -368,7 +368,7 @@ int svc_cmd(struct svcrun *run)
 	char *cmd = (char*)run->argv[4];
 	char buf[10124] = { "" };
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[%s])\n", __func__, run, run->name);
 #endif
 
@@ -548,7 +548,7 @@ reterr:
 static int svc_run(struct svcrun *run)
 {
 	pid_t pid;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[%s])\n", __func__, run, run->name);
 #endif
 
@@ -614,7 +614,7 @@ runsvc:
 
 	/* write the service command and the pid to the lock file */
 	dprintf(run->lock, "pid=%d:command=%s", getpid(), run->argv[4]);
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
 			run->name, run->argv[4], getpid());
 #endif
@@ -636,7 +636,7 @@ supervise:
 		/* setup a timeout and wait for the child */
 		if (run->dep->timeout)
 			alarm(run->dep->timeout);
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("waiting pid=%d (service=%s)\n", run->cld, run->name);
 #endif
 		sigsuspend(&ss_old);
@@ -650,7 +650,7 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 {
 	int status = 0;
 	pid_t pid = 0;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[=%s], %d)\n", __func__, run, run->name, flags);
 #endif
 
@@ -659,7 +659,7 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 		status = run->status;
 	else
 	do {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("waiting for pid=%d (service=%s)\n", run->cld, run->name);
 #endif
 		pid = waitpid(run->cld, &status, flags);
@@ -709,7 +709,7 @@ static int svc_depend(struct svcrun *run)
 	SV_DepTree_T deptree = { NULL, NULL, 0, 0 };
 	SV_String_T *svc;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, run);
 #endif
 
@@ -766,7 +766,7 @@ static void svc_env(void)
 	char buf[1024], *ptr;
 	int i = 0, j;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
@@ -798,7 +798,7 @@ int svc_environ_update(off_t off)
 	int j;
 	char *ptr;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%ld)\n", __func__, off);
 #endif
 
@@ -830,7 +830,7 @@ static int svc_lock(struct svcrun *run, int timeout)
 	static int f_flags = O_NONBLOCK | O_CREAT | O_WRONLY | O_CLOEXEC;
 	static mode_t f_mode = 0644;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[%s], %d)\n", __func__, run, run->name, timeout);
 #endif
 
@@ -875,7 +875,7 @@ static int svc_wait(struct svcrun *run, int timeout, char *path)
 	int i, j;
 	pid_t pid = 0;
 	int msec = SVC_TIMEOUT_MSEC, nsec, ssec = 10;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[%s], %d)\n", __func__, run, run->name, timeout);
 #endif
 	if (timeout < ssec) {
@@ -916,7 +916,7 @@ static void svc_zap(const char *svc)
 		SV_TMPDIR_PIDS, SV_TMPDIR_WAIT,
 		SV_TMPDIR "/envs", SV_TMPDIR "/opts", NULL };
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%s)\n", __func__, svc);
 #endif
 
@@ -936,7 +936,7 @@ static int svc_status(struct svcrun *restrict run, int status, int flag, char *r
 	int open_flags = O_RDONLY;
 	mode_t m;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[%s], %c, %i, %s)\n", __func__, run, run->name, status, flag, what);
 #endif
 
@@ -1036,7 +1036,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 	int j = -1;
 	static const char *sn[] = { "SIGCONT", "SIGSTOP", "SIGTRAP" };
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 
@@ -1062,7 +1062,7 @@ static void rs_sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 			if (j < 0) j = 1;
 		case CLD_TRAPPED:
 			if (j < 0) j = 2;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 			if (sv_debug) DBG("pid=%d (service=%s) received %s signal\n", RUN->cld, RUN->name, sn[j]);
 #endif
 			errno = serrno;
@@ -1084,7 +1084,7 @@ static void rs_sigsetup(void)
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
@@ -1101,7 +1101,7 @@ void svc_sigsetup(void)
 	struct sigaction sa;
 	int *sig = (int []){ SIGALRM, SIGCHLD, SIGHUP, SIGINT, SIGQUIT, SIGTERM,
 		SIGUSR1, 0 };
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	memset(&sa, 0, sizeof(sa));
@@ -1118,7 +1118,7 @@ int svc_exec(int argc, const char *argv[]) {
 	int i = 0, j, retval;
 	struct svcrun run;
 	SV_String_T svc;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%d, %p)\n", __func__, argc, argv);
 #endif
 	memset(&svc, 0, sizeof(svc));
@@ -1182,7 +1182,7 @@ static void *thread_worker_handler(void *arg)
 	int r;
 	struct svcrun_list *p = arg;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
 #endif
 
@@ -1247,7 +1247,7 @@ static void *thread_worker_handler(void *arg)
 				p->rl_next = RL_SVC;
 				if (RL_SVC) RL_SVC->rl_prev = p;
 				RL_SVC = p;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 				if (sv_debug) DBG("[add]lid=%u prev=%p %p next=%p\n", p->rl_lid, p->rl_prev, p, p->rl_next);
 #endif
 				pthread_rwlock_unlock(&RL_SVC_LOCK);
@@ -1257,7 +1257,7 @@ static void *thread_worker_handler(void *arg)
 			p->rl_job++;
 			j = p->rl_job;
 			pthread_rwlock_unlock(&p->rl_lock);
-#ifdef SV_DEBUG
+#ifdef DEBUG
 			if (sv_debug) DBG("[job]lid=%u service=%s\n", p->rl_lid, p->run[n].name);
 #endif
 			n++;
@@ -1275,7 +1275,7 @@ static void *thread_worker_handler(void *arg)
 
 waitpid:
 	while (j) {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("lid=%u waiting %ld jobs\n", p->rl_lid, j);
 #endif
 		pthread_rwlock_rdlock(&p->rl_lock);
@@ -1299,7 +1299,7 @@ retval:
 	pthread_rwlock_rdlock(&p->rl_lock);
 	if (p->rl_count != p->rl_siz) {
 		pthread_rwlock_wrlock(&RL_SVC_LOCK);
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("[del]lid=%u prev=%p %p next=%p\n", p->rl_lid, p->rl_prev, p, p->rl_next);
 #endif
 		if (RL_SVC == p) RL_SVC = p->rl_next;
@@ -1318,7 +1318,7 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 	int i = -1;
 	int serrno = errno;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
 #endif
 
@@ -1330,7 +1330,7 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 		case CLD_TRAPPED:
 			return;
 		}
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("Caught SIGCHLD from pid=%d\n", si->si_pid);
 #endif
 		pthread_cond_signal(&RL_PID_COND);
@@ -1361,7 +1361,7 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 	struct timespec ts = { 0L, 0L };
 	pid_t pid;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
@@ -1371,13 +1371,13 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 	for (;;) {
 waitcond:
 		if (pthread_mutex_lock(&RL_PID_MUTEX)) {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 			if (sv_debug) DBG("Failed to lock pid mutex (RL_PID_MUTEX)\n", NULL);
 #endif
 			continue;
 		}
 		if (pthread_cond_wait(&RL_PID_COND, &RL_PID_MUTEX)) {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 			if (sv_debug) DBG("Failed to wait pid condition (RL_PID_MUTEX)\n", NULL);
 #endif
 			continue;
@@ -1389,7 +1389,7 @@ waitpid:
 			if (pid < 0 && errno != EINTR) goto waitcond;
 			if (!pid) goto waitcond;
 		} while(!WIFEXITED(s) && !WIFSIGNALED(s));
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("Looking for pid=%d\n", pid);
 #endif
 
@@ -1404,7 +1404,7 @@ rl_svc:
 			for (i = 0; i < len; i++) {
 				if (p->run[i].pid != pid) continue;
 				pthread_mutex_unlock(&p->rl_pid);
-#ifdef SV_DEBUG
+#ifdef DEBUG
 				if (sv_debug) DBG("Found pid=%d service=%s\n", pid, p->run[i].name);
 #endif
 				p->run[i].status = s;
@@ -1435,7 +1435,7 @@ rl_svc:
 			}
 			pthread_mutex_unlock(&p->rl_pid);
 		}
-#ifdef SV_DEBUG
+#ifdef DEBUG
 		if (sv_debug) DBG("Failed to found pid=%d\n", pid);
 #endif
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
@@ -1449,7 +1449,7 @@ static void thread_signal_setup(void)
 	int r;
 	int *sig = (int []){ SIGCHLD, SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, 0 };
 	struct sigaction sa;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	memset(&sa, 0, sizeof(sa));
@@ -1480,7 +1480,7 @@ static void thread_signal_setup(void)
 
 __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)))
 {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	if (pthread_sigmask(SIG_UNBLOCK, &ss_thread, NULL))
@@ -1503,7 +1503,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	static unsigned int count;
 	struct svcrun_list *p, *k;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
 #endif
 
@@ -1603,7 +1603,7 @@ retval:
 static void thread_worker_cleanup(struct svcrun_list *p)
 {
 	int i;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, p);
 #endif
 
