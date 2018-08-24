@@ -485,7 +485,7 @@ static int svc_init_level(int argc, const char *argv[])
 	SV_SvcDeps_T *dep;
 	SV_String_T *svc;
 #ifdef SV_DEBUG
-	if (sv_debug) DBG("%s(%d, %d, %p)\n", __func__, argc, argv);
+	if (sv_debug) DBG("%s(%d, %p)\n", __func__, argc, argv);
 #endif
 
 	if (sv_init == SV_SHUTDOWN_LEVEL)
