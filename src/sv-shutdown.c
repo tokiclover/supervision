@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-shutdown.c  0.14.0 2018/07/10
+ * @(#)sv-shutdown.c  0.14.2 2018/08/24
  */
 
 #ifdef HAVE_CONFIG_H
@@ -63,7 +63,7 @@ static int aiocb_count;
 # define HOST_NAME_MAX MAXHOSTNAMELEN
 #endif
 
-#define VERSION "0.13.0"
+#define VERSION "0.14.2"
 
 #ifndef LIBDIR
 # define LIBDIR "/lib"
@@ -406,6 +406,7 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	struct utmpx ut;
 	int init_signal = 0;
 	int action_force = 0;
+	pid_t pid = getpid();
 #ifdef DEBUG
 	DBG("%s(void)\n", __func__);
 #endif
@@ -580,10 +581,11 @@ shutdown:
 	if (slog_flag) {
 	openlog(progname, LOG_PID | LOG_CONS, LOG_AUTH);
 	if (shutdown_action == SD_SINGLE)
-		syslog(LOG_CRIT, "%s user mode runlevel (by %s@%s)",
-				action[SD_ACTION_SINGLE], whom, hostname);
+		syslog(LOG_CRIT, "%s[%d]: %s user mode runlevel (by %s@%s)",
+				progname, pid, action[SD_ACTION_SINGLE], whom, hostname);
 	else
-		syslog(LOG_CRIT, "system %s (by %s@%s)", action[ai], whom, hostname);
+		syslog(LOG_CRIT, "%s[%d]: system %s (by %s@%s)", progname, pid,
+				action[ai], whom, hostname);
 	closelog();
 	}
 
