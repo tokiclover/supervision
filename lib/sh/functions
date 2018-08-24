@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) shfunctions    2.1 2018/07/26 21:09:26                   Exp $
+# $Id:  @(#) shfunctions    2.2 2018/08/24 21:09:26                   Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -37,10 +37,10 @@ error()
 {
 	local message="${*}"
 	if ${__SVC_SYSLOG__}; then
-		logger "${name}: error: ${@}"
+		logger "${name}[$$]: error: ${@}"
 	fi
 	if ${__SVC_DEBUG_INFO__}; then
-		printf "${name}: error: ${@}\n" >&${__SV_DEBUG_FD__}
+		printf "${name}[$$]: error: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_mag}${name}}"
@@ -54,10 +54,10 @@ info()
 {
 	local message="${*}"
 	if ${__SVC_SYSLOG_INFO__}; then
-		logger "${name}: info: ${message}"
+		logger "${name}[$$]: info: ${message}"
 	fi
 	if ${__SVC_DEBUG_INFO__}; then
-		printf "${name}: info: ${@}\n" >&${__SV_DEBUG_FD__}
+		printf "${name}[$$]: info: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_ylw}${name}}"
@@ -71,10 +71,10 @@ warn()
 {
 	local message="${*}"
 	if ${__SVC_SYSLOG__}; then
-		logger "${name}: warning: ${message}"
+		logger "${name}[$$]: warning: ${message}"
 	fi
 	if ${__SVC_DEBUG_INFO__}; then
-		printf "${name}: warn: ${@}\n" >&${__SV_DEBUG_FD__}
+		printf "${name}[$$]: warn: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
 	local prefix="${name:+${color_fg_red}${name}}"
@@ -88,10 +88,10 @@ begin()
 {
 	local message="${*}"
 	if ${__SVC_SYSLOG_INFO__}; then
-		logger "${name}: notice: ${message}"
+		logger "${name}[$$]: notice: ${message}"
 	fi
 	if ${__SVC_DEBUG_INFO__}; then
-		printf "${name}: notice: ${@}\n" >&${__SV_DEBUG_FD__}
+		printf "${name}[$$]: notice: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	printf "${__print_eol__}"
 	__eol_print__=
@@ -110,10 +110,10 @@ end()
 	shift
 	local message="${*}"
 	if ${__SVC_SYSLOG_INFO__}; then
-		logger "${name}: notice: ${message} [${ret}]"
+		logger "${name}[$$]: notice: ${message} [${ret}]"
 	fi
 	if ${__SVC_DEBUG_INFO__}; then
-		printf "${name}: notice: ${@} [${ret}]\n" >&${__SV_DEBUG_FD__}
+		printf "${name}[$$]: notice: ${@} [${ret}]\n" >&${__SV_DEBUG_FD__}
 	fi
 	case "${ret}" in
 		(0) suffix="${color_fg_blu}(${name}) [${color_fg_grn}ok${color_fg_blu}]${color_rst}";;
