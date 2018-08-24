@@ -272,24 +272,25 @@ service command when a service is waiting for the lockfile
 .SH "APPLICATION USAGE"
 Some services are added to the service directory? Try starting them then.
 It seems to work? Good, try to add them in an init runlevel with
-`\fIsv-run \fB--RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the priority file
-by running `\fIsv-rc \fBRUNLEVEL\fR' and then checkout
-\fI@RUNDIR@/sv/.tmp/deps/\fBRUNLEVEL\fR to see if the service is inserted
+`\fIsv-run \fB\-\-RUNLEVEL SERVICE \fIadd\fR'; and then regenerate the dependency
+scheduling priority file by running `\fIsv-rcorder \fB\-\-RUNLEVEL \fIscan\fR'
+and then checkout the output to see if the service is inserted
 in the right place depending on the dependency definitions. Or better,
-check out the file beforehand. It looks weird or the order changed dramatically?
-Try removing the file altogether and try again after issuing `\fIsv-run \fBSERVICE \fIscan\fR'
-to update the dependency cache. Else, it can be a case of cyclic
-dependency definition. Major dependency redefinition is necessary.
-
-.B NOTE:
-Cyclical dependency definitions will cause dependency setup to fail when using
-`\fIsv-run \fBSERVICE \fIstart\fR'
-or service scheduling havoc in dependency tree files mentionned above.
+check out the ordering beforehand with `\fIsv-rcorder \fB\-\-RUNLEVEL\fR'.
+It looks weird or the order changed dramatically?
+Try again\-\-update the dependency definitions\-\-and then issue
+`\fIsv-rcorder \fB\-\-RUNLEVEL \fIscan\fR' to update the dependency cache and
+the scheduling priority ordering. Else, it can be a case of cyclical
+dependency definition. Major dependency redefinition is necessary to fix this
+issue which will prevent
+.BR sv-rc (8)
+to schedule and order the start/stop of services.
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
 .BR supervision (5),
 .BR sv-rc (8),
+.BR sv-order (8),
 .BR sv-shutdown (8),
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
