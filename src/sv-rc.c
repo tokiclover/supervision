@@ -668,8 +668,9 @@ static void svc_init(const char *cmd)
 
 	t = time(NULL);
 	ctime_r(&t, b);
-	svc_log("logging: %s command\n", command);
-	svc_log("%s %s init level started at %s\n", progname, sv_init_level[sv_init], b);
+	svc_log("\nlogging: %s command\n", command);
+	svc_log("%s {v%s} %s init level started at %s\n", progname, SV_VERSION, 
+			sv_init_level[sv_init], b);
 
 	/* do this extra loop to be able to stop sysboot with sv_init=SV_SHUTDOWN_LEVEL;
 	 * so that, {local,network}fs services etc. can be safely stopped
@@ -751,9 +752,9 @@ sysboot:
 		ctime_r(&t, b);
 		svc_log( "\n\t%s runlevel (%s command) at %s\n", sv_init_level[sv_level],
 				command, b);
-		printf("\n\t%s%s%s %s(ing) init %s%s%s runlevel at %s%s%s\n",
+		printf("\n\t%s%s%s {v%s} %s(ing) init %s%s%s runlevel at %s%s%s\n",
 				print_color(COLOR_MAG, COLOR_FG), progname, print_color(COLOR_RST, COLOR_RST),
-				command, print_color(COLOR_BLU, COLOR_FG), sv_init_level[sv_level],
+				SV_VERSION, command, print_color(COLOR_BLU, COLOR_FG), sv_init_level[sv_level],
 				print_color(COLOR_RST, COLOR_RST), print_color(COLOR_YLW, COLOR_RST),
 				b, print_color(COLOR_RST, COLOR_RST));
 
