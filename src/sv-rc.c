@@ -539,7 +539,7 @@ static void svc_init_order(char *arg)
 	SV_String_T *s;
 	DIR *d;
 	struct dirent *e;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(arg)\n", __func__);
 #endif
 
