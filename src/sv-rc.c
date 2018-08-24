@@ -13,6 +13,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <time.h>
+#include <dirent.h>
 #include <sys/file.h>
 #include <sys/param.h>
 #include <sys/types.h>
@@ -531,25 +532,35 @@ static int svc_init_level(int argc, const char *argv[])
 	return retval;
 }
 
-static svc_init_order(char *arg)
+static void svc_init_order(char *arg)
 {
 	char b[128];
 	int p;
 	SV_String_T *s;
+	DIR *d;
+	struct dirent *e;
 #ifdef SV_DEBUG
 	if (sv_debug) DBG("%s(arg)\n", __func__);
 #endif
 
 	snprintf(b, sizeof(b), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
-	if (arg && !strcmp(arg, "update")) {
-		if (geteuid()) {
+	if (arg && !strcmp(arg, "scan")) {
+		if (!(d = opendir(SV_TMPDIR_DEPS)))
+			ERROR("Failed to `opendir(%s)'", SV_TMPDIR_DEPS);
+		if ((p = dirfd(d)) < 0)
+			ERROR("Failed to `dirfd(%s)'", SV_TMPDIR_DEPS);
+		while ((e = readdir(d))) { 
+			if (*e->d_name == '.') continue;
+			if (unlinkat(p, e->d_name, 0))
+				ERROR("Failed to `unlinkat(%s, %s)'", SV_TMPDIR_DEPS, e->d_name);
+		}
 require_root:
+		if (geteuid()) {
 			ERR("super user proviledge is required!\n", NULL);
 			exit(EXIT_FAILURE);
 		}
-		if (unlink(b)) ERROR("Failed to `unlink(%s)'", b);
 	}
-	if (access(b, F_OK)) goto require_root;
+	if (!arg && access(b, F_OK)) goto require_root;
 
 	sv_svcdeps_load(NULL);
 	sv_deptree_load(&DEPTREE);
