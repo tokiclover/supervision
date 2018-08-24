@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2018/08/16
 
+0.14.2:
+
+Merged remaining commits from master branch into this stable;
+Some commits were missing from previous v0.14.1. **Apology**
+
 0.14.1:
 
 `sv-rc(8)' bug fix (environment variables were not being compared properly),
