@@ -23,7 +23,7 @@ static int  sv_conf_load(void);
 static void sv_conf_free(void);
 
 inline int sv_conf_yesno(const char *env) {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%s)\n", __func__, env);
 #endif
 	return sv_yesno(sv_getconf(env));
@@ -31,7 +31,7 @@ inline int sv_conf_yesno(const char *env) {
 
 const char *sv_getconf(const char *env)
 {
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(%s)\n", __func__, env);
 #endif
 	if (!SV_CONFIG_ARRAY)
@@ -63,7 +63,7 @@ static int sv_conf_load(void)
 	char *line = NULL, *ptr;
 	size_t count = 0, len = 0, l, num = 16, pos;
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
@@ -105,7 +105,7 @@ static int sv_conf_load(void)
 	SV_CONFIG_ARRAY[count++] = NULL;
 	SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*count);
 
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	atexit(sv_conf_free);
 #endif
 	return 0;
@@ -114,7 +114,7 @@ static int sv_conf_load(void)
 static void sv_conf_free(void)
 {
 	int i = 0;
-#ifdef SV_DEBUG
+#ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 	while (SV_CONFIG_ARRAY[i])

@@ -880,7 +880,7 @@ check_CP <<EOF && _PATH_WALL=$($TMP_E)
 int main(void){puts(_PATH_WALL); return 0;}
 EOF
 
-enabled debug && add_CPPFLAGS -DSV_DEBUG
+enabled debug && add_CPPFLAGS -DDEBUG
 enabled sysvinit && HEADERS_LIST="${HEADERS_LIST} initreq.h"
 for header in $HEADERS_LIST; do
 	check_header "$header" || DIE "missing $header header"

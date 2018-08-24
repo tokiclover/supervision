@@ -73,7 +73,7 @@ extern "C" {
 extern int debugfd;
 extern FILE *debugfp;
 
-#if defined(ERROR_H) && defined(SV_DEBUG)
+#if defined(ERROR_H) && defined(DEBUG)
 #include <stdio.h>
 #  undef ERR
 #  define ERR(fmt, ...) do {              \
@@ -102,7 +102,7 @@ extern FILE *debugfp;
 	if (debugfp != stderr)   \
 	fprintf(stderr , "%s: debug: %s:%d: " fmt, progname, __FILE__, __LINE__, __VA_ARGS__); \
   } while (0/*CONSTCOND*/)
-#endif /* ERROR_H && SV_DEBUG */
+#endif /* ERROR_H && DEBUG */
 
 extern int sv_debug;
 extern int sv_parallel;
