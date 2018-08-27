@@ -63,7 +63,7 @@ static const char *longopts_help[] = {
 	NULL
 };
 
-static void help_message(int status)
+__attribute__((__noreturn__)) static void help_message(int status)
 {
 	int i = 0;
 
