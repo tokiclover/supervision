@@ -442,7 +442,7 @@ static int svupdate(void)
 }
 
 
-static void help_message(int status)
+__attribute__((__noreturn__)) static void help_message(int status)
 {
 	int i = 0;
 
