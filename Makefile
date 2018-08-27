@@ -230,7 +230,38 @@ dist_SV_SVCS  += initctl
 endif
 
 DISTFILES   = \
+	$(dist_SV_RUN_SYMLINKS) \
+	$(dist_SV_RUN_LIBEXEC_SYMLINKS) \
+	$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) $(dist_SV_LOGS)
+.PHONY: uninstall uninstall-doc uninstall-dist
+
+uninstall: uninstall-doc
+	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
+		$(DESTDIR)$(SBINDIR)/sv-shutdown \
+		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SBINDIR)/%) $(DESTDIR)$(SBINDIR)/sv-run \
+		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
+		$(DESTDIR)$(MANDIR)/man8/sv-rc.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
+		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
+	rm -f $(dist_CONFIG_LOCAL:%=$(DESTDIR)$(SV_SVCDIR).conf.local.d/%)
+	for svc in $(dist_SVC_INSTANCES); do \
+		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
+	done
+	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
+	       $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%) \
+	       $(dist_RS_OPTS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%)
+	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
+	rm -fr $(DESTDIR)$(SV_LIBDIR)/cache/* $(dist_INITD:%=$(DESTDIR)$(SV_SVCDIR).init.d/%)
+	rm -f $(dist_SV_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
+		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_BINS:src/%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
+		$(dist_SV_SBINS:src/%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SH_BINS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
+		$(dist_SH_LIBS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
+		$(DESTDIR)$(SV_SVCDIR)/getty.tty*
 dist_INITD = sysinit sysboot default shutdown single
 dist_DIRS  += \
 	$(SV_LIBDIR)/bin $(SV_LIBDIR)/sbin $(SV_LIBDIR)/sh $(DOCDIR) \
@@ -297,9 +328,6 @@ endif
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
 	$(install_EXEC) src/sv-run $(DESTDIR)$(SBINDIR)
 	$(install_EXEC) src/sv-shutdown $(DESTDIR)$(SBINDIR)
-	$(dist_SV_RUN_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/%;)
-	$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
-	$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/%;)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_EXEC) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
 	$(install_EXEC) $(dist_SH_BINS) $(DESTDIR)$(SV_LIBDIR)/sh
@@ -356,6 +384,13 @@ $(dist_SV_LOGS): install-dir
 
 $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
+
+$(dist_SV_RUN_SYMLINKS): install-dir
+	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/$@
+$(dist_SV_RUN_LIBEXEC_SYMLINKS): install-dir
+	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/$@
+$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS): install-dir
+	$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$@
 
 .PHONY: uninstall uninstall-doc uninstall-dist
 
