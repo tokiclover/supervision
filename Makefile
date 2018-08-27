@@ -214,6 +214,7 @@ dist_SV_RUN_SYMLINKS = sv-rc sv-rcorder
 dist_SV_RUN_LIBEXEC_SYMLINKS = rc service
 dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS = halt poweroff reboot shutdown
 dist_SV_LIBEXEC_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
+dist_MAN_8_PAGES = sv-rc.8 sv-rcorder.8 sv-shutdown.8
 
 ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_RUNIT_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
@@ -230,6 +231,7 @@ dist_SV_SVCS  += initctl
 endif
 
 DISTFILES   = \
+	$(dist_MAN_8_PAGES) \
 	$(dist_SV_RUN_SYMLINKS) \
 	$(dist_SV_RUN_LIBEXEC_SYMLINKS) \
 	$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS) \
@@ -339,11 +341,7 @@ endif
 	$(install_DATA) -D README.local $(DESTDIR)/usr/local$(SV_SVCDIR).local.d/README
 	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/run
-	sed $(dist_MAN_SED) sv-run.8 >$(DESTDIR)$(MANDIR)/man8/sv-run.8
-	sed $(dist_MAN_SED) sv-rc.8 >$(DESTDIR)$(MANDIR)/man8/sv-rc.8
-	sed $(dist_MAN_SED) sv-rcorder.8 >$(DESTDIR)$(MANDIR)/man8/sv-rcorder.8
 	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
-	sed $(dist_MAN_SED) sv-shutdown.8 >$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|\(_PATH_STDPATH=\).*$$|\1$(_PATH_STDPATH)|g' \
@@ -392,6 +390,9 @@ $(dist_SV_RUN_LIBEXEC_SYMLINKS): install-dir
 $(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS): install-dir
 	$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$@
 
+$(dist_MAN_8_PAGES): FORCE install-dir
+	sed $(dist_MAN_SED) $@ >$(DESTDIR)$(MANDIR)/man8/$@
+
 .PHONY: uninstall uninstall-doc uninstall-dist
 
 uninstall: uninstall-doc
@@ -399,8 +400,7 @@ uninstall: uninstall-doc
 		$(DESTDIR)$(SBINDIR)/sv-shutdown \
 		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SBINDIR)/%) $(DESTDIR)$(SBINDIR)/sv-run \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
-		$(DESTDIR)$(MANDIR)/man8/sv-rc.8 $(DESTDIR)$(MANDIR)/man8/sv-run.8 \
-		$(DESTDIR)$(MANDIR)/man8/sv-shutdown.8
+		$(dist_MAN_8_PAGES:%=$(DESTDIR)$(MANDIR)/man8/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(DESTDIR)$(SV_SVCDIR).conf.local.d/%)
 	for svc in $(dist_SVC_INSTANCES); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
