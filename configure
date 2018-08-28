@@ -576,7 +576,6 @@ LINUX_SUPERVISION_SERVICES="
 	docker
 	dmeventd
 	lvmetad
-	sulogin
 	udev
 	udev-monitor
 "

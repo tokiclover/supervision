@@ -288,6 +288,9 @@ $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
 install: install-dir $(DISTFILES)
+	sed -e '/^SVC_OPTS=.*$$/d;s,/sbin/sulogin,/bin/login,g' \
+		-i $(DESTDIR}$(SYSCONFIDIR)/sv/sulogin/OPTIONS
+
 	$(install_DATA) $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 	$(install_DATA) $(dist_CONFIG_LOCAL:%=sv.conf.local.d/%) $(DESTDIR)$(SV_SVCDIR).conf.local.d
 
