@@ -323,7 +323,7 @@ int svc_end(const char *svc, int status)
 
 __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 {
-	static char logfile[] = "/var/log/sv.log", *logpath;
+	static char logfile[] = "/var/log/sv-rc.log", *logpath;
 	int retval = 0;
 	va_list ap;
 
