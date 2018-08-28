@@ -307,7 +307,6 @@ elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
 	if yesno "${SV_CGROUP}" && [ "${SV_UNAME}" = "Linux" ]; then
 		cgroup_remove_service
 	fi
-	sv-shutdown --force ${ACTION} now
 fi
 }
 
