@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
+#include <unistd.h>
 #include <sys/file.h>
 #include <sys/param.h>
 #include <sys/reboot.h>
@@ -39,12 +40,10 @@
 static int aiocb_count;
 #endif
 
-#if defined (__linux__) || (defined(__FreeBSD_kernel__) && \
-		defined(__GLIBC__)) || defined(__GNU__)
+#if defined(RB_HALT_SYSTEM)
 # define RA_HALT     RB_HALT_SYSTEM
 # define RA_POWEROFF RB_POWER_OFF
-#elif defined(__DragonFly__) || defined(__FreeBSD__) || \
-	defined(__OpenBSD__) || defined(__NetBSD__) || defined(BSD)
+#elif defined(RB_HALT)
 # define RA_HALT     RB_HALT
 # define RA_POWEROFF RB_POWEROFF
 #else
