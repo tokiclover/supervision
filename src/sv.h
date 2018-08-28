@@ -53,8 +53,8 @@ extern "C" {
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
 #define SV_ENVIRON SV_TMPDIR "/environ"
-#define SV_LOGFILE SV_TMPDIR "/sv.log"
-#define SV_PIDFILE SV_TMPDIR "/sv.pid"
+#define SV_LOGFILE SV_TMPDIR "/sv-rc.log"
+#define SV_PIDFILE SV_TMPDIR "/sv-rc.pid"
 #define SV_RUN_SH SV_LIBDIR "/sh/sv-run.sh"
 
 /* status command to issue to svc_{mark,state} when the STAT querry the status
