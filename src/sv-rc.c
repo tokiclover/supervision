@@ -569,6 +569,7 @@ static void svc_init(const char *cmd)
 	int level = 0;
 	const char *runlevel;
 	time_t t;
+	size_t l;
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(%s)\n", __func__, cmd);
 #endif
@@ -600,6 +601,26 @@ static void svc_init(const char *cmd)
 	setenv("__SV_DEBUG_FD__", buf, 1);
 	snprintf(buf, sizeof(buf), "%d", sv_pid);
 	setenv("SV_PID", buf, 1);
+
+	/* check another instance of sv-rc(8) and send signal if necessary */
+	if (!access(SV_PIDFILE, F_OK) && (sv_init == SV_SHUTDOWN_LEVEL)) {
+		if ((r = open(SV_PIDFILE, O_RDONLY)) > 0) {
+			l = strlen(buf)+1LU;
+			do {
+				p = read(r, buf+l, sizeof(buf)-l);
+				if (p < 0 && errno == EINTR) continue;
+			} while (0);
+			if ((p > 0) && sscanf(buf+l, "%d", &p)) {
+				/* kill the other instance before system reboot or halt */
+				if (!kill(0, p)) {
+					if (runlevel && (strcmp(runlevel, sv_init_level[SV_REBOOT_LEVEL]) ||
+					                 strcmp(runlevel, sv_init_level[SV_SHUTDOWN_LEVEL])))
+						kill(SIGTERM, p);
+				}
+			}
+		}
+	}
+
 	if ((r = open(SV_PIDFILE, O_CREAT|O_RDWR|O_TRUNC|O_CLOEXEC, 0644)) > 0) {
 		if (flock(r, LOCK_EX|LOCK_NB))
 			ERROR("Failed to lock %s", SV_PIDFILE);
@@ -714,6 +735,7 @@ sysboot:
 			p = DEPTREE.size-1;
 		else
 			p = 0;
+		svc_run_level(sv_init_level[sv_level]);
 		while (p >= 0 && p < DEPTREE.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(DEPTREE.tree[p])) {
 				t = time(NULL);
@@ -741,7 +763,6 @@ sysboot:
 			break;
 	} /* SHUTDOWN_LOOP */
 
-	svc_run_level(sv_init_level[sv_level]);
 	t = time(NULL);
 	ctime_r(&t, b);
 	svc_log("\n%s %s init run level stopped at %s\n", progname, sv_init_level[sv_init], b);
