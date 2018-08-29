@@ -81,6 +81,7 @@ dist_SV_SVCS  = \
 	spawn-fcgi.nginx \
 	snmpd \
 	snmptrapd \
+	sulogin \
 	syslog \
 	inetd \
 	httpd \
@@ -286,8 +287,10 @@ $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
 install: install-dir $(DISTFILES)
+ifneq ($(OS),Linux)
 	sed -e '/^SVC_OPTS=.*$$/d;s,/sbin/sulogin,/bin/login,g' \
 		-i $(DESTDIR}$(SYSCONFIDIR)/sv/sulogin/OPTIONS
+endif
 
 	$(install_DATA) $(dist_EXTRA)   $(DESTDIR)$(DOCDIR)
 	$(install_DATA) $(dist_CONFIG_LOCAL:%=sv.conf.local.d/%) $(DESTDIR)$(SV_SVCDIR).conf.local.d
