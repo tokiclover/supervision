@@ -574,7 +574,7 @@ static int svc_run(struct svcrun *run)
 		}
 		return SVC_WAITPID;
 	}
-	else if (run->pid == 0) /* child */
+	else if (pid == 0) /* child */
 		goto runsvc;
 	else {
 		ERROR("%s:%d: Failed to fork()", __func__, __LINE__);
