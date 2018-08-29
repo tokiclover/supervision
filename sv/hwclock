@@ -67,7 +67,7 @@ start()
 	fi
 
 	begin "Setting up system clock (${HWCLOCK_MESSAGE})"
-	HWCLOCK --systz ${HWCLOCK_OPTS} $HWCLOCK_ARGS}
+	HWCLOCK --systz ${HWCLOCK_OPTS} ${HWCLOCK_ARGS}
 	end "${?}" "Hardware Clock"
 
 	if [ -e /etc/adjtime ] && yesno "$HWCLOCK_ADJTIME}"; then
