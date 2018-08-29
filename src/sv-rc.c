@@ -614,6 +614,7 @@ static void svc_init(const char *cmd)
 				/* kill the other instance before system reboot or halt */
 				if (!kill(0, p)) {
 					if (runlevel && (strcmp(runlevel, sv_init_level[SV_REBOOT_LEVEL]) ||
+								     strcmp(runlevel, sv_init_level[SV_SYSINIT_LEVEL]) ||
 					                 strcmp(runlevel, sv_init_level[SV_SHUTDOWN_LEVEL])))
 						kill(SIGTERM, p);
 				}
