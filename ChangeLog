@@ -1,5 +1,10 @@
 Header: supervision/ChangeLog, 2018/08/16
 
+0.14.3:
+
+Bug fixes: most important is svc_run() pid fix in sv-run(8);
+Renamed `sv.log' logfile to `sv-rc.log';
+
 0.14.2:
 
 Merged remaining commits from master branch into this stable;
