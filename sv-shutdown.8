@@ -174,6 +174,32 @@ Print the help message
 .TP
 .B \-v \| \-\-version
 Print version string message
+
+.SH FILES
+.TP
+.B /var/run/utmp
+Record of users currently logged in
+.TP
+.B /var/log/wtmp
+Record of all login and logout
+.TP
+.B @LIBDIR@/sv/sh/SV-CONFIG
+Commands definition for supervision (services)
+
+.SH "RETURN VALUE"
+.TP
+.B 0
+success
+.TP
+.B 1
+miscellaneous operational failures (failure to read the dependency file...);
+
+.SH "APPLICATION USAGE"
+Refer to
+.BR sv-rc (8)
+for more information.
+.SH "FUTURE DIRECTIONS"
+None.
 .SH "SEE ALSO"
 .BR supervision (5)
 .BR sv-run (8)
