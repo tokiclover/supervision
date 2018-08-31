@@ -1187,6 +1187,7 @@ static void *thread_worker_handler(void *arg)
 #endif
 
 	TAILQ_FOREACH(svc, p->list, entries) {
+		memset(&p->run[n], 0, sizeof(struct svcrun));
 		p->run[n].name = svc->str;
 		p->run[n].argc = p->argc;
 		p->run[n].argv = p->argv;
