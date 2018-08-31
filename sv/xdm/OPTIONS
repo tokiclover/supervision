@@ -18,7 +18,7 @@ description="Set up display manager"
 # * gdm-3 need dbus;
 # * quota for a readable home;
 #
-SVC_AFTER="console getty-tty1 getty-tty2 getty-tty3 getty-tty4 getty-tty5 getty-tty6 gpm openvpn"
+SVC_AFTER="console getty.tty1 getty.tty2 getty.tty3 getty.tty4 getty.tty5 getty.tty6 gpm openvpn"
 SVC_BEFORE="alsasound"
 SVC_USE="autofs consolekit dbus lircmd quota ybind xfs"
 SVC_OPTS="-nodaemon"
@@ -35,8 +35,8 @@ esac
 
 checkvt()
 {
-	if [ -d "${SV_RUNDIR}/getty-tty1" ]; then
-		[ -d "${SV_RUNDIR}/getty-tty${1}" ]
+	if [ -d "${SV_RUNDIR}/getty.tty1" ]; then
+		[ -d "${SV_RUNDIR}/getty.tty${1}" ]
 	elif [ -f /etc/inittab ]; then
 		grep -Eq "^c${1}:.* tty${1} " /etc/inittab
 	elif [ -f /etc/ttys ]; then
