@@ -1,5 +1,9 @@
 Header: supervision/ChangeLog, 2018/08/16
 
+0.14.4:
+
+Fixed a nasty structure initilization bug (sv-run);
+
 0.14.3:
 
 Bug fixes: most important is svc_run() pid fix in sv-run(8);
