@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv.h  0.14.0 2018/08/22
+ * @(#)sv.h  0.14.0 2018/08/30
  */
 
 #ifndef SV_H
@@ -120,8 +120,8 @@ enum {
 #define SV_SHUTDOWN_LEVEL SV_SHUTDOWN_LEVEL
 	SV_SINGLE_LEVEL,
 #define SV_SINGLE_LEVEL SV_SINGLE_LEVEL
-	SV_NOWNETWORK_LEVEL,
-#define SV_NOWNETWORK_LEVEL SV_NOWNETWORK_LEVEL
+	SV_NONETWORK_LEVEL,
+#define SV_NONETWORK_LEVEL SV_NONETWORK_LEVEL
 	SV_DEFAULT_LEVEL,
 #define SV_DEFAULT_LEVEL SV_DEFAULT_LEVEL
 	SV_SYSINIT_LEVEL,
@@ -131,7 +131,14 @@ enum {
 	SV_REBOOT_LEVEL,
 #define SV_REBOOT_LEVEL SV_REBOOT_LEVEL
 };
-extern const char *const sv_init_level[];
+#define SV_SHUTDOWN_RUNLEVEL "shutdown"
+#define SV_SINGLE_RUNLEVEL "single"
+#define SV_DEFAULT_RUNLEVEL "default"
+#define SV_SYSINIT_RUNLEVEL "sysinit"
+#define SV_SYSBOOT_RUNLEVEL "sysboot"
+#define SV_REBOOT_RUNLEVEL "reboot"
+#define SV_NONETWORK_RUNLEVEL "nonetwork"
+extern const char *const restrict sv_init_level[];
 
 extern void sv_cleanup(void);
 

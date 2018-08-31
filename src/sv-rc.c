@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-rc.c  0.14.0 2018/08/22
+ * @(#)sv-rc.c  0.14.0 2018/08/30
  */
 
 #include <stdio.h>
@@ -62,8 +62,15 @@ static const char *const restrict sv_run_level[8] = {
 	"DEFAULT", "SYSINIT", "SYSBOOT",
 };
 /* !!! order matter (defined constant/enumeration) !!! */
-const char *const sv_init_level[] = { "shutdown", "single", "nonetwork",
-	"default", "sysinit", "sysboot", "reboot", NULL
+const char *const restrict sv_init_level[] = {
+	[SV_SHUTDOWN_LEVEL] = SV_SHUTDOWN_RUNLEVEL,
+	[SV_SINGLE_LEVEL] = SV_SINGLE_RUNLEVEL,
+	[SV_NONETWORK_LEVEL] = SV_NONETWORK_RUNLEVEL,
+	[SV_DEFAULT_LEVEL] = SV_DEFAULT_RUNLEVEL,
+	[SV_SYSINIT_LEVEL] = SV_SYSINIT_RUNLEVEL,
+	[SV_SYSBOOT_LEVEL] = SV_SYSBOOT_RUNLEVEL,
+	[SV_REBOOT_LEVEL] = SV_REBOOT_RUNLEVEL,
+	NULL
 };
 
 const char *progname;
@@ -288,16 +295,16 @@ static void svc_level(void)
 	entry = get_cmdline_option("softlevel");
 
 	/* mark network services as started, so nothing will be started */
-	if ((entry && strcmp(entry, sv_init_level[SV_NOWNETWORK_LEVEL]) == 0) ||
-		(sv_level == SV_NOWNETWORK_LEVEL)) {
-		sv_level = SV_NOWNETWORK_LEVEL;
+	if ((entry && strcmp(entry, SV_NONETWORK_RUNLEVEL) == 0) ||
+		(sv_level == SV_NONETWORK_LEVEL)) {
+		sv_level = SV_NONETWORK_LEVEL;
 		for (i = 0; i < SERVICES.virt_count; i++)
 			if (strcmp(SERVICES.virt_svcdeps[i]->virt, "net") == 0)
 				svc_status_simple(SERVICES.virt_svcdeps[i]->svc,
 						SV_SVC_STATUS_STAR, SVC_STATUS_SET, NULL);
 		svc_status_simple("net", SV_SVC_STATUS_STAR, SVC_STATUS_SET, NULL);
 	}
-	else if ((entry && strcmp(entry, sv_init_level[SV_SINGLE_LEVEL]) == 0)) {
+	else if ((entry && strcmp(entry, SV_SINGLE_RUNLEVEL) == 0)) {
 		sv_init = sv_level = SV_SINGLE_LEVEL;
 	}
 
@@ -613,9 +620,9 @@ static void svc_init(const char *cmd)
 			if ((p > 0) && sscanf(buf+l, "%d", &p)) {
 				/* kill the other instance before system reboot or halt */
 				if (!kill(0, p)) {
-					if (runlevel && (strcmp(runlevel, sv_init_level[SV_REBOOT_LEVEL]) ||
-								     strcmp(runlevel, sv_init_level[SV_SYSINIT_LEVEL]) ||
-					                 strcmp(runlevel, sv_init_level[SV_SHUTDOWN_LEVEL])))
+					if (runlevel && (strcmp(runlevel, SV_REBOOT_RUNLEVEL) ||
+								     strcmp(runlevel, SV_SYSINIT_RUNLEVEL) ||
+					                 strcmp(runlevel, SV_SHUTDOWN_RUNLEVEL)))
 						kill(SIGTERM, p);
 				}
 			}
@@ -675,8 +682,8 @@ static void svc_init(const char *cmd)
 		else if (sv_init == SV_DEFAULT_LEVEL && !level) {
 			/* start sysboot runlevel only when service command is NULL */
 			if (!cmd && (!runlevel ||
-						(strcmp(runlevel, sv_init_level[SV_SYSBOOT_LEVEL]) &&
-						 strcmp(runlevel, sv_init_level[SV_DEFAULT_LEVEL])))) {
+						(strcmp(runlevel, SV_SYSBOOT_RUNLEVEL) &&
+						 strcmp(runlevel, SV_DEFAULT_RUNLEVEL)))) {
 			level = sv_level;
 			/* do nothing with a subsystem */ 
 			if (getenv("SV_SYSTEM") || getenv("SV_PREFIX")) continue;
@@ -689,7 +696,7 @@ static void svc_init(const char *cmd)
 		else if (level == SV_DEFAULT_LEVEL) {
 			sv_level = sv_init = level;
 			level = 0;
-			svc_run_level(sv_init_level[SV_SYSBOOT_LEVEL]);
+			svc_run_level(SV_SYSBOOT_RUNLEVEL);
 			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 			svc_environ_update(ENVIRON_OFF);
@@ -714,7 +721,7 @@ static void svc_init(const char *cmd)
 		}
 		else if (sv_init == SV_SYSBOOT_LEVEL) {
 sysboot:
-			if (!cmd && (runlevel && !strcmp(runlevel, sv_init_level[SV_SYSINIT_LEVEL]))) {
+			if (!cmd && (runlevel && !strcmp(runlevel, SV_SYSINIT_RUNLEVEL))) {
 			svc_level(); /* make SystemV compatible runlevel */
 			if (sv_level == SV_SINGLE_LEVEL) level = 0;
 			}
@@ -808,7 +815,7 @@ int main(int argc, char *argv[])
 				break;
 			case '2':
 			case 'N':
-				sv_level = SV_NOWNETWORK_LEVEL;
+				sv_level = SV_NONETWORK_LEVEL;
 				sv_init  = SV_SYSBOOT_LEVEL;
 			case '5':
 			case 'b':
@@ -875,8 +882,8 @@ int main(int argc, char *argv[])
 	setenv("SV_RUNDIR", SV_RUNDIR, 1);
 	setenv("SV_SVCDIR", SV_SVCDIR, 1);
 	setenv("SV_VERSION", SV_VERSION, 1);
-	setenv("SV_SYSBOOT_LEVEL" , sv_init_level[SV_SYSBOOT_LEVEL] , 1);
-	setenv("SV_SHUTDOWN_LEVEL", sv_init_level[SV_SHUTDOWN_LEVEL], 1);
+	setenv("SV_SYSBOOT_LEVEL" , SV_SYSBOOT_RUNLEVEL , 1);
+	setenv("SV_SHUTDOWN_LEVEL", SV_SHUTDOWN_RUNLEVEL, 1);
 	if (!sv_debug)
 		sv_debug = sv_conf_yesno("SV_DEBUG");
 	if ( sv_debug)
@@ -938,7 +945,7 @@ sv_rc_init:
 				switch(sv_init) {
 				case SV_SINGLE_LEVEL:
 				case SV_SYSINIT_LEVEL:
-				case SV_NOWNETWORK_LEVEL:
+				case SV_NONETWORK_LEVEL:
 				case SV_SYSBOOT_LEVEL:
 					ERR("invalid usage with SV_{SYSTEM|PREX} system\n", NULL);
 					fprintf(stderr, "Usage: %s (default|shutdown|reboot)\n", progname);
@@ -973,7 +980,7 @@ sv_rc_help:
 				case SV_SHUTDOWN_LEVEL:
 					sv_init = SV_SHUTDOWN_LEVEL;
 					break;
-				case SV_NOWNETWORK_LEVEL:
+				case SV_NONETWORK_LEVEL:
 				case SV_SYSBOOT_LEVEL:
 					sv_init = SV_SYSBOOT_LEVEL;
 					break;
