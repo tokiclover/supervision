@@ -24,7 +24,7 @@ PRE_OPTS="- HOME=${HOME} USER=${SVC_USER}"
 tmpdir="/var/nagios"
 live_socket=${tmpdir}/rw/live
 cmdfile="${tmpdir}/rw/nagios.cmd"
-pidfile="${tmpdir}/nagios.lock"
+SVC_PIDFILE="${tmpdir}/nagios.lock"
 logfile="${tmpdir}/status.log"
 tmpfile="${tmpdir}/nagios.tmp"
 
@@ -125,7 +125,7 @@ start_post()
 
 stop_post()
 {
-	rm -f ${tmpfile} ${logfile} ${pidfile} ${cmdfile}
+	rm -f ${tmpfile} ${logfile} ${SVC_PIDFILE} ${cmdfile}
 }
 
 #
