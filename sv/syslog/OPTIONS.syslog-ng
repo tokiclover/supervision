@@ -10,7 +10,8 @@ SVC_STATEFILE_DIR="/var/lib/${name}"
 SVC_STATEFILE="${SVC_STATEFILE_DIR}/${name}.persist"
 
 SVC_CMD="/usr/sbin/${name}"
-SVC_OPTS="--cfgfile ${SVC_CONFIGFILE} --foreground --persist-file ${SVC_STATEFILE}"
+SVC_PIDFILE="/var/run/${name}.pid"
+SVC_OPTS="--cfgfile ${SVC_CONFIGFILE} --foreground --persist-file ${SVC_STATEFILE} --pidfile ${SVC_PIDFILE}"
 SVC_STARTED_COMMANDS=reload
 
 start_pre()
