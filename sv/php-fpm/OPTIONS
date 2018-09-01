@@ -22,7 +22,7 @@ SVC_CMD=/usr/bin/php-fpm5.6
 # XXX: do not expand in case an instance or different php is used
 #
 SVC_OPTS="--nodaemonize --php-ini ${SVC_CONFIGFILE%/*}/php.ini --fpm-config ${SVC_CONFIGFILE}"
-PIDFILE=/var/run/php-fpm.pid
+SVC_PIDFILE=/var/run/php-fpm.pid
 
 start_pre()
 {
@@ -33,7 +33,7 @@ start_pre()
 }
 reload()
 {
-	svc_sig HUP || kill -HUP $(cat ${PIDFILE})
+	svc_sig HUP || kill -HUP $(cat ${SVC_PIDFILE})
 }
 
 #
