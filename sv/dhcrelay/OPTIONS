@@ -6,7 +6,8 @@
 description='Dynamic Host Configuration Protocol (DHCP) relay'
 
 SVC_CMD='/usr/sbin/dhcrelay'
-SVC_OPTS='-d 192.168.0.255'
+SVC_PIDFILE=/var/run/${name}.pid
+SVC_OPTS="-pf ${SVC_PIDFILE} -d 192.168.0.255"
 SVC_USE='logger'
 SVC_NEED='net'
 
