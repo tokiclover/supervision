@@ -6,9 +6,10 @@
 name=dnsmasq
 SVC_CONFIGFILE=/etc/${name}.conf
 SVC_CMD=/usr/sbin/dnsmasq
+SVC_PIDFILE=/var/run/${name}.pid
 SVC_USER=nobody
 SVC_GROUP=nobody
-SVC_OPTS="-k ${SVC_USER:+-u} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP}"
+SVC_OPTS="-k ${SVC_USER:+-u} ${SVC_USER} ${SVC_GROUP:+-g} ${SVC_GROUP} --pid-file=${SVC_PIDFILE}"
 SVC_USE=logger
 
 start_pre()
