@@ -79,7 +79,8 @@ ALLOWED_ENV="PATH"
 
 description='spawn CGI applications'
 SVC_CMD=/usr/bin/spawn-fcgi
-SVC_OPTS=-n
+SVC_PIDFILE=/var/run/${SVC_NAME}.pid
+SVC_OPTS="-n -P ${SVC_PIDFILE}"
 SVC_BEFORE="apache2 httpd lighttpd nginx"
 SVC_NEED=net
 SVC_PROVIDE=fastcgi
