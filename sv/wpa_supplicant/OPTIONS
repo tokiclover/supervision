@@ -19,8 +19,9 @@ esac
 
 name=wpa_supplicant
 SVC_CONFIGFILE=/etc/${name}/${name}.conf
+SVC_PIDFILE=/var/run/${name}.pid
 SVC_CMD=/usr/sbin/wpa_supplicant
-SVC_OPTS="${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IFACE:+-i} ${WPA_IFACE}"
+SVC_OPTS="${WPA_OPTS} -c ${SVC_CONFIGFILE} ${WPA_IFACE:+-i} -P ${SVC_PIDFILE} ${WPA_IFACE}"
 case "${SVC_OPTS}" in
 	(*-s*) SVC_USE=logger;;
 esac
