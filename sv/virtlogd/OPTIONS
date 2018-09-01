@@ -4,7 +4,9 @@
 #
 
 description="libvirt virtual machine logging manager"
+SVC_PIDFILE="/var/run/virtlogd.pid"
 SVC_CMD=/usr/sbin/virtlogd
+SVC_OPTS="--pid-file ${SVC_PIDFILE}"
 SVC_STARTED_COMMANDS="reload"
 description_reload="reload the daemon, while maintaining open connections"
 SVC_AFTER="ntp-client ntp nfs nfsmount corosync"
