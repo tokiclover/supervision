@@ -4,8 +4,9 @@
 #
 
 description="libvirt virtual machine lock manager"
+SVC_PIDFILE="/var/run/virtlockd.pid"
 SVC_CMD="/usr/sbin/virtlockd"
-SVC_OPTS=""
+SVC_OPTS="--pid-file ${SVC_PIDFILE}"
 SVC_CONFIGFILE="/etc/libvirt/virtlockd.conf"
 SVC_STARTED_COMMANDS="reload"
 description_reload="reload the daemon, while maintaining locks and clients"
