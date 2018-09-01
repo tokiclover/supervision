@@ -265,7 +265,7 @@ svc_wait()
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
 		#
-		if ${pid} && [ -e ${SV_TMPDIR}/fail/${SVC_NAME} ]; then
+		if ${pid} && [ "${__SV_NAM__}" = "runit" ] && svc_status -f; then
 			return 1
 		fi
 
