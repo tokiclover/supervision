@@ -31,7 +31,7 @@ __svc_deps__()
 {
 	local RC_OPTS SVC_DEBUG SVC_NAME SVC_NEED SVC_USE SVC_BEFORE SVC_AFTER name
 	local SVC_KEYWORD SVC_PROVIDE SVC_TIMEOUT __SVC_PIDFILE__ SV_SERVICE RC_SERVICE
-	local dep
+	local dep SVC_INSTANCE SVC_PROVIDER
 
 	if   [ -d "${__svc__}" ]; then
 		SV_TYPE=sv
