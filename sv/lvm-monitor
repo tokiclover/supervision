@@ -16,7 +16,11 @@ start_pre()
 }
 start()
 {
-	vglist="$(${lvm} vgs --noheadings -o name --rows 2>${NULL})"
+	if [ -e ${SV_RUNDIR}/udev ]; then
+		sv-run -q udev restart >${NULL} 2>&1 || sv-run -q udev start >${NULL} 2>&1 && UDEV_ARGS=--noudevsync
+		ENV_SET UDEV_ARGS
+	fi
+
 	${lvm} vgchange ${UDEV_ARGS} --monitor y --poll y ${vglist}
 }
 stop_pre()
