@@ -59,8 +59,10 @@ FCGI_CHDIR=
 # The user and group to run your application as. If you do not specify these,
 # the application will be run as root:root.
 #
-FCGI_USER=
-FCGI_GROUP=
+SVC_USER="${SVC_PROVIDER}"
+SVC_GROUP="${SVC_PROVIDER}"
+FCGI_USER="${SVC_USER}"
+FCGI_GROUP="${SVC_GROUP}"
 
 # If your application requires additional environment variables, you may
 # specify them here. See PHP example below.

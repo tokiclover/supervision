@@ -57,8 +57,8 @@ FCGI_CHDIR=
 # The user and group to run your application as. If you do not specify these,
 # the application will be run as root:root.
 #
-FCGI_USER=lighttpd
-FCGI_GROUP=lighttpd
+#FCGI_USER=lighttpd
+#FCGI_GROUP=lighttpd
 
 # If your application requires additional environment variables, you may
 # specify them here. See PHP example below.
