@@ -649,8 +649,10 @@ static void svc_init(const char *cmd)
 	sv_pid    = getpid();
 	setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 	setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
-	snprintf(buf, sizeof(buf), "%d", logfd);
-	setenv("__SV_DEBUG_FD__", buf, 1);
+	if (sv_debug && sv_conf_yesno("SV_DEBUG_INFO")) {
+		snprintf(buf, sizeof(buf), "%d", logfd);
+		setenv("__SV_DEBUG_FD__", buf, 1);
+	}
 	snprintf(buf, sizeof(buf), "%d", sv_pid);
 	setenv("SV_PID", buf, 1);
 
