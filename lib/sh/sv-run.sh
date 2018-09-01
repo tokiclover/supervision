@@ -70,8 +70,18 @@ readonly SVC_NAME SV_TYPE
 
 if ! . ${SV_LIBDIR}/sh/runscript-functions; then
 	echo "${0##*/}: error: Required file not found \`${SV_LIBDIR}/sh/runscript-functions'" >&2
+	rm -f ${SV_TMPDIR}/wait/${SVC_NAME}
 	exit 1
 fi
+
+svc_cleanup()
+{
+	local ret="$?" last="$_"
+	rm -f ${SV_TMPDIR}/wait/${SVC_NAME} ${SV_TMPDIR}/envs/${SVC_NAME}
+	_="${last}"
+	return ${ret}
+}
+trap svc_cleanup INT TERM QUIT
 
 #
 # Handle service command
@@ -84,7 +94,6 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	#
 	if [ "${__cmd__}" = "start" -o "${__cmd__}" = "stop" ] || \
 	   [ "${__cmd__}" = "up"    -o "${__cmd__}" = "down" ]; then
-	trap "rm -f ${SV_TMPDIR}/envs/${SVC_NAME}" INT TERM QUIT
 	while read line; do
 		echo "${line}"
 	done <${SV_TMPDIR}/environ >${SV_TMPDIR}/envs/${SVC_NAME}
@@ -96,8 +105,11 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	svc_cmd "${@}"
 else
 	error "nothing to do -- invalid usage"
-	exit 1
 fi
+
+retval="${?}"
+rm -f ${SV_TMPDIR}/wait/${SVC_NAME}
+exit ${retval}
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
