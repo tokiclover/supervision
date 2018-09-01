@@ -120,13 +120,11 @@ __attribute__((__unused__)) static int svc_status(struct svcrun *restrict runa, 
 
 /*
  * lock file for service to start/stop
- * @svc: service name;
- * @lock_fd: SVC_LOCK to lock, lock_fd >= 0 to unlock;
+ * @run: service;
  * @timeout: timeout to use to poll the lockfile (SVC_TIMEOUT_SECS);
  * @return: fd >= 0 on success; negative (usually -errno) on failure;
  */
 static int svc_lock(struct svcrun *run, int timeout);
-#define SVC_LOCK -1 /* magic number to lock a service */
 
 /*
  * wait for the availability of the lock file;
@@ -585,14 +583,11 @@ runsvc:
 
 	debugfp = fdopen(debugfd, "a+");
 	/* lock the lock file before any command */
-	run->lock = SVC_LOCK;
 	if ((run->lock = svc_lock(run, SVC_TIMEOUT_SECS)) < 0) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		_exit(4);
 	}
-	/* close the lockfile to be able to mount rootfs read-only */
-	if (sv_init == SV_SHUTDOWN_LEVEL && run->cmd == SV_SVC_CMD_START)
-		(void)close(run->lock);
+
 
 	/* supervise the service */
 	if (run->dep->timeout) {
@@ -613,6 +608,7 @@ runsvc:
 
 	/* write the service command and the pid to the lock file */
 	dprintf(run->lock, "pid=%d:command=%s", getpid(), run->argv[4]);
+	if (!close(run->lock)) run->lock = -1;
 #ifdef DEBUG
 	if (sv_debug) DBG("executing service=%s command=%s (pid=%d)\n",
 			run->name, run->argv[4], getpid());
@@ -679,8 +675,8 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 		return SVC_WAITPID;
 	else if (WIFSIGNALED(status))
 		run->status = WTERMSIG(status);
-	if (run->lock)
-		svc_lock(run, 0);
+	run->lock = -1;
+	svc_lock(run, 0);
 	run->cld = 0;
 
 	/* do not mark service status twice */
@@ -837,7 +833,7 @@ static int svc_lock(struct svcrun *run, int timeout)
 		return -ENOENT;
 	snprintf(f_path, sizeof(f_path), "%s/%s", SV_TMPDIR_WAIT, run->name);
 
-	if (run->lock == SVC_LOCK) {
+	if (!run->lock) {
 		m = umask(0);
 		if ((run->lock = open(f_path, O_RDONLY, 0644)) > 0) {
 			/* check the holder of the lock file */
@@ -860,10 +856,8 @@ static int svc_lock(struct svcrun *run, int timeout)
 		}
 		return run->lock;
 	}
-	else if (run->lock > 0) {
-		close(run->lock);
+	else
 		(void)unlink(f_path);
-	}
 	return 0;
 }
 #undef SVC_WAIT_LOCK
@@ -1150,6 +1144,8 @@ int svc_exec(int argc, const char *argv[]) {
 	retval = svc_cmd(&run);
 	if (access(SV_PIDFILE, F_OK))
 		atexit(sv_cleanup);
+	if (retval != SVC_WAITPID)
+		svc_lock(&run, 0);
 	switch(retval) {
 	case -EBUSY:
 		return EXIT_SUCCESS;
@@ -1165,6 +1161,7 @@ int svc_exec(int argc, const char *argv[]) {
 	case SVC_WAITPID:
 		run.cld = run.pid;
 		retval = svc_waitpid(&run, 0);
+		svc_lock(&run, 0);
 		if (retval < 0) return EXIT_FAILURE;
 		return retval;
 	default:
