@@ -7,8 +7,9 @@ description="Rocket-fast system log precessing daemon"
 name=rsyslog
 
 SVC_CONFIGFILE="/etc/${name}.conf"
+SVC_PIDFILE="/var/run/${name}.pid"
 SVC_CMD="/usr/sbin/rsyslogd"
-SVC_OPTS="-f ${SVC_CONFIGFILE} -n ${RSL_OPTS}"
+SVC_OPTS="-f ${SVC_CONFIGFILE} -n ${RSL_OPTS} -i ${SVC_PIDFILE}"
 SVC_USE=net
 RSL_LEVEL=
 
