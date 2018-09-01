@@ -6,10 +6,16 @@
 description='Simple server for Git repositories'
 
 SVC_CMD=/usr/bin/git
+SVC_PIDFILE=/var/run/git-daemon.pid
 SVC_USER=nobody
 SVC_GROUP=nobody
-SVC_OPTS="daemon -e HOME= -e XDG_CONFIG_HOME= -b -m -u ${SVC_USER}:${SVC_GROUP} --verbose"
+SVC_OPTS="daemon -e HOME= -e XDG_CONFIG_HOME= -b -m -u ${SVC_USER}:${SVC_GROUP} --pid-file=${SVC_PIDFILE} --verbose"
 SVC_USE=logger
+
+start_pre()
+{
+	sv-run -q syslog status >${NULL} 2>&1 && SVC_OPTS="${SVC_OPTS} --syslog"
+}
 
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
