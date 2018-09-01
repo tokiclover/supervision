@@ -8,7 +8,8 @@ SVC_CONFIGFILE=/etc/${name}.conf
 SVC_COMMANDS=check_config
 
 SVC_CMD=/usr/sbin/ntpd
-SVC_OPTS="-d -f ${SVC_CONFIGFILE}"
+SVC_PIDFILE=/var/run/${name}.pid
+SVC_OPTS="-d -f ${SVC_CONFIGFILE} -p ${SVC_PIDFILE}"
 
 check_config()
 {
