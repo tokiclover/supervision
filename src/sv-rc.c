@@ -1059,7 +1059,7 @@ sv_rcorder:
 					svc_init_order(*argv);
 					exit(EXIT_SUCCESS);
 				default:
-					goto sv_rcorder;
+					goto sv_rcorder_help;
 			}
 		}
 		else {
