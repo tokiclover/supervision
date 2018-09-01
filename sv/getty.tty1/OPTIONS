@@ -14,7 +14,7 @@ SVC_CMD=/sbin/agetty
 #SVC_CMD=/sbin/fbgetty
 SVC_TRY=16
 SVC_AFTER="*"
-name="${SVC_CMD##*/}"
+name="${SVC_NAME}"
 
 #
 # XXX: Safety net
@@ -22,8 +22,7 @@ name="${SVC_CMD##*/}"
 find_getty()
 {
 	local cmd
-	for cmd in ${SVC_NAME%-*} agetty mgetty mingetty fbgetty; do
-		name="${cmd}"
+	for cmd in ${SVC_NAME%.*} agetty mgetty mingetty fbgetty; do
 		cmd="$(command -v ${cmd} 2>${NULL})"
 		if [ -n "${cmd}" ] && [ -x "${cmd}" ]; then
 			SVC_CMD="${cmd}"
@@ -34,7 +33,7 @@ find_getty()
 	cmd=$(command -v busybox 2>${NULL})
 	if [ -n "${cmd}" ] && [ -x "${cmd}" ]; then
 		warn "using busybox getty!!!"
-		name=getty SVC_CMD="${cmd}"
+		SVC_CMD="${cmd}"
 		return 0
 	fi
 	name=
@@ -84,22 +83,22 @@ _rescue_shell()
 
 _start_pre()
 {
-	local cmd
-	if   [ "${name}" = "mgetty" ]; then
+	local cmd="${SVC_CMD##*/}"
+	if   [ "${cmd}" = "mgetty" ]; then
 		find_issue -i
-		SVC_CONFIGFILE="/etc/${name}+sendfax/${name}.config"
+		SVC_CONFIGFILE="/etc/mgetty+sendfax/mgetty.config"
 		SVC_OPTS="${TTY} ${TTY_OPTS}"
-	elif [ "${name}" = "fbgetty" ]; then
+	elif [ "${cmd}" = "fbgetty" ]; then
 		find_issue -i
 		SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
-	elif [ "${name}" = "mingetty" ]; then
+	elif [ "${cmd}" = "mingetty" ]; then
 		SVC_OPTS="${TTY}"
-	elif [ "${name}" = "agetty" ]; then
+	elif [ "${cmd}" = "agetty" ]; then
 		agetty_options
-	elif [ "${name}" = "getty" ]; then
+	elif [ "${cmd}" = "busybox" ]; then
 		agetty_options
 		SVC_OPTS="getty ${SVC_OPTS}"
-	fi # name
+	fi
 }
 start_pre()
 {
