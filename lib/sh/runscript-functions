@@ -1,5 +1,5 @@
 #
-# $Id:  @(#) runscript-functions    2.0 2018/08/24 21:09:26           Exp $
+# $Id:  @(#) runscript-functions    2.0 2018/08/30 21:09:26           Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -359,14 +359,14 @@ if [ -n "${__svc__}" ]; then
 #
 # Set up runscript environment
 #
+case "${SVC_NAME}" in
+	(*.*) SVC_INSTANCE="${SVC_NAME#*.}" ;;
+esac
+readonly SVC_INSTANCE
+
 if   [ "${SV_TYPE}" = "rs" ]; then
-	if [ "${name}" != "${SVC_NAME}" ]; then
-	DOT "${SV_CONFDIR}/${name}"
-	DOT "${SV_CONFLOCAL}/${name}"
-	else
 	DOT "${SV_CONFDIR}/${SVC_NAME}"
 	DOT "${SV_CONFLOCAL}/${SVC_NAME}"
-	fi
 	DOT -e ${__svc__} || return 1
 #
 # Set up supervision environment
@@ -381,20 +381,19 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	trap ': COLUMNS=$(tput cols)' WINCH
 	fi # __cmd__
 
-	if [ "${name}" = "${SVC_NAME}" ]; then
-	DOT "${SV_CONFLOCAL}/${SVC_NAME}"
+	if [ "${SVC_NAME}" != "${name}" ]; then
+	SVC_PROVIDER="${name}"
 	else
-	DOT "${SV_CONFLOCAL}/${name}"
+	SVC_PROVIDER="${SVC_NAME}"
 	fi
+	readonly SVC_PROVIDER
+
+	DOT "${SV_CONFLOCAL}/${SVC_PROVIDER}"
 	DOT -e ${__svc__}/OPTIONS || return 1
 	#
 	# Handle specific (virtual) service backend/instance
 	#
-	if [ "${name}" = "${SVC_NAME}" ]; then
-	DOT "${SVC_DIR}/OPTIONS.${SVC_NAME}"
-	else
-	DOT "${SVC_DIR}/OPTIONS.${name}"
-	fi
+	DOT "${SVC_DIR}/OPTIONS.${SVC_PROVIDER}"
 	readonly __SVC_PIDFILE__="${SV_TMPDIR}/pids/${SVC_NAME}"
 :	${SVC_PIDFILE:=${__SVC_PIDFILE__}}
 
