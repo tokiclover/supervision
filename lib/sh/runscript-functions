@@ -83,13 +83,13 @@ svc_add()
 }
 SVC_DEBUG()
 {
-	if ${__SVC_SYSLOG__}; then
+	if ${__SVC_SYSLOG__:-false}; then
 		logger "${name}[$$]: debug: ${@}"
 	fi
-	if ${__SVC_DEBUG_INFO__}; then
+	if ${__SVC_DEBUG_INFO__:-flase}; then
 		printf "${name}[$$]: debug: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
-	if ${__SVC_DEBUG__}; then
+	if ${__SVC_DEBUG__:-false}; then
 		local message="${*}"
 		__print_len__=$((${#message}+${#name}+9))
 		printf "${__print_eol__}${name}: debug: ${@}${__eol_print__}" >&2
