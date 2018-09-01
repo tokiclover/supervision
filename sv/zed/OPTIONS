@@ -4,11 +4,12 @@
 #
 
 description='ZFS Event Daemon'
+SVC_PIDFILE=/var/run/zed.pid
 SVC_AFTER='localfs'
 SVC_NEED='zfs'
 SVC_CMD=/sbin/zed
-SVC_OPTS='-F -p /var/run/zed.pid'
+SVC_OPTS="-F -p ${SVC_PIDFILE}"
 
 #
-# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+# vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #
