@@ -45,7 +45,7 @@ SVC_OPTS="-D DEFAULT_VHOST -D INFO -D SSL -D SSL_DEFAULT_VHOST -D LANGUAGE -D NA
 # YOU HAVE BEEN WARNED.
 
 # PID file
-PIDFILE=/var/run/apache2.pid
+SVC_PIDFILE=/var/run/apache2.pid
 
 # timeout for startup/shutdown checks
 #TIMEOUT=10
@@ -90,7 +90,7 @@ description_virtualhosts="Show the settings as parsed from the config file (curr
 description_stop="Kills all children and stops the server."
 
 # Apply default values for some conf.d variables.
-PIDFILE="${PIDFILE:-/var/run/apache2.pid}"
+SVC_PIDFILE="${SVC_PIDFILE:-/var/run/apache2.pid}"
 TIMEOUT=${TIMEOUT:-15}
 SERVERROOT="${SERVERROOT:-/usr/lib64/apache2}"
 SVC_CONFIGFILE="${SVC_CONFIGFILE:-/etc/apache2/httpd.conf}"
@@ -148,7 +148,7 @@ start_pre()
 }
 start_post()
 {
-	svc_wait "${TIMEOUT}" "${PIDFILE}"
+	svc_wait "${TIMEOUT}" "${SVC_PIDFILE}"
 }
 
 stop_pre()
@@ -157,13 +157,13 @@ stop_pre()
 		checkconfig || return 1
 	fi
 
-	[ -f ${PIDFILE} ] && read PID <${PIDFILE} || PID=
+	[ -f ${SVC_PIDFILE} ] && read PID <${SVC_PIDFILE} || PID=
 	[ -n "${PID}" ] && ${SVC_CMD} ${SVC_OPTS} -k stop
 }
 stop_post()
 {
-	[ -f ${PIDFILE} ] && pgrep -P ${PID} apache2 >${NULL} &&
-	svc_wait "${TIMEOUT}" "${PIDFILE}"
+	[ -f ${SVC_PIDFILE} ] && pgrep -P ${PID} apache2 >${NULL} &&
+	svc_wait "${TIMEOUT}" "${SVC_PIDFILE}"
 }
 
 reload()
