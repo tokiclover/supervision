@@ -8,7 +8,8 @@ name=xinetd
 SVC_STARTED_COMMANDS="check dump reload"
 SVC_CONFIGFILE=/etc/xinetd.conf
 SVC_CMD=/usr/sbin/xinetd
-SVC_OPTS='-f ${SVC_CONFIGFILE} -dontfork -stayalive'
+SVC_PIDFILE=/var/run/${name}.pid
+SVC_OPTS="-f ${SVC_CONFIGFILE} -pidfile ${SVC_PIDFILE} -dontfork -stayalive"
 SVC_USE=net
 
 reload()
