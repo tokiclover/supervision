@@ -5,7 +5,8 @@
 
 SVC_CONFIGFILE=/etc/hostapd/hostapd.conf
 SVC_CMD=/usr/sbin/hostapd
-SVC_OPTS='${SVC_CONFIGFILE}'
+SVC_PIDFILE=/var/run/hostapd.pid
+SVC_OPTS="-P ${SVC_PIDFILE} ${SVC_CONFIGFILE}"
 SVC_USE=logger
 SVC_NEED=net
 
