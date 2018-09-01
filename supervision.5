@@ -414,7 +414,7 @@ T}
 Niceness value to apply to daemon \fB+19\fR (low priority) to \fB-20\fR (high priority)
 T}
 \fBSVC_PIDFILE\fR@T{
-PID file of service (OVERRIDED for supervised services)
+PID file of service (default to \fB__SVC_PIDFILE__=${SV_TMPDIR}/pids/${SVC_NAME}\fR for supervised services)
 T}
 \fBRC_OPTS=Yes\fR@T{
 To enable support for OpenRC service configuration files
