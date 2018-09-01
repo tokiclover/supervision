@@ -4,7 +4,8 @@
 #
 
 # Initial (empty) options.
-SVC_OPTS=""
+SVC_PIDFILE="/var/run/snmpd.pid"
+SVC_OPTS="-p ${SVC_PIDFILE}"
 
 # Disable smux by default
 SVC_OPTS="${SVC_OPTS} -I -smux"
