@@ -5,9 +5,9 @@
 
 description="Virtual Machine Management daemon (libvirt)"
 
-pidfile="/var/run/libvirtd.pid"
+SVC_PIDFILE="/var/run/libvirtd.pid"
 SVC_CMD="/usr/sbin/libvirtd"
-SVC_OPTS="${LIBVIRTD_OPTS} --pid-file ${pidfile}"
+SVC_OPTS="${LIBVIRTD_OPTS} --pid-file ${SVC_PIDFILE}"
 PRE_CMD="/usr/bin/env"
 PRE_OPTS="- KRB5_KTNAME=/etc/libvirt/krb5.tab"
 
