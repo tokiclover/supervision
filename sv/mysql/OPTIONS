@@ -74,14 +74,15 @@ start_pre()
 
 	local basedir=$(get_config basedir)
 	local datadir=$(get_config datadir)
-	local pidfile=$(get_config pid-file)
 	local socket=$(get_config socket)
 	local chroot=$(get_config chroot)
+	SVC_PIDFILE=$(get_config pid-file)
 
 	if [ -n "${chroot}" ] ; then
 		socket="${chroot}/${socket}"
-		pidfile="${chroot}/${pidfile}"
+		SVC_PIDFILE="${chroot}/${SVC_PIDFILE}"
 	fi
+	ENV_SET SVC_PIDFILE basedir socket
 
 	if [ ! -d "${datadir}" ] ; then
 		error "MySQL datadir \`${datadir}' is empty or invalid"
@@ -102,8 +103,8 @@ start_pre()
 		return 1
 	fi
 
-	SVC_OPTS="${SVC_OPTS} --basedir=${basedir} --datadir=${datadir} --socket=${socket} --pid-file=${pidfile}"
-	local piddir="${pidfile%/*}"
+	SVC_OPTS="${SVC_OPTS} --basedir=${basedir} --datadir=${datadir} --socket=${socket} --pid-file=${SVC_PIDFILE}"
+	local piddir="${SVC_PIDFILE%/*}"
 	checkpath -d --owner ${SVC_USER}:${SVC_GROUP} --mode 0755 "${piddir}"
 	if [ $? -ne 0 ]; then
 		error "Directory ${piddir} for pidfile does not exist and cannot be created"
@@ -112,22 +113,22 @@ start_pre()
 }
 start_post()
 {
-	local pidfile=$(get_config pid-file)
-	local socket=$(get_config socket)
-	local chroot=$(get_config chroot)
-
-	if [ -n "${chroot}" ] ; then
-		socket="${chroot}/${socket}"
+	if [ -z "${socket}" ]; then
+		SVC_PIDFILE=$(get_config pid-file)
+		local socket=$(get_config socket)
+		local chroot=$(get_config chroot)
+		if [ -n "${chroot}" ] ; then
+			socket="${chroot}/${socket}"
+			SVC_PIDFILE="${chroot}/${SVC_PIDFILE}"
+		fi
 	fi
 	svc_wait "${STARTUP_TIMEOUT:-900}" "${socket}" || return
 
-	ENV_SET pidfile
-	ENV_SET basedir
 }
 
 check_config()
 {
-	${SVC_CMD} --defaults-file="${MY_CNF}" --help --verbose > /dev/null
+	${SVC_CMD} --defaults-file="${MY_CNF}" --help --verbose >${NULL}
 }
 
 #
