@@ -4,7 +4,8 @@
 #
 
 SVC_CMD=/usr/sbin/acpid
-SVC_OPTS=--foreground
+SVC_PIDFILE=/var/run/acpid.pid
+SVC_OPTS="--foreground --pidfile ${SVC_PIDFILE}"
 SVC_USE=logger
 
 #
