@@ -19,7 +19,7 @@ name="${SVC_NAME}"
 #
 # XXX: Safety net
 #
-find_getty()
+getty_command()
 {
 	local cmd
 	for cmd in ${SVC_NAME%.*} agetty mgetty mingetty fbgetty; do
@@ -36,20 +36,19 @@ find_getty()
 		SVC_CMD="${cmd}"
 		return 0
 	fi
-	name=
 	return 1
 }
 
-find_issue()
+getty_issue()
 {
 	local x
 	for x in /etc/issue.${TTY} /etc/issue.d/${TTY}; do
 		[ -f ${x} ] && TTY_OPTS="${TTY_OPTS} ${1} ${x}"
 	done
 }
-agetty_options()
+agetty_arguments()
 {
-	find_issue -f
+	getty_issue -f
 	case "${TTY}" in
 		(tty[1-6])
 		SVC_OPTS="38400 ${TTY_OPTS} ${TTY} linux"
@@ -81,22 +80,22 @@ _rescue_shell()
 	exec /bin/login "root" "USER=root"
 }
 
-_start_pre()
+getty_arguments()
 {
 	local cmd="${SVC_CMD##*/}"
 	if   [ "${cmd}" = "mgetty" ]; then
-		find_issue -i
+		getty_issue -i
 		SVC_CONFIGFILE="/etc/mgetty+sendfax/mgetty.config"
 		SVC_OPTS="${TTY} ${TTY_OPTS}"
 	elif [ "${cmd}" = "fbgetty" ]; then
-		find_issue -i
+		getty_issue -i
 		SVC_OPTS="--fb=/dev/fb0 --login-prompt='%l@%h login: ' --tty=/dev/${TTY} ${TTY_OPTS}"
 	elif [ "${cmd}" = "mingetty" ]; then
 		SVC_OPTS="${TTY}"
 	elif [ "${cmd}" = "agetty" ]; then
-		agetty_options
+		agetty_arguments
 	elif [ "${cmd}" = "busybox" ]; then
-		agetty_options
+		agetty_arguments
 		SVC_OPTS="getty ${SVC_OPTS}"
 	fi
 }
@@ -104,7 +103,7 @@ start_pre()
 {
 	if [ "${__cmd__}" = "run" ]; then
 		if [ -z "${SVC_CMD}" ] || [ ! -x ${SVC_CMD} ]; then
-			if ! find_getty; then
+			if ! getty_command; then
 				error "*** Failed to find a getty binary!!! ***"
 				error "*** Configure \`${SVC_DIR}/OPTIONS' and or install [a]getty(8) ***"
 
@@ -117,7 +116,7 @@ start_pre()
 				info "*** Found \`${SVC_CMD}' binary; setting up the service. ***"
 			fi
 		fi
-		_start_pre
+		getty_arguments
 	else
 		return 0
 	fi
