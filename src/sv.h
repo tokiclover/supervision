@@ -144,6 +144,8 @@ extern void sv_cleanup(void);
 
 /* tiny function to print end string like the shell end() counterpart */
 extern int svc_end(const char *svc, int status);
+/* mark service status */
+extern __attribute__((__unused__)) int svc_status_simple(char *restrict svc, int status, int flag, char *restrict what);
 
 /* simple function to help debug (vfprintf(3) clone) */
 extern int svc_log(const char *fmt, ...);

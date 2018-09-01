@@ -30,9 +30,6 @@ extern int svc_cmd(struct svcrun *run);
 extern int svc_exec (int argc, const char *argv[]);
 /* the same for a list of service */
 extern int svc_execl(SV_StringList_T *list, int argc, const char *argv[]);
-/* mark service status */
-__attribute__((__unused__))
-static int svc_status_simple(char *restrict svc, int status, int flag, char *restrict what);
 
 /* signal handleer/setup */
 sigset_t ss_child, ss_full, ss_null, ss_old;
@@ -133,8 +130,7 @@ static void svc_init_order(char *arg);
 static void svc_level(void);
 static char *get_cmdline_option(const char *entry);
 
-__attribute__((__unused__))
-static int svc_status_simple(char *restrict svc, int status, int flag, char *restrict what)
+__attribute__((__unused__)) int svc_status_simple(char *restrict svc, int status, int flag, char *restrict what)
 {
 	char path[PATH_MAX], *ptr;
 	int fd;

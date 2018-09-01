@@ -116,8 +116,7 @@ static int svc_depend(struct svcrun *run);
  * @status: int value, see the SV_SVC_STATUS_* macros;
  * @return: true/false;
  */
-__attribute__((__unused__))
-static int svc_status(struct svcrun *restrict runa, int status, int flag, char *restrict what);
+__attribute__((__unused__)) static int svc_status(struct svcrun *restrict runa, int status, int flag, char *restrict what);
 
 /*
  * lock file for service to start/stop
@@ -748,7 +747,7 @@ static int svc_depend(struct svcrun *run)
 				}
 				retval++;
 			}
-			else if (!svc_status(svc->str, SV_SVC_STATUS_STAR, SVC_STATUS_GET, NULL))
+			else if (!svc_status_simple(svc->str, SV_SVC_STATUS_STAR, SVC_STATUS_GET, NULL))
 				retval++;
 		}
 	}
