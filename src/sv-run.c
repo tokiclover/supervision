@@ -552,7 +552,7 @@ static int svc_run(struct svcrun *run)
 #endif
 
 	if (SV_KEYWORD_GET(run->dep, SV_KEYWORD_TIMEOUT))
-		run->dep->timeout = -1;
+		run->dep->timeout = 0U;
 	run->status = -1;
 	run->sig = 0;
 
