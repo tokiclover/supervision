@@ -1063,7 +1063,7 @@ sv_rcorder:
 			}
 		}
 		else {
-sv_rcorder_helep:
+sv_rcorder_help:
 			fprintf(stderr, "Usage: %s [OPTIONS] --(sysinit|sysboot|default|"
 					"shutdown) [update]\n", progname);
 			exit(EXIT_FAILURE);
