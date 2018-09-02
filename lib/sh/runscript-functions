@@ -233,7 +233,6 @@ svc_wait()
 		return 0
 	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
-	${pid} && i=1
 
 	if ( ${pid} && [ -n "${arg}" ] ) || ( [ -z "${arg}" ] && ${__wait__} ); then
 		if [ -n "${pid}" -a -n "${arg}" -a ! -e ${x} ]; then
@@ -265,7 +264,7 @@ svc_wait()
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
 		#
-		if ${pid} && [ "${__SV_NAM__}" = "runit" ] && svc_status -f; then
+		if ${pid} && ${__wait__} && [ "${__SV_NAM__}" = "runit" ] && svc_status -f; then
 			return 1
 		fi
 
