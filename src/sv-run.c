@@ -968,7 +968,7 @@ static int svc_status(struct svcrun *restrict run, int status, int flag, char *r
 					fd = i = 0;
 					do {
 						if (strcmp(run->dep->virt, SERVICES.virt_svcdeps[i]->virt) == 0 &&
-							svc_status(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STATUS_STAR, SVC_STATUS_GET, NULL))
+							svc_status_simple(SERVICES.virt_svcdeps[i]->svc, SV_SVC_STATUS_STAR, SVC_STATUS_GET, NULL))
 							fd++;
 						i++;
 					} while (i < SERVICES.virt_count);
