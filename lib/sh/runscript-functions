@@ -210,26 +210,26 @@ svc_sig()
 
 svc_wait()
 {
-	local x p t v=0 i=5 r arg pid=false
+	local a x p t v=0 i=5 r arg pid=false
 	local __wait_file__=${SV_TMPDIR}/wait/${SVC_NAME} __wait__=true
 	SVC_DEBUG "function=svc_wait( ${@} )"
 
-	for x; do
+	for a; do
 	case "${1}" in
-		(-E) arg=${1} ;;
-		(-p) pid=true ;;
+		(-E|--noexist) arg=${1} ;;
+		(-p|--pid)     pid=true ;;
+		(-t|--timeout) t="${2}"; shift;;
+		(-f|--file)    x="${2}"; shift;;
 		(*) break ;;
 	esac
 	shift
 	done
-	t="${1:-60}"
-	if [ -n "${2}" -a "${2}" != "${__wait_file__}" ]; then
+:	${t:=${1:-60}}
+:	${x:=${2:-${__wait_file__}}}
+	if [ "${x}" != "${__wait_file__}" ]; then
 		__wait__=false
-	else
-		x=${__wait_file__}
 	fi
-	x=${2:-${__wait_file__}}
-	if ! yesno "${__SVC_WAIT__:-1}" && [ -z "${2}" ]; then
+	if ! yesno "${__SVC_WAIT__:-1}" && ${__wait__}; then
 		return 0
 	fi
 	[ $((${t}%${i})) -eq 0 ] || i="${t}"
@@ -268,7 +268,7 @@ svc_wait()
 			return 1
 		fi
 
-		if waitfile ${arg} ${i} ${x}; then
+		if waitfile ${arg} -t ${i} -f ${x}; then
 			if ${__wait__} && [ -n "${arg}" ]; then
 				if svc_status -w; then
 					error "service is busy -- retry later"

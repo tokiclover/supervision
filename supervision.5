@@ -821,7 +821,7 @@ Clean up service from running directory
 .BR svc_sig \ \| \-SIGNAL \|
 Send a particular SIGNAL to the daemon service
 .TP
-.BR svc_wait \ \| [ \-E ] \ [ \-p ] \ TIMEOUT \ FILE \|
+.BR svc_wait \ \| [ \-E | \-\-noexist ] \ [ \-p | \-\-pid ] \ [ \-t | \-\-timeout ] TIMEOUT \ [ \-t | \-\-file ] FILE \|
 Wait a service file to appear or disapear--with \fI-E\fR option; add \fI-p\fR for
 PID checking
 .TP
