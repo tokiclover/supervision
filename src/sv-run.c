@@ -895,11 +895,8 @@ static int svc_lock(struct svcrun *run, int timeout)
 		} while (r);
 		if (!close(run->lock)) run->lock = 0;
 	}
-	else {
-		r = unlinkat(wait_fd, run->name, 0);
-		printf("r=%d: %s\n", r, strerror(errno));
-		return r;
-	}
+	else
+		return unlinkat(wait_fd, run->name, 0);
 
 	return 0;
 }
