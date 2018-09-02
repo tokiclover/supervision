@@ -904,7 +904,7 @@ static int svc_wait(struct svcrun *run, int timeout, char *path)
 		if (!(++i % ssec))
 			INFO("waiting for %s (%d seconds)\n", run->name, i);
 	}
-	return svc_status(run->name, SV_SVC_STATUS_WAIT, SVC_STATUS_GET, NULL) ? -1 : 0;
+	return svc_status(run, SV_SVC_STATUS_WAIT, SVC_STATUS_GET, NULL) ? -1 : 0;
 }
 
 static void svc_zap(const char *svc)
