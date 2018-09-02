@@ -26,7 +26,7 @@ start()
 {
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 	if [ -e ${SV_RUNDIR}/udev ]; then
-		sv-run -q udev restart >${NULL} 2>&1 || sv-run -q udev start >${NULL} 2>&1 && UDEV_ARGS=--noudevsync
+		sv-run -q udev restart >${NULL} 2>&1 || sv-run -q udev start >${NULL} 2>&1 || UDEV_ARGS=--noudevsync
 		ENV_SET UDEV_ARGS
 	fi
 

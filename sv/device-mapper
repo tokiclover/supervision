@@ -56,7 +56,7 @@ start()
 	local volume options retval=0 ifs="${IFS}"
 	local dmsetup_opts=--addnodeoncreate
 	if [ -e ${SV_RUNDIR}/udev ]; then
-		sv-run -q udev restart >${NULL} 2>&1 || sv-run -q udev start >${NULL} 2>&1 && UDEV_ARGS=--noudevsync
+		sv-run -q udev restart >${NULL} 2>&1 || sv-run -q udev start >${NULL} 2>&1 || UDEV_ARGS=--noudevsync
 		ENV_SET UDEV_ARGS
 		dmsetup_opts="${dmsetup_opts} ${UDEV_ARGS}"
 	fi
