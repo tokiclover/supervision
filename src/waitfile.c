@@ -24,6 +24,10 @@
 #include "error.h"
 
 #define VERSION "0.4.0"
+#ifndef RUNDIR
+# define RUNDIR "/var/run"
+#endif
+#define SV_TMPDIR RUNDIR "/sv/.tmp"
 
 #define WAIT_SECS 60    /* default delay */
 #define WAIT_MSEC 1000  /* interval for displaying warning */
@@ -120,7 +124,8 @@ static int waitfile(void)
 	int FF = O_RDONLY;
 	int wf = 0;
 	long unsigned int msec = WAIT_MSEC, nsec, ssec = 1;
-	char WF[512] = RUNDIR "/sv/.tmp/wait/";
+	char WF[512] = SV_TMPDIR "/wait/";
+	char SF[512] = SV_TMPDIR "/fail/";
 	size_t len = strlen(WF);
 	FILE * fp;
 	pid_t pid = 0;
@@ -153,7 +158,10 @@ getpid:
 		}
 		if (wf && !pid) return 0;
 	}
-	else if (PF) goto getpid;
+	else if (PF) {
+		snprintf(SF+strlen(SF), sizeof(SF)-strlen(SF), "%s", NM);
+		goto getpid;
+	}
 
 	for (i = 0; i < TM; ) {
 		for (j = WAIT_POLL; j <= msec; j += WAIT_POLL) {
@@ -171,6 +179,8 @@ getpid:
 				(void)unlink(FP);
 				return 0;
 			}
+			/* test service command failure */
+			if (PF && !wf && !access(SF, F_OK)) return 0;
 
 			/* use poll(3p) as a milliseconds timer (sleep(3) replacement) */
 			if (poll(0, 0, WAIT_POLL) < 0)
