@@ -1187,8 +1187,6 @@ int svc_exec(int argc, const char *argv[]) {
 	retval = svc_cmd(&run);
 	if (access(SV_PIDFILE, F_OK))
 		atexit(sv_cleanup);
-	if (retval != SVC_WAITPID)
-		svc_lock(&run, 0);
 	switch(retval) {
 	case -EBUSY:
 		return EXIT_SUCCESS;
@@ -1209,6 +1207,7 @@ int svc_exec(int argc, const char *argv[]) {
 		return retval;
 	default:
 		if (retval < 0) return EXIT_FAILURE;
+		svc_lock(&run, 0);
 		return retval;
 	}
 }
