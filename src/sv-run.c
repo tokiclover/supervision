@@ -681,7 +681,6 @@ __attribute__((__unused__)) static int svc_waitpid(struct svcrun *run, int flags
 	/* do not mark service status twice */
 	if (run->dep->timeout && !pid)
 		return run->status;
-	svc_status(run, SV_SVC_STATUS_WAIT, SVC_STATUS_SET, NULL);
 	if (!svc_quiet)
 		svc_end(run->name, run->status);
 	if (run->status)
