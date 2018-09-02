@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)waitfile.c  0.2.0 2016/12/24
+ * @(#)waitfile.c  0.4.0 2018/08/30
  */
 
 #include "config.h"
@@ -45,7 +45,7 @@ static const struct option longopts[] = {
 	{ "name"   ,  0, NULL, 'n' },
 	{ "pid"    ,  0, NULL, 'p' },
 	{ "timeout",  0, NULL, 't' },
-	{ "noexits",  0, NULL, 'E' },
+	{ "noexit",   0, NULL, 'E' },
 	{ "message",  0, NULL, 'm' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
@@ -213,6 +213,9 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'E':
 			EF++;
+			break;
+		case 'f':
+			FP = optarg;
 			break;
 		case 'm':
 			MF++;
