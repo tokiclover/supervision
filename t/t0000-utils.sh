@@ -9,9 +9,9 @@ fi
 
 name="${0##*/}"
 SV_LIBDIR=lib
-[ -L lib/bin/checkpath ] || ln -s ../src/checkpath $SV_LIBDIR/bin
-[ -L lib/bin/fstabinfo ] || ln -s ../src/fstabinfo $SV_LIBDIR/bin
-[ -L lib/bin/mountinfo ] || ln -s ../src/mountinfo $SV_LIBDIR/bin
+[ -L src/checkpath ] || ln -s ../src/checkpath $SV_LIBDIR/bin
+[ -L src/fstabinfo ] || ln -s ../src/fstabinfo $SV_LIBDIR/bin
+[ -L src/mountinfo ] || ln -s ../src/mountinfo $SV_LIBDIR/bin
 SV_LIBDIR=$SV_LIBDIR . $SV_LIBDIR/sh/runscript-functions
 
 if yesno Enable; then
