@@ -105,7 +105,11 @@ svc_del()
 svc_zap()
 {
 	SVC_DEBUG "function=svc_zap( ${@} )"
-	rm -f ${SV_TMPDIR}/*/${SVC_NAME}
+	rm -f ${SV_TMPDIR}/dow/${SVC_NAME} \
+		${SV_TMPDIR}/envs/${SVC_NAME} \
+		${SV_TMPDIR}/fail/${SVC_NAME} \
+		${SV_TMPDIR}/opts/${SVC_NAME} \
+		${SV_TMPDIR}/star/${SVC_NAME}
 }
 
 svc_check_pid()
