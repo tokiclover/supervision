@@ -268,11 +268,11 @@ svc_wait()
 		#
 		# XXX: sv(8) from runit bug (unreliable with wait up command)
 		#
-		if ${pid} && ${__wait__} && [ "${__SV_NAM__}" = "runit" ] && svc_status -f; then
+		if ${pid} && [ "${__SV_NAM__}" = "runit" ] && svc_status -f; then
 			return 1
 		fi
 
-		if waitfile ${arg} -t ${i} -f ${x}; then
+		if waitfile ${arg} ${pid:+-p} -t ${i} -f ${x}; then
 			if ${__wait__} && [ -n "${arg}" ]; then
 				if svc_status -w; then
 					error "service is busy -- retry later"
