@@ -977,7 +977,7 @@ static int svc_status(struct svcrun *restrict run, int status, int flag, char *r
 	if (!run || !status)
 		return 0;
 	if (flag == SVC_STATUS_SET)
-		open_flags = O_CREAT | O_WRONLY | O_NONBLOCK;
+		open_flags = O_CREAT | O_RDWR | O_NONBLOCK;
 	if (run->dep && flag) run->dep->status = status;
 
 	switch(status) {
@@ -993,7 +993,7 @@ static int svc_status(struct svcrun *restrict run, int status, int flag, char *r
 				if (run->dep->virt) {
 					snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
 					m = umask(0);
-					fd = open(path, (open_flags | O_APPEND) & ~O_WRONLY, 0644);
+					fd = open(path, open_flags | O_APPEND, 0644);
 					umask(m);
 					if (fd > 0) {
 						(void)err_write(fd, (const char*)run->name, (const char*)path);
