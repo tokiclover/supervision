@@ -895,8 +895,11 @@ static int svc_lock(struct svcrun *run, int timeout)
 		} while (r);
 		if (!close(run->lock)) run->lock = 0;
 	}
-	else
-		return unlinkat(wait_fd, run->name, 0);
+	else {
+		r = unlinkat(wait_fd, run->name, 0);
+		printf("r=%d: %s\n", r, strerror(errno));
+		return r;
+	}
 
 	return 0;
 }
@@ -989,6 +992,7 @@ static int svc_status(struct svcrun *restrict run, int status, int flag, char *r
 		case SV_SVC_STATUS_STAR:
 			ptr = SV_TMPDIR_STAR;
 			if (flag == SVC_STATUS_SET) {
+				svc_status(run, SV_SVC_STATUS_FAIL, SVC_STATUS_DEL, NULL);
 				if (run->dep->virt) {
 					snprintf(path, sizeof(path), "%s/%s", ptr, run->dep->virt);
 					m = umask(0);
@@ -1002,7 +1006,6 @@ static int svc_status(struct svcrun *restrict run, int status, int flag, char *r
 				}
 			}
 			else if (flag == SVC_STATUS_DEL) {
-				svc_status(run, SV_SVC_STATUS_FAIL, SVC_STATUS_DEL, NULL);
 				if (run->dep->virt) {
 					/* do not remove virtual service if there is another provider */
 					fd = i = 0;
