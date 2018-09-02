@@ -60,7 +60,7 @@ info()
 		printf "${name}[$$]: info: ${@}\n" >&${__SV_DEBUG_FD__}
 	fi
 	__print_len__=$((${#name}+3+${#message}))
-	local prefix="${name:+${color_fg_ylw}${name}}"
+	local prefix="${name:+${color_fg_ylw}${name}${color_rst}:}"
 	printf "${__print_eol__}${prefix} ${color_fg_blu}info${color_rst}: ${message}${__eol_print__}"
 }
 
