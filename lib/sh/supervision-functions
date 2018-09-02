@@ -56,19 +56,18 @@ svc_start()
 	SVC_DEBUG "function=svc_start( ${@} )"
 
 	svc_status -p && return 0
-	rm -f ${SV_TMPDIR}/fail/${SVC_NAME}
+	svc_status --del -f
 	cp -HRpu ${__svc__} ${SV_RUNDIR}
 	[ -z "${__SCANCMD__}" ] || eval ${__SCANCMD__}
 
-	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} "${SV_RUNDIR}/${SVC_NAME}" >${NULL} 2>&1; then
-		val=0
-	elif svc_status -f; then
-		:;
+	if eval ${__SVCCMD__} ${__SIGWTUP__:-${__SIGSTRT__}} ${SV_RUNDIR}/${SVC_NAME} >${NULL} 2>&1 ||
+		! svc_status -f; then
 	#
 	# XXX: wait pidfile because sv(8) is unreliable with false negative failures
 	#
-	elif svc_wait -p ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
+	if svc_wait -p ${SVC_TIMEOUT_UP:-${SV_TIMEOUT_UP:-10}} ${SVC_PIDFILE}; then
 		val=0
+	fi
 	fi
 
 	if [ "${val}" = "0" ]; then
@@ -103,13 +102,14 @@ svc_stop()
 	if ! svc_command stop_pre; then
 		return 2
 	fi
-	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} "${SV_RUNDIR}/${SVC_NAME}" >${NULL} 2>&1; then
-		val=0
+	if eval ${__SVCCMD__} ${__SIGWDWN__:-${__SIGSTOP__}} ${SV_RUNDIR}/${SVC_NAME} >${NULL} 2>&1 ||
+		! svc_status -f; then
 	#
 	# XXX: wait pidfile because sv(8) is unreliable with false negative failures
 	#
-	elif svc_wait -E -p ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-10}} ${SVC_PIDFILE}; then
+	if svc_wait -E -p ${SVC_TIMEOUT_DOWN:-${SV_TIMEOUT_DOWN:-10}} ${SVC_PIDFILE}; then
 		val=0
+	fi
 	fi
 	if [ "${val}" = "0" ]; then
 		if svc_command stop_post; then
