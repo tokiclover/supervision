@@ -105,12 +105,5 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	svc_cmd "${@}"
 else
 	error "nothing to do -- invalid usage"
+	exit 1
 fi
-
-retval="${?}"
-rm -f ${SV_TMPDIR}/wait/${SVC_NAME}
-exit ${retval}
-
-#
-# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
-#
