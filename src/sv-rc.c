@@ -591,6 +591,10 @@ static void svc_init(const char *cmd)
 			exit(EXIT_FAILURE);
 		}
 		break;
+	case SV_DEFAULT_LEVEL:
+	case SV_NONETWORK_LEVEL:
+		setsid();
+		break;
 	}
 
 	/* set a few sane environment variables */
