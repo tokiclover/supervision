@@ -20,6 +20,7 @@
 #include <pwd.h>
 #include <utmpx.h>
 #include <getopt.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <paths.h>
 #include <string.h>
