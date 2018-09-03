@@ -14,6 +14,7 @@ SVC_CMD=/sbin/agetty
 #SVC_CMD=/sbin/fbgetty
 SVC_TRY=16
 SVC_AFTER="*"
+PRE_CMD=${SV_LIBDIR}/bin/pgrphack
 name="${SVC_NAME}"
 
 #
