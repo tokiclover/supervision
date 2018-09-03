@@ -102,8 +102,8 @@ static const char *longopts_help[] = {
 	"Enable debug mode",
 	"Enable shell trace",
 	"Enable quiet mode",
-	"Show help and exit",
-	"Show version and exit",
+	"Print help message",
+	"Print version string",
 	NULL
 };
 
