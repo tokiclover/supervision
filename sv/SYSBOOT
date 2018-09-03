@@ -8,6 +8,16 @@ description='SYSBOOT check-point (DUMMY SERVICE)'
 SVC_NEED='dev clock hostname localfs loopback miscfs console net networkfs logger'
 SVC_PROVIDE='SYSBBOT'
 
+start()
+{
+	#
+	# nth hack to get udev(8) working
+	#
+	if [ -e ${SV_RUNDIR}/udev ]; then
+		sv-run -q udev restart >${NULL} 2>&1
+	fi
+}
+
 #
 # vim:fenc=utf-8:ft=sv:ci:pi:sts=0:sw=4:ts=4:
 #
