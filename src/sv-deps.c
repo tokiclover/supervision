@@ -451,10 +451,14 @@ static int sv_svcdeps_gen(const char *svc)
 
 	if ((pid = fork()) > 0) { /* parent */
 		do {
-			retval = waitpid(pid, &status, 0);
+			retval = waitpid(pid, &status, WUNTRACED);
 			if (retval < 0) {
-				if (errno != ECHILD) continue;
+				if (errno == EINTR) continue;
 				ERROR("%s: failed to fork()", __func__);
+			}
+			if (WIFSTOPPED(status)) {
+				kill(pid, SIGCONT);
+				continue;
 			}
 		} while (!WIFEXITED(status));
 	}
