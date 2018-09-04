@@ -530,6 +530,12 @@ static int svc_init_level(int argc, const char *argv[])
 		if (!TAILQ_EMPTY(DEPTREE.tree[i]))
 			retval += svc_execl(DEPTREE.tree[i], argc, argv);
 	}
+
+	sv_stringlist_free(&DEPTREE.list);
+	DEPTREE.list = sv_stringlist_new();
+	sv_stringlist_add(DEPTREE.list, sv_run_level[sv_init]);
+	(void)svc_execl(DEPTREE.list, argc, argv);
+
 	sv_deptree_free(&DEPTREE);
 	sv_stringlist_free(&DEPTREE.list);
 	return retval;
