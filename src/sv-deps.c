@@ -295,7 +295,9 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 	SV_String_T *ent;
 	SV_String_T *elm;
 	SV_SvcDeps_T *dep;
+	SV_StringList_T *list;
 	int pri;
+	int i;
 
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, deptree);
@@ -324,10 +326,28 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 			(*elm->str == '*')) {
 			for (pri = 0; pri < deptree->prio; pri++) {
 				if ((elm = sv_stringlist_fid(deptree->tree[pri], ent))) {
+					/* move up the string list if necessary */
+					if (!TAILQ_EMPTY(deptree->tree[0])) {
+						i = 0;
+						TAILQ_FOREACH(ent, deptree->tree[pri], entries) i++;
+						if (i > 1) {
+							/* allocate new string list if necessary */
+							if ((deptree->prio+1) > deptree->size)
+								sv_deptree_alloc(deptree);
+							if ((deptree->prio+1) < deptree->size) {
+								deptree->prio++; pri++;
+								list = deptree->prio;
+								for (i = deptree->prio; i < deptree->prio; i--)
+									deptree->tree[i] = deptree->tree[i-1];
+								deptree->tree[0] = list;
+							}
+						}
+					}
 					sv_stringlist_mov(deptree->tree[pri], deptree->tree[0], elm);
 					break;
 				}
 			}
+			continue;
 		}
 
 		if ((dep = ent->data) &&
@@ -335,9 +355,14 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 			(*elm->str == '*')) {
 			for (pri = deptree->prio; pri > 0; pri--) {
 				if ((elm = sv_stringlist_fid(deptree->tree[pri], ent))) {
-					if (deptree->prio >= deptree->size-1)
+					/* allocate new string list if necessary */
+					if ((deptree->prio == pri) && (deptree->prio >= (deptree->size-1)))
+						sv_deptree_alloc(deptree);
+					if (deptree->prio >= (deptree->size-1)) {
+						if (pri < deptree->prio)
 						sv_stringlist_mov(deptree->tree[pri],
 								deptree->tree[deptree->prio], elm);
+					}
 					else
 						sv_stringlist_mov(deptree->tree[pri],
 								deptree->tree[++deptree->prio], elm);
