@@ -189,7 +189,6 @@ dist_SYSINIT = \
 	sysfs
 dist_SYSBOOT = \
 	$(EXTRA_SYSBOOT_SERVICES) \
-	SYSBOOT \
 	checkfs \
 	hostname \
 	localfs \
