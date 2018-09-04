@@ -891,7 +891,7 @@ int main(int argc, char *argv[])
 	if ( sv_debug)
 		setenv("SVC_DEBUG", on, 1);
 	sv_parallel = sv_conf_yesno("SV_PARALLEL");
-	if ((ptr = sv_getconf("SV_TIMEOUT")))
+	if ((ptr = (char *)sv_getconf("SV_TIMEOUT")))
 		if (!sscanf( ptr, "%u", &sv_timeout)) sv_timeout = 0;
 	sv_sigsetup();
 
@@ -935,7 +935,7 @@ sv_run:
 			if (argc < 2) goto sv_run_help;
 			unsetenv("SV_INITLEVEL");
 			unsetenv("SV_RUNLEVEL");
-			return svc_exec(argc, argv);
+			return svc_exec(argc, (const char**)argv);
 		}
 	}
 	else if (!strcmp(progname, "service")) goto sv_run;
