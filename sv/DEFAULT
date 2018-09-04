@@ -5,7 +5,6 @@
 #
 
 description='DEFAULT check-point (DUMMY SERVICE)'
-SVC_AFTER='*'
 SVC_NEED='cron getty.tty1 sshd'
 SVC_PROVIDE='DEFAULT'
 
