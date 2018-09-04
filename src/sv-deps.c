@@ -463,6 +463,7 @@ static int sv_svcdeps_gen(const char *svc)
 		} while (!WIFEXITED(status));
 	}
 	else if (!pid) { /* child */
+		setenv("SVCDEPS_UPDATE", "1", 1);
 		if (execl(SV_DEPS_SH, strrchr(SV_DEPS_SH, '/')+1, svc, NULL))
 			ERROR("Failed to execute `%s'", SV_DEPS_SH);
 	}
