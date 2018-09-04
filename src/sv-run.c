@@ -116,7 +116,7 @@ static int svc_depend(struct svcrun *run);
  * @status: int value, see the SV_SVC_STATUS_* macros;
  * @return: true/false;
  */
-__attribute__((__unused__)) static int svc_status(struct svcrun *restrict runa, int status, int flag, char *restrict what);
+__attribute__((__unused__)) static int svc_status(struct svcrun *restrict run, int status, int flag, char *restrict what);
 
 /*
  * lock file for service to start/stop
