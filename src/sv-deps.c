@@ -336,7 +336,7 @@ void sv_deptree_load(SV_DepTree_T *deptree)
 								sv_deptree_alloc(deptree);
 							if ((deptree->prio+1) < deptree->size) {
 								deptree->prio++; pri++;
-								list = deptree->prio;
+								list = deptree->tree[deptree->prio];
 								for (i = deptree->prio; i >= 0; i--)
 									deptree->tree[i] = deptree->tree[i-1];
 								deptree->tree[0] = list;
