@@ -13,9 +13,9 @@ ZRAM_STREAM_NUMBER=2
 # <size> <file-system> <mount-point> <mount-options> <octal-mode>
 # device size should not excede 2xRAM-SIZE to avoid memory waste
 #
-ZRAM_DEVICE_0='512M swap'
-ZRAM_DEVICE_1='4G ext4 /var/tmp user_xattr 1777'
-ZRAM_DEVICE_2='512M ext4 /tmp user_xattr 1777'
+#ZRAM_DEVICE_0='512M swap'
+ZRAM_DEVICE_0='8G btrfs /var/tmp relatime,nodatacow,nospace_cache,nossd 1777'
+ZRAM_DEVICE_1='512M btrfs /tmp relatime,nodatacow,nospace_cache,nossd 1777'
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
