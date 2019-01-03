@@ -90,13 +90,13 @@ start_post()
 		fi
 	fi
 
+	begin "Waiting uevents to be processed"
+	${udevadm} settle --timeout=${UDEV_SETTLE_TIMEOUT:-180}
+	end "${?}"
+
 	begin "Populating /dev with uevents"
 	${udevadm} trigger --type=subsystems --action=add
 	${udevadm} trigger --type=devices --action=add
-	end "${?}"
-
-	begin "Waiting uevents to be processed"
-	${udevadm} settle --timeout=${UDEV_SETTLE_TIMEOUT:-60}
 	end "${?}"
 
 	if ! ${UDEV_MONITOR}; then
