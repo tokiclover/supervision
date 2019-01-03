@@ -5,7 +5,7 @@
 #
 
 description='SYSBOOT check-point (DUMMY SERVICE)'
-SVC_NEED='dev clock hostname localfs loopback miscfs console net logger'
+SVC_NEED='dev clock hostname localfs loop-back-device miscfs console net networkfs logger'
 SVC_PROVIDE='SYSBBOT'
 
 start()
