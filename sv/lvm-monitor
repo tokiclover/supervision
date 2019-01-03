@@ -17,7 +17,7 @@ start_pre()
 start()
 {
 	if [ -e ${SV_RUNDIR}/udev ]; then
-		sv-run -q udev restart >${NULL} 2>&1 || sv-run -q udev start >${NULL} 2>&1 || UDEV_ARGS=--noudevsync
+		udevadm trigger || UDEV_ARGS=--noudevsync
 		ENV_SET UDEV_ARGS
 	fi
 
