@@ -14,7 +14,7 @@ exec__cmd__()
 	local x
 	for x in ${SV_LOCALDIR}/*; do
 		if [ -x "${x}" ]; then
-			begin "    Starting \`${x}'"
+			begin "\tStarting \`${x##*/}'"
 			(. ${x} "${__cmd__}")
 			end "${?}"
 		fi
