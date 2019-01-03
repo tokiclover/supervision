@@ -335,10 +335,10 @@ __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 		logpath = logfile;
 	else
 		logpath = SV_LOGFILE;
-	if (!logfd) {
-		logfd = open(logpath, O_DSYNC|O_CREAT|O_RDWR, 0644);
+	if (!logfd && (!strcmp(progname, "sv-rc") || !strcmp(progname, "rc"))) {
+		logfd = open(logpath, O_DSYNC | O_CREAT | O_RDWR | O_APPEND, 0644);
 		if (logfd < 0)
-			logfd = open(SV_LOGFILE, O_DSYNC|O_CREAT|O_RDWR, 0644);
+			logfd = open(SV_LOGFILE, O_DSYNC | O_CREAT | O_RDWR | O_APPEND, 0644);
 		if (logfd > 0) {
 			logfp = fdopen(logfd, "a+");
 			debugfp = logfp;
