@@ -158,7 +158,7 @@ dist_RS_SVCS = \
 	kmod-static-nodes \
 	libvirt-guests \
 	localfs \
-	loopback \
+	loop-back-device \
 	miscfs \
 	mtab \
 	nginx \
@@ -192,7 +192,7 @@ dist_SYSBOOT = \
 	checkfs \
 	hostname \
 	localfs \
-	loopback \
+	loop-back-device \
 	miscfs \
 	mtab \
 	networkfs \
