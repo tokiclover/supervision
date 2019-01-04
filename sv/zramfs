@@ -16,7 +16,7 @@ SVC_KEYWORD="docker lxc openvz prefix supervision systemd-nspawn uml vserver xen
 
 start()
 {
-	local blk_dir cmd dev type mode mnt_dir num=0 offset=0 mnt_opts
+	local blk_dir cmd dev type mode mnt_dir num=0 mnt_opts
 	local CONTINUE='{ num=$((${num}+1)); continue; }'
 
 	for cmd in mkfs mount mkswap swapon; do
@@ -24,20 +24,23 @@ start()
 	done
 
 	while true; do
-		#
-		# Find the first free device
-		#
-		dev=/dev/zram$((${num}+${offset}))
-		[ -b ${dev} ] || break
-		if [ "$(cat /sys/block/${dev##*/}/size)" != 0 ]; then
-			offset=$((${offset}+1)); continue;
-		fi
 		eval set -- \${ZRAM_DEVICE_${num}}
 		size="${1}" type="${2}" mnt_dir="${3}" mnt_opts="${4}" mode="${5}"
 		#
+		# Find the first free device
+		#
+		dev=/dev/zram${num}
+		[ -b ${dev} ] || break
+		if [ "$(cat /sys/block/${dev##*/}/size)" != 0 ]; then
+			if mountinfo -q ${mnt_dir}; then
+				warn "(/dev/zram${num}) ${mnt_dir} is mounted!"
+				continue
+			fi
+		fi
+		#
 		# Initialize device if defined
 		#
-		blk_dir="/sys/block/${dev##*/}"
+		blk_dir="/sys/block/zram${num}"
 		[ -n "${size}" ] || break
 		[ -n "${ZRAM_COMPRESSOR}"    ] &&
 			echo "${ZRAM_COMPRESSOR}"    >${blk_dir}/comp_algorithm
