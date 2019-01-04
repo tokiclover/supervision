@@ -367,6 +367,9 @@ esac
 readonly SVC_INSTANCE
 
 if   [ "${SV_TYPE}" = "rs" ]; then
+	SV_SERVICE=${__svc__}
+	RC_SERVICE=${__svc__}
+
 	DOT "${SV_CONFDIR}/${SVC_NAME}"
 	DOT "${SV_CONFLOCAL}/${SVC_NAME}"
 	DOT -e ${__svc__} || return 1
@@ -375,6 +378,8 @@ if   [ "${SV_TYPE}" = "rs" ]; then
 #
 elif [ "${SV_TYPE}" = "sv" ]; then
 :	${SVC_DIR:=${__svc__}}
+	SV_SERVICE=${__svc__}/run
+	RC_SERVICE=${__svc__}/run
 
 	if [ "${__cmd__}" = "run" -o "${__cmd__}" = "finish" ]; then
 :	${COLUMNS:=80}
@@ -418,8 +423,6 @@ if [ -n "${__cmd__}" ]; then
 DOT ${SV_TMPDIR}/opts/${SVC_NAME}
 fi # __cmd__
 
-SV_SERVICE=${__svc__}
-RC_SERVICE=${__svc__}
 export SV_SERVICE RC_SERVICE
 
 fi # __svc__
