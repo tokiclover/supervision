@@ -1,5 +1,14 @@
 Header: supervision/ChangeLog, 2018/08/16
 
+0.14.5:
+
+Renamed loopback service to loop-back-device;
+
+Tiny tixes to try to make LVM works out with udev.
+Synchronization issue may happen because udev is not ready to initialize
+devices; and then LVM will block the boot process.
+Remain hitting the ^C (CTRL-C) to halt lvm.
+
 0.14.4:
 
 Fixed a nasty structure initilization bug (sv-run);
