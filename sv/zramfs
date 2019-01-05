@@ -30,18 +30,18 @@ start()
 		# Find the first free device
 		#
 		dev=/dev/zram${num}
+		blk_dir="/sys/block/zram${num}"
+		[ -n "${size}" ] || break
 		[ -b ${dev} ] || break
 		if [ "$(cat /sys/block/${dev##*/}/size)" != 0 ]; then
 			if mountinfo -q ${mnt_dir}; then
 				warn "(/dev/zram${num}) ${mnt_dir} is mounted!"
-				continue
+				eval ${CONTINUE}
 			fi
 		fi
 		#
 		# Initialize device if defined
 		#
-		blk_dir="/sys/block/zram${num}"
-		[ -n "${size}" ] || break
 		[ -n "${ZRAM_COMPRESSOR}"    ] &&
 			echo "${ZRAM_COMPRESSOR}"    >${blk_dir}/comp_algorithm
 		[ -n "${ZRAM_STREAM_NUMBER}" ] &&
