@@ -5,6 +5,7 @@
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
 
+readonly __arg__="$*"
 #
 # ZSH compatibility
 #
@@ -82,6 +83,7 @@ svc_cleanup()
 	return ${ret}
 }
 trap svc_cleanup INT TERM QUIT
+SVC_DEBUG "${__svc__}:pid=$$=( ${@} )"
 
 #
 # Handle service command
