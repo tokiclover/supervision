@@ -74,13 +74,10 @@ static const char *const environ_whitelist[] = {
 	"LANG", "LC_ALL", "LC_ADDRESS", "LC_COLLATE", "LC_CTYPE", "LC_NUMERIC",
 	"LC_MEASUREMENT", "LC_MONETARY", "LC_MESSAGES", "LC_NAME", "LC_PAPER",
 	"LC_IDENTIFICATION", "LC_TELEPHONE", "LC_TIME", "PWD", "OLDPWD", "LOGNAME",
-	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID",  "__SV_DEBUG_FD__", NULL
-};
-static const char *environ_list[] = {
-	"__SV_DEBUG_FD__",
+	"COLUMNS", "LINES", "UID", "GID", "EUID", "EGID",
 	"SVC_DEBUG", "SVC_TRACE", "__SVC_WAIT__", "SV_RUNDIR", "SV_SVCDIR",
 	"SV_LIBDIR", "SV_SYSBOOT_LEVEL", "SV_SHUTDOWN_LEVEL", "SV_VERSION",
-	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_INITLEVEL",
+	"SV_SYSTEM", "SV_PREFIX", "SV_RUNLEVEL", "SV_INITLEVEL", "__SV_DEBUG_FD__",
 	NULL
 };
 
@@ -436,7 +433,7 @@ int svc_cmd(struct svcrun *run)
 		return svc_print_status(run, &st_buf, buf, type[retval]+2U);
 	}
 
-	run->path = err_strdup(buf);
+	if (!run->path) run->path = err_strdup(buf);
 	if (!run->svc->data)
 		run->svc->data = sv_svcdeps_load(run->name);
 	run->dep = run->svc->data;
@@ -747,15 +744,12 @@ static int svc_depend(struct svcrun *run)
 	return retval;
 }
 
-off_t ENVIRON_OFF = ARRAY_SIZE(environ_list)-3;
-static long environ_off;
-static int  environ_fd;
-static FILE *environ_fp;
+off_t ENVIRON_OFF = ARRAY_SIZE(environ_whitelist)-3;
 static void svc_env(void)
 {
 	size_t len = 8;
 	char buf[1024], *ptr;
-	int i = 0, j;
+	off_t i = 0, j;
 
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
@@ -782,36 +776,30 @@ static void svc_env(void)
 		}
 	}
 	svc_environ[i++] = (char *)0;
-	svc_environ_update(0L);
 }
-int svc_environ_update(off_t off)
+
+void svc_environ_update(void)
 {
-	int j;
-	char *ptr;
+	size_t len;
+	off_t i;
+	static off_t OFF;
+	char buf[128];
 
 #ifdef DEBUG
-	if (sv_debug) DBG("%s(%ld)\n", __func__, off);
+	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
 
-	if (!environ_fd) {
-		if ((environ_fd = open(SV_ENVIRON, O_CREAT|O_WRONLY|O_TRUNC|O_APPEND|O_CLOEXEC, 0644)) < 0)
-			return -1;
-		if (flock(environ_fd, LOCK_EX|LOCK_NB) < 0)
-			return -1;
+	if (!OFF) {
+		for (OFF= 0; svc_environ[OFF]; OFF++) ;
+		OFF -= 3L;
 	}
-	if (!environ_fp)
-		if (!(environ_fp = fdopen(environ_fd, "w")))
-			return -1;
-	if (off)
-		ftruncate(environ_fd, (off_t)environ_off);
-	for (j = off; environ_list[j]; j++) {
-		if (!off && j == ENVIRON_OFF)
-			environ_off = ftell(environ_fp);
-		if ((ptr = getenv(environ_list[j])))
-			fprintf(environ_fp, "%s='%s'\n", environ_list[j], ptr);
+	for (i = 0L; i < 2L; i++) {
+		snprintf(buf, sizeof(buf), "%s=%s", environ_whitelist[ENVIRON_OFF+i], getenv(environ_whitelist[ENVIRON_OFF+i]));
+		len = strlen(buf);
+		len++;
+		svc_environ[OFF+i] = err_realloc(svc_environ[OFF+i], len);
+		memcpy(svc_environ[OFF+i], buf, len);
 	}
-	fflush(environ_fp);
-	return 0;
 }
 
 static int svc_lock(struct svcrun *run, int timeout)

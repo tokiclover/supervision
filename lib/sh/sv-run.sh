@@ -94,9 +94,11 @@ elif [ "${SV_TYPE}" = "sv" ]; then
 	#
 	if [ "${__cmd__}" = "start" -o "${__cmd__}" = "stop" ] || \
 	   [ "${__cmd__}" = "up"    -o "${__cmd__}" = "down" ]; then
-	while read line; do
-		echo "${line}"
-	done <${SV_TMPDIR}/environ >${SV_TMPDIR}/envs/${SVC_NAME}
+	for env in SVC_DEBUG SVC_TRACE __SVC_WAIT__ SV_RUNDIR SV_SVCDIR \
+		SV_LIBDIR SV_SYSBOOT_LEVEL SV_SHUTDOWN_LEVEL SV_VERSION \
+		SV_SYSTEM SV_PREFIX SV_RUNLEVEL SV_INITLEVEL __SV_DEBUG_FD__; do
+		eval echo "${env}=\$${env}"
+	done >${SV_TMPDIR}/envs/${SVC_NAME}
 	ENV_SET SVC_DEPS
 	else
 	rm -f ${SV_TMPDIR}/envs/${SVC_NAME}

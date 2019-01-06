@@ -370,8 +370,6 @@ void sv_cleanup(void)
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
 #endif
-	if (!access(SV_ENVIRON, F_OK))
-		unlink(SV_ENVIRON);
 	if (!access(SV_PIDFILE, F_OK))
 		unlink(SV_PIDFILE);
 }
@@ -714,7 +712,7 @@ static void svc_init(const char *cmd)
 			svc_run_level(SV_SYSBOOT_RUNLEVEL);
 			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
-			svc_environ_update(ENVIRON_OFF);
+			svc_environ_update();
 		}
 		else if (sv_init == SV_SINGLE_LEVEL) {
 			/* stop runlevel only when service command is NULL */
@@ -730,7 +728,7 @@ static void svc_init(const char *cmd)
 			sv_init = level;
 			level = 0;
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] ,1);
-			svc_environ_update(ENVIRON_OFF);
+			svc_environ_update();
 			command = sv_svc_cmd[SV_SVC_CMD_START];
 			svc_start = 1;
 		}
