@@ -844,7 +844,7 @@ static int svc_lock(struct svcrun *run, int timeout)
 			/* check the holder of the lock file */
 			if (svc_wait(run, timeout))
 				return -1;
-			(void)unlink(run->name);
+			(void)unlinkat(wait_fd, run->name, 0);
 		}
 		if (run->lock < 0)
 			run->lock = openat(wait_fd, run->name, f, 0644);
