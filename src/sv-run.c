@@ -505,7 +505,7 @@ int svc_cmd(struct svcrun *run)
 		run->ARGV[1] = type[1];
 	else
 		run->ARGV[1] = type[0];
-	run->ARGV[2] = deps[0];
+	run->ARGV[2] = deps[1];
 	run->ARGV[3] = run->path;
 
 	/* check service mtime */
@@ -522,8 +522,6 @@ int svc_cmd(struct svcrun *run)
 			retval = -ECANCELED;
 			goto reterr;
 		}
-		else
-			run->ARGV[2] = deps[1];
 	}
 
 	if (!svc_quiet)
