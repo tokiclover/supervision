@@ -2,6 +2,7 @@ Header: supervision/ChangeLog, 2018/08/16
 
 0.14.6:
 
+Fix redundant dependency start up;
 Fix logging to log file (important fix);
 Fix zramfs infinite loop (0.14.5);
 
