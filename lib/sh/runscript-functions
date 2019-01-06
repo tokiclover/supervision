@@ -272,7 +272,7 @@ svc_wait()
 			return 1
 		fi
 
-		if waitfile ${arg} ${pid:+-p} -t ${i} -f ${x}; then
+		if waitfile ${arg} ${pid:+-p $$} -t ${i} -f ${x}; then
 			if ${__wait__} && [ -n "${arg}" ]; then
 				if svc_status -w; then
 					error "service is busy -- retry later"
