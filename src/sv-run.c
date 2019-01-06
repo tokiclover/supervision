@@ -716,12 +716,12 @@ static int svc_depend(struct svcrun *run)
 		else p = 0;
 		while (p >= 0 && p < deptree.size) { /* PRIORITY_LEVEL_LOOP */
 			if (!TAILQ_EMPTY(deptree.tree[p]))
-				val += svc_execl(deptree.tree[p], run->argc, run->argv);
+				val = svc_execl(deptree.tree[p], run->argc, run->argv);
 			--p;
 		} /* PRIORITY_LEVEL_LOOP */
 		sv_deptree_free(&deptree);
-		if (val > 0 && type == SV_SVCDEPS_NEED)
-			retval = val;
+		if (type == SV_SVCDEPS_USE) continue;
+		if (val > 0) retval = val;
 	}
 
 	/* check if the direct service dependencies are started */
