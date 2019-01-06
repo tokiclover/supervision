@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)waitfile.c  0.4.0 2018/08/30
+ * @(#)waitfile.c  0.5.0 2019/01/06
  */
 
 #include "config.h"
@@ -43,7 +43,7 @@ static char *NM, *FP;
 static int EF, MF, PF;
 static unsigned long int TM;
 
-static const char *shortopts = "Ef:hmn:p:t:v";
+static const char *shortopts = "Ef:hmn::p:t:v";
 static const struct option longopts[] = {
 	{ "file"   ,  0, NULL, 'f' },
 	{ "name"   ,  0, NULL, 'n' },
@@ -128,7 +128,7 @@ static int waitfile(void)
 	char SF[512] = SV_TMPDIR "/fail/";
 	size_t len = strlen(WF);
 	FILE * fp;
-	pid_t pid = 0;
+	pid_t pf = 0;
 
 	if (TM < ssec) {
 		nsec = TM;
@@ -143,20 +143,20 @@ static int waitfile(void)
 	if (!FP) FP = WF;
 	if (FP == WF || !strcmp(WF, FP)) {
 		FF = O_WRONLY | O_EXCL | O_CREAT;
-		PF++;
+		if (!PF) PF++;
 		wf++;
 getpid:
 		if ((fd = open(FP, O_RDONLY, 0644)) < 0)
 			return 0;
 		if ((fp = fdopen(fd, "r"))) {
-			if (!fscanf(fp, "pid=%d:", &pid)) pid = 0;
+			if (!fscanf(fp, "pid=%d:", &pf)) pf = 0;
 			(void)close(fd);
 		}
-		if ((pid == getpid())) {
+		if ((pf == getpid()) || (pf == PF)) {
 			(void)unlink(FP);
 			return 0;
 		}
-		if (wf && !pid) return 0;
+		if (wf && !pf) return 0;
 	}
 	else if (PF) {
 		snprintf(SF+strlen(SF), sizeof(SF)-strlen(SF), "%s", NM);
@@ -175,7 +175,7 @@ getpid:
 				}
 				return 0;
 			}
-			if (pid && kill(pid, 0)) {
+			if (pf && kill(pf, 0)) {
 				(void)unlink(FP);
 				return 0;
 			}
@@ -234,7 +234,8 @@ int main(int argc, char *argv[])
 			NM = optarg;
 			break;
 		case 'p':
-			PF++;
+			PF = strtoul(optarg, NULL, 10);
+			if (errno == ERANGE) PF++;
 			break;
 		case 't':
 			TM = strtoul(optarg, NULL, 10);
@@ -246,6 +247,8 @@ int main(int argc, char *argv[])
 		case 'v':
 			printf("%s version %s\n", progname, VERSION);
 			exit(EXIT_SUCCESS);
+		case ':':
+			break;
 		case 'h':
 			help_message(EXIT_SUCCESS);
 		default:
