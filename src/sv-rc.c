@@ -646,7 +646,7 @@ static void svc_init(const char *cmd)
 
 	if ((r = open(SV_PIDFILE, O_CREAT|O_RDWR|O_TRUNC|O_CLOEXEC, 0644)) > 0) {
 		if (flock(r, LOCK_EX|LOCK_NB))
-			ERROR("Failed to lock %s", SV_PIDFILE);
+			LOG_ERR("Failed to lock %s", SV_PIDFILE);
 	}
 	else
 		ERROR("Failed to open %s", SV_PIDFILE);
