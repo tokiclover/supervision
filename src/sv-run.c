@@ -364,7 +364,7 @@ int svc_cmd(struct svcrun *run)
 	int retval;
 	int i;
 	char *cmd = (char*)run->argv[4];
-	char buf[10124] = { "" };
+	char buf[1024] = { "" };
 
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(%p[%s])\n", __func__, run, run->name);
