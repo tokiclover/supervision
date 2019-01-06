@@ -55,7 +55,6 @@ extern "C" {
 #define SV_TMPDIR_STAR SV_TMPDIR "/star"
 #define SV_TMPDIR_WAIT SV_TMPDIR "/wait"
 
-#define SV_ENVIRON SV_TMPDIR "/environ"
 #define SV_LOGFILE SV_TMPDIR "/sv-rc.log"
 #define SV_PIDFILE SV_TMPDIR "/sv-rc.pid"
 #define SV_RUN_SH SV_LIBDIR "/sh/sv-run.sh"
@@ -180,9 +179,9 @@ enum {
 };
 extern const char *const sv_svc_cmd[];
 
-/* update SV_TMPDIR/environ environment file */
+/* update environment */
 extern off_t ENVIRON_OFF;
-extern int svc_environ_update(off_t off);
+extern void svc_environ_update(void);
 
 #ifdef __cplusplus
 }
