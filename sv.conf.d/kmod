@@ -1,18 +1,25 @@
 #
-# $Id: /etc/sv.conf.d/kmod, 2016/06/06       Exp $
+# $Id: /etc/sv.conf.d/kmod, 2019/01/06       Exp $
 #
 
 #
 # Setup this variable for kernel modules for any kernel version
-#modules="iwlwifi"
+#modules="iwlwifi ucvideo"
+
+#
+# Set module options
+# XXX: hypen `-' in module name should be replaced by underscore `_'!
+#
+#module_ucvideo_options="quircks=0x100"
 
 #
 # Setup any or all following variants to load kernel modules for
 # pariticular kernel (major, minor, patch level) versions
-#modules_3="snd-hda-intel"
-#modules_3_18="sha256-ssse3 twofish-x86_64-3way"
-#modules_3_18_100="sha512-ssse3 serpent-avx2 blowfish-x86_64"
+#modules_4="snd-hda-intel"
+#modules_4_18="sha256-ssse3 twofish-x86_64-3way"
+#modules_4_18_100="sha512-ssse3 serpent-avx2 blowfish-x86_64"
 
 #
 # vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
 #
+
