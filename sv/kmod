@@ -10,7 +10,7 @@ SVC_KEYWORD="docker lxc openvz prefix shutdown supervision systemd-nspawn uml vs
 
 start()
 {
-	local mod k_modules kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
+	local mod grp kv_minor kv_major kv_patch kv_modules ifs="${IFS}"
 
 	IFS=".-"
 	set ${SV_UNAME_RELEASE}
@@ -18,14 +18,16 @@ start()
 	kv_major="${1}" kv_minor="${2}" kv_patch="${3}"
 	IFS="${ifs}"
 
-	eval kv_modules="\"\${modules_${kv_major}} \${modules_${kv_major}_${kv_minor}} \
-		\${modules_${kv_major}_${kv_minor}_${kv_patch}}\""
+	for grp in "" "_${kv_major}" "_${kv_major}_${kv_minor}" "_${kv_major}_${kv_minor}_${kv_patch}"; do
+		for mod in $(eval echo "\${modules$grp}"); do
+			eval modprobe -aq "${mod}" "\${module_${mod//-/_}_options}"
+		done
+	done
 
 	#
 	# Build a space separated list to be able to load everything with a single
 	# command
 	#
-	modprobe -aq ${modules} ${kv_modules}
 	return 0
 }
 
