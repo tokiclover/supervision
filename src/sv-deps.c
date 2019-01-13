@@ -669,12 +669,9 @@ static SV_SvcDeps_T *sv_svcdeps_add(const char *svc)
 #endif
 	static unsigned int id;
 	SV_SvcDeps_T *elm = err_malloc(sizeof(SV_SvcDeps_T));
+	memset(elm, 0, sizeof(SV_SvcDeps_T));
 	elm->did = ++id;
 	elm->svc = err_strdup(svc);
-	elm->virt = NULL;
-	elm->keyword = 0;
-	elm->timeout = 0;
-	elm->options = 0;
 
 	for (int i = 0; i < SV_SVCDEPS_TYPE; i++)
 		elm->deps[i] = sv_stringlist_new();
