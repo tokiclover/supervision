@@ -10,7 +10,7 @@ SV_INIT_SH=/lib/sv/sh/sv-init.sh
 touch   /etc/runit/stopit
 chmod 0 /etc/runit/stopit
 if [ -x ${SV_INIT_SH} ]; then
-	${SV_INIT_SH} --sysinit
+	${SV_INIT_SH} sysinit
 else
 
 #

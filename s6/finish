@@ -19,7 +19,7 @@ esac
 :	${ACTION:=shutdown}
 
 if [ -x ${SV_INIT_SH} ]; then
-	${SV_INIT_SH} "--${ACTION}" || sv-rc ${ACTION}
+	${SV_INIT_SH} "${ACTION}" || sv-rc ${ACTION}
 if [ -x ${SV_SHUTDOWN} ]; then
 	${SV_SHUTDOWN} --${ACTION} now
 fi
