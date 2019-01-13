@@ -61,7 +61,7 @@ static int sv_conf_load(void)
 {
 	FILE *fp;
 	char *line = NULL, *ptr;
-	size_t count = 0, len = 0, l, num = 16, pos;
+	size_t count = 0, len = 0, l, num = 8, pos;
 
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(void)\n", __func__);
@@ -96,7 +96,7 @@ static int sv_conf_load(void)
 
 		/* expand list if necessary */
 		if (count == num) {
-			num += 16;
+			num += 8;
 			SV_CONFIG_ARRAY = err_realloc(SV_CONFIG_ARRAY, sizeof(void *)*num);
 		}
 	}
