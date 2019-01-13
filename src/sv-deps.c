@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)rs-deps.c  0.14.0 2018/08/18
+ * @(#)rs-deps.c  0.14.0 2019/01/12
  */
 
 #include <string.h>
@@ -471,14 +471,13 @@ static int sv_svcdeps_gen(const char *svc)
 
 #define WAIT_SVSCAN                                                      \
 	if (sv_level != SV_SYSINIT_LEVEL) { /* SVSCAN */                     \
-		snprintf(cmd, sizeof(cmd), "%s/svscan.pid", SV_TMPDIR);          \
 		do {                                                             \
-			if (!access(cmd, F_OK)) break;                               \
+			if (!access(pidfile, F_OK)) break;                           \
 			poll(NULL, 0, 100); /* milisecond sleep */                   \
 			t++;                                                         \
 		} while (t < 600);                                               \
 		if (t >= 600) {                                                  \
-			ERR("Timed out waiting for `%s'\n", SV_INIT_SH);          \
+			ERR("Timed out waiting for `%s'\n", SV_INIT_SH);             \
 			exit(EXIT_FAILURE);                                          \
 		}                                                                \
 	} else {                                                             \
@@ -489,20 +488,21 @@ static int sv_svcdeps_gen(const char *svc)
 			}                                                            \
 		} while (!WIFEXITED(t));                                         \
 		if (!file_test(SV_TMPDIR_DEPS, 'd'))                             \
-			ERROR("`%s' failed to setup `%s", SV_INIT_SH, SV_TMPDIR); \
+			ERROR("`%s' failed to setup `%s", SV_INIT_SH, SV_TMPDIR);    \
 	}
 
 #define ARG_OFFSET 32
-#define EXEC_SVSCAN                                                      \
-	if (sv_level != SV_SYSINIT_LEVEL)                                    \
-		setsid();                                                        \
-	execl(SV_INIT_SH, strrchr(SV_INIT_SH, '/')+1, cmd, arg, NULL); \
+#define EXEC_SVSCAN                              \
+	if (sv_level != SV_SYSINIT_LEVEL)            \
+		setsid();                                \
+	execv(SV_INIT_SH, argv);                     \
 	ERROR("Failed to execl(%s ...)", SV_INIT_SH);
 
 SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 {
-	char cmd[128], *ptr, *svc, *type, *line = NULL;
-	char *arg;
+	char pidfile[128] =  SV_TMPDIR "/svscan.pid";
+	char *ptr, *svc, *type, *line = NULL;
+	char *argv[4] = { strrchr(SV_INIT_SH, '/')+1, [3] = NULL };
 	FILE *fp;
 	size_t len = 0, l = 0;
 	int r, t = 0;
@@ -528,18 +528,12 @@ SV_SvcDeps_T *sv_svcdeps_load(const char *service)
 		SERVICES.svcdeps = sv_svcdeps_new();
 
 	/* initialize SV_RUNDIR and start _SVSCAN_ if necessary */
-	snprintf(cmd, sizeof(cmd), "%s/svscan.pid", SV_TMPDIR);
-	if (access(cmd, F_OK)) {
+	if (access(pidfile, F_OK)) {
 svscan:
-		if (sv_level == SV_SYSINIT_LEVEL) {
-			arg = "--background";
-			ptr = (char*)sv_init_level[sv_level];
-		}
-		else {
-			arg = "--foreground";
-			ptr = "svscan";
-		}
-		snprintf(cmd, ARRAY_SIZE(cmd), "--%s", ptr);
+		if (sv_level == SV_SYSINIT_LEVEL)
+			argv[1] = "background", argv[2] = (char*)sv_init_level[sv_level];
+		else
+			argv[1] = "foreground", argv[2] = "svscan";
 		if ((p = fork()) < 0)
 			ERROR("%s: Failed to fork()", __func__);
 		if (p) {
@@ -550,13 +544,13 @@ svscan:
 		}
 	}
 	else {
-		if ((fp = fopen(cmd, "r"))) {
+		if ((fp = fopen(pidfile, "r"))) {
 			if (fscanf(fp, "%d", &p)) {
 				if (kill(p, 0)) goto svscan;
 			}
 			else {
 #ifdef DEBUG
-				if (sv_debug) DBG("Failed to read svscan pid from `%s'\n", cmd);
+				if (sv_debug) DBG("Failed to read svscan pid from `%s'\n", pidfile);
 #endif
 				goto svscan;
 			}
@@ -564,7 +558,7 @@ svscan:
 		}
 		else {
 #ifdef DEBUG
-			if (sv_debug) DBG("Failed to open svscan pidfile `%s'\n", cmd);
+			if (sv_debug) DBG("Failed to open svscan pidfile `%s'\n", pidfile);
 #endif
 			goto svscan;
 		}

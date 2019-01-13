@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id:  @(#) sv-init.sh    1.8 2018/07/22 21:09:26                    Exp $
+# $Id:  @(#) sv-init.sh    2.0 2019/01/12 21:09:26                    Exp $
 # $C$:  Copyright (c) 2015-2018 tokiclover <tokiclover@gmail.com>     Exp $
 # $L$:  2-clause/new/simplified BSD License                           Exp $
 #
@@ -37,7 +37,7 @@ svc_rescue_shell()
 	exec 2>&1
 
 	echo "${name}: error: *** Launching a rescue shell !!! ***" >&2
-	echo "${name}: error: *** Fix the issue and then run \`exec ${0} --default' to resume system boot. ***" >&2
+	echo "${name}: error: *** Fix the issue and then run \`exec ${0} default' to resume system boot. ***" >&2
 	echo "${name}: error: *** \`exec' is necessary because this PID=$$ should not exit to successfully boot!!! ***"
 	exec /bin/login || echo "${name}: error: *** Failed to launche a rescue \`/bin/login'!!! ***" >&2
 }
@@ -238,19 +238,19 @@ esac
 svc_init_level()
 {
 	SVC_DEBUG "function=svc_init_level( ${@} )"
-if   [ "${1}" = "--svscan" ]; then
+if   [ "${1}" = "svscan" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	if [ -e ${SV_PIDFILE__} ]; then
 		kill_svscan
 	fi
-	if [ "${2}" = "--foreground" ]; then
+	if [ "${2}" = "foreground" ]; then
 		ARGS=""  PRECMD="exec"
 	else
 		ARGS="&" PRECMD=""
 	fi
 	make_svscan_pidfile
 	eval ${PRECMD} ${__SV_CMD__} ${SV_RUNDIR} ${SV_OPTS:+"$SV_OPTS"} ${ARGS}
-elif [ "${1}" = "--sysinit" ]; then
+elif [ "${1}" = "sysinit" ]; then
 	#
 	# XXX: initialize temporary directory
 	#
@@ -260,8 +260,8 @@ elif [ "${1}" = "--sysinit" ]; then
 	fi
 	early_console
 	svc_init
-	[ "${2}" = "--background" ] || sv-rc -q sysinit || sv-rc -q single || sv-shutdown --force --halt
-elif [ "${1}" = "--default" ]; then
+	[ "${2}" = "background" ] || sv-rc -q sysinit || sv-rc -q single || sv-shutdown --force --poweroff
+elif [ "${1}" = "default" ]; then
 	[ -d "${SV_RUNDIR}" ] || svc_rundir
 	#
 	# Set up CGroup
@@ -290,13 +290,13 @@ elif [ "${1}" = "--default" ]; then
 	# Drop into a rescue shell
 	#
 	svc_rescue_shell
-elif [ "${1}" = "--shutdown" -o "${1}" = "--reboot" ]; then
+elif [ "${1}" = "shutdown" -o "${1}" = "reboot" ]; then
 	ACTION=${1}
 	case "${ACTION}" in
-		(--reboot|--shutdown)  ;;
-		(*) ACTION="--shutdown";;
+		(reboot|shutdown)  ;;
+		(*) ACTION="shutdown";;
 	esac
-	sv-rc -q ${ACTION#--}
+	sv-rc -q "${ACTION}"
 	if [ -n "${SV_SYSTEM}" ]; then
 		return 0
 	fi
@@ -311,9 +311,13 @@ fi
 }
 
 case "${1}" in
-	(--default|--reboot|--sysinit|--shutdown|--svscan)
-	begin "Starting ${1#--} level\n"
+	(default|reboot|sysinit|shutdown|svscan)
+	printf "\t\t\t"
+	begin "Starting ${1} level"
+	printf "\n"
 	svc_init_level "${@}"
+	printf "\n"
+	printf "\t\t\t"
 	end "${?}"
 	;;
 esac

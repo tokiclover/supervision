@@ -15,8 +15,8 @@ for link in crash finish; do
 done
 
 if [ -x ${SV_INIT_SH} ]; then
-	${SV_INIT_SH} --sysinit
-	exec ${SV_INIT_SH} --default
+	${SV_INIT_SH} sysinit
+	exec ${SV_INIT_SH} default
 fi
 RUNLEVEL=S rc sysinit
 RUNLEVEL=S rc boot
