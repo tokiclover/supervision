@@ -19,19 +19,52 @@ start_pre()
 		device_info --all device-mapper || modporbe dm-mod >${NULL} 2>&1
 	fi
 	checkpath -q -d -m 0700 -o root:root /run/lvm /run/lock/lvm
-	[ -n "${lvm}" -a -x "${lvm}" ] && [ -c /dev/mapper/control -a -f ${SVC_CONFIGFILE} ]
 
 	if [ -e ${SV_RUNDIR}/udev ]; then
 		udevadm trigger || UDEV_ARGS=--noudevsync
 		ENV_SET UDEV_ARGS
 	fi
+
+	[ -n "${lvm}" -a -x "${lvm}" ] && [ -c /dev/mapper/control -a -f ${SVC_CONFIGFILE} ]
 }
 
+#
+# XXX: try to make LVM udev friendly or else LVM will stall waiting for devices
+#
+LVM_PVSCAN()
+{
+	local n p P="/run/${name}-lvm-pvscan.pid"
+
+	rm -f ${P}
+	sh -c "echo $$ >${P}; ${lvm} pvscan;" &
+	while [ ! -e ${P} ]; do
+		sleep 1
+	done
+	read p <${P}
+	rm -f ${P}
+
+	for n; do
+		sleep 1
+		if kill -0 "${p}"; then
+			[ -n "${UDEV_ARGS}" ] || udevadm trigger
+		else
+			return 0
+		fi
+	done
+	if kill -0 "${p}"; then
+		kill -INT "${p}"
+		return 1
+	fi
+	return 0
+}
 start()
 {
 	[ -d /proc/lvm ] || device_info --all device-mapper || return
 
-	${lvm} pvscan
+	if ! LVM_PVSCAN "${PVSCAN_TIMEOUT:-60}"; then
+		error "*** Failed to scan devices!!! ***"
+		return 1
+	fi
 	${lvm} vgscan --mknodes
 	${lvm} vgchange ${UDEV_ARGS} --sysinit --activate ly
 }
