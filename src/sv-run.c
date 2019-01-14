@@ -20,10 +20,9 @@
 #include <pthread.h>
 #include "sv-deps.h"
 
-#define OFFSET_T_SIZE(SIZE, align, remind)                                   \
-	(SIZE-(SIZE % sizeof(int))) % (align*sizeof(int)) > remind*sizeof(int) ? \
-	(align+remind)*sizeof(int)-(SIZE-(SIZE % sizeof(int))) % (align*sizeof(int)) : \
-	remind*sizeof(int)-(SIZE-(SIZE % sizeof(int))) % (align*sizeof(int))
+#define OFFSET_T_SIZE(size, align, remind)                                     \
+	(remind - (size)) == 0 ? align :                                           \
+	(remind < (size) ? align - ((size) - remind) : align - (remind - (size)))
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)*2LU+sizeof(pthread_rwlock_t)+sizeof(pthread_t))
 struct svcrun_list {
@@ -40,7 +39,7 @@ struct svcrun_list {
 	pthread_rwlock_t rl_lock;
 	pthread_t rl_tid;
 	pthread_mutex_t rl_pid;
-	char __pad[OFFSET_T_SIZE(THREAD_T_SIZE, 4LU, 4LU)];
+	char __pad[OFFSET_T_SIZE(THREAD_T_SIZE % sizeof(int), 4LU, 3LU)];
 };
 #undef THREAD_T_SIZE
 #undef OFSET_T_SIZE
