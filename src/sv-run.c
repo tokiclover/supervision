@@ -577,7 +577,6 @@ runsvc:
 	/* restore signal mask */
 	sigprocmask(SIG_SETMASK, &ss_child, NULL);
 
-	debugfp = fdopen(debugfd, "a+");
 	/* lock the lock file before any command */
 	if (svc_lock(run, SVC_TIMEOUT_SECS)) {
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
