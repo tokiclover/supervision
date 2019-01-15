@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-run.c  0.14.0 2018/08/22
+ * @(#)sv-run.c  0.14.0 2019/01/12
  */
 
 #include <stdio.h>
@@ -25,15 +25,15 @@
 	(remind < (size) ? align - ((size) - remind) : align - (remind - (size)))
 
 #define THREAD_T_SIZE (sizeof(pthread_cond_t)+sizeof(pthread_mutex_t)*2LU+sizeof(pthread_rwlock_t)+sizeof(pthread_t))
-struct svcrun_list {
+struct runlist {
 	unsigned int rl_lid;
+	size_t rl_job, rl_len, rl_siz, rl_count;
+	int rl_ret;
 	int argc;
 	const char **argv;
 	SV_StringList_T *list;
 	struct svcrun *run;
-	int retval;
-	size_t rl_job, rl_len, rl_siz, rl_count;
-	struct svcrun_list *rl_next, *rl_prev;
+	struct runlist *rl_next, *rl_prev;
 	pthread_cond_t rl_cond;
 	pthread_mutex_t rl_mutex;
 	pthread_rwlock_t rl_lock;
@@ -47,7 +47,7 @@ struct svcrun_list {
 extern pid_t sv_pid;
 
 static struct svcrun *RUN;
-static struct svcrun_list *RL_SVC;
+static struct runlist *RL_SVC;
 static unsigned int RL_COUNT = 1U;
 static pthread_attr_t  RL_SVC_ATTR;
 static pthread_rwlock_t RL_SVC_LOCK;
@@ -85,7 +85,7 @@ static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__
 __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __attribute__((__unused__)));
 __attribute__((__noreturn__)) static void *thread_signal_worker(void *arg __attribute__((__unused__)));
 static void *thread_worker_handler(void *arg);
-static void  thread_worker_cleanup(struct svcrun_list *p);
+static void  thread_worker_cleanup(struct runlist *p);
 
 /* execute a service command;
  * @run: an svcrun structure;
@@ -556,9 +556,9 @@ static int svc_run(struct svcrun *run)
 		/* restore signal mask */
 		if (run->rl_svc) {
 			sigprocmask(SIG_SETMASK, &ss_thread, NULL);
-			pthread_mutex_lock  (&((struct svcrun_list*)(run->rl_svc))->rl_pid);
+			pthread_mutex_lock  (&((struct runlist*)(run->rl_svc))->rl_pid);
 			run->pid = pid;
-			pthread_mutex_unlock(&((struct svcrun_list*)(run->rl_svc))->rl_pid);
+			pthread_mutex_unlock(&((struct runlist*)(run->rl_svc))->rl_pid);
 		}
 		else {
 			sigprocmask(SIG_SETMASK, &ss_child, NULL);
@@ -1199,7 +1199,7 @@ static void *thread_worker_handler(void *arg)
 	size_t j = 0, n = 0;
 	long int eagain = 0;
 	int r;
-	struct svcrun_list *p = arg;
+	struct runlist *p = arg;
 
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(%p)\n", __func__, arg);
@@ -1233,7 +1233,7 @@ static void *thread_worker_handler(void *arg)
 		case -EPERM:
 			pthread_mutex_lock(&p->rl_mutex);
 			p->rl_count++;
-			p->retval++;
+			p->rl_ret++;
 			pthread_mutex_unlock(&p->rl_mutex);
 			continue;
 		case -EBUSY:
@@ -1246,7 +1246,7 @@ static void *thread_worker_handler(void *arg)
 		case -ENOMEM:
 			if (eagain == -n) { /* something went wrong */
 				pthread_mutex_lock(&p->rl_mutex);
-				p->retval++;
+				p->rl_ret++;
 				pthread_mutex_unlock(&p->rl_mutex);
 				goto retval;
 			}
@@ -1284,7 +1284,7 @@ static void *thread_worker_handler(void *arg)
 		}
 		else {
 			r = svc_waitpid(&p->run[n], 0);
-			if (r) p->retval++;
+			if (r) p->rl_ret++;
 		}
 	}
 
@@ -1330,7 +1330,7 @@ retval:
 		pthread_rwlock_unlock(&RL_SVC_LOCK);
 	}
 	pthread_rwlock_unlock(&p->rl_lock);
-	pthread_exit((void*)&p->retval);
+	pthread_exit((void*)&p->rl_ret);
 }
 
 static void thread_signal_action(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
@@ -1377,7 +1377,7 @@ __attribute__((__noreturn__)) static void *thread_sigchld_handler(void *arg __at
 {
 	int i, r, s;
 	size_t len;
-	struct svcrun_list *p;
+	struct runlist *p;
 	struct timespec ts = { 0L, 0L };
 	pid_t pid;
 
@@ -1433,7 +1433,7 @@ rl_svc:
 				p->rl_count++;
 				p->rl_job--;
 				len = p->rl_job;
-				if (r) p->retval++;
+				if (r) p->rl_ret++;
 				if (p->rl_count == p->rl_siz) {
 					/* remove job from queue */
 					pthread_rwlock_unlock(&RL_SVC_LOCK);
@@ -1521,7 +1521,7 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 	} while(0)
 	int r;
 	static unsigned int count;
-	struct svcrun_list *p, *k;
+	struct runlist *p, *k;
 
 #ifdef DEBUG
 	if (sv_debug) DBG("%s(%p, %d, %p)\n", __func__, list, argc, argv);
@@ -1554,8 +1554,8 @@ int svc_execl(SV_StringList_T *list, int argc, const char *argv[])
 			HANDLE_ERROR(pthread_create);
 	}
 
-	p = err_malloc(sizeof(struct svcrun_list));
-	memset(p, 0, sizeof(struct svcrun_list));
+	p = err_malloc(sizeof(struct runlist));
+	memset(p, 0, sizeof(struct runlist));
 	p->rl_lid  = RL_COUNT;
 	p->list = list;
 	p->argc = argc;
@@ -1614,13 +1614,13 @@ retval:
 	if (r)
 		r = -r;
 	else
-		r = p->retval;
+		r = p->rl_ret;
 	thread_worker_cleanup(p);
 	return r;
 #undef HANDLE_ERROR
 }
 
-static void thread_worker_cleanup(struct svcrun_list *p)
+static void thread_worker_cleanup(struct runlist *p)
 {
 	int i;
 #ifdef DEBUG
