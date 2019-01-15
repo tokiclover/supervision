@@ -33,29 +33,29 @@ start_pre()
 #
 LVM_PVSCAN()
 {
-	local n p P="/run/${name}-lvm-pvscan.pid"
+	local num="${1}" pid="$$"
 
-	rm -f ${P}
-	sh -c "echo $$ >${P}; ${lvm} pvscan;" &
-	while [ ! -e ${P} ]; do
-		sleep 1
-	done
-	read p <${P}
-	rm -f ${P}
-
-	for n; do
-		sleep 1
-		if kill -0 "${p}"; then
-			[ -n "${UDEV_ARGS}" ] || udevadm trigger
+	if [ -z "${UDEV_ARGS}" ]; then
+		sh -c "
+	n="${num}";
+	while [ "\${n}" -gt 0 ]; do
+		sleep 1;
+		if kill -0 "${pid}" 2>${NULL}; then
+			udevadm trigger;
 		else
-			return 0
-		fi
-	done
-	if kill -0 "${p}"; then
-		kill -INT "${p}"
-		return 1
+			exit 0;
+		fi;
+		n="\$\(\(\${n}-1\)\)";
+	done;
+	if kill -0 "${pid}" 2>${NULL}; then
+		kill -INT "${pid}" 2>${NULL};
+		exit 1;
+	fi;
+	exit 0;
+		" &
 	fi
-	return 0
+
+	${lvm} pvscan
 }
 start()
 {
