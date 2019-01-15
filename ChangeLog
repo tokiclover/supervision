@@ -1,5 +1,11 @@
 Header: supervision/ChangeLog, 2018/08/16
 
+0.14.7:
+
+Memory alignement fix (fix structures padding);
+Fix miultiple logfile open (important fix);
+Added a workaround to LVM pvscan(8) stall with udev;
+
 0.14.6:
 
 Fix redundant dependency start up;
