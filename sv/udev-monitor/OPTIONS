@@ -4,7 +4,7 @@
 #
 
 SVC_CMD=/sbin/udevadm
-SVC_OPTS='monitor >/run/udevmonitor.log 2>&1'
+SVC_OPTS='monitor >/tmp/udevmonitor.log 2>&1'
 SVC_NEED='udev'
 SVC_KEYWORD="lxc supervision vserver"
 
