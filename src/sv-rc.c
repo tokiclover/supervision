@@ -332,17 +332,12 @@ __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 	va_list ap;
 
 	/* save logfile if necessary */
-	if (!logpath && sv_conf_yesno("SV_LOGGER"))
-		logpath = logfile;
-	else
-		logpath = SV_LOGFILE;
-	if (!logfd)
-		if (strcmp(progname, "sv-rc") && strcmp(progname, "rc")) logfd = -1;
+	if (!logpath) {
+		if (sv_conf_yesno("SV_LOGGER"))
+			logpath = logfile;
+		else
+			logpath = SV_LOGFILE;
 
-	switch (logfd) {
-	case -1:
-		break;
-	default:
 		logfd = open(logpath, O_DSYNC | O_CREAT | O_RDWR | O_APPEND, 0644);
 		if (logfd < 0)
 			logfd = open(SV_LOGFILE, O_DSYNC | O_CREAT | O_RDWR | O_APPEND, 0644);
@@ -351,7 +346,6 @@ __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 			debugfp = logfp;
 			debugfd = logfd;
 		}
-		break;
 	}
 
 	va_start(ap, fmt);
