@@ -53,6 +53,7 @@ FILE *debugfp = NULL;
 int debugfd = STDERR_FILENO;
 static FILE *logfp;
 static int logfd;
+static char *logpath;
 
 /* run level check-point */
 static const char *const restrict sv_run_level[8] = {
@@ -330,7 +331,7 @@ int svc_end(const char *svc, int status)
 
 __attribute__((format(printf,1,2))) int svc_log(const char *fmt, ...)
 {
-	static char logfile[] = "/var/log/sv-rc.log", *logpath;
+	static char logfile[] = "/var/log/sv-rc.log";
 	int retval = 0;
 	va_list ap;
 
@@ -730,7 +731,10 @@ static void svc_init(const char *cmd)
 		else if (level == SV_REBOOT_LEVEL) {
 			level = 0;
 			/* close the logfile because rootfs will be mounted read-only */
-			debugfp = stderr; debugfd = STDERR_FILENO;
+			if (logpath != SV_LOGFILE) {
+				debugfp = stderr;
+				debugfd = STDERR_FILENO;
+			}
 			if (!fclose(logfp))
 				logfd = 0;
 			if (!close(logfd))
