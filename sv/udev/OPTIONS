@@ -53,7 +53,7 @@ start_pre()
 		echo '' >/proc/sys/kernel/hotplug
 	fi
 	if [ -n "${UDEV_DEBUG}" ]; then
-		SVC_OPTS="${SVC_OPTS} --debug 2>/run/udevdebug.log"
+		SVC_OPTS="${SVC_OPTS} --debug 2>/tmp/udevdebug.log"
 		PRE_CMD=/usr/bin/env
 		PRE_OPTS="- UDEV_DEBUG=${UDEV_DEBUG}"
 	fi
@@ -99,7 +99,7 @@ start_post()
 	${udevadm} trigger --type=devices --action=add
 	end "${?}"
 
-	if ! ${UDEV_MONITOR}; then
+	if ! ${UDEV_MONITOR} || [ -e ${SV_RUNDIR}/udev-monitor ]; then
 		begin "Stopping udev-monitor"
 		sv-run -q udev-monitor stop >${NULL} 2>&1
 		end "${?}"
@@ -110,6 +110,9 @@ start_post()
 
 stop_pre()
 {
+	if [ -e ${SV_RUNDIR}/udev-monitor ]; then
+		sv-run -q udev-monitor stop >${NULL} 2>&1
+	fi
 	${udevadm} control --exit
 }
 
