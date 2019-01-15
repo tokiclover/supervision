@@ -61,14 +61,14 @@ extern const char *const sv_keywords[];
 typedef struct SV_SvcDeps {
 	/* dependency type {after,before,use,need} */
 	unsigned int did;
-	char *svc;
-	char *virt;
 	unsigned int timeout;
 	unsigned long int options;
 	unsigned long int keyword;
 	int status;
 	int command;
 	/* priority level list [0-SV_SVCDEPS_TYPE] */
+	char *svc;
+	char *virt;
 	SV_StringList_T *deps[SV_SVCDEPS_TYPE];
 	TAILQ_ENTRY(SV_SvcDeps) entries;
 } SV_SvcDeps_T;
@@ -95,15 +95,15 @@ struct svcrun {
 	SV_SvcDeps_T *dep;
 	const char *name;
 	const char *path;
-	pid_t pid;
-	int lock;
-	int argc;
 	const char **argv;
 	const char **envp;
 	const char **ARGV;
+	void *rl_svc;
+	pid_t pid;
+	int lock;
+	int argc;
 	int cmd, mark, sig,
 		status;
-	void *rl_svc;
 	pid_t cld;
 };
 
