@@ -33,6 +33,9 @@ dist_EXTRA  = \
 	BUGS.md \
 	ChangeLog-v00 ChangeLog-v0.12 \
 	ChangeLog
+dist_SV-SBINS = \
+	sv-run \
+	sv-shutdown
 dist_SH_BINS  = \
 	lib/sh/run \
 	lib/sh/tmpfiles \
@@ -211,11 +214,24 @@ dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
-dist_SV_RUN_SYMLINKS = sv-rc sv-rcorder
+dist_SV_RUN_SYMLINKS = \
+	sv-rc \
+	sv-rcorder
 dist_SV_RUN_LIBEXEC_SYMLINKS = rc service
 dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS = halt poweroff reboot shutdown
-dist_SV_LIBEXEC_SYMLINKS = envdir envuidgid fghack pgrhack setlock setuidgid softlimit
-dist_MAN_8_PAGES = sv-rc.8 sv-rcorder.8 sv-shutdown.8
+dist_SV_LIBEXEC_SYMLINKS = \
+	envdir \
+	envuidgid \
+	fghack \
+	pgrhack \
+	setlock \
+	setuidgid \
+	softlimit
+dist_MAN_8_PAGES = \
+	sv-rc.8 \
+	sv-run.8 \
+	sv-rcorder.8 \
+	sv-shutdown.8
 
 ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_RUNIT_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
@@ -307,8 +323,7 @@ ifeq ($(S6_INIT_STAGE),yes)
 endif
 
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
-	$(install_EXEC) src/sv-run $(DESTDIR)$(SBINDIR)
-	$(install_EXEC) src/sv-shutdown $(DESTDIR)$(SBINDIR)
+	$(install_EXEC) $(dist_SV-SBINS:%=src/%) $(DESTDIR)$(SBINDIR)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
 	$(install_EXEC) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
 	$(install_EXEC) $(dist_SH_BINS) $(DESTDIR)$(SV_LIBDIR)/sh
@@ -370,14 +385,14 @@ $(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS): install-dir
 	$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$@
 
 $(dist_MAN_8_PAGES): FORCE install-dir
-	sed $(dist_MAN_SED) $@ >$(DESTDIR)$(MANDIR)/man8/$@
+	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man8/$@
 
 .PHONY: uninstall uninstall-doc uninstall-dist
 
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
-		$(DESTDIR)$(SBINDIR)/sv-shutdown \
-		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SBINDIR)/%) $(DESTDIR)$(SBINDIR)/sv-run \
+		$(dist_SV-SBINS:%=$(DESTDIR)$(SBINDIR)/%) \
+		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SBINDIR)/%) \
 		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
 		$(dist_MAN_8_PAGES:%=$(DESTDIR)$(MANDIR)/man8/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(DESTDIR)$(SV_SVCDIR).conf.local.d/%)
