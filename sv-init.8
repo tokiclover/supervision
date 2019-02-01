@@ -1,0 +1,226 @@
+.\"
+.\" CopyLeft (c) 2016-2019 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.TH SV-INIT 8 "2019-01-31" "0.15.0" "System Manager's Manual"
+.SH NAME
+sv-rc \-  process control initialization
+.SH SYNOPSIS
+
+AT&T System V UNIX style options
+
+.B sv-init
+.RB [\| \-d | \-\-debug \|]
+.RB [\| 1 | 0 | 6 \|]
+
+Berkeley BSD style options (minor the long options)
+
+.B sv-init
+.RB [\| \-d | \-\-debug \|]
+.RB [\| \-f | \-\-fastboot \|]
+.RB [\| \-s | \-\-single \|]
+
+.B sv-init
+.RB [\| \-h | \-\-help \|]
+.RB [\| \-v | \-\-version \|]
+
+.SH DESCRIPTION
+.B sv-init
+is the last stage of the boot process.
+It normally executes the sequence of events of the init system.
+And if this succeeds, begin multi-user operations. Else, if the boot
+process fails,
+.B sv-init
+requests single-user from the init system. And then, if this fails,
+.B sv-init
+will launch an emergency
+.BR login (8)
+by giving the super user a priviledged shell on the console.
+The
+.B sv-init
+utility may be given parameters from the boot program to prevent the system from
+going multi-user and instead go to single-user.
+The system wait then for maintenance and may be latter made to go to mutli-user
+by exiting single-user (with ^D). This will cause
+.B sv-init
+to execute
+.BR @SYSCONFDIR@/sv.init
+if available, or
+.BR @SBINDIR@/sv-rc
+if available, or else
+.BR @LIBDIR@/sv/sh/sv-init.sh
+with
+.I default
+as the argument after a first system initialization phase wwith
+.I sysinit
+argument.
+
+The sequence of execution of the boot script or utility is as the following:
+.sp
+.B @EXEC_PREFIX@/sbin/sv-rc
+.RB \| sysinit \|
+.sp
+.B @EXEC_PREFIX@/sbin/sv-rc
+.RB \| default \|
+.sp
+.B @EXEC_PREFIX@/sbin/sv-rc
+.RB \| shutdown | reboot \|
+
+The whole sequence can be executed with
+.B @SYSCONFDIR@/sv.init
+boot script if the file exists and the executable bit is set.
+System
+.RB \| reboot | shutdown \|
+can be moved to the shutdown script
+.B @SYSCONFDIR@/sv.shutdown
+if the file exists and the executable bit is set.
+
+Any phase failure will cause a single-user execution of the system
+initialisation binary or script as the following:
+.sp
+.B @EXEC_PREFIX@/sbin/sv-rc
+.RB \| single \|
+.sp
+And if this fails, an emergency
+.I /bin/login
+will be executed instead of the single-user run level. System boot can be
+continued by exiting the login shell.
+
+.B sv-init
+does not launch any
+.RB getty (8)
+service by itself. Services are managed by the service manager; and services
+are supervised by the supervisor. So, there is no
+.B console
+entry of any sort, nor any
+.RB getty (8)
+respawning. Almost
+.I anything
+is handled as a service, and if not, the remaining is handled as init script and
+invoqued by the init system.
+Firstsly,
+.BR @SYSCONFDIR@/sv.init
+will be invoked first if the file exists and the executable bit is set.
+Secondly,
+.BR @SBINDIR@/sv-rc
+will be invoked if available and executable and the previous file is not executable.
+And lastly, if the previous files are not available,
+.BR @LIBDIR@/sv/sh/sv-init.sh
+will be invoked to execute the sequence of events described in the init system.
+Those files will be invoked with
+.I default
+argument if no argument is specified after a first
+.I sysinit
+invocation to bring the system to multi-user operations.
+
+Any of
+.RB {\| single | shutdown | reboot \|}
+can be used when
+.B sv-init
+is used as a user process as shown in the following table.
+And those run levels are specified using the digit equivalent
+.RB {\| 1 | 0 | 6 \|}
+following the AT&T System V tradition. Or else, the signal can be send to PID=1
+for almost the same effect (ragarding the 0, or shutdown, run level with the user
+signals).
+
+.TS
+tab (@);
+l lx.
+\fB0\fR@T{
+.B SIGUSER1
+System halt
+T}
+\fB0\fR@T{
+.B SIGUSER2
+System halt and turn the power off
+T}
+\fB1\fR@T{
+.B SIGTERM\ 
+Go to single-user run level
+T}
+\fB6\fR@T{
+.B SIGINT\ \ 
+System reboot
+T}
+.TE
+
+.SH OPTIONS
+.TP
+.RB \| \-d | \-\-debug \|
+Enable debugging output to stderr and
+.BR syslog (8)
+.TP
+.RB \| \-v | \-\-version \|
+Print the version message
+.TP
+.RB \| \-f | \-\-fastboob \|
+Enable fast boot mode. This is not actually supported! Use
+.B /fastboot
+file instead to send the message to the init system.
+.TP
+.RB \| \-h | \-\-help \|
+Print the help message
+.TP
+.RB \| \-q | \-\-quiet \|
+Suppress verbose message
+
+.SH FILES
+.TP
+.B /dev/console
+System console device
+.TP
+.B @SYSCONFDIR@/sv.init
+Optional command script for the init system
+.TP
+.B @SYSCONFDIR@/sv.shutdown
+Optional command script for system halt, reboot and poweroff
+.TP
+.B @SBIN@/sv-rc
+Optional command utility for the init system management
+.TP
+.B @LIBDIR@/sv/sh/sv-init.sh
+Optional command script for the init system
+.TP
+.B /var/run/utmp
+record of users currently logged in
+.TP
+.B /var/log/wtmp
+record of all logins and logouts
+
+.SH "RETURN VALUE"
+.TP
+.B 0
+success
+.TP
+.B 1
+miscellaneous operational
+
+.SH "APPLICATION USAGE"
+Refer to
+.BR sv-rc (8)
+for more information.
+
+.SH "FUTURE DIRECTIONS"
+None.
+
+.SH "SEE ALSO"
+.BR kill (1),
+.BR login (1),
+.BR getty (8),
+.BR sv-rc (8),
+.BR SV-rcorder (8),
+.BR sv-run (8),
+.BR supervision (5),
+.BR sv-shutdown (8),
+
+.SH HISTORY
+An init command appeared in Version 1 AT&T UNIX.
+
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"
