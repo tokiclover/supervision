@@ -159,9 +159,9 @@ __attribute__((__noreturn__)) void error(int err, const char *fmt, ...)
 
 	va_end(va);
 	if (err >= 0)
-		exit(err);
+		_exit(err);
 	else
-		exit(EXIT_FAILURE);
+		_exit(EXIT_FAILURE);
 }
 
 __attribute__((__unused__)) void *err_malloc(size_t size)
