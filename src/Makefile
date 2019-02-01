@@ -42,7 +42,7 @@ checkpath: $(checkpath_SRCS:%.c=%.o) error.h
 fstabinfo: $(fstabinfo_SRCS:%.c=%.o) error.h
 mountinfo: $(mountinfo_SRCS:%.c=%.o) sv-list.h
 sv-config: $(sv-config_SRCS:%.c=%.o) $(dist_HDRS) sv-conf.h
-sv-shutdown: $(sv-shutdown_SRCS:%.c=%.o) error.h
+sv-shutdown: $(sv-shutdown_SRCS:%.c=%.o) error.h sv-copyright.h
 $(simple_BINS): $$@.o $($$@_SRCS:%.c=%.o)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
