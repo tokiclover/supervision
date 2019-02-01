@@ -15,7 +15,7 @@ mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
 
 sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c
-sv-run_HDRS   := sv.h sv-conf.h
+sv-run_HDRS   := sv.h sv-conf.h sv-copyright.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
