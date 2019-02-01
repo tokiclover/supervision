@@ -14,13 +14,14 @@ fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
 
+sv-init_SRCS  := sv-init.c error.c
 sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c
 sv-run_HDRS   := sv.h sv-conf.h sv-copyright.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
 HDRRS      = $(dist_HDRS) $(sv-run_HDRS)
-simple_BINS := checkpath fstabinfo mountinfo sv-config sv-shutdown waitfile
+simple_BINS := checkpath fstabinfo mountinfo sv-config sv-init sv-shutdown waitfile
 dist_BINS  = $(simple_BINS) sv-run
 
 ifeq (SYSVINIT,yes)
@@ -42,6 +43,7 @@ checkpath: $(checkpath_SRCS:%.c=%.o) error.h
 fstabinfo: $(fstabinfo_SRCS:%.c=%.o) error.h
 mountinfo: $(mountinfo_SRCS:%.c=%.o) sv-list.h
 sv-config: $(sv-config_SRCS:%.c=%.o) $(dist_HDRS) sv-conf.h
+sv-init  : $(sv-init_SRCS:%.c=%.o) config.h sv-copyright.h
 sv-shutdown: $(sv-shutdown_SRCS:%.c=%.o) error.h sv-copyright.h
 $(simple_BINS): $$@.o $($$@_SRCS:%.c=%.o)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)

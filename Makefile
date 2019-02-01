@@ -34,6 +34,7 @@ dist_EXTRA  = \
 	ChangeLog-v00 ChangeLog-v0.12 \
 	ChangeLog
 dist_SV-SBINS = \
+	sv-init \
 	sv-run \
 	sv-shutdown
 dist_SH_BINS  = \
@@ -228,6 +229,7 @@ dist_SV_LIBEXEC_SYMLINKS = \
 	setuidgid \
 	softlimit
 dist_MAN_8_PAGES = \
+	sv-init.8 \
 	sv-rc.8 \
 	sv-run.8 \
 	sv-rcorder.8 \
