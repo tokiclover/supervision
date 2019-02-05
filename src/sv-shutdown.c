@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-shutdown.c  0.14.2 2019/01/31
+ * @(#)sv-shutdown.c  0.15.0 2019/01/31
  */
 
 #ifdef HAVE_CONFIG_H
@@ -449,7 +449,11 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 	}
 
 	if (supervisor) {
-		if (strcmp(supervisor, "runit") == 0) {
+		if (strcmp(supervisor, "supervision") == 0) {
+			snprintf(arg, sizeof(arg), "%d", shutdown_action);
+			argv[0] = "sv-init";
+		}
+		else if (strcmp(supervisor, "runit") == 0) {
 			snprintf(arg, sizeof(arg), "%d", shutdown_action);
 			argv[0] = "runit-init";
 		}
@@ -535,7 +539,14 @@ shutdown:
 		len = strlen(arg)+1LU;
 		if ((fp = fopen("/proc/1/cmdline", "r"))) {
 			if (fread(arg+len, sizeof(char), sizeof(arg)-len, fp)) {
-				if (!strcmp(supervisor, "runit")) {
+				if (!strcmp(supervisor, "supervision")) {
+					if (strcmp(arg+len, "sv-init")) {
+						ERR("\007*** `init' (PID=1) is not `sv-init' -- "
+								"forcing system %s ***\007\n", action[ai]);
+						action_force = -action_force;
+					}
+				}
+				else if (!strcmp(supervisor, "runit")) {
 					if (strcmp(arg+len, "runit")) {
 						ERR("\007*** `init' (PID=1) is not `runit' -- "
 								"forcing system %s ***\007\n", action[ai]);
@@ -610,6 +621,15 @@ shutdown:
 
 	if (reboot_force)
 		exit(reboot(reboot_action));
+	if (!strcmp(supervisor, "supervision")) {
+		if (kill(1, init_signal)) {
+			ERR("Failed to send the %s signal to `init' (PID=1): %s\n", action[ai],
+				strerror(errno));
+			sighandler(SIGUSR1, NULL, NULL);
+		}
+		else
+			exit(EXIT_SUCCESS);
+	}
 	execvp(*argv, argv);
 	ERR("Failed to execvp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
 	sighandler(SIGUSR1, NULL, NULL);
