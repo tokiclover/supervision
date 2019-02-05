@@ -535,15 +535,19 @@ shutdown:
 		len = strlen(arg)+1LU;
 		if ((fp = fopen("/proc/1/cmdline", "r"))) {
 			if (fread(arg+len, sizeof(char), sizeof(arg)-len, fp)) {
-				if (!strcmp(supervisor, "runit") && strcmp(arg+len, "runit")) {
-					ERR("\007*** `init' (PID=1) is not `runit' -- "
-							"forcing system %s ***\007\n", action[ai]);
-					action_force = -action_force;
+				if (!strcmp(supervisor, "runit")) {
+					if (strcmp(arg+len, "runit")) {
+						ERR("\007*** `init' (PID=1) is not `runit' -- "
+								"forcing system %s ***\007\n", action[ai]);
+						action_force = -action_force;
+					}
 				}
-				else if (!strcmp(supervisor, "s6") && strcmp(arg+len, "s6-svscan")) {
-					ERR("\007*** `init' (PID=1) is not `s6-svscan' -- "
-							"forcing system %s ***\007\n", action[ai]);
-					action_force = -action_force;
+				else if (!strcmp(supervisor, "s6")) {
+					if (strcmp(arg+len, "s6-svscan")) {
+						ERR("\007*** `init' (PID=1) is not `s6-svscan' -- "
+								"forcing system %s ***\007\n", action[ai]);
+						action_force = -action_force;
+					}
 				}
 				else if (!strncmp(supervisor, "daemontools", 11LU)) {
 					if (strcmp(arg+len, "init")) {
