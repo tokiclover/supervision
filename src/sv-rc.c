@@ -646,8 +646,7 @@ static void svc_init(const char *cmd)
 			exit(EXIT_FAILURE);
 		}
 		break;
-	case SV_DEFAULT_LEVEL:
-	case SV_NONETWORK_LEVEL:
+	default:
 		setsid();
 		break;
 	}
@@ -713,7 +712,45 @@ static void svc_init(const char *cmd)
 	 * so that, {local,network}fs services etc. can be safely stopped
 	 */
 	for (;;) { /* SHUTDOWN_LOOP */
-		if (sv_init == SV_SHUTDOWN_LEVEL && !level) {
+			if (level)
+		switch (level) {
+		case SV_REBOOT_LEVEL: /* SHUTDOWN */
+			level = 0;
+			/* close the logfile because rootfs will be mounted read-only */
+			if (logpath != SV_LOGFILE) {
+				debugfp = stderr;
+				debugfd = STDERR_FILENO;
+			}
+			if (!fclose(logfd)) {
+				logfd = 0;
+				logfp = NULL;
+			}
+			/* and finaly start shutdown runlevel */
+			command = sv_svc_cmd[SV_SVC_CMD_START];
+			svc_start = 1;
+			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
+			unlink(buf);
+			break;
+		case SV_DEFAULT_LEVEL: /* DEFAULT */
+			sv_level = sv_init = level;
+			level = 0;
+			svc_run_level(SV_SYSBOOT_RUNLEVEL);
+			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
+			setenv("SV_INITLEVEL", sv_init_level[sv_init] , 1);
+			svc_environ_update();
+			break;
+		case SV_SINGLE_LEVEL: /* SINGLE */
+			sv_init = level;
+			level = 0;
+			setenv("SV_INITLEVEL" , sv_init_level[sv_init] ,1);
+			svc_environ_update();
+			command = sv_svc_cmd[SV_SVC_CMD_START];
+			svc_start = 1;
+			break;
+		}
+			else
+		switch (sv_init) {
+		case SV_SHUTDOWN_LEVEL: /* STOP DEFAULT*/
 			level = SV_REBOOT_LEVEL;
 			/* load the started services instead of only SV_{SYSBOOT,DEFAULT}_LEVEL
 			 * to be abe to shutdown everything with sv_init=SV_SHUTDOWN_LEVEL
@@ -721,29 +758,14 @@ static void svc_init(const char *cmd)
 			DEPTREE.list = sv_svclist_load(SV_TMPDIR_STAR);
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
 			svc_start = 0;
-		}
-		else if (level == SV_REBOOT_LEVEL) {
-			level = 0;
-			/* close the logfile because rootfs will be mounted read-only */
-			if (logpath != SV_LOGFILE) {
-				debugfp = stderr;
-				debugfd = STDERR_FILENO;
-			}
-			if (!fclose(logfp))
-				logfd = 0;
-			if (!close(logfd))
-				logfp = NULL;
-			/* and finaly start shutdown runlevel */
-			command = sv_svc_cmd[SV_SVC_CMD_START];
-			svc_start = 1;
-			snprintf(buf, sizeof(buf), "%s/%s", SV_TMPDIR_DEPS, sv_init_level[sv_init]);
-			unlink(buf);
-		}
-		else if (sv_init == SV_DEFAULT_LEVEL && !level) {
+			break;
+		case SV_DEFAULT_LEVEL: /* SYSBOOT */
 			/* start sysboot runlevel only when service command is NULL */
-			if (!cmd && (!runlevel ||
-						(strcmp(runlevel, SV_SYSBOOT_RUNLEVEL) &&
-						 strcmp(runlevel, SV_DEFAULT_RUNLEVEL)))) {
+			if (cmd) break;
+			if (runlevel &&
+						(!strcmp(runlevel, SV_SYSBOOT_RUNLEVEL) ||
+						 !strcmp(runlevel, SV_DEFAULT_RUNLEVEL)))
+				break;
 			level = sv_level;
 			/* do nothing with a subsystem */ 
 			if (getenv("SV_SYSTEM") || getenv("SV_PREFIX")) continue;
@@ -751,40 +773,22 @@ static void svc_init(const char *cmd)
 			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 			goto sysboot;
-			}
-		}
-		else if (level == SV_DEFAULT_LEVEL) {
-			sv_level = sv_init = level;
-			level = 0;
-			svc_run_level(SV_SYSBOOT_RUNLEVEL);
-			setenv("SV_RUNLEVEL", sv_init_level[sv_level], 1);
-			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
-			svc_environ_update();
-		}
-		else if (sv_init == SV_SINGLE_LEVEL) {
+		case SV_SINGLE_LEVEL: /* STOP RUNLEVEL */
 			/* stop runlevel only when service command is NULL */
-			if (!cmd) {
+			if (cmd) break;
 			level = sv_init;
 			sv_init = SV_DEFAULT_LEVEL;
 			setenv("SV_INITLEVEL" , sv_init_level[sv_init] , 1);
 			command = sv_svc_cmd[SV_SVC_CMD_STOP];
 			svc_start = 0;
-			}
-		}
-		else if (level == SV_SINGLE_LEVEL) {
-			sv_init = level;
-			level = 0;
-			setenv("SV_INITLEVEL" , sv_init_level[sv_init] ,1);
-			svc_environ_update();
-			command = sv_svc_cmd[SV_SVC_CMD_START];
-			svc_start = 1;
-		}
-		else if (sv_init == SV_SYSBOOT_LEVEL) {
+			break;
+		case SV_SYSBOOT_LEVEL: /* SYSBOOT */
 sysboot:
-			if (!cmd && (runlevel && !strcmp(runlevel, SV_SYSINIT_RUNLEVEL))) {
+			if (cmd) break;
+			if (runlevel && strcmp(runlevel, SV_SYSINIT_RUNLEVEL)) break;
 			svc_level(); /* make SystemV compatible runlevel */
-			if (sv_level == SV_SINGLE_LEVEL) level = 0;
-			}
+			level = 0;
+			break;
 		}
 		argv[4] = command;
 
