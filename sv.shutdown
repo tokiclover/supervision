@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $Id:  @(#) /etc/sv.shutdown   0 2019/01/31 21:09:26                 Exp $
+# $L$:  2-clause/new/simplified BSD License                           Exp $
+#
+
+exec >/dev/console 2>&1
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+SV_INIT_SH=/lib/sv/sh/sv-init.sh
+SV_SHUTDOWN=/lib/sv/sbin/shutdown
+
+exec ${SV_INIT_SH} "${@}"
+
+#
+# vim:fenc=utf-8:ft=sh:ci:pi:sts=0:sw=4:ts=4:
+#
