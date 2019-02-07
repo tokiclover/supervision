@@ -33,27 +33,31 @@ dist_EXTRA  = \
 	BUGS.md \
 	ChangeLog-v00 ChangeLog-v0.12 \
 	ChangeLog
-dist_SV-SBINS = \
-	sv-init \
+dist_INIT_SBIN = \
+	sv-init
+dist_SERVICE_SBIN = \
 	sv-run \
 	sv-shutdown
-dist_SH_BINS  = \
+dist_SBIN = \
+	$(dist_INIT_SBIN) \
+	$(dist_SERVICE_SBIN)
+dist_SV_LIB_SH  = \
 	lib/sh/run \
 	lib/sh/tmpfiles \
 	lib/sh/sv-run.sh \
 	lib/sh/sv-init.sh \
 	lib/sh/cgroup-release-agent \
 	lib/sh/sv-deps.sh
-dist_SV_SBINS = \
+dist_SV_LIB_SBIN = \
 	src/sv-config
-dist_SH_LIBS  = \
+dist_SV_LIB_NX  = \
 	lib/sh/SV-OPTIONS.in \
 	lib/sh/SV-CONFIG \
 	lib/sh/cgroup-functions \
 	lib/sh/functions \
 	lib/sh/runscript-functions \
 	lib/sh/supervision-functions
-dist_SV_BINS  = \
+dist_SV_LIB_BIN  = \
 	src/checkpath \
 	src/fstabinfo \
 	src/mountinfo \
@@ -126,7 +130,7 @@ dist_SV_LOGS = \
 	wpa_supplicant/log \
 	xdm/log \
 	zed/log
-dist_SVC_INSTANCES  = \
+dist_SV_SVCS_SYM  = \
 	$(EXTRA_SERVICE_INSTANCES) \
 	getty.tty6:getty.tty1 getty.tty5:getty.tty1 getty.tty4:getty.tty1 \
 	getty.tty3:getty.tty1 getty.ttyS0:getty.tty1 getty.ttyS1:getty.tty1 \
@@ -215,12 +219,12 @@ dist_SHUTDOWN = \
 	$(EXTRA_SHUTDOWN_SERVICES) \
 	rdonlyfs
 
-dist_SV_RUN_SYMLINKS = \
+dist_SV_RUN_SYM = \
 	sv-rc \
 	sv-rcorder
-dist_SV_RUN_LIBEXEC_SYMLINKS = rc service
-dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS = halt poweroff reboot shutdown
-dist_SV_LIBEXEC_SYMLINKS = \
+dist_SV_RUN_LIBEXEC_SYM = rc service
+dist_SV_SHUTDOWN_LIBEXEC_SYM = halt poweroff reboot shutdown
+dist_SV_LIBEXEC_SYM = \
 	envdir \
 	envuidgid \
 	fghack \
@@ -228,12 +232,23 @@ dist_SV_LIBEXEC_SYMLINKS = \
 	setlock \
 	setuidgid \
 	softlimit
-dist_MAN_8_PAGES = \
-	sv-init.8 \
+dist_INIT_MAN8 = \
+	sv-init.8
+dist_SERVICE_MAN5 = \
+	supervision.5
+dist_SERVICE_MAN8 = \
 	sv-rc.8 \
 	sv-run.8 \
 	sv-rcorder.8 \
 	sv-shutdown.8
+dist_MAN8 = \
+	$(dist_INIT_MAN8) \
+	$(dist_SERVICE_MAN8)
+dist_MAN5 = \
+	supervision.5
+dist_MAN_PAGES = \
+	$(dist_MAN5) \
+	$(dist_MAN8)
 
 ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_RUNIT_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
@@ -245,15 +260,19 @@ dist_S6_INIT_D  += $(DATADIR)/$(PACKAGE)/s6
 endif
 
 ifeq ($(SYSVINIT),yes)
-dist_SV_SBINS += src/initctl
+dist_SV_LIB_SBIN += src/initctl
 dist_SV_SVCS  += initctl
 endif
 
-DISTFILES   = \
+dist_INIT = \
+	$(dist_INIT_SBIN) \
+	$(dist_INIT_MAN8)
+dist_SERVICE = \
+	$(dist_SERVICE_SBIN) \
 	$(dist_MAN_8_PAGES) \
-	$(dist_SV_RUN_SYMLINKS) \
-	$(dist_SV_RUN_LIBEXEC_SYMLINKS) \
-	$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS) \
+	$(dist_SV_RUN_SYM) \
+	$(dist_SV_RUN_LIBEXEC_SYM) \
+	$(dist_SV_SHUTDOWN_LIBEXEC_SYM) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) $(dist_SV_LOGS)
 
 dist_INITD = sysinit sysboot default shutdown single
@@ -306,7 +325,9 @@ FORCE:
 $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
-install: install-dir $(DISTFILES)
+install: install-service install-init
+install-init: install-dir $(dist_INIT)
+install-service: install-dir $(dist_SERVICE)
 ifneq ($(OS),Linux)
 	sed -e '/^SVC_OPTS=.*$$/d;s,/sbin/sulogin,/bin/login,g' \
 		-i $(DESTDIR}$(SYSCONFIDIR)/sv/sulogin/OPTIONS
@@ -325,19 +346,17 @@ ifeq ($(S6_INIT_STAGE),yes)
 endif
 
 	$(install_DATA)  sv.conf $(DESTDIR)$(SV_SVCDIR).conf
-	$(install_EXEC) $(dist_SV-SBINS:%=src/%) $(DESTDIR)$(SBINDIR)
 	$(install_DATA) -D sv.vim $(DESTDIR)$(VIMDIR)/syntax/sv.vim
-	$(install_EXEC) $(dist_SV_BINS) $(DESTDIR)$(SV_LIBDIR)/bin
-	$(install_EXEC) $(dist_SH_BINS) $(DESTDIR)$(SV_LIBDIR)/sh
-	$(install_DATA)   $(dist_SH_LIBS) $(DESTDIR)$(SV_LIBDIR)/sh
-	$(install_EXEC) $(dist_SV_SBINS) $(DESTDIR)$(SV_LIBDIR)/sbin
+	$(install_EXEC) $(dist_SV_LIB_BIN) $(DESTDIR)$(SV_LIBDIR)/bin
+	$(install_EXEC) $(dist_SV_LIB_SH) $(DESTDIR)$(SV_LIBDIR)/sh
+	$(install_DATA)   $(dist_SV_LIB_NX) $(DESTDIR)$(SV_LIBDIR)/sh
+	$(install_EXEC) $(dist_SV_LIB_SBIN) $(DESTDIR)$(SV_LIBDIR)/sbin
 	$(install_DATA)   $(dist_RS_OPTS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
 	-$(install_DATA)  $(dist_RS_SVCS:%=sv.conf.d/%) $(DESTDIR)$(SV_SVCDIR).conf.d
 	$(install_EXEC) $(dist_RS_SVCS:%=sv/%)        $(DESTDIR)$(SV_SVCDIR)
 	$(install_DATA) -D README.local $(DESTDIR)/usr/local$(SV_SVCDIR).local.d/README
 	sed -e 's,\(SV_LIBDIR=\).*$$,\1$(SV_LIBDIR)\nSV_SVCDIR=$(SV_SVCDIR),' \
 		-i $(DESTDIR)$(SV_LIBDIR)/sh/run
-	sed $(dist_MAN_SED) supervision.5 >$(DESTDIR)$(MANDIR)/man5/supervision.5
 	sed -e 's|/etc|$(SYSCONFDIR)|g' -e 's|/lib|$(LIBDIR)|g' \
 		-e 's|/run/|$(RUNDIR)/|g' \
 		-e 's|\(_PATH_STDPATH=\).*$$|\1$(_PATH_STDPATH)|g' \
@@ -352,7 +371,7 @@ ifneq ($(dist_SVC_SED),)
 endif
 	sed $(INIT_SH_SED) -i $(DESTDIR)$(SV_LIBDIR)/sh/sv-init.sh \
 		$(dist_INIT_SH:%=$(DESTDIR)$(DATADIR)/$(PACKAGE)/%)
-	for svc in $(dist_SVC_INSTANCES); do \
+	for svc in $(dist_SV_SVCS_SYM); do \
 		echo $(LN_S) "$${svc#*:}" "$(DESTDIR)$(SV_SVCDIR)/$${svc%:*}"; \
 		$(LN_S) "$${svc#*:}" "$(DESTDIR)$(SV_SVCDIR)/$${svc%:*}"; \
 	done
@@ -379,26 +398,31 @@ $(dist_SV_LOGS): install-dir
 $(dist_SV_OPTS): $(dist_SV_SVCS) $(dist_SV_LOGS)
 	$(install_DATA)  sv/$@ $(DESTDIR)$(SV_SVCDIR)/$@
 
-$(dist_SV_RUN_SYMLINKS): install-dir
+$(dist_SV_RUN_SYM): install-dir
 	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SBINDIR)/$@
-$(dist_SV_RUN_LIBEXEC_SYMLINKS): install-dir
+$(dist_SV_RUN_LIBEXEC_SYM): install-dir
 	$(LN_S) $(SBINDIR)/sv-run $(DESTDIR)$(SV_LIBDIR)/sbin/$@
-$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS): install-dir
+$(dist_SV_SHUTDOWN_LIBEXEC_SYM): install-dir
 	$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$@
 
-$(dist_MAN_8_PAGES): FORCE install-dir
+$(dist_SBIN):
+	$(install_EXEC) src/$@ $(DESTDIR)$(SBINDIR)
+%.8: FORCE install-dir
 	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man8/$@
+%.5: FORCE install-dir
+	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man5/$@
+%.1: FORCE install-dir
+	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man1/$@
 
 .PHONY: uninstall uninstall-doc uninstall-dist
 
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
-		$(dist_SV-SBINS:%=$(DESTDIR)$(SBINDIR)/%) \
-		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SBINDIR)/%) \
-		$(DESTDIR)$(MANDIR)/man5/supervision.5 \
-		$(dist_MAN_8_PAGES:%=$(DESTDIR)$(MANDIR)/man8/%)
+		$(dist_SBIN:%=$(DESTDIR)$(SBINDIR)/%) \
+		$(dist_SV_RUN_SYM:%=$(DESTDIR)$(SBINDIR)/%) \
+		$(dist_MAN_PAGES:%=$(DESTDIR)$(MANDIR)/man*/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(DESTDIR)$(SV_SVCDIR).conf.local.d/%)
-	for svc in $(dist_SVC_INSTANCES); do \
+	for svc in $(dist_SV_SVCS_SYM); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
 	done
 	rm -f  $(dist_RS_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%) \
@@ -406,15 +430,15 @@ uninstall: uninstall-doc
 	       $(dist_RS_OPTS:%=$(DESTDIR)$(SV_SVCDIR).conf.d/%)
 	rm -fr $(dist_SV_SVCS:%=$(DESTDIR)$(SV_SVCDIR)/%)
 	rm -fr $(DESTDIR)$(SV_LIBDIR)/cache/* $(dist_INITD:%=$(DESTDIR)$(SV_SVCDIR).init.d/%)
-	rm -f $(dist_SV_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
-		$(dist_SV_RUN_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SV_SHUTDOWN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SV_BINS:src/%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
-		$(dist_SV_SBINS:src/%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SV_RUN_LIBEXEC_SYMLINKS:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
-		$(dist_SH_BINS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
-		$(dist_SH_LIBS:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
+	rm -f $(dist_SV_LIBEXEC_SYM:%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
+		$(dist_SV_RUN_SYM:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_RUN_LIBEXEC_SYM:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_SHUTDOWN_LIBEXEC_SYM:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_LIB_BIN:src/%=$(DESTDIR)$(SV_LIBDIR)/bin/%) \
+		$(dist_SV_LIB_SBIN:src/%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_RUN_LIBEXEC_SYM:%=$(DESTDIR)$(SV_LIBDIR)/sbin/%) \
+		$(dist_SV_LIB_SH:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
+		$(dist_SV_LIB_NX:lib/%=$(DESTDIR)$(SV_LIBDIR)/%) \
 		$(DESTDIR)$(SV_SVCDIR)/getty.tty*
 ifeq ($(RUNIT_INIT_STAGE),yes)
 	rm -fr $(DESTDIR)$(dist_RUNIT_INIT_D)
