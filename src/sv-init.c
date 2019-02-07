@@ -94,8 +94,8 @@ static int level;
 static const char *shortopts = "dfhsv";
 static const struct option longopts[] = {
 	{ "debug",    0, NULL, 'd' },
-	{ "fastboot", 0, NULL, 'f' },
-	{ "single",     0, NULL, 's' },
+	{ "fast",     0, NULL, 'f' },
+	{ "single",   0, NULL, 's' },
 	{ "help",     0, NULL, 'h' },
 	{ "version",  0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
@@ -275,12 +275,12 @@ int main(int argc, char *argv[])
 			kill(1, SIGINT);
 			break;
 		default:
-			goto arguments;
+			goto getopts;
 		}
 		exit(EXIT_SUCCESS);
 	}
 
-arguments:
+getoptts:
 	while ((i = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
 	{
 		switch(i) {
