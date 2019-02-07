@@ -83,8 +83,8 @@ static const char *const restrict SV_INIT_LEVEL[] = {
 #define SV_SHUTDOWN_SH SYSCONFDIR "/sv.shutdown"
 static const char **restrict SV_INIT_SH = (const char *restrict []) {
 	SYSCONFDIR "/sv.init",
-	EXEC_PREFIX "/sbin/sv-rc",
 	LIBDIR "/sv/sh/sv-init.sh",
+	EXEC_PREFIX "/sbin/sv-rc",
 	NULL
 };
 
