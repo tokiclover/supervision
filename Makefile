@@ -38,6 +38,10 @@ dist_INIT_SBIN = \
 dist_SERVICE_SBIN = \
 	sv-run \
 	sv-shutdown
+dist_SUPERVISION_BIN = \
+	svp
+dist_BIN = \
+	$(dist_SUPERVISION_BIN)
 dist_SBIN = \
 	$(dist_INIT_SBIN) \
 	$(dist_SERVICE_SBIN)
@@ -89,7 +93,6 @@ dist_SV_SVCS  = \
 	spawn-fcgi.nginx \
 	snmpd \
 	snmptrapd \
-	sulogin \
 	syslog \
 	inetd \
 	httpd \
@@ -241,12 +244,17 @@ dist_SERVICE_MAN8 = \
 	sv-run.8 \
 	sv-rcorder.8 \
 	sv-shutdown.8
+dist_SUPERVISION_MAN1 = \
+	svp.1
+dist_MAN1 = \
+	$(dist_SUPERVISION_MAN1)
 dist_MAN8 = \
 	$(dist_INIT_MAN8) \
 	$(dist_SERVICE_MAN8)
 dist_MAN5 = \
 	supervision.5
 dist_MAN_PAGES = \
+	$(dist_MAN1) \
 	$(dist_MAN5) \
 	$(dist_MAN8)
 
@@ -274,6 +282,8 @@ dist_SERVICE = \
 	$(dist_SV_RUN_LIBEXEC_SYM) \
 	$(dist_SV_SHUTDOWN_LIBEXEC_SYM) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) $(dist_SV_LOGS)
+dist_SUPERVISION = \
+	$(dist_SUPERVISION_BIN)
 
 dist_INITD = sysinit sysboot default shutdown single
 dist_DIRS  += \
@@ -325,8 +335,9 @@ FORCE:
 $(SUBDIRS): FORCE
 	$(MAKE) -C $@
 
-install: install-service install-init
+install: install-supervision install-service install-init
 install-init: install-dir $(dist_INIT)
+install-supervision: install-dir $(dist_SUPERVISION)
 install-service: install-dir $(dist_SERVICE)
 ifneq ($(OS),Linux)
 	sed -e '/^SVC_OPTS=.*$$/d;s,/sbin/sulogin,/bin/login,g' \
@@ -405,6 +416,8 @@ $(dist_SV_RUN_LIBEXEC_SYM): install-dir
 $(dist_SV_SHUTDOWN_LIBEXEC_SYM): install-dir
 	$(LN_S) $(SBINDIR)/sv-shutdown $(DESTDIR)$(SV_LIBDIR)/sbin/$@
 
+$(dist_BIN):
+	$(install_EXEC) src/$@ $(DESTDIR)$(BINDIR)
 $(dist_SBIN):
 	$(install_EXEC) src/$@ $(DESTDIR)$(SBINDIR)
 %.8: FORCE install-dir
@@ -418,6 +431,7 @@ $(dist_SBIN):
 
 uninstall: uninstall-doc
 	rm -f $(DESTDIR)$(SV_SVCDIR).conf $(DESTDIR)$(VIMDIR)/syntax/sv.vim \
+		$(dist_BIN:%=$(DESTDIR)$(BINDIR)/%) \
 		$(dist_SBIN:%=$(DESTDIR)$(SBINDIR)/%) \
 		$(dist_SV_RUN_SYM:%=$(DESTDIR)$(SBINDIR)/%) \
 		$(dist_MAN_PAGES:%=$(DESTDIR)$(MANDIR)/man*/%)
