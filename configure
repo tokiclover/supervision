@@ -917,6 +917,8 @@ check_builtin "sigwaitinfo" "signal.h" "sigwaitinfo((void*)0, (void*)0)" ||
 	DIE "missing sigwaitinfo system builtin"
 check_builtin "getline" "stdio.h" "getline((char**)0, (size_t*)0, (FILE*)0)" &&
 	append HAVE_CONFIG_H HAVE_GETLINE
+check_builtin "flock" "sys/file.h" "flock(0, 0)" &&
+	append HAVE_CONFIG_H HAVE_FLOCK
 
 
 check_cpp_condition 'unistd.h' 'defined(__linux__) || (defined(__FreeBSD_kernel__) && \

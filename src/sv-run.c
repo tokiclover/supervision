@@ -841,7 +841,11 @@ static int svc_lock(struct svcrun *run, int timeout)
 		}
 
 		do {
+#ifdef HAVE_FLOCK
 			r = flock(run->lock, LOCK_EX | LOCK_NB);
+#else
+			r = lockf(run->lock, F_LOCK | F_TLOCK);
+#endif
 			if (r == -1) {
 				if (errno == EINTR) continue;
 #ifdef DEBUG
@@ -868,7 +872,11 @@ static int svc_lock(struct svcrun *run, int timeout)
 		} while (l);
 
 		do {
+#ifdef HAVE_FLOCK
 			r = flock(run->lock, LOCK_UN);
+#else
+			r = lockf(run->lock, F_ULOCK);
+#endif
 			if (r == -1) {
 				if (errno == EINTR) continue;
 #ifdef DEBUG

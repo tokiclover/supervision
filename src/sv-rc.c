@@ -686,7 +686,11 @@ static void svc_init(const char *cmd)
 	}
 
 	if ((r = open(SV_PIDFILE, O_CREAT|O_RDWR|O_TRUNC|O_CLOEXEC, 0644)) > 0) {
+#ifdef HAVE_FLOCK
 		if (flock(r, LOCK_EX|LOCK_NB))
+#else
+		if (lockf(r, F_LOCK|F_TLOCK, 0LU))
+#endif
 			LOG_ERR("Failed to lock %s", SV_PIDFILE);
 	}
 	else
