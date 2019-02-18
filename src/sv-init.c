@@ -214,10 +214,6 @@ static void signal_handler(int sig)
 	errno = serrno;
 }
 
-static void collect_child(pid_t pid)
-{
-}
-
 #define OPEN_CONSOLE(fd)                                                  \
 	if ((fd = open(_PATH_CONSOLE, O_APPEND | O_RDWR | O_NONBLOCK)) > 0) { \
 		(void)fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);       \
@@ -280,7 +276,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_SUCCESS);
 	}
 
-getoptts:
+getopts:
 	while ((i = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
 	{
 		switch(i) {
