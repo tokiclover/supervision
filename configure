@@ -959,11 +959,7 @@ print_config_h(){
 	local val
 	for i in sysconfdir libdir rundir prefix exec_prefix; do
 		eval val="\$$i"
-		if [ -n "$val" ]; then
-			eval printf '"# define %-16s \"%s\"\n"' $(toupper "$i") "\$$i"
-		else
-			printf '# define %-16s\n' $(toupper "$i")
-		fi
+		eval printf '"# define %-16s \"%s\"\n"' $(toupper "$i") "$val"
 	done
 	for i in $HAVE_CONFIG_H; do
 		printf "# define %-36s 1\n" "$i"
