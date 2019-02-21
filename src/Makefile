@@ -10,6 +10,7 @@ checkpath_SRCS := checkpath.c error.c
 sv-config_SRCS := $(dist_SRCS) sv-config.c sv-conf.c
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
+supervision_SRCS := supervision.c error.c
 fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
@@ -23,7 +24,7 @@ sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 svp_SRCS       := svp.c error.c
 
 HDRRS      = $(dist_HDRS) $(sv-run_HDRS)
-simple_BINS := checkpath fstabinfo mountinfo sv-config sv-init svp sv-shutdown waitfile
+simple_BINS := checkpath fstabinfo mountinfo supervision sv-config sv-init svp sv-shutdown waitfile
 dist_BINS  = $(simple_BINS) sv-run
 
 ifeq (SYSVINIT,yes)
@@ -41,12 +42,14 @@ clean:
 sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(sv-run_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
+supervision    := error.h sv-copyright.h
+svp_HDRS       := config.h error.h sv-copyright.h
+
 checkpath_HDRS := error.h
 fstabinfo_HDRS := error.h
 mountinfo_HDRS := sv-list.h
 sv-config_HDRS := $(dist_HDRS) sv-conf.h
 sv-init_HDRS   := config.h sv-copyright.h
-svp_HDRS       := config.h error.h sv-copyright.h
 sv-shutdown_HDRS := error.h sv-copyright.h
 $(simple_BINS): $$@.o $($$@_SRCS:%.c=%.o) $($$@_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)

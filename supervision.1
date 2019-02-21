@@ -1,0 +1,67 @@
+.\"
+.\" CopyLeft (c) 2016-2018 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH SUPERVISION 1 "2018-08-20" "0.15.0" "User Commands Manual"
+.SH NAME
+supervision \-  supervise collection of daemons
+.SH DESCRIPTION
+.B supervision
+is a utility to supervise collection of daemon maintedned in directory.
+See
+.BR supervision (5)
+for more information about the architecture and the layout of the
+supervised directory and the service layout defined as directory.
+.B SYNOPSIS
+for more information.
+
+.SH SYNOPSIS
+.B supervision
+.RB [\| \-s | \-\-sid \|]
+.RB [\| \-d | \-\-daemon \|]
+.BR \| DIR \|
+
+.B supervision
+.RB [\| \-h | \-\-help \|]
+.RB [\| \-v | \-\-version \|]
+
+.SH OPTIONS
+.TP
+.RB [\| \-s | \-\-sid \|]
+Use a new session
+.TP
+.RB [\| \-d | \-\-daemon \|]
+Daemonize the process in the background; logging will be directed to
+.RB syslog (1)
+.TP
+.RB \| \-v | \-\-version \|
+Print the version message
+.TP
+.RB \| \-h | \-\-help \|
+Print the help message
+
+.SH "RETURN VALUE"
+.TP
+.B 0
+success
+.TP
+.B 1
+miscellaneous operational failures
+
+.SH "APPLICATION USAGE"
+None.
+.SH "FUTURE DIRECTIONS"
+None.
+.SH "SEE ALSO"
+.BR svp (1),
+.BR svd (1),
+.BR svr (1),
+.BR supervision (5),
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"

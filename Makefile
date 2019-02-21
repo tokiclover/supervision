@@ -39,6 +39,7 @@ dist_SERVICE_SBIN = \
 	sv-run \
 	sv-shutdown
 dist_SUPERVISION_BIN = \
+	supervision \
 	svp
 dist_BIN = \
 	$(dist_SUPERVISION_BIN)
