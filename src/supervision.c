@@ -146,6 +146,7 @@ static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unus
 		case SIGBUS :
 		case SIGHUP :
 		case SIGCONT:
+		case SIGILL :
 			break;
 		default: 
 			(void)collect_child(si->si_pid);
@@ -170,7 +171,7 @@ static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unus
 		break;
 	case SIGQUIT:
 		kill(0, sig);
-		while ((child = waitpid(0, &status, WNOHANG)) != -1) ;
+		while ((child = waitpid(0, &status, WNOHANG | WUNTRACED | WCONTINUED)) != -1) ;
 		exit(EXIT_FAILURE);
 		break;
 	case SIGHUP:
@@ -189,7 +190,7 @@ __attribute__((__unused__)) static pid_t collect_child(pid_t pid)
 	off_t no;
 	int child, status;
 
-	while ((child = waitpid(pid, &status, WNOHANG)) != -1) {
+	while ((child = waitpid(pid, &status, WNOHANG | WUNTRACED | WCONTINUED)) != -1) {
 		for (no = 0LU; no < off; no++) {
 			if (SV_ENT[no].se_pid == pid) {
 				SV_ENT[no].se_pid = 0;
@@ -203,8 +204,8 @@ __attribute__((__unused__)) static pid_t collect_child(pid_t pid)
 						free((void*)SV_ENT[no].se_nam);
 						SV_ENT[no].se_nam = NULL;
 					}
+					return child;
 				}
-				return child;
 			}
 		}
 	}
