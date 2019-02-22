@@ -236,28 +236,20 @@ dist_SV_LIBEXEC_SYM = \
 	setlock \
 	setuidgid \
 	softlimit
-dist_INIT_MAN8 = \
+dist_INIT_MAN = \
 	sv-init.8
-dist_SERVICE_MAN5 = \
-	supervision.5
-dist_SERVICE_MAN8 = \
+dist_SERVICE_MAN = \
+	supervision.5 \
 	sv-rc.8 \
 	sv-run.8 \
 	sv-rcorder.8 \
 	sv-shutdown.8
-dist_SUPERVISION_MAN1 = \
+dist_SUPERVISION_MAN = \
 	svp.1
-dist_MAN1 = \
-	$(dist_SUPERVISION_MAN1)
-dist_MAN8 = \
-	$(dist_INIT_MAN8) \
-	$(dist_SERVICE_MAN8)
-dist_MAN5 = \
-	supervision.5
-dist_MAN_PAGES = \
-	$(dist_MAN1) \
-	$(dist_MAN5) \
-	$(dist_MAN8)
+dist_MAN = \
+	$(dist_SUPERVISION_MAN) \
+	$(dist_INIT_MAN) \
+	$(dist_SERVICE_MAN)
 
 ifeq ($(RUNIT_INIT_STAGE),yes)
 dist_RUNIT_INIT_SH += runit/1 runit/2 runit/3 runit/ctrlaltdel runit/reboot
@@ -275,16 +267,17 @@ endif
 
 dist_INIT = \
 	$(dist_INIT_SBIN) \
-	$(dist_INIT_MAN8)
+	$(dist_INIT_MAN)
 dist_SERVICE = \
 	$(dist_SERVICE_SBIN) \
-	$(dist_MAN_8_PAGES) \
+	$(dist_SERVICE_MAN) \
 	$(dist_SV_RUN_SYM) \
 	$(dist_SV_RUN_LIBEXEC_SYM) \
 	$(dist_SV_SHUTDOWN_LIBEXEC_SYM) \
 	$(dist_SV_OPTS) $(dist_SV_SVCS) $(dist_SV_LOGS)
 dist_SUPERVISION = \
-	$(dist_SUPERVISION_BIN)
+	$(dist_SUPERVISION_BIN) \
+	$(dist_SUPERVISION_MAN)
 
 dist_INITD = sysinit sysboot default shutdown single
 dist_DIRS  += \
@@ -292,7 +285,7 @@ dist_DIRS  += \
 	$(SV_LIBDIR)/cache $(SV_SVCDIR) $(SV_SVCDIR).conf.local.d \
 	$(SV_SVCDIR).conf.d $(dist_INITD:%=$(SV_SVCDIR).init.d/%) \
 	$(DATADIR)/$(PACKAGE)
-DISTDIRS    = $(SBINDIR) $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
+DISTDIRS    = $(SBINDIR) $(MANDIR)/man1 $(MANDIR)/man5 $(MANDIR)/man8 $(dist_DIRS)
 
 dist_SVC_SED  =
 ifneq ($(OS),Linux)
@@ -422,11 +415,11 @@ $(dist_BIN):
 $(dist_SBIN):
 	$(install_EXEC) src/$@ $(DESTDIR)$(SBINDIR)
 %.8: FORCE install-dir
-	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man8/$@
+	sed $(dist_MAN_SED) $($@_SED) src/$@ >$(DESTDIR)$(MANDIR)/man8/$@
 %.5: FORCE install-dir
-	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man5/$@
+	sed $(dist_MAN_SED) $($@_SED) src/$@ >$(DESTDIR)$(MANDIR)/man5/$@
 %.1: FORCE install-dir
-	sed $(dist_MAN_SED) $($@_SED) $@ >$(DESTDIR)$(MANDIR)/man1/$@
+	sed $(dist_MAN_SED) $($@_SED) src/$@ >$(DESTDIR)$(MANDIR)/man1/$@
 
 .PHONY: uninstall uninstall-doc uninstall-dist
 
@@ -435,7 +428,7 @@ uninstall: uninstall-doc
 		$(dist_BIN:%=$(DESTDIR)$(BINDIR)/%) \
 		$(dist_SBIN:%=$(DESTDIR)$(SBINDIR)/%) \
 		$(dist_SV_RUN_SYM:%=$(DESTDIR)$(SBINDIR)/%) \
-		$(dist_MAN_PAGES:%=$(DESTDIR)$(MANDIR)/man*/%)
+		$(dist_MAN:%=$(DESTDIR)$(MANDIR)/man*/%)
 	rm -f $(dist_CONFIG_LOCAL:%=$(DESTDIR)$(SV_SVCDIR).conf.local.d/%)
 	for svc in $(dist_SV_SVCS_SYM); do \
 		rm -f $(DESTDIR)$(SV_SVCDIR)/$${svc%:*}; \
