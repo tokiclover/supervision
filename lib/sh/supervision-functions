@@ -564,7 +564,7 @@ svc_run()
 
 svc_finish()
 {
-	local __ret__="${1}"
+	local __ret__="${2:-$1}"
 	SVC_DEBUG "function=svc_finish( ${@} )"
 	shift
 	svc_stop_post "${@}"
