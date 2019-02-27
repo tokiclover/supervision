@@ -245,6 +245,7 @@ dist_SERVICE_MAN = \
 	sv-rcorder.8 \
 	sv-shutdown.8
 dist_SUPERVISION_MAN = \
+	supervision.1 \
 	svp.1
 dist_MAN = \
 	$(dist_SUPERVISION_MAN) \
