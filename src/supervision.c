@@ -52,6 +52,7 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc);
 __attribute__((__unused__)) static pid_t collect_child(pid_t pid);
 
 const char *progname;
+static int sv_debug;
 static char *SV_DIR;
 static int fd, df;
 static off_t off;
@@ -63,8 +64,9 @@ static struct svent *SV_ENT;
 static size_t SV_SIZ;
 static sigset_t mask;
 
-static const char *shortopts = "lhsv";
+static const char *shortopts = "dlhsv";
 static const struct option longopts[] = {
+	{ "debug"  , 0, NULL, 'd' },
 	{ "log"    , 0, NULL, 'l' },
 	{ "sid"    , 0, NULL, 's' },
 	{ "help"   , 0, NULL, 'h' },
@@ -72,6 +74,7 @@ static const struct option longopts[] = {
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
+	"Enable debug mode",
 	"Log events to system logger",
 	"Set session identity",
 	"Print help message",
@@ -94,6 +97,7 @@ __attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fm
 	va_list ap;
 
 	if (log_err) {
+		if ((priority == LOG_DEBUG) && !sv_debug) return;
 		va_start(ap, fmt);
 		vsyslog(priority, fmt, ap);
 		va_end(ap);
@@ -121,6 +125,7 @@ __attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fm
 				print_color(COLOR_RST, COLOR_RST));
 		break;
 	case  LOG_DEBUG:
+		if (!sv_debug) return;
 		fprintf(stderr, "%s: debug: ", progname);
 		break;
 	}
@@ -284,6 +289,7 @@ int main(int argc, char *argv[])
 	/* Parse options */
 	while ((pf = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (pf) {
+			case 'd': sv_debug++; break;
 			case 'l': log_err++ ; break;
 			case 's': sid++     ; break;
 			case 'v':
