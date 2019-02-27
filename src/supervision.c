@@ -63,16 +63,16 @@ static struct svent *SV_ENT;
 static size_t SV_SIZ;
 static sigset_t mask;
 
-static const char *shortopts = "dhsv";
+static const char *shortopts = "lhsv";
 static const struct option longopts[] = {
-	{ "daemon" , 0, NULL, 'd' },
+	{ "log"    , 0, NULL, 'l' },
 	{ "sid"    , 0, NULL, 's' },
 	{ "help"   , 0, NULL, 'h' },
 	{ "version", 0, NULL, 'v' },
 	{ 0, 0, 0, 0 }
 };
 static const char *longopts_help[] = {
-	"Daemonize to the background",
+	"Log events to system logger",
 	"Set session identity",
 	"Print help message",
 	"Print version string",
@@ -223,7 +223,7 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 		err_syslog(LOG_ERR, "Failed to stat `%s'", svc);
 		return -ENOENT;
 	}
-	if (!S_ISDIR(st.st_mode & S_IFMT)) return -EINVAL;
+	if (!S_ISDIR(st.st_mode)) return -EINVAL;
 	
 	/* structure recycling */
 	if (pid)
@@ -284,12 +284,8 @@ int main(int argc, char *argv[])
 	/* Parse options */
 	while ((pf = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (pf) {
-			case 'd':
-				log_err++;
-				break;
-			case 's':
-				sid++;
-				break;
+			case 'l': log_err++ ; break;
+			case 's': sid++     ; break;
 			case 'v':
 				printf("%s version %s\n\n", progname, SV_VERSION);
 				puts(SV_COPYRIGHT);
@@ -340,26 +336,13 @@ int main(int argc, char *argv[])
 	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NOCTTY | O_NONBLOCK)) == -1)
 		ERROR("Failed to open `%s'", SV_FIFO);
 
-	if (log_err) {
-		do {
-			pf = fork();
-			if (pf == -1) {
-				if (errno == EINTR) continue;
-				ERROR("cannot fork the process", NULL);
-			}
-		} while(pf == -1);
-		if (pf) _exit(EXIT_SUCCESS);
+	if (log_err)
 		openlog(progname, LOG_CONS | LOG_ODELAY | LOG_PID, LOG_DAEMON);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		close(STDERR_FILENO);
-	}
-	if (sid) {
+	if (sid)
 		if (setsid() == -1) {
 			err_syslog(LOG_ERR, "cannot start a new session: %s\n", strerror(errno));
 			if (getpid() != getpgrp()) setpgrp();
 		}
-	}
 
 	SV_ALLOC(32LU);
 	off = 0LU;
