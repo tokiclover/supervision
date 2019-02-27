@@ -42,7 +42,7 @@ clean:
 sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(sv-run_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
-supervision    := error.h sv-copyright.h
+supervision_HDRS := error.h sv-copyright.h
 svp_HDRS       := config.h error.h sv-copyright.h
 
 checkpath_HDRS := error.h
