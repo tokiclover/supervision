@@ -21,37 +21,58 @@ sv-run_HDRS   := sv.h sv-conf.h sv-copyright.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
+svd_SRCS       := svd.c error.c $(timeatto_SRCS)
 svp_SRCS       := svp.c error.c
 
 HDRRS      = $(dist_HDRS) $(sv-run_HDRS)
-simple_BINS := checkpath fstabinfo mountinfo supervision sv-config sv-init svp sv-shutdown waitfile
-dist_BINS  = $(simple_BINS) sv-run
+.SECONDEXPANSION:
+dist_BINS := \
+	checkpath \
+	fstabinfo \
+	mountinfo \
+	supervision \
+	sv-config \
+	sv-init \
+	svp \
+	sv-shutdown \
+	waitfile \
+	sv-run
 
 ifeq (SYSVINIT,yes)
-.SECONDEXPANSION:
-simple_BINS  += initctl
+dist_BINS  += initctl
 initctl_SRCS := initctl.c $(dist_SRCS)
 endif
 
 all: $(dist_BINS)
 
 clean:
-	rm -f $(dist_BINS) $(dist_OBJS) $(sv-run_SRCS:%.c=%.o) $(simple_BINS:%=%.o) \
-		$(simple_BINS)
+	rm -f $(dist_BINS) $(dist_OBJS) $(sv-run_SRCS:%.c=%.o) $(dist_BINS:%=%.o) \
+		$(dist_BINS)
 
 sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(sv-run_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 supervision_HDRS := error.h sv-copyright.h
+svd_HDRS       := config.h error.h sv-copyright.h $(timeatto_HDRS)
 svp_HDRS       := config.h error.h sv-copyright.h
 
-checkpath_HDRS := error.h
-fstabinfo_HDRS := error.h
 mountinfo_HDRS := sv-list.h
 sv-config_HDRS := $(dist_HDRS) sv-conf.h
 sv-init_HDRS   := config.h sv-copyright.h
 sv-shutdown_HDRS := error.h sv-copyright.h
-$(simple_BINS): $$@.o $($$@_SRCS:%.c=%.o) $($$@_HDRS)
+
+checkpath: $(ceckpath_SRCS:%.c=%.o) $(checkpath_HDRS)
+sv-config: $(sv-config_SRCS:%.c=%.o) $(sv-config_HDRS)
+sv-shutdown: $(sv-shutdown_SRCS:%.c=%.o) $(sv-shutdown_HDRS)
+supervision: $(supervision_SRCS:%.c=%.o) $(supervision_HDRS)
+fstabinfo: $(fstabinfo_SRCS:%.c=%.o) $(fstabinfo_HDRS)
+mountinfo: $(mountinfo_SRCS:%.c=%.o) $(mountinfo_HDRS)
+waitfile: $(waitfile_SRCS:%.c=%.o) $(waitfile_HDRS)
+sv-init: $(sv-init_SRCS:%.c=%.o) $(sv-init_HDRS)
+svp: $(svp_SRCS:%.c=%.o) $(svp_HDRS)
+initctl: $(initctl_SRCS:%.c=%.o) $(initctl_HDRS)
+
+$(dist_BINS): $$@.o $($$@_SRCS:%.c=%.o) $($$@_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 %.o: %.c %.h
