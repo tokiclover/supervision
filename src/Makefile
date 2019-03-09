@@ -2,8 +2,9 @@
 CC      ?= cc
 
 dist_SRCS := error.c helper.c
-dist_OBJS := $(dist_SRCS:%.c=%.o)
 dist_HDRS := error.h helper.h
+timespec_SRCS := timespec.c
+timespec_HDRS := timespec.h
 
 .SECONDEXPANSION:
 checkpath_SRCS := checkpath.c error.c
@@ -16,12 +17,11 @@ mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
 
 sv-init_SRCS  := sv-init.c error.c
-sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c
+sv-run_SRCS   := sv-conf.c sv-deps.c sv-run.c sv-list.c sv-rc.c $(dist_SRCS)
 sv-run_HDRS   := sv.h sv-conf.h sv-copyright.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
-svd_SRCS       := svd.c error.c $(timeatto_SRCS)
 svp_SRCS       := svp.c error.c
 
 HDRRS      = $(dist_HDRS) $(sv-run_HDRS)
@@ -35,25 +35,23 @@ dist_BINS := \
 	sv-init \
 	svp \
 	sv-shutdown \
-	waitfile \
-	sv-run
+	waitfile
 
 ifeq (SYSVINIT,yes)
 dist_BINS  += initctl
 initctl_SRCS := initctl.c $(dist_SRCS)
 endif
 
-all: $(dist_BINS)
+all: $(dist_BINS) sv-run
 
 clean:
-	rm -f $(dist_BINS) $(dist_OBJS) $(sv-run_SRCS:%.c=%.o) $(dist_BINS:%=%.o) \
+	rm -f $(dist_BINS) $(dist_SRCS:%.c=%.o) $(sv-run_SRCS:%.c=%.o) $(dist_BINS:%.c=%.o%=%.o) \
 		$(dist_BINS)
 
-sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(dist_HDRS) $(sv-run_HDRS)
-	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(dist_OBJS) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
+sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_HDRS) $(sv-run_HDRS)
+	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 supervision_HDRS := error.h sv-copyright.h
-svd_HDRS       := config.h error.h sv-copyright.h $(timeatto_HDRS)
 svp_HDRS       := config.h error.h sv-copyright.h
 
 mountinfo_HDRS := sv-list.h
