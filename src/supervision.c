@@ -27,11 +27,18 @@
 #include "config.h"
 #include "error.h"
 #include "sv-copyright.h"
+#include "supervision.h"
 
 #define SV_VERSION "0.15.0"
-#define SV_PIDFILE ".tmp/supervision.pid"
-#define SV_FIFO    ".tmp/supervision.ctl"
-#define SVD EXEC_PREFIX PREFIX "/bin/svd"
+#ifndef SV_PIDFILE
+# define SV_PIDFILE ".tmp/supervision.pid"
+#endif
+#ifndef SV_FIFO
+# define SV_FIFO    ".tmp/supervision.ctl"
+#endif
+#ifndef SVD
+# define SVD EXEC_PREFIX PREFIX "/bin/svd"
+#endif
 #define SV_TIMEOUT 5LU
 #define SV_ALLOC(siz) if ((siz) >= SV_SIZ) {                                   \
 	SV_SIZ += (siz);                                                           \
@@ -51,6 +58,7 @@ __attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fm
 __attribute__((__unused__)) static int svd(pid_t pid, char *svc);
 __attribute__((__unused__)) static pid_t collect_child(pid_t pid);
 
+extern char **environ;
 const char *progname;
 static int sv_debug;
 static char *SV_DIR;
@@ -60,14 +68,14 @@ static int scan_dir;
 static pid_t scan_child;
 static time_t time_old, scan_time;
 static int log_err;
+static int sid;
 static struct svent *SV_ENT;
 static size_t SV_SIZ;
-static sigset_t mask;
 
 static const char *shortopts = "dlhsv";
 static const struct option longopts[] = {
 	{ "debug"  , 0, NULL, 'd' },
-	{ "log"    , 0, NULL, 'l' },
+	{ "logger" , 0, NULL, 'l' },
 	{ "sid"    , 0, NULL, 's' },
 	{ "help"   , 0, NULL, 'h' },
 	{ "version", 0, NULL, 'v' },
@@ -160,6 +168,7 @@ static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unus
 		break;
 	case SIGALRM:
 	case SIGUSR1:
+		sid++;
 	case SIGUSR2:
 		time_old = scan_time;
 		scan_time = time(NULL);
@@ -221,7 +230,15 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 	off_t no;
 	struct stat st;
 	static char *a = strrchr(SVD, '/');
-	char *argv[4], p[512];
+	char *p;
+	char *argv[4];
+
+	if ((p = strchr(svc, ';'))) {
+		*p++ = '\0';
+		if (p[0] == '-') {
+			if ((p[1] == 's') || !strcmp(p, "--sid")) sid++;
+		}
+	}
 
 	memset(&st, 0, sizeof(st));
 	if (lstat(svc, &st)) {
@@ -244,8 +261,11 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 		SV_ENT[no].se_nam = err_strdup(svc);
 	}
 
-	argv[0] = SVD; argv[1] = p; argv[2] = NULL;
-	snprintf(p, sizeof(p), "%s/%s", SV_DIR, svc);
+	argv[0] = SVD; argv[1] = svc;
+	if (sid > 0) {
+		argv[1] = p; argv[2] = svc; argv[3] = NULL;
+		sid--;
+	}
 
 	do {
 		SV_ENT[off].se_pid = fork();
@@ -261,8 +281,8 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 		return 0;
 	}
 
-	execv(a, argv); /* child */
-	ERROR("Failed to `execv(%s,...)'", a);
+	execve(a, argv, environ); /* child */
+	ERROR("Failed to `execve(%s,...)'", a);
 }
 
 int main(int argc, char *argv[])
@@ -275,6 +295,7 @@ int main(int argc, char *argv[])
 	int *sig = (int []) { SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
 	char bf[256];
 	struct sigaction action;
+	sigset_t mask;
 	struct stat st;
 
 	progname = strrchr(argv[0], '/');
@@ -315,14 +336,18 @@ int main(int argc, char *argv[])
 
 	/* set up signal handler */
 	memset(&action, 0, sizeof(action));
+	sigemptyset(&mask);
 	sigemptyset(&action.sa_mask);
 	action.sa_sigaction = sv_sigaction;
 	action.sa_flags = SA_SIGINFO | SA_RESTART;
 	for ( ; *sig; off++, sig++) {
+		sigaddset(&mask, *sig);
 		if (sigaction(*sig, &action, NULL))
-			err_syslog(LOG_ERR, "Failed to register `%d' signal: %s",
-					*sig, strerror(errno));
+			ERROR("Failed to register `%d' signal!", *sig);
 	}
+	/* set up the signal mask */
+	if (sigprocmask(SIG_UNBLOCK, &mask, NULL))
+		ERROR("Failed to setup signal mask!", NULL);
 
 	if (!(dp = opendir(*argv)))
 		ERROR("Failed to open `%s' directory", *argv);
@@ -339,6 +364,8 @@ int main(int argc, char *argv[])
 	(void)unlink(SV_FIFO);
 	if (mkfifoat(df, SV_FIFO, 0660))
 		ERROR("Failed to make `%s' fifo", SV_FIFO);
+	if ((pf = openat(df, SV_FIFO, O_WRONLY | O_NOCTTY | O_NONBLOCK)) == -1)
+		ERROR("Failed to open `%s'", SV_FIFO);
 	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NOCTTY | O_NONBLOCK)) == -1)
 		ERROR("Failed to open `%s'", SV_FIFO);
 
