@@ -581,6 +581,8 @@ runsvc:
 		LOG_ERR("%s: Failed to setup lockfile for service\n", run->name);
 		_exit(4);
 	}
+	if (debugfd > STDERR_FILENO)
+		fcntl(debugfd  , F_SETFD, fcntl(debugfd  , F_GETFD, 0) | FD_CLOEXEC);
 
 
 	/* supervise the service */
