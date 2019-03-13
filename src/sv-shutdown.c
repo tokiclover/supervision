@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)sv-shutdown.c  0.15.0 2019/01/31
+ * @(#)sv-shutdown.c  0.15.0 2019/03/13
  */
 
 #ifdef HAVE_CONFIG_H
@@ -117,8 +117,8 @@ static struct timeinterval {
 #undef M
 
 __attribute__((__noreturn__)) static void help_message(int status);
-static void sighandler(int sig, siginfo_t *info, void *ctx __attribute__((__unused__)));
-static int sigsetup(void);
+static void sv_sigaction(int sig, siginfo_t *info, void *ctx __attribute__((__unused__)));
+static int sv_sigsetup(void);
 static int sv_nologin(void);
 static void sv_timewarn(unsigned long int timeleft);
 
@@ -211,7 +211,7 @@ __attribute__((__noreturn__)) static void help_message(int status)
 	exit(status);
 }
 
-static void sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
+static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
 {
 #ifdef DEBUG
 	DBG("%s(%d, %p, %p)\n", __func__, sig, si, ctx);
@@ -263,7 +263,7 @@ static void sighandler(int sig, siginfo_t *si, void *ctx __attribute__((__unused
 	}
 	errno = serrno;
 }
-static int sigsetup(void)
+static int sv_sigsetup(void)
 {
 	struct sigaction act;
 	int sigvalue[] = { SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
@@ -272,7 +272,7 @@ static int sigsetup(void)
 	DBG("%s(void)\n", __func__);
 #endif
 
-	act.sa_sigaction = sighandler;
+	act.sa_sigaction = sv_sigaction;
 	act.sa_flags = SA_SIGINFO | SA_RESTART;
 	sigemptyset(&act.sa_mask);
 	for (i = 0; sigvalue[i]; i++)
@@ -465,13 +465,13 @@ __attribute__((__noreturn__)) static void sv_shutdown(void)
 			WARN("\007*** forcing system %s procedure!!! ***\007\n", action[ai]);
 		else {
 			ERR("Invalid supervision backend -- %s\n", supervisor);
-			sighandler(SIGUSR1, NULL, NULL);
+			sv_sigaction(SIGUSR1, NULL, NULL);
 		}
 	}
 	else {
 		ERR("Failed to get `%s' value\n", ent);
 		ERR("Execute `%s/sv/sbin/sv-config --config SUPERVISOR' beforehand!\n", LIBDIR);
-		sighandler(SIGUSR1, NULL, NULL);
+		sv_sigaction(SIGUSR1, NULL, NULL);
 	}
 
 shutdown:
@@ -495,7 +495,7 @@ shutdown:
 				continue;
 			else {
 				ERR("Failed to nanosleep: %s\n", strerror(errno));
-				sighandler(SIGUSR1, NULL, NULL);
+				sv_sigaction(SIGUSR1, NULL, NULL);
 			}
 		}
 		ts.tv_sec = ti->ti_wait;
@@ -522,7 +522,7 @@ shutdown:
 		if (kill(1, init_signal)) {
 			ERR("Failed to send the %s signal to `init' (PID=1): %s\n", action[ai],
 				strerror(errno));
-			sighandler(SIGUSR1, NULL, NULL);
+			sv_sigaction(SIGUSR1, NULL, NULL);
 		}
 		exit(EXIT_SUCCESS);
 # endif /* SHUTDOWN_DEBUG */
@@ -625,14 +625,14 @@ shutdown:
 		if (kill(1, init_signal)) {
 			ERR("Failed to send the %s signal to `init' (PID=1): %s\n", action[ai],
 				strerror(errno));
-			sighandler(SIGUSR1, NULL, NULL);
+			sv_sigaction(SIGUSR1, NULL, NULL);
 		}
 		else
 			exit(EXIT_SUCCESS);
 	}
 	execvp(*argv, argv);
 	ERR("Failed to execvp(%s, %s): %s\n", *argv, argv[1], strerror(errno));
-	sighandler(SIGUSR1, NULL, NULL);
+	sv_sigaction(SIGUSR1, NULL, NULL);
 	exit(EXIT_FAILURE);
 #endif /* SHUTDOWN_DEBUG */
 }
@@ -909,7 +909,7 @@ message:
 	else
 		ERROR("Failed to fdopen(`%s')", SD_PIDFILE);
 	/* setup signal */
-	sigsetup();
+	sv_sigsetup();
 
 	if (boot_flag)
 		if (fclose(fopen(BOOTFILE, "w")))
