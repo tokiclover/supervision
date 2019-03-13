@@ -3,15 +3,13 @@ CC      ?= cc
 
 dist_SRCS := error.c helper.c
 dist_HDRS := error.h helper.h
-timespec_SRCS := timespec.c
-timespec_HDRS := timespec.h
 
 .SECONDEXPANSION:
 checkpath_SRCS := checkpath.c error.c
 sv-config_SRCS := $(dist_SRCS) sv-config.c sv-conf.c
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
-supervision_SRCS := supervision.c error.c
+supervision_SRCS := supervision.c error.c err_syslog.c
 fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
@@ -33,7 +31,9 @@ dist_BINS := \
 	supervision \
 	sv-config \
 	sv-init \
+	svd \
 	svp \
+	svr \
 	sv-shutdown \
 	waitfile
 
@@ -70,7 +70,7 @@ sv-init: $(sv-init_SRCS:%.c=%.o) $(sv-init_HDRS)
 svp: $(svp_SRCS:%.c=%.o) $(svp_HDRS)
 initctl: $(initctl_SRCS:%.c=%.o) $(initctl_HDRS)
 
-$(dist_BINS): $$@.o $($$@_SRCS:%.c=%.o) $($$@_HDRS)
+$(dist_BINS): $@.o $($$@_SRCS:%.c=%.o) $($$@_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $($@_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
 %.o: %.c %.h

@@ -60,15 +60,14 @@ __attribute__((__unused__)) static pid_t collect_child(pid_t pid);
 
 extern char **environ;
 const char *progname;
-static int sv_debug;
+extern int debug, log;
 static char *SV_DIR;
 static int fd, df;
 static off_t off;
 static int scan_dir;
 static pid_t scan_child;
-static time_t time_old, scan_time;
-static int log_err;
 static int sid;
+static time_t time_old, scan_time;
 static struct svent *SV_ENT;
 static size_t SV_SIZ;
 
@@ -98,49 +97,6 @@ __attribute__((__noreturn__)) static void help_message(int retval)
 		printf("    -%c, --%-14s %s\n", longopts[i].val, longopts[i].name,
 				longopts_help[i]);
 	exit(retval);
-}
-
-__attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fmt, ...)
-{
-	va_list ap;
-
-	if (log_err) {
-		if ((priority == LOG_DEBUG) && !sv_debug) return;
-		va_start(ap, fmt);
-		vsyslog(priority, fmt, ap);
-		va_end(ap);
-		return;
-	}
-
-	switch (priority) {
-	case LOG_EMERG:
-	case LOG_ALERT:
-	case LOG_CRIT:
-	case LOG_ERR:
-		fprintf(stderr, "%s: %serror%s: ", progname,
-				print_color(COLOR_RED, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		break;
-	case LOG_WARNING:
- 		fprintf(stderr, "%s: %swarning%s: ", progname, 
-				print_color(COLOR_YLW, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		break;
-	case LOG_NOTICE:
-	case LOG_INFO:
- 		fprintf(stderr, "%s: %sinfo%s: ", progname, 
-				print_color(COLOR_BLU, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		break;
-	case  LOG_DEBUG:
-		if (!sv_debug) return;
-		fprintf(stderr, "%s: debug: ", progname);
-		break;
-	}
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fprintf(stderr, "\n");
 }
 
 static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)))
@@ -310,8 +266,8 @@ int main(int argc, char *argv[])
 	/* Parse options */
 	while ((pf = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (pf) {
-			case 'd': sv_debug++; break;
-			case 'l': log_err++ ; break;
+			case 'd': debug++; break;
+			case 'l': log++ ; break;
 			case 's': sid++     ; break;
 			case 'v':
 				printf("%s version %s\n\n", progname, SV_VERSION);
@@ -369,7 +325,7 @@ int main(int argc, char *argv[])
 	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NOCTTY | O_NONBLOCK)) == -1)
 		ERROR("Failed to open `%s'", SV_FIFO);
 
-	if (log_err)
+	if (log)
 		openlog(progname, LOG_CONS | LOG_ODELAY | LOG_PID, LOG_DAEMON);
 	if (sid)
 		if (setsid() == -1) {
