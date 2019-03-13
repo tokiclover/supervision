@@ -37,14 +37,17 @@ extern "C" {
 #ifndef SYSCONFDIR
 # define SYSCONFDIR "/etc"
 #endif
+#ifndef RUNDIR
+# if defined(__linux__) || (defined(__FreeBSD_kernel__) && \
+		defined(__GLIBC__)) || defined(__GNU__)
+#  define RUNDIR "/run"
+# else
+#  define RUNDIR "/var/run"
+# endif
+#endif
 #define SV_LIBDIR LIBDIR "/sv"
 #define SV_SVCDIR SYSCONFDIR "/sv"
-#if defined(__linux__) || (defined(__FreeBSD_kernel__) && \
-		defined(__GLIBC__)) || defined(__GNU__)
-#define SV_RUNDIR "/run/sv"
-#else
-#define SV_RUNDIR "/var/run/sv"
-#endif
+#define SV_RUNDIR RUNDIR "/sv"
 #define SV_TMPDIR SV_RUNDIR "/.tmp"
 #define SV_TMPDIR_DEPS SV_TMPDIR "/deps"
 #define SV_SVCDEPS_FILE SV_TMPDIR_DEPS "/svcdeps"
