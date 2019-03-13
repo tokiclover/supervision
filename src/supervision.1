@@ -20,8 +20,9 @@ for more information.
 
 .SH SYNOPSIS
 .B supervision
+.RB [\| \-d | \-\-debug \|]
+.RB [\| \-l | \-\-syslog \|]
 .RB [\| \-s | \-\-sid \|]
-.RB [\| \-d | \-\-daemon \|]
 .BR \| DIR \|
 
 .B supervision
@@ -30,12 +31,15 @@ for more information.
 
 .SH OPTIONS
 .TP
+.RB [\| \-d | \-\-debug \|]
+Enable debugging
+.TP
+.RB [\| \-l | \-\-syslog \|]
+Log message to
+.RB syslog (1)
+.TP
 .RB [\| \-s | \-\-sid \|]
 Use a new session
-.TP
-.RB [\| \-d | \-\-daemon \|]
-Daemonize the process in the background; logging will be directed to
-.RB syslog (1)
 .TP
 .RB \| \-v | \-\-version \|
 Print the version message
