@@ -35,11 +35,9 @@
 #define SV_LIBDIR LIBDIR "/sv"
 
 const char *progname;
-static int sv_debug;
 
 static void signal_handler(int sig);
 __attribute__((__noreturn__)) static void help_message(int status);
-__attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fmt, ...);
 
 #define SHUTDOWN_TIMEOUT 120LU
 #define DEATH_TIMEOUT 10LU
@@ -119,46 +117,6 @@ __attribute__((__noreturn__)) static void help_message(int status)
 	exit(status);
 }
 
-__attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsyslog(priority, fmt, ap);
-	va_end(ap);
-
-	if (!sv_debug) return;
-
-	switch (priority) {
-	case LOG_EMERG:
-	case LOG_ALERT:
-	case LOG_CRIT:
-	case LOG_ERR:
-		fprintf(stderr, "%s: %serror%s: ", progname,
-				print_color(COLOR_RED, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		break;
-	case LOG_WARNING:
- 		fprintf(stderr, "%s: %swarning%s: ", progname, 
-				print_color(COLOR_YLW, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		break;
-	case LOG_NOTICE:
-	case LOG_INFO:
- 		fprintf(stderr, "%s: %sinfo%s: ", progname, 
-				print_color(COLOR_BLU, COLOR_FG),
-				print_color(COLOR_RST, COLOR_RST));
-		break;
-	case  LOG_DEBUG:
-		fprintf(stderr, "%s: debug: ", progname);
-		break;
-	}
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fprintf(stderr, "\n");
-}
-
 static void signal_handler(int sig)
 {
 	static int sigsys;
@@ -197,10 +155,10 @@ static void signal_handler(int sig)
 		runlevel = SV_SINGLE_LEVEL;
 		break;
 	case SIGHUP:
-		/*if (sv_debug)
-			sv_debug--;
+		/*if (ERR_debug)
+			ERR_debug--;
 		else
-			sv_debug++;*/
+			ERR_debug++;*/
 		break;
 	case SIGSTOP:
 		break;
@@ -234,7 +192,6 @@ int main(int argc, char *argv[])
 	int *sig = (int []) { SIGABRT,  SIGFPE, SIGILL, SIGSEGV,
 			SIGBUS, SIGXCPU, SIGXFSZ, SIGHUP, SIGINT, SIGTERM, SIGSTOP,
 			SIGUSR1, SIGUSR2, SIGALRM, 0 };
-	off_t off = 0LU;
 	sigset_t mask;
 	struct sigaction action;
 	char ARG[128], *ARGV[8];
@@ -247,7 +204,7 @@ int main(int argc, char *argv[])
 		progname = *argv;
 	else
 		progname++;
-
+	ERR_syslog++;
 	openlog(progname, LOG_CONS | LOG_ODELAY, LOG_AUTH);
 
 	if (setsid() == -1)
@@ -281,7 +238,7 @@ getopts:
 	{
 		switch(i) {
 		case 'd':
-			sv_debug++;
+			ERR_debug++;
 			break;
 		case 'f': /*IGNORED*/
 			break;

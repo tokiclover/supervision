@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
@@ -54,13 +53,11 @@ struct svent {
 };
 
 static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)));
-__attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fmt, ...);
 __attribute__((__unused__)) static int svd(pid_t pid, char *svc);
 __attribute__((__unused__)) static pid_t collect_child(pid_t pid);
 
 extern char **environ;
 const char *progname;
-extern int debug, log;
 static char *SV_DIR;
 static int fd, df;
 static off_t off;
@@ -74,7 +71,7 @@ static size_t SV_SIZ;
 static const char *shortopts = "dlhsv";
 static const struct option longopts[] = {
 	{ "debug"  , 0, NULL, 'd' },
-	{ "logger" , 0, NULL, 'l' },
+	{ "syslog" , 0, NULL, 'l' },
 	{ "sid"    , 0, NULL, 's' },
 	{ "help"   , 0, NULL, 'h' },
 	{ "version", 0, NULL, 'v' },
@@ -204,12 +201,14 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 	if (!S_ISDIR(st.st_mode)) return -EINVAL;
 	
 	/* structure recycling */
-	if (pid)
+	if (pid) {
 		for (no = 0LU; no < off; no++)
 			if (SV_ENT[no].se_pid == pid) break;
-	else
+	}
+	else {
 		for (no = 0LU; no < off; no++)
 			if (!SV_ENT[no].se_ino) break;
+	}
 
 	if (no == off) {
 		SV_ENT[no].se_ino = st.st_ino;
@@ -266,9 +265,9 @@ int main(int argc, char *argv[])
 	/* Parse options */
 	while ((pf = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
 		switch (pf) {
-			case 'd': debug++; break;
-			case 'l': log++ ; break;
-			case 's': sid++     ; break;
+			case 'd': ERR_debug++ ; break;
+			case 'l': ERR_syslog++; break;
+			case 's': sid++      ; break;
 			case 'v':
 				printf("%s version %s\n\n", progname, SV_VERSION);
 				puts(SV_COPYRIGHT);
@@ -325,7 +324,7 @@ int main(int argc, char *argv[])
 	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NOCTTY | O_NONBLOCK)) == -1)
 		ERROR("Failed to open `%s'", SV_FIFO);
 
-	if (log)
+	if (ERR_syslog)
 		openlog(progname, LOG_CONS | LOG_ODELAY | LOG_PID, LOG_DAEMON);
 	if (sid)
 		if (setsid() == -1) {

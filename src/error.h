@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)error.h  0.14.0 2018/08/06
+ * @(#)error.h  0.15.0 2019/03/13
  */
 
 #ifndef ERROR_H
@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -92,6 +93,9 @@ __attribute__((__unused__)) char *print_color(int col, int attr);
 __attribute__((format(printf,2,3)))
 __attribute__((__noreturn__)) void error(int err, const char *fmt, ...);
 extern const char *progname;
+
+extern int ERR_debug, ERR_syslog;
+__attribute__((format(printf,2,3))) void err_syslog(int priority, const char *fmt, ...);
 
 __attribute__((__unused__)) void *err_malloc(size_t size);
 __attribute__((__unused__)) void *err_calloc(size_t num, size_t size);
