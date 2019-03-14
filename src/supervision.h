@@ -5,7 +5,7 @@
  * Supervision is free software; you can redistribute
  * new BSD License included in the distriution of this package.
  *
- * @(#)supervision.h  0.15.0 2019/02/28
+ * @(#)supervision.h  0.15.0 2019/03/14
  */
 
 #ifndef SUPERVISION_H
@@ -40,7 +40,7 @@ extern "C" {
 # define SV_FIFO    ".tmp/supervision.ctl"
 #endif
 #ifndef SVD
-# define SVD EXEC_PREFIX PREFIX "/bin/svd"
+# define SVD EXEC_PREFIX "/bin/svd"
 #endif
 
 #ifdef __cplusplus

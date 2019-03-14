@@ -6,7 +6,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)supervision.c  0.15.0 2019/02/14
+ * @(#)supervision.c  0.15.0 2019/03/14
  */
 
 #include <dirent.h>
@@ -36,7 +36,7 @@
 # define SV_FIFO    ".tmp/supervision.ctl"
 #endif
 #ifndef SVD
-# define SVD EXEC_PREFIX PREFIX "/bin/svd"
+# define SVD EXEC_PREFIX "/bin/svd"
 #endif
 #define SV_TIMEOUT 5LU
 #define SV_ALLOC(siz) if ((siz) >= SV_SIZ) {                                   \
@@ -182,7 +182,6 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 {
 	off_t no;
 	struct stat st;
-	static char *a = strrchr(SVD, '/');
 	char *p;
 	char *argv[4];
 
@@ -236,8 +235,8 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 		return 0;
 	}
 
-	execve(a, argv, environ); /* child */
-	ERROR("Failed to `execve(%s,...)'", a);
+	execve(*argv, argv, environ); /* child */
+	ERROR("Failed to `execve(%s,...)'", *argv);
 }
 
 static void sv_clean(void)
