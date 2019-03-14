@@ -285,16 +285,14 @@ getopts:
 	memcpy(&action.sa_mask, &mask, sizeof(mask));
 	action.sa_handler = signal_handler;
 	action.sa_flags = SA_RESTART;
-	for ( ; *sig; off++, sig++) {
+	for ( ; *sig; sig++) {
+		sigdelset(&mask, *sig);
 		if (*sig == SIGCHLD) action.sa_flags |= SA_NOCLDSTOP;
 		if (sigaction(*sig, &action, NULL))
 			err_syslog(LOG_ERR, "Failed to register sigaction(%d, ...): %s",
 					*sig, strerror(errno));
 	}
 	/* set up the signal mask */
-	sig -= off;
-	for ( ; *sig; sig++)
-		sigdelset(&mask, *sig);
 	if (sigprocmask(SIG_SETMASK, &mask, NULL))
 		err_syslog(LOG_ERR, "Failed to setup signal mask: %s", strerror(errno));
 
