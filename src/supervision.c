@@ -240,12 +240,19 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 	ERROR("Failed to `execve(%s,...)'", a);
 }
 
+static void sv_clean(void)
+{
+	(void)unlink(SV_PIDFILE);
+	(void)unlink(SV_FIFO);
+}
+
 int main(int argc, char *argv[])
 {
 	off_t no;
 	int sid = 0;
 	int pf, rv;
 	DIR *dp;
+	FILE *fp;
 	struct dirent *de;
 	int *sig = (int []) { SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
 	char bf[256];
@@ -263,8 +270,8 @@ int main(int argc, char *argv[])
 		help_message(1);
 
 	/* Parse options */
-	while ((pf = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
-		switch (pf) {
+	while ((rv = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1) {
+		switch (rv) {
 			case 'd': ERR_debug++ ; break;
 			case 'l': ERR_syslog++; break;
 			case 's': sid++      ; break;
@@ -310,19 +317,37 @@ int main(int argc, char *argv[])
 		ERROR("Failed to get `%s' directory description", *argv);
 	if (mkdirat(df, ".tmp", 0755) && errno != EEXIST)
 		ERROR("Failed to create `%s' directory", ".tmp");
-	if (!(fd = open(SV_PIDFILE, O_CREAT | O_WRONLY, 0644)))
+
+	if ((fd = open(SV_PIDFILE, O_RDONLY)) != -1) {
+		fp = fdopen(fd, "r");
+		if (fscanf(fp, "%d", &rv)) {
+			if (!kill(rv, 0)) {
+				ERR("pid=%d} is already running!\n", rv);
+				exit(EXIT_SUCCESS);
+			}
+		}
+		close(fd);
+	}
+	atexit(sv_clean);
+	if (!(fd = openat(df, SV_PIDFILE, O_CREAT | O_WRONLY, 0644)))
 		ERROR("Failed to open `%s'", SV_PIDFILE);
+#ifdef HAVE_FLOCK
+	if ((rv = flock(fd, LOCK_EX | LOCK_NB)))
+#else
+	if ((rv = lockf(fd, F_LOCK | F_TLOCK, sizeof(pid_t))))
+#endif
+		ERR("Failed to lock `%s'", SV_PIDFILE);
 	sprintf(bf, "%d", getpid());
 	if (err_write(fd, bf, SV_PIDFILE)) exit(EXIT_FAILURE);
-	close(fd);
+	/*close(fd);*/
 
 	(void)unlink(SV_FIFO);
-	if (mkfifoat(df, SV_FIFO, 0660))
+	if (mkfifoat(df, SV_FIFO, 0600))
 		ERROR("Failed to make `%s' fifo", SV_FIFO);
-	if ((pf = openat(df, SV_FIFO, O_WRONLY | O_NOCTTY | O_NONBLOCK)) == -1)
-		ERROR("Failed to open `%s'", SV_FIFO);
-	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NOCTTY | O_NONBLOCK)) == -1)
-		ERROR("Failed to open `%s'", SV_FIFO);
+	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NDELAY | O_CLOEXEC)) == -1)
+		ERROR("Failed to open `%s' [read]", SV_FIFO);
+	if (openat(df, SV_FIFO, O_WRONLY | O_NDELAY | O_CLOEXEC) == -1)
+		ERROR("Failed to open `%s' [write]", SV_FIFO);
 
 	if (ERR_syslog)
 		openlog(progname, LOG_CONS | LOG_ODELAY | LOG_PID, LOG_DAEMON);
