@@ -41,7 +41,8 @@ dist_SERVICE_SBIN = \
 dist_SUPERVISION_BIN = \
 	supervision \
 	svd \
-	svp
+	svp \
+	svr
 dist_BIN = \
 	$(dist_SUPERVISION_BIN)
 dist_SBIN = \
@@ -248,7 +249,8 @@ dist_SERVICE_MAN = \
 dist_SUPERVISION_MAN = \
 	supervision.1 \
 	svd.1 \
-	svp.1
+	svp.1 \
+	svr.1
 dist_MAN = \
 	$(dist_SUPERVISION_MAN) \
 	$(dist_INIT_MAN) \

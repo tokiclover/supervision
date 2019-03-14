@@ -1,0 +1,231 @@
+.\"
+.\" CopyLeft (c) 2016-2018 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH SVR 1 "2019-03-14" "0.15.0" "User Commands Manual"
+.SH NAME
+svr \-  supervision run, control supervision daemon
+.SH SYNOPSIS
+.B svr
+.RB [\| \-w | \-\-wait \|= SECONDS \|]
+.RB [\| \-d | \-\-debug \|]
+.RB [\| \-s | \-\-sid \|]
+.RB \| SERVICE \|[ S \|]
+
+.B svr
+.RB [\| \-h | \-\-help \|]
+.RB [\| \-v | \-\-version \|]
+
+.SH DESCRIPTION
+.B svr
+is a utility to run and control a service defined as a directory,
+more precesily,
+.B svd
+supervise daemon.
+See
+.BR FILES
+subsection,
+.BR svd (1)
+and
+.BR supervision (5)
+for more information about the architecture and the layout of the
+the service defined as directory.
+.B SERVICE
+is a directory with an executable
+.I run
+file, an optional
+.I finish
+executable file, and a
+.I log/
+directory with the same layout minor the
+.I log/
+directory.
+If the
+.I down
+file is present the service is not started.
+
+.B svr
+changes directory to
+.B SERVICE
+and executes
+.BR svd (1)
+; if
+.BR svd (1)
+is not started.
+Or else,
+.B svr
+will read the service status from
+.RB \|{, log/ \|} supervise/status \|
+and control command to the supervisor.
+
+.SH "STANDARD COMMANDS"
+The named pipes
+.RB \|{, log/ \|} supervise/control \|
+are provided for
+.B svd
+control.
+.BR svr (1)
+is used to control
+.BR svd (1)
+or writing the first character of the following commands can be used instead.
+.TP
+.B up
+Start the service if it is not running; restart the service.
+.TP
+.B down
+Stop the service by sending the
+.B TERM
+signal; and then a
+.B CONT
+signal.
+If
+.I run
+exits;
+start
+.I finish
+and do not restart the service.
+.TP
+.B once
+Start the service if it is not running; and do not restart the service.
+.TP
+.B pause
+Pause the service by sending the
+.B STOP
+signal.
+.TP
+.B exit
+Send the
+.B EXIT
+signal if the service is running; or else, send the
+.B EXIT
+signal to the service logger if the service is down; else,
+exit the supervisor if the service and the service logger are down (stopped).
+
+.SH "INIT-SCRIPT (COMPATIBLE) COMMANDS"
+A default 10 seconds timeout is used for any of the subsequent command if no
+timeout argument is provided in the command line. The status of the service is
+also reported at the end of the timeout, after the
+.I check
+command.
+
+.TP
+.B start
+Start the service if it is not running; restart the service; same as
+.I up
+command.
+.TP
+.B stop
+Stop the service if it is running; same as
+.I down
+command.
+.TP
+.B restart
+Stop the service if it is running; and then
+Start the service; same as
+.I down
+and then
+.I up
+commands.
+.TP
+.B reload
+Send the
+.B HUP
+signal to the service.
+.TP
+.B shutdown
+Terminate and exit the service if it is running; same as
+.I exit
+command.
+
+.TP
+.B force-stop
+Stop the service if it is running. Send the
+.B KILL
+signal after the timeout if the service is not down (stopped).
+.TP
+.B force-reload
+Send the
+.B TERM
+and
+.B CONT
+signals if the service is running.
+.TP
+.B force-restart
+Send the
+.B TERM
+,
+.B CONT
+and
+.B UP
+signal to the service.
+.TP
+.B force-shutdown
+Stop the service if it is running. Send the
+.B KILL
+signal after the timeout if the service is not down (stopped).
+.TP
+.B try-restart
+If the service is running, send the
+.B TERM
+and
+.B CONT
+signals; and then wait the service to start.
+
+.SH "ADDITIONAL COMMANDS"
+.TP
+.B check
+Check the service after a service command. If the
+.I ./check
+executable is present in the service directory, this executable is executed with
+the service command as the argument. If the executable exits with zero exit
+status, the status is a success.
+.TP
+.RB \| alarm \|, cont \|, hup \|, int \|, kill \|, pause \|, quit \|, exit \|, 1 \|, 2 \|
+If the service is running, send the ALARM, CONT, HUP, INT, KILL, STOP, QUIT,
+EXIT, and USR{1,2} signal.
+
+.SH OPTIONS
+.TP
+.RB [\| \-d | \-\-debug \|]
+Enable debugging
+.TP
+.RB [\| \-l | \-\-logger \|]
+Log message to
+.RB syslog (1)
+.TP
+.RB [\| \-s | \-\-sid \|]
+Use a new session
+.TP
+.RB \| \-v | \-\-version \|
+Print the version message
+.TP
+.RB \| \-h | \-\-help \|
+Print the help message
+
+.SH "RETURN VALUE"
+.TP
+.B 0
+success;
+or no service executable files found;
+.TP
+.B 1
+miscellaneous operational failures;
+
+.SH "APPLICATION USAGE"
+None.
+.SH "FUTURE DIRECTIONS"
+None.
+.SH "SEE ALSO"
+.BR svp (1),
+.BR svl (1),
+.BR svd (1),
+.BR supervision (1),
+.BR supervision (5),
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"

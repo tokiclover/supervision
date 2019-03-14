@@ -23,6 +23,7 @@ sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
 svd_SRCS       := svd.c error.c $(timespec_SRCS)
+svr_SRCS       := svr.c error.c $(timespec_SRCS)
 svp_SRCS       := svp.c error.c
 
 HDRRS      = $(dist_HDRS) $(sv-run_HDRS)
@@ -36,6 +37,7 @@ dist_BINS := \
 	sv-init \
 	svd \
 	svp \
+	svr \
 	sv-shutdown \
 	waitfile
 
@@ -55,6 +57,7 @@ sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_HDRS) $(sv-run_HDRS)
 
 supervision_HDRS := error.h sv-copyright.h
 svd_HDRS       := config.h error.h sv-copyright.h $(timespec_HDRS) svd.h
+svr_HDRS       := config.h error.h sv-copyright.h $(timespec_HDRS) svd.h supervision.h
 svp_HDRS       := config.h error.h sv-copyright.h
 
 mountinfo_HDRS := sv-list.h
@@ -71,6 +74,7 @@ mountinfo: $(mountinfo_SRCS:%.c=%.o) $(mountinfo_HDRS)
 waitfile: $(waitfile_SRCS:%.c=%.o) $(waitfile_HDRS)
 sv-init: $(sv-init_SRCS:%.c=%.o) $(sv-init_HDRS)
 svd: $(svd_SRCS:%.c=%.o) $(svd_HDRS)
+svr: $(svr_SRCS:%.c=%.o) $(svr_HDRS)
 svp: $(svp_SRCS:%.c=%.o) $(svp_HDRS)
 initctl: $(initctl_SRCS:%.c=%.o) $(initctl_HDRS)
 
