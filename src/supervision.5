@@ -4,9 +4,9 @@
 .\" Distributed under the terms of the 2-clause BSD License
 .\"
 .pc
-.TH SUPERVISION 5 "2018-08-30" "0.14.0" "File Format Manual"
+.TH SUPERVISION 5 "2019-03-14" "0.15.0" "File Format"
 .SH NAME
-supervision \- supervision framework init-system and service-manager
+supervision \- supervision init-system and service-manager
 .SH DESCRIPTION
 Supervision provide an easy, simple and efficient
 service-manager and init-system build to function with any supervisor.
@@ -20,13 +20,16 @@ defining only \fBSVC_OPTS=--foregroud\fR would suffice to manage and supervise
 and supervise atd service.
 .SS SUPERVISION SERVICE
 Supervision service provide an easy and efficient way to supervise daemons;
+supervision,
 deamontools[-encore], runit and s6 supervisor are actually supported.
 (Supervision-)services use, by default, an \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/OPTIONS\fR
 file for service definition
 and
-.RB \./{\| finish , run \|}
+.RB \./{\| finish \|, run \|}
 command files symlinked to \fI@LIBDIR@/sv/sh/run\fR.
-The same goes for the log directory for \fI./{run,finish}\fR command files.
+The same goes for the log directory for
+.RB \| \./ \|{ run \|, finish \|}
+command files.
 .I Envdir
 directory with a global \fI@SYSCONFDIR@/sv/.env/\fR and local
 \fI@SYSCONFDIR@/sv/\fBSERVICE\fI/env/\fR is also supported.
@@ -55,14 +58,14 @@ sub-section for more information.
 Any service type support a local configuration file in \fI@SYSCONFDIR@/sv.conf.local.d/\fBSERVICE\fR as well.
 .SH "SERVICE COMMANDS"
 Standard service commands
-.RB {(\| start ),( stop ), status ,( reload ),( restart ),( desc ), scan , zap \|}
+.RB {(\| start \|),( stop \|), status \|,( reload \|),( restart \|),( desc \|), scan \|, zap \|}
 and special supervised service commands
-.RB {\| add ,( cgroup_remove_service \|)}
+.RB {\| add \|,( cgroup_remove_service \|)}
 extra commands are supported.
 Supervision-services also support
-.RB {\| new , remove , up , down \|}
+.RB {\| new \|, remove \|, up , down \|}
 command to create a new service with a template; the other two send the
-.RB {\| up , down \|}
+.RB {\| up \|, down \|}
 command to the supervisor.
 .I reload
 command has special meaning for supervision services in that, if no
@@ -76,7 +79,7 @@ would be sent the supervisor.
 This special meaning is also used for runscript service if used to manage a daemon.
 The other command remove the service from
 .B SV_RUNDIR
-(running /service/ directory.)
+(running servised directory.)
 And the last to remove Control Group hierarchy for linux systems.
 .B @EXEC_PREFIX@@SBINDIR@/sv-run
 .RB [\| OPTIONS \|]
@@ -86,9 +89,9 @@ And the last to remove Control Group hierarchy for linux systems.
 can be used for
 any service type and efficiency; or the following for a particular service type.
 Some commands, like
-.RB {\| add , del \|}
+.RB {\| add \|, del \|}
 require a runlevel command line argument
-.RB (\| \-0 | \-1 | \-3 | \-4 | \-5 \|)
+.RB (\| \-0 \|| \-1 \|| \-3 \|| \-4 \|| \-5 \|)
 to get the appropriate result.
 
 Commands with parenthesis are optional. This is more true with runscript service.
@@ -98,10 +101,10 @@ manage a daemon, no such command(s) are available.
 .B restart
 command is special in that, if no definition is found, a stop-start sequence will
 replace the command as the following:
-.RB {(\| stop_pre ),( stop ),( stop_post ),( start_pre ),( start ),( start_post \|)}
+.RB {(\| stop_pre \|),( stop \|),( stop_post \|),( start_pre \|),( start \|),( start_post \|)}
 would follow in that exact sequence if the commands are defined (shell functions.)
 Replace the
-.RB {\| stop , start \|}
+.RB {\| stop \|, start \|}
 commands with the supervisor commands for supervision service which are always defined for
 this type of service.
 
@@ -142,9 +145,10 @@ file(s), like
 with
 .I socklog
 provider (which support extra
-.RB {\| inet , ucspi , unix \|}
+.RB {\| inet \|, ucspi \|, unix \|}
 instances),
-instead of duplicating unecessary directory and symbolic links to \fI./{run,finish}\fR.
+instead of duplicating unecessary directory and symbolic links to
+.RB \|{ run \|, finish \|} \fR.
 And then a single extra
 `\fBln -s SERVICE INSTANCE\fR'
 symbolic link in th eservice directory would suffice.
@@ -241,7 +245,7 @@ environment variable. The first variant cannot be used here because runscript
 services are execuable files instead of directories.
 .SH "APPLICATION USAGE"
 Full
-.RB {\| after , before , need , use \|}
+.RB {\| after \|, before \|, need \|, use \|}
 service dependencies is supported. See
 .B DEPENDENCIES
 and
@@ -249,7 +253,7 @@ and
 for more information.
 .TP
 .B SUPERVISION SERVICE
-If service dependencies matter, usage of Runit/S6 is recommanded.
+If service dependencies matter, usage of Supervision, Runit or S6 is recommanded.
 Cold system boot should be fine because of priority level scheduling which start
 services in parallele depending on the service dependencies; so, services with
 dependencies would reliably wait enough if necessary, or else,
@@ -263,7 +267,7 @@ Now runscript service can be used to start daemons which cannot be kept in the
 foreground even with
 .B fghack
 usage. See
-.RB {\| nrpe , nginx \|}
+.RB {\| nrpe \|, nginx \|}
 services for practical examples. Just keep in mind that either
 .B SVC_PIDFILE
 should be defined and/or enable
@@ -281,9 +285,9 @@ service instead of
 one. There is no hack to try to find the PID of a daemon!
 This ability was just added to avoid defining
 .I ad infinitum
-.RB {\| start , stop \|}
+.RB {\| start \|, stop \|}
 shell function. Just define at least
-.RB {\| SVC_CMD , SVC_OPTS \|}
+.RB {\| SVC_CMD \|, SVC_OPTS \|}
 and be done with it.
 
 .TP
@@ -291,14 +295,14 @@ and be done with it.
 Support for containrization solutions or \fBsubsystems\fR is available via
 \fBkeywords\fR usage, see \fBKEYWORDS\fR subsection and \fI@SYSCONFDIR@/sv.conf\fR
 for more information, for
-.B docker,
-.B LXC,
-.B jail,
-.B systemd-nspawn,
-.B prefix,
-.B supervision,
-.B UML,
-.B VServer
+.RB \| docker \|,
+.RB \| LXC \|,
+.RB \| jail \|,
+.RB \| systemd-nspawn \|,
+.RB \| prefix \|,
+.RB \| supervision \|,
+.RB \| UML \|,
+.RB \| VServer \|
 and
 .B XEN.
 Either the subsystem will be
@@ -315,7 +319,7 @@ Services that have the subsystem keyword will not be started in that particular
 subsystem environment.
 
 To have the supervisor
-.RB ({\| damontools[-encore] , runit , s6 \|})
+.RB ({\| supervision \|, damontools \|[ -encore \|], runit \|, s6 \|})
 executed as \fBPID 1\fR...
 Just setup the container or subsystem; once done, use something like
 the following for docker: `\fBdocker run [OPTIONS] --env container=docker --tmpfs /run
@@ -512,13 +516,13 @@ T}
 Extra service commands along with supported commands are defined as shell functions.
 .B WARNING:
 A few functions starting with
-.RB {\| svc_ , rs_ \|}
+.RB {\| svc_ \|, rs_ \|}
 prefix are used for internal usage (see \fBBUILTINS\fR);
 and thus are reserved for futur usage;
 use `sv.vim' file type plugin or look at it to get a list of functions/keywords.
-.RB {\| env_del , env_set \|}
+.RB {\| env_del \|, env_set \|}
 shell functions are also reserved for internal usage.
-.RB {\| checkpath , fstabinfo , mountinfo , service , waitfile \|}
+.RB {\| checkpath \|, fstabinfo \|, mountinfo \|, service \|, waitfile \|}
 have shell functions of the
 same name to bypass shell path look up for efficiency.)
 And then, a few functions name have special meaning; read the following for more
@@ -563,18 +567,18 @@ See
 for the default and
 .I OPTIONS
 file for services like
-.I acpid,
-.I cron,
-.I cgred,
-.I dbus,
-.I sshd
+.RB \| acpid \|,
+.RB \| cron \|,
+.RB \| cgred \|,
+.RB \| dbus \|,
+.RB \| sshd \|
 for practical examples.
 .TP
 .B RUNSCRIPT SERVICE
 Standard
-.RB {\| restart , start , stop \|}
+.RB {\| restart \|, start \|, stop \|}
 along with
-.RB {\| start_pre , start_post , stop_pre , stop_post \|}
+.RB {\| start_pre \|, start_post \|, stop_pre \|, stop_post \|}
 (set/clean up) functions are supported.
 .TS
 tab (@);
@@ -630,7 +634,7 @@ is set to an unsigned or postive integer.)
 .TP
 .B shutdown
 Disable the service in
-.RB {\| reboot , shutdown \|}
+.RB {\| reboot \|, shutdown \|}
 runlevels
 or simply, disable the \fBstop\fR service command.
 .TP
@@ -653,7 +657,7 @@ subsystem keywords.
 .SS ANSI COLORS ESCAPE SEQUENCES
 .B ANSI
 escape sequences are available with
-.RB {\| color_bg_COLOR , color_fg_COLOR \|}
+.RB {\| color_bg_COLOR \|, color_fg_COLOR \|}
 when \fBCOLOR\fR is an integer from 0 to 7 for 8 colors terminal, or 0 to 255
 for 256 colors terminals (a `\fIeval_clors 256\fR' is required beforehand.)
 There are a few aliases for the base colors and attributes mapped to
@@ -667,7 +671,7 @@ for bold,
 .I ita
 for italic,
 and
-.RB {\| color_bg_COLOR , color_fg_COLOR \|}
+.RB {\| color_bg_COLOR \|, color_fg_COLOR \|}
 for colors:
 .I blk
 for black,
@@ -716,99 +720,104 @@ entries
 (see \fB@LIBDIR@/sv/bin/fstabinfo --help\fR for more inforamtion)
 
 
-.RB \| \-m | \-\-mount \|
+.br \| \-m | \-\-mount \|
 Mount the entry;
-.rb
+.br
 .RB \| \-r | \-\-remount \|
 Remount the entry;
-.rb
+.br
 .RB \| \-d | \-\-device \|
 Print device node;
-.rb
+.br
 .RB \| \-o | \-\-options \|
 Print the mount options;
-.rb
+.br
 .RB \| \-t | \-\-fstype \|
 Print the file system type;
-.rb
+.br
 .RB \| \-a | \-\-mntargs \|
 Print
 .BR mount (8)
 command line arguments;
-.rb
+.br
 .RB \| \-q | \-\-quiet \|
 Enable quiet mode;
 
 .TP
-.BR mountinfo \ \| [ OPTIONS ] \ MOUNTPOINTS \|
+.BR \| mountinfo \ \| [ OPTIONS ] \ MOUNTPOINTS \|
 Get information of current
 .BR mount (8)
 points
 (see \fB@LIBDIR@/sv/bin/mountinfo --help\fR for more information)
 
-.RB \| \-D | \-\-device-skip-regex \ ARGUMENT \|
+.TS
+tab (@);
+l lx.
+\fB\-D\fR|\fB\-\-device-skip-regex=REGEX\fR@T{
 Device node regex to skip;
-.rb
-.RB \| \-O | \-\-optionsèskip-regex \ ARGUMANT \|
+T}
+\fB\-O\fR|\fB\-\-optionsèskip-regex=REGEX\fR@T{
 Mount options regex to skip;
-.rb
-.RB \| \-T | \-\-fstype-skip-regex \ ARGUMENT \|
+T}
+\fB\-T\fR|\fB\-\-fstype-skip-regex=REGEX\fR@T{
 File system type regex to skip;
-.rb
-.RB \| \-P | \-\-mpoint-skip-regex \ ARGUMENT \|
+T}
+\fB\-P\fR|\fB\-\-mpoint-skip-regex=RGEX\fR@T{
 Mount point regex to skip;
-.rb
-.RB \| \-d | \-\-device-regex \ ARGUMENT \|
+T}
+\fB\-d\fR|\fB\-\-device-regex=REGEX\fR@T{
 Device regex to match;
-.rb
-.RB \| \-o | \-\-options-regex \ ARGUMENT \|
+T}
+\fB\-o\fR|\fB\-\-options-regex=REGEX\fR@T{
 Mount options regex to match;
-.rb
-.RB \| \-t | \-\-fstype-regex \ ARGUMENT \|
+T}
+\fB\-t\fR|\fB\-\-fstype-regex=REGEX\fR@T{
 File system type regex to match;
-.rb
-.RB \| \-p | \-\-mpoint-regx \|
+T}
+\fB\-p\fR|\fB\-\-mpoint-regx=REGEX\fR@T{
 Mount point regex to match;
-.rb
-.RB \| \-m | \-\-options \|
+T}
+\fB\-m\fR|\fB\-\-options\fR@T{
 Print mount options;
-.rb
-.RB \| \-b | \-\-device \|
+T}
+\fB\-b\fR|\fB\-\-device\fR@T{
 Print device node;
-.rb
-.RB \| \-f | \-\-fstype \|
+T}
+\fB\-f\fR|\fB\-\-fstype\fR@T{
 Print file system type;
-.rb
-.RB \| \-n | \-\-netdev \|
+T}
+\fB\-n\fR|\fB\-\-netdev\fR@T{
 Match network device(s);
-.rb
-.RB \| \-N | \-\-nonetdev \|
+T}
+\fB\-N\fR|\fB\-\-nonetdev\fR@T{
 Match no network devices(s);
-.rb
-.RB \| \-q | \-\-quiet \|
+T}
+\fB\-q\fR|\fB\-\-quiet\fR@T{
 Enable quiet mode;
-.rb
-.RB \| \-r | \-\-reverse \|
+T}
+\fB\-r\fR|\fB\-\-reverse\fR@T{
 Print in reverse order;
+T}
+.TE
 
 .TP
-.BR device_info \ \| [ \-a | \-\-all ] \ DEVICES \|
+.RB \| device_info \ [\| \-a | \-\-all \|] \ DEVICES \|
 Probe /proc/{devices,misc} device info
 .TP
-.BR DOT \ \| [ \-e | \-d ] \ FILES \|
+.RB \| DOT \ \|[ \-e \|| \-d \|] \ FILES \|
 Dot or source builtin wrapper (\fI-e|-d\fR to print errors and \fI-d\fR to return ASAP
 if an error occur); \fBSOURCE\fR is an alias of this builtin
 .TP
-.BR ENV_SET \ \| VAR1 \ VAR2 \ ... \|
+.RB \| ENV_SET \ \| VAR1 \| \ VAR2 \ ... \|
 Save persistent environment variables (\fIenv_set\fR alias)
 .TP
-.RB \| svc_cmd | rs_cmd \|
+.RB \| svc_cmd \|| rs_cmd \|
 Run a supported service command (the first for SUPERVISION and the second for RUNSCRIPT service)
 .TP
-.BR ENV_DEL \ \| VAR1 \ VAR2 \ ... \|
+.RB \| ENV_DEL \ \| VAR1 \ VAR2 \ ... \|
 Remove persistent environment variables (\fIenv_del\fR alias)
 .TP
-.BR svc_down
+.B svc_down
 Set up a service as down (SUPERVISION)
 
 .TP
@@ -818,34 +827,34 @@ Remove service from runlevel directory
 .B svc_remove
 Clean up service from running directory
 .TP
-.BR svc_sig \ \| \-SIGNAL \|
+.RB \| svc_sig \ \| \-SIGNAL \|
 Send a particular SIGNAL to the daemon service
 .TP
-.BR svc_wait \ \| [ \-E | \-\-noexist ] \ [ \-p | \-\-pid ] \ [ \-t | \-\-timeout ] TIMEOUT \ [ \-t | \-\-file ] FILE \|
+.RB \| svc_wait \ [\| \-E | \-\-noexist \|] \ [\| \-p \|| \-\-pid \|] \ [\| \-t \|| \-\-timeout \|] TIMEOUT \ [\| \-t \|| \-\-file \|] \ FILE \|
 Wait a service file to appear or disapear--with \fI-E\fR option; add \fI-p\fR for
 PID checking
 .TP
 .B svc_zap
 Remove temporary service files
 .TP
-.BR waitfile \ \| [ OPTIONS ] \ [ \-E ] \ [ \-t ] \  TIMEOUT \ [ \-f ] \  FILE \|
+.RB \| waitfile \ [\| OPTIONS \|] \ [\| \-E \|] \ [\| \-t \|] \  TIMEOUT \ [\| \-f \|] \  FILE \|
 Wait for file to appear or disapear--with \fI-E\fR argument;
 
-.RB \| \-E | \-\-noexist \|
+.RB [\| \-E \|| \-\-noexist \|]
 Wait the disppearance of the file instead of the appearance;
 .rb
-.RB [\| \-p | \-\-pid \|]
+.RB [\| \-p \|| \-\-pid \|]
 Check the pid(file);
 .rb
-.RB \| [ \-t | \-\-timeout ] \ TIMEOUT \|
+.RB [\| \-t \|| \-\-timeout \|] \ TIMEOUT \|
 Timeout to use in seconds;
 .rb
-.RB \| [ \-f | \-\-file ] \ FILE \|
+.RB [\| \-f \|| \-\-file \|] \ FILE \|
 File name to wait for;
 
 see \fI@LIBDIR@/sv/bin/waitfile --help\fR for more information.
 .TP
-.BR svc_status \ [ \-\-set | \-\-del ] \ (\| \-a | \-d | \-e | \-f | | \-p | \-s \|)
+.RB \| svc_status \ [\| \-\-set \|| \-\-del \|] \ [\| \-a \|| \-d \|| \-e \|| \-f \|| \-p \|| \-s \|)
 Get, set (with
 .RB \| \-\-set \|
 command line argument)
@@ -917,7 +926,7 @@ is necessary, because, the supervisor is only started after
 .I sysinit
 runlevel.
 
-.RB {\| sysinit , sysboot , default , nonetwork , shutdown , reboot , single , nonetwork \|}
+.RB {\| sysinit \|, sysboot \|, default \|, nonetwork \|, shutdown \|, reboot \|, single \|, nonetwork \|}
 run levels are supported.
 Extra services that should be started in
 .I single
@@ -938,11 +947,11 @@ runlevel is the first init stage;
 (multi users mode) runlevel is the
 .I default
 init stage;
-.RB {\| nonetwork , single \|}
+.RB {\| nonetwork \|, single \|}
 are only a modified
 .B sysboot
 runlevels without network services. So, in practice,
-.RB {\| nonetwork , single \|}
+.RB {\| nonetwork \|, single \|}
 replace
 .B sysboot
 runlevel to be able to repair a system.
@@ -1031,16 +1040,12 @@ group supervisor {
 }
 \fB** FILE_EOF **\fR
 \fB** @SYSCONFDIR@/cgroup/cgrules.conf **\fR
-*:runsv  supervision   supervisor/
+*:svd  supervision   supervision/
+*:runsv  supervision   supervision/
+*:supervise  supervision   supervision/
+*:s6-supervise  supervision   supervision/
 \fB** FILE_EOF **\fR
 .fi
-Replace
-.IR runsv
-with
-.IR supervise
-for daemontools[-encore] or
-.IR s6-supervise
-for S6.
 See
 .BR cgconfig.conf (5)
 and enable cgred service.
@@ -1074,6 +1079,31 @@ handlers;
 see
 .BR sv-shutdown (8)
 for more information.
+.TP
+.I @EXEC_PREFIX@@SBINDIR@/sv-rcorder
+System
+.BR \|[ sv\- \|] rcorder (8)
+service order.
+.TP
+.I @EXEC_PREFIX@@BINDIR@/supervision
+.BR supervision (1)
+Supervision, directory supervisor
+.TP
+.I @EXEC_PREFIX@@BINDIR@/svd
+.BR svd (1)
+Supervision daemon, daemon supervisor
+.TP
+.I @EXEC_PREFIX@@BINDIR@/svr
+.BR svr (1)
+Supervision run, run and control supervision daemon
+.TP
+.I @EXEC_PREFIX@@BINDIR@/svp
+.BR svp (1)
+Supervision program run
+.TP
+.I @EXEC_PREFIX@@/svl
+.BR svl (1)
+Supervision logger
 .SS @SYSCONFDIR@
 .TP
 .I @SYSCONFDIR@/sv.conf
@@ -1092,7 +1122,7 @@ Runlevel directory
 See \fB ${SV_SVCDIR}/sv.init.d/RUNLEVEL\fR for active services.
 Use
 .B sv-run
-.RB \| \-0 | \-1 | \-2 | \-3 | \-4 | \-5 \|
+.RB \| \-0 \|| \-1 \|| \-2 \|| \-3 \|| \-4 \|| \-5 \|
 .RB \| SERVICE \|
 .RB \| add \|
 to add a particular service to a particular
@@ -1101,12 +1131,12 @@ init stage or run level.
 is ready to use;
 .B sysboot
 can be modified to include services like
-.B {zramfs,zfs,zpool,unionfs,device-mapper,dmraid,mdadm}
+.RB \|{ zramfs \|, zfs \|, zpool \|, unionfs \|, device-mapper \|, dmraid \|, mdadm \|}
 and so on; likewise for
 .B default
 runlevel.
 
-.B RUNSCRIPT\-SERVICES:
+RUNSCRIPT\-SERVICES:
 .RB [\| hwclock \|]
 .RB [\| console \|]
 .RB [\| devfs \|]
@@ -1133,7 +1163,7 @@ runlevel.
 .RB [\| zfs \|]
 .RB [\| zfs-share \|]
 .RB [\| zpool \|]
-.RB (LINUX:[\| device-mapper \|]
+.RB \|(LINUX:[ device-mapper \|]
 .RB [\| dmcrypt \|]
 .RB [\| dmraid \|]
 .RB [\| kmod \|]
@@ -1148,7 +1178,7 @@ runlevel.
 .RB [\| unionfs \|]
 .RB [\| zramfs \|])
 
-.B SUPERVISION\-SERVICES:
+SUPERVISION\-SERVICES:
 .RB [\| apache2 \|]
 .RB [\| atd \|]
 .RB [\| cron \|]
@@ -1188,7 +1218,7 @@ runlevel.
 .RB [\| wpa_supplicant \|]
 .RB [\| xdm \|]
 .RB [\| zed \|]
-.RB (LINUX:\ [\| acpid \|]
+.RB \|(LINUX:[ acpid \|]
 .RB [\| cgred \|]
 .RB [\| docker \|]
 .RB [\| dmeventd \|]
@@ -1196,7 +1226,7 @@ runlevel.
 .RB [\| udev \|]
 .RB [\| udev-monitor \|])
 .TP
-.I /usr/local/@SYSCONFDIR@/sv \fBSV_SVCDIR_LOCAL_fR
+.I /usr/local/@SYSCONFDIR@/sv \fBSV_SVCDIR_LOCAL\fR
 Local service directory
 .SS SV_RUNDIR: @RUNDIR@/sv
 Default run time '/service/' directory
@@ -1245,10 +1275,10 @@ after updating the package
 .TP
 .I @LIBDIR@/sv/sbin/sv-shutdown
 Simple utility to handle system halt or reboot. It could be symlinked to
-.B @EXEC_PREFIX@@SBINDIR@/sbin/{halt,shutdown,reboot}
+.RB \| @EXEC_PREFIX@@SBINDIR@/sbin/{ \| halt \|, shutdown \|, reboot \|}
 to get SystemV or BSD interface... minor no compatible command line options.
 .TP
-.I @LIBDIR@/sv/sbin/{halt,poweroff,reboot,shutdown}
+.RB \| @LIBDIR@/sv/sbin/ \|{ halt \|, poweroff \|, reboot \|, shutdown \|}
 .B sv-shutdown
 standard aliases for system shutdown (with default action.)
 .SS SV_LIBDIR/sh: @LIBDIR@/sv/sh
@@ -1259,7 +1289,7 @@ Commands definition for supervision (services)
 .I @LIBDIR@/sv/sh/run
 Default
 .B @SYSCONFDIR@/sv/\c
-.RB \| SERVICE/ { log/ }{ finish , run } \|
+.RB \| SERVICE/ \|{ log/ \|}{ finish \|, run \|}
 command utility
 .TP
 .I @LIBDIR@/sv/sh/sv-deps.sh
@@ -1294,6 +1324,11 @@ Tmpfiles utility for SystemD tmpfiles.d compatiblity
 .BR sv-rc (8),
 .BR sv-rcorder (8),
 .BR sv-shutdown (8),
+.BR supervision (1),
+.BR svd (1),
+.BR svl (1),
+.BR svp (1),
+.BR svr (1),
 .SH AUTHORS
 tokiclover <tokiclover@supervision.project>
 .\"
