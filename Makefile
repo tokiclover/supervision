@@ -40,6 +40,7 @@ dist_SERVICE_SBIN = \
 	sv-shutdown
 dist_SUPERVISION_BIN = \
 	supervision \
+	svd \
 	svp
 dist_BIN = \
 	$(dist_SUPERVISION_BIN)
@@ -246,6 +247,7 @@ dist_SERVICE_MAN = \
 	sv-shutdown.8
 dist_SUPERVISION_MAN = \
 	supervision.1 \
+	svd.1 \
 	svp.1
 dist_MAN = \
 	$(dist_SUPERVISION_MAN) \

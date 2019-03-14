@@ -1,0 +1,289 @@
+.\"
+.\" CopyLeft (c) 2016-2018 tokiclover <tokiclover@gmail.com>
+.\"
+.\" Distributed under the terms of the 2-clause BSD License as
+.\" stated in the COPYING file that comes with the source files
+.\"
+.pc
+.TH SVD 1 "2019-03-14" "0.15.0" "User Commands Manual"
+.SH NAME
+svd \- supervision daemon
+.SH SYNOPSIS
+.B svd
+.RB [\| \-d | \-\-debug \|]
+.RB [\| \-l | \-\-syslog \|]
+.RB [\| \-s | \-\-sid \|]
+.RB \| SERVICE \|
+
+.B svd
+.RB [\| \-h | \-\-help \|]
+.RB [\| \-v | \-\-version \|]
+
+.SH DESCRIPTION
+.B svd
+is a utility to supervise a daemon or a service defined as a directory.
+See
+.BR FILES
+subsection and
+.BR supervision (5)
+for more information about the architecture and the layout of the
+the service defined as directory.
+.B SERVICE
+is a directory with an executable
+.I run
+file, an optional
+.I finish
+executable file, and a
+.I log/
+directory with the same layout minor the
+.I log/
+directory.
+If the
+.I down
+file is present the service is not started.
+
+.B svd
+changes directory to
+.B SERVICE
+and executes
+.I run
+; if
+.I run
+exits,
+.I finish
+is executed with the exit value and
+the exit status (lower byte) as the first and second
+argument respectively.
+If
+.I run
+does not exist,
+.B svd
+exits with zero or success exit status.
+
+If
+.I log
+directory exists,
+.B svd
+creates a pipe and redirects
+.RB \| run \|
+and
+.RB [\| finish \|]
+standard output and standard error to
+.RB log/run
+standard input.
+
+.B svd
+maintains status information in almost binary compatible format to
+.BR supervise (1)
+(daemontools[-encore]) in
+.RB \| supervise/status \|
+and 
+.RB [\| log/supervise/status \|]
+for the logger;
+and in a human readable format in
+.RB \|{, log/ \|} supervise/stat \|
+and
+.RB \|{, log/ \|} supervise/pid \|
+
+.SH CONTROL
+The named pipes
+.RB \|{, log/ \|} supervise/control \|
+are provided for
+.B svd
+control.
+.BR svr (1)
+is used to control
+.BR svd (1)
+or writing the first character of the following commands can be used instead.
+.TP
+.B u
+.I up
+Start the service if it is not running; restart the service.
+.TP
+.B d
+.I down
+Stop the service by sending the
+.B TERM
+signal; and then a
+.B CONT
+signal.
+If
+.I run
+exits;
+start
+.I finish
+and do not restart the service.
+.TP
+.B o
+.I once
+Start the service if it is not running; and do not restart the service.
+.TP
+.B p
+.I pause
+Pause the service by sending the
+.B STOP
+signal.
+.TP
+.B c
+.I cont
+Continue the service by sending the
+.B CONT
+if it is paused.
+.TP
+.B h
+.I hangup
+Send the
+.B HUP
+signal if the service is running.
+.TP
+.B a
+.I alarm
+Send the
+.B ALRM
+signal if the service is running.
+.TP
+.B i
+.I interrupt
+Send the
+.B INT
+signal if the service is running.
+.TP
+.B q
+.I quit
+Send the
+.B QUIT
+signal if the service is running.
+.TP
+.B 1
+.I user-defined-1
+Send the
+.B USR1
+signal if the service is running.
+.TP
+.B 2
+.I user-defined-2
+Send the
+.B USR2
+signal if the service is running.
+.TP
+.B t
+.I terminate
+Send the
+.B TERM
+signal is the service is running.
+.TP
+.B k
+.I kill
+Send the
+.B KILL
+signal if the service is running.
+.TP
+.B x
+.I exit
+Send the
+.B EXIT
+signal if the service is running; or else, send the
+.B EXIT
+signal to the service logger if the service is down; else,
+exit the supervisor if the service and the service logger are down (stopped).
+
+.SH "USER CONTROL"
+User control is also suported for each control command in the
+.B \| control \|
+directory
+with
+.RB [\| control/ \|{ 1 \|, 2 \|, a \|, c \|, d \|, h \|, i \|, k \|, p \|, q \|, t \|, u \|, x \|}]
+command files;
+If the exit status is
+.B 0
+no further action is taken but to update the
+.I \| {,log/}supervise/status \|
+file(s).
+There is no
+.I o
+control character replacing by \fIu\fR, nor
+.I x
+control character replacing by \fIt\fR
+like \fIrunit\fR.
+
+.SH OPTIONS
+.TP
+.RB [\| \-d | \-\-debug \|]
+Enable debugging
+.TP
+.RB [\| \-l | \-\-syslog \|]
+Log message to
+.RB syslog (1)
+.TP
+.RB [\| \-s | \-\-sid \|]
+Use a new session
+.TP
+.RB \| \-v | \-\-version \|
+Print the version message
+.TP
+.RB \| \-h | \-\-help \|
+Print the help message
+
+.SH FILES
+.TS
+tab (@);
+l lx.
+\fBrun\fR@T{
+Service executable
+T}
+\fBfinish\fR@T{
+Service clean up executable [OPTIONL]
+T}
+\fBdown\fR@T{
+Put the service to down if present
+T}
+\fBcontrol/{1,2,a,c,d,h,i,k,p,q,t,u,x}\fR@T{
+User control files
+T}
+\fBlog/run\fR@T{
+Service logging executable
+T}
+\fBlog/finish\fR@T{
+Service logging clean up executable [OPTIONAL]
+T}
+\fIsupervise/control\fR@T{
+Control file (named pipe or FIFO)
+T}
+\fIsupervise/lock\fR@T{
+Supervisor lockfile
+T}
+\fIsupervise/pid\fR@T{
+Pidfile of the child or supervised process
+T}
+\fIsupervise/stat\fR@T{
+Phase name file (run or finish)
+T}
+\fIsupervise/status\fR@T{
+Status file
+T}
+.TE
+
+.SH "RETURN VALUE"
+.TP
+.B 0
+success;
+or no service executable files found;
+.TP
+.B 1
+miscellaneous operational failures;
+
+.SH "APPLICATION USAGE"
+None.
+.SH "FUTURE DIRECTIONS"
+None.
+.SH "SEE ALSO"
+.BR svp (1),
+.BR svl (1),
+.BR svr (1),
+.BR supervision (1),
+.BR supervision (5),
+.SH AUTHORS
+tokiclover <tokiclover@supervision.project>
+.\"
+.\" vim:fenc=utf-8:ft=groff:ci:pi:sts=2:sw=2:ts=2:expandtab:
+.\"
