@@ -5,9 +5,9 @@
 .\" stated in the COPYING file that comes with the source files
 .\"
 .pc
-.TH SVP 1 "2018-08-20" "0.14.0" "User Commands Manual"
+.TH SVP 1 "2019-03-14" "0.15.0" "User Commands Manual"
 .SH NAME
-svp \-  run programm utility
+svp \-  supervision program run
 .SH DESCRIPTION
 .B svp
 is a utility to run a programm with new software limits and environment.
@@ -32,22 +32,22 @@ for more information.
 
 .SH SYNOPSIS
 .B svp
-.RB [\| \-/ | \-\-chroot \ DIR \|]
-.RB [\| \-b | \-\-name \ ARG \|]
-.RB [\| \-c | \-\-core \ ARG \|]
-.RB [\| \-d | \-\-data \ DIR \|]
-.RB [\| \-e | \-\-envdir \ DIR \|]
-.RB [\| \-f | \-\-output \ ARG \|]
-.RB [\| \-G | \-\-egid \ GROUP \|]
-.RB [\| \-U | \-\-euid \ USER[:GROUP] \|]
-.RB [\| \-L | \-\-Lock \ FILE \|]
-.RB [\| \-l | \-\-lock \ FILE \|]
-.RB [\| \-m | \-\-memory \ ARG \|]
-.RB [\| \-n | \-\-nice \ ARG \|]
-.RB [\| \-o | \-\-open \ ARG \|]
-.RB [\| \-p | \-\-proc \ DIR \|]
-.RB [\| \-g | \-\-gig \ GROUP \|]
-.RB [\| \-u | \-\-uid \ USER[:GROUP] \|]
+.RB [\| \-/ | \-\-chroot \|= DIR \|]
+.RB [\| \-b | \-\-name \|= ARG \|]
+.RB [\| \-c | \-\-core \|= ARG \|]
+.RB [\| \-d | \-\-data \|= DIR \|]
+.RB [\| \-e | \-\-envdir \|= DIR \|]
+.RB [\| \-f | \-\-output \|= ARG \|]
+.RB [\| \-G | \-\-egid \|= GROUP \|]
+.RB [\| \-U | \-\-euid \|= USER[:GROUP] \|]
+.RB [\| \-L | \-\-Lock \|= FILE \|]
+.RB [\| \-l | \-\-lock \|= FILE \|]
+.RB [\| \-m | \-\-memory \|= ARG \|]
+.RB [\| \-n | \-\-nice \|= ARG \|]
+.RB [\| \-o | \-\-open \|= ARG \|]
+.RB [\| \-p | \-\-proc \|= DIR \|]
+.RB [\| \-g | \-\-gig \|= GROUP \|]
+.RB [\| \-u | \-\-uid \|= USER[:GROUP] \|]
 .RB [\| \-s | \-\-sid \|]
 .RB [\| \-P | \-\-pgrp \|]
 .RB [\| \-0 | \-\-stdin \|]
@@ -106,69 +106,69 @@ for more information.
 
 .SH OPTIONS
 .TP
-.RB [\| \-/ | \-\-chroot \ DIR \|]
+.RB [\| \-/ | \-\-chroot \|= DIR \|]
 Change root directory to
 .I DIR
 .TP
-.RB [\| \-b | \-\-name \ ARG \|]
+.RB [\| \-b | \-\-name \|= ARG \|]
 Set the first vector argument, this is the default behavior
 .TP
-.RB [\| \-c | \-\-core \ ARG \|]
+.RB [\| \-c | \-\-core \|= ARG \|]
 Set core size to
 .I ARG
 bytes
 .TP
-.RB [\| \-d | \-\-data \ DIR \|]
+.RB [\| \-d | \-\-data \|= DIR \|]
 Set data size to
 .I ARG
 bytes
 .TP
-.RB [\| \-e | \-\-envdir \ DIR \|]
+.RB [\| \-e | \-\-envdir \|= DIR \|]
 Use
 .I DIR
 environment directory
 .TP
-.RB [\| \-f | \-\-output \ ARG \|]
+.RB [\| \-f | \-\-output \|= ARG \|]
 Set output file size to
 .I ARG
 bytes
 .TP
-.RB [\| \-G | \-\-egid \ GROUP \|]
+.RB [\| \-G | \-\-egid \|= GROUP \|]
 Set effective group identity
 .TP
-.RB [\| \-U | \-\-euid \ USER[:GROUP] \|]
+.RB [\| \-U | \-\-euid \|= USER[:GROUP] \|]
 Set effective user, with optional group identity
 .TP
-.RB [\| \-L | \-\-Lock \ FILE \|]
+.RB [\| \-L | \-\-Lock \|= FILE \|]
 Set a lock file without blocking
 .TP
-.RB [\| \-l | \-\-lock \ FILE \|]
+.RB [\| \-l | \-\-lock \|= FILE \|]
 Set a lock with blocking
 .TP
-.RB [\| \-m | \-\-memory \ ARG \|]
+.RB [\| \-m | \-\-memory \|= ARG \|]
 Set memory size to
 .I ARG
 bytes
 .TP
-.RB [\| \-n | \-\-nice \ ARG \|]
+.RB [\| \-n | \-\-nice \|= ARG \|]
 Set niceness to
 .I ARG
 increment
 .TP
-.RB [\| \-o | \-\-open \ ARG \|]
+.RB [\| \-o | \-\-open \|= ARG \|]
 Set the maximum number of opened file to
 .I ARG
 which should be equal or above
 .B \_POSIX_OPEN_MAX
 .TP
-.RB [\| \-p | \-\-proc \ DIR \|]
+.RB [\| \-p | \-\-proc \|= DIR \|]
 Set the maximum of user process to
 .I ARG
 .TP
-.RB [\| \-g | \-\-gig \ GROUP \|]
+.RB [\| \-g | \-\-gig \|= GROUP \|]
 Set the group identity
 .TP
-.RB [\| \-u | \-\-uid \ USER[:GROUP] \|]
+.RB [\| \-u | \-\-uid \|= USER[:GROUP] \|]
 Set the user identity, with an optional group identity
 .TP
 .RB [\| \-s | \-\-sid \|]
