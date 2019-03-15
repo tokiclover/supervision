@@ -362,16 +362,16 @@ svd_err:
 	(void)close(fd);
 
 	if ((sd->fd_status = open(sd->sv_status, O_RDONLY | O_NDELAY)) == -1) {
-		ERR("%s: cannot open `%s': %s\n", svc, sd_svc->sv_status, strerror(errno));
+		ERR("%s: cannot open `%s': %s", svc, sd_svc->sv_status, strerror(errno));
 		return -1;
 	}
 	rv = read(sd->fd_status, st_buf, sizeof(st_buf));
 	if (rv == -1) {
-		ERR("%s: cannot read `%s': %s\n", svc, sd->sv_status, strerror(errno));
+		ERR("%s: cannot read `%s': %s", svc, sd->sv_status, strerror(errno));
 		return -1;
 	}
 	if (rv != sizeof(st_buf)) {
-		ERR("%s: cannot read `%s': erronous lenght\n", svc, sd->sv_status);
+		ERR("%s: cannot read `%s': erronous lenght", svc, sd->sv_status);
 		return 1;
 	}
 
@@ -457,7 +457,7 @@ __attribute__((__unused__)) static int svr_status(__attribute__((__unused__)) ch
 	rc = svr_status_print(sd_svc);
 	if (chdir("log")) {
 		if (errno != ENOENT)
-			fprintf(stderr, "%serror%s: %s: cannot chdir(`%s'): %s\n",
+			fprintf(stderr, "%serror%s: %s: cannot chdir(`%s'): %s",
 				print_color(COLOR_RED, COLOR_FG), print_color(COLOR_RST, COLOR_RST),
 				svc, "log", strerror(errno));
 	}
