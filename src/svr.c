@@ -277,7 +277,7 @@ __attribute__((__unused__)) static void svd(void)
 	fd = -1;
 	if (!access(bf, F_OK)) {
 		if (!(pt = strrchr(svc, '/'))) pt = svc;
-		if ((fd = open(bf, O_WRONLY | O_NDELAY)) != -1) {
+		if ((fd = open(bf, O_WRONLY | O_NDELAY | O_CLOEXEC | O_NONBLOCK)) != -1) {
 			pc = pt;
 			if (sid) {
 				pc = err_malloc(strlen(pt)+4LU);
@@ -287,7 +287,7 @@ __attribute__((__unused__)) static void svd(void)
 		}
 	}
 	if ((fd == -1) && !access(bp, F_OK)) {
-		if ((fd = open(bp, O_RDONLY | O_NDELAY)) != -1) {
+		if ((fd = open(bp, O_RDONLY | O_NDELAY | O_CLOEXEC)) != -1) {
 			fp = fdopen(fd, "r");
 			if (fscanf(fp, "%d", &rv)) {
 				if (sid) kill(rv, SIGUSR1);
