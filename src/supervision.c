@@ -49,18 +49,18 @@ struct svent {
 	ino_t se_ino;
 	dev_t se_dev;
 	pid_t se_pid;
-	char *se_nam;
+	char *se_arg, *se_nam;
 };
 
 static void sv_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unused__)));
-__attribute__((__unused__)) static int svd(pid_t pid, char *svc);
+__attribute__((__unused__)) static int svd(long int off, char *svc, int flag);
 __attribute__((__unused__)) static pid_t collect_child(pid_t pid);
 
 extern char **environ;
 const char *progname;
 static char *SV_DIR;
 static int fd, df;
-static off_t off;
+static off_t OFF;
 static int scan_dir;
 static pid_t scan_child;
 static int sid;
@@ -158,7 +158,7 @@ __attribute__((__unused__)) static pid_t collect_child(pid_t pid)
 	int child, status;
 
 	while ((child = waitpid(pid, &status, WNOHANG | WUNTRACED | WCONTINUED)) != -1) {
-		for (no = 0LU; no < off; no++) {
+		for (no = 0LU; no < OFF; no++) {
 			if (SV_ENT[no].se_pid == pid) {
 				SV_ENT[no].se_pid = 0;
 				if (WIFEXITED(status)) {
@@ -178,18 +178,17 @@ __attribute__((__unused__)) static pid_t collect_child(pid_t pid)
 	}
 	return 0;
 }
-__attribute__((__unused__)) static int svd(pid_t pid, char *svc)
+__attribute__((__unused__)) static int svd(long int off, char *svc, int flag)
 {
 	off_t no;
-	struct stat st;
+	static char *arg [2] = { "-s", "--sid" };
+	static char *argv[4] = { SVD, [3] = NULL };
 	char *p;
-	char *argv[4];
+	struct stat st;
 
 	if ((p = strchr(svc, ';'))) {
 		*p++ = '\0';
-		if (p[0] == '-') {
-			if ((p[1] == 's') || !strcmp(p, "--sid")) sid++;
-		}
+		if (!strcmp(p, arg[0]) || !strcmp(p, arg[1])) sid++;
 	}
 
 	memset(&st, 0, sizeof(st));
@@ -199,39 +198,39 @@ __attribute__((__unused__)) static int svd(pid_t pid, char *svc)
 	}
 	if (!S_ISDIR(st.st_mode)) return -EINVAL;
 	
-	/* structure recycling */
-	if (pid) {
-		for (no = 0LU; no < off; no++)
-			if (SV_ENT[no].se_pid == pid) break;
-	}
-	else {
-		for (no = 0LU; no < off; no++)
-			if (!SV_ENT[no].se_ino) break;
-	}
-
-	if (no == off) {
+	if (off < 0) {
+		for (no = 0LU; no < OFF; no++)
+			if (!SV_ENT[no].se_ino) {
+				break;
+			}
 		SV_ENT[no].se_ino = st.st_ino;
 		SV_ENT[no].se_dev = st.st_dev;
 		SV_ENT[no].se_nam = err_strdup(svc);
 	}
+	else no = off;
 
-	argv[0] = SVD; argv[1] = svc;
 	if (sid > 0) {
-		argv[1] = p; argv[2] = svc; argv[3] = NULL;
 		sid--;
+		SV_ENT[no].se_arg = *arg;
+	}
+	if (SV_ENT[no].se_arg) {
+		argv[2] = svc; argv[1] = SV_ENT[no].se_arg;
+	}
+	else {
+		argv[1] = svc; argv[2] = NULL;
 	}
 
 	do {
-		SV_ENT[off].se_pid = fork();
-		if (SV_ENT[off].se_pid == -1 && errno != EINTR) {
-			err_syslog(LOG_ERR, "Failed to fork()");
+		SV_ENT[no].se_pid = fork();
+		if (SV_ENT[no].se_pid == -1 && errno != EINTR) {
+			err_syslog(LOG_ERR, "%s: cannot fork", __func__);
 			while (!collect_child(0));
 		}
-	} while (SV_ENT[off].se_pid == -1);
+	} while (SV_ENT[no].se_pid == -1);
 
-	if (SV_ENT[off].se_pid) { /* parent */
-		off++;
-		SV_ALLOC(off);
+	if (SV_ENT[no].se_pid) { /* parent */
+		if (no == OFF) OFF++;
+		SV_ALLOC(OFF);
 		return 0;
 	}
 
@@ -254,7 +253,7 @@ int main(int argc, char *argv[])
 	FILE *fp;
 	struct dirent *de;
 	int *sig = (int []) { SIGHUP, SIGINT, SIGTERM, SIGQUIT, SIGUSR1, SIGUSR2, SIGALRM, 0 };
-	char bf[256];
+	char bf[512];
 	struct sigaction action;
 	sigset_t mask;
 	struct stat st;
@@ -301,7 +300,7 @@ int main(int argc, char *argv[])
 	sigemptyset(&action.sa_mask);
 	action.sa_sigaction = sv_sigaction;
 	action.sa_flags = SA_SIGINFO | SA_RESTART;
-	for ( ; *sig; off++, sig++) {
+	for ( ; *sig; sig++) {
 		sigaddset(&mask, *sig);
 		if (sigaction(*sig, &action, NULL))
 			ERROR("Failed to register `%d' signal!", *sig);
@@ -317,7 +316,7 @@ int main(int argc, char *argv[])
 	if (mkdirat(df, ".tmp", 0755) && errno != EEXIST)
 		ERROR("Failed to create `%s' directory", ".tmp");
 
-	if ((fd = open(SV_PIDFILE, O_RDONLY)) != -1) {
+	if ((fd = openat(df, SV_PIDFILE, O_RDONLY)) != -1) {
 		fp = fdopen(fd, "r");
 		if (fscanf(fp, "%d", &rv)) {
 			if (!kill(rv, 0)) {
@@ -343,13 +342,12 @@ int main(int argc, char *argv[])
 	(void)unlink(SV_FIFO);
 	if (mkfifoat(df, SV_FIFO, 0600))
 		ERROR("Failed to make `%s' fifo", SV_FIFO);
-	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NDELAY | O_CLOEXEC)) == -1)
+	if ((pf = openat(df, SV_FIFO, O_RDONLY | O_NDELAY | O_NONBLOCK | O_CLOEXEC)) == -1)
 		ERROR("Failed to open `%s' [read]", SV_FIFO);
-	if (openat(df, SV_FIFO, O_WRONLY | O_NDELAY | O_CLOEXEC) == -1)
+	if (openat(df, SV_FIFO, O_WRONLY | O_NDELAY | O_NONBLOCK | O_CLOEXEC) == -1)
 		ERROR("Failed to open `%s' [write]", SV_FIFO);
 
-	if (ERR_syslog)
-		openlog(progname, LOG_CONS | LOG_ODELAY | LOG_PID, LOG_DAEMON);
+	if (ERR_syslog) openlog(progname, LOG_CONS | LOG_ODELAY | LOG_PID, LOG_DAEMON);
 	if (sid)
 		if (setsid() == -1) {
 			err_syslog(LOG_ERR, "cannot start a new session: %s\n", strerror(errno));
@@ -357,8 +355,6 @@ int main(int argc, char *argv[])
 		}
 
 	SV_ALLOC(32LU);
-	off = 0LU;
-
 	for (;;) {
 		scan_dir = 0;
 		while ((de = readdir(dp))) {
@@ -367,21 +363,21 @@ int main(int argc, char *argv[])
 			switch (de->d_type) {
 			case DT_DIR:
 			case DT_LNK:
-				(void)svd(0, de->d_name);
+				(void)svd(-1, de->d_name, 0);
 				break;
 			default: continue;
 			}
 #else
-			(void)svd(0, de->d_name);
+			(void)svd(-1, de->d_name, 0);
 #endif
 		}
 
 		do {
 			if (scan_dir) break;
 			if (scan_child) {
-				for (no = 0LU; no < off; no++)
-					if (scan_child == SV_ENT[off].se_pid) {
-						(void)svd(scan_child, SV_ENT[no].se_nam);
+				for (no = 0LU; no < OFF; no++)
+					if (scan_child == SV_ENT[no].se_pid) {
+						(void)svd(no, SV_ENT[no].se_nam, 0);
 						scan_child = 0;
 					}
 				break;
@@ -411,7 +407,7 @@ int main(int argc, char *argv[])
 				}
 				continue;
 			}
-			if (rv) (void)svd(0, bf);
+			if (rv) (void)svd(-1, bf, 1);
 		} while (!scan_dir || !scan_child);
 
 		rewinddir(dp);
