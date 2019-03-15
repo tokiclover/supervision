@@ -11,7 +11,6 @@ checkpath_SRCS := checkpath.c error.c
 sv-config_SRCS := $(dist_SRCS) sv-config.c sv-conf.c
 sv-shutdown_SRCS  := sv-shutdown.c $(dist_SRCS)
 sv-shutdown_LIBS   = $(LIBRT_LIBS)
-supervision_SRCS := supervision.c error.c
 fstabinfo_SRCS := fstabinfo.c error.c
 mountinfo_SRCS := mountinfo.c error.c sv-list.c
 waitfile_SRCS  := error.c waitfile.c
@@ -22,6 +21,7 @@ sv-run_HDRS   := sv.h sv-conf.h sv-copyright.h
 sv-run_CFLAGS  = $(PTHREAD_FLAGS)
 sv-run_LDFLAGS = $(PTHREAD_FLAGS)
 
+supervision_SRCS := supervision.c error.c $(timespec_SRCS)
 svd_SRCS       := svd.c error.c $(timespec_SRCS)
 svr_SRCS       := svr.c error.c $(timespec_SRCS)
 svp_SRCS       := svp.c error.c
@@ -55,7 +55,7 @@ clean:
 sv-run: $(sv-run_SRCS:%.c=%.o) $(dist_HDRS) $(sv-run_HDRS)
 	$(CC) $(CFLAGS) $($@_CFLAGS) -o $@ $(sv-run_SRCS:%.c=%.o) $(LDFLAGS) $($@_LDFLAGS) $($@_LIBS)
 
-supervision_HDRS := error.h sv-copyright.h
+supervision_HDRS := error.h sv-copyright.h $(timespec_GDRS)
 svd_HDRS       := config.h error.h sv-copyright.h $(timespec_HDRS) svd.h
 svr_HDRS       := config.h error.h sv-copyright.h $(timespec_HDRS) svd.h supervision.h
 svp_HDRS       := config.h error.h sv-copyright.h
