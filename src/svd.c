@@ -36,8 +36,8 @@
 #ifndef SV_TIMEOUT
 # define SV_TIMEOUT 1U
 #endif
-#ifndef SV_RUN_NUM
-# define SV_RUN_NUM 100
+#ifndef SV_SIGSYS_MAX
+# define SV_SIGSYS_MAX 100
 #endif
 #ifndef SVL
 # define SVL EXEC_PREFIX "/bin/svl"
@@ -204,7 +204,7 @@ static void svd_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 	{
 	case SIGALRM:
 		count++;
-		if (count >= SV_RUN_NUM)
+		if (count >= SV_SIGSYS_MAX)
 			exit(EXIT_SUCCESS);
 		break;
 	case SIGCHLD:
@@ -225,9 +225,8 @@ static void svd_sigaction(int sig, siginfo_t *si, void *ctx __attribute__((__unu
 		case SIGILL :
 		case SIGFPE :
 			err_syslog(LOG_DEBUG, "child caught fatal `%s' signal", strsignal(sig));
-			if (++sig_count > SV_RUN_NUM)
+			if (++sig_count > SV_SIGSYS_MAX)
 				exit(EXIT_SUCCESS);
-			break;
 		case SIGCONT:
 		case SIGHUP :
 		case SIGUSR1:
@@ -545,6 +544,7 @@ __attribute__((__unused__)) static int svd_ctrl(struct sdent *restrict sd, char 
 	case 'p':
 		sd->sd_ctrl |= SW_PAUSE;
 		if (rv) rv = kill(sd->sd_pid, SIGSTOP);
+		TIMESPEC(&sd->sv_time);
 		svd_stat(sd);
 		return 0;
 	case 'c':
