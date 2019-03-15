@@ -9,7 +9,7 @@
  * it and/or modify it under the terms of the 2-clause, simplified,
  * new BSD License included in the distriution of this package.
  *
- * @(#)initctl.c  0.14.0 2018/07/28
+ * @(#)initctl.c  0.15.0 2019/03/14
  */
 
 #include <initreq.h>
@@ -42,7 +42,9 @@ int main(int argc, char *argv[])
 			ERROR("Failed to create %s FIFO", INIT_FIFO);
 		umask(m);
 	}
-	if ((fd = open(INIT_FIFO, O_RDONLY)) < 0)
+	if ((fd = open(INIT_FIFO, O_RDONLY | O_NDELAY | O_NONBLOCK)) < 0)
+		ERROR("Failed to open %s", INIT_FIFO);
+	if (open(INIT_FIFO, O_WRONLY | O_NDELAY | O_NONBLOCK) < 0)
 		ERROR("Failed to open %s", INIT_FIFO);
 
 	for (;;) {
