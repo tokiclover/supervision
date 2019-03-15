@@ -688,9 +688,9 @@ int main(int argc, char *argv[])
 	(void)unlink(sde[i].sv_control);
 	if (mkfifo(sde[i].sv_control, 0600))
 		ERROR("Failed to make `%s' (read)", sde[i].sv_control);
-	if ((sde[i].fd_ctrl = open(sde[i].sv_control, O_RDONLY | O_NDELAY | O_CLOEXEC)) == -1)
+	if ((sde[i].fd_ctrl = open(sde[i].sv_control, O_RDONLY | O_NDELAY | O_NONBLOCK | O_CLOEXEC)) == -1)
 		ERROR("Failed to open `%s'", sde[i].sv_control);
-	if ((fd = open(sde[i].sv_control, O_WRONLY | O_NDELAY | O_CLOEXEC)) == -1)
+	if ((fd = open(sde[i].sv_control, O_WRONLY | O_NDELAY | O_NONBLOCK | O_CLOEXEC)) == -1)
 		ERROR("Failed to open `%s' (write)", sde[i].sv_control);
 
 	/*(void)unlink(sde[i].sv_ok);
