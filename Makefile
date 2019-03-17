@@ -185,6 +185,7 @@ dist_RS_SVCS = \
 	swaps \
 	tmpdirs \
 	tmpfiles.dev \
+	urandom \
 	vmware \
 	zfs \
 	zfs-share \
