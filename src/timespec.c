@@ -5,7 +5,7 @@
  * Supervision is free software; you can redistribute
  * new BSD License included in the distriution of this package.
  *
- * @(#)timespec.c  0.15.0 2019/03/14
+ * @(#)timespec.c  0.15.0 2019/03/18
  */
 
 
@@ -14,8 +14,8 @@
 uint64_t timespec_pack_sec(char *restrict s, register uint64_t u)
 {
 	register int o = TIMESPEC_NSEC;
-	while (o--) s[o] = u & 255, u >>= CHAR_BIT;
-	s[o] = u;
+	while (o--) s[o] = (unsigned char)(u & 255), u >>= CHAR_BIT;
+	s[0] = (unsigned char)u;
 	return u;
 }
 
@@ -44,6 +44,14 @@ void timespec_pack(char *restrict s, struct timespec *restrict ts)
 	p += TIMESPEC_NSEC;
 	timespec_pack_sec(p, (uint64_t)ts->tv_nsec & UINT64_MAX);
 	p += TIMESPEC_NSEC;
+}
+
+void timespec_unpack(char *restrict s, struct timespec *restrict ts)
+{
+	register char *p = s;
+	ts->tv_nsec = timespec_unpack_sec(p);
+	p += TIMESPEC_NSEC;
+	ts->tv_sec  = timespec_unpack_sec(p);
 }
 
 void timespec_add(struct timespec *restrict ts, struct timespec *restrict u, struct timespec *restrict v)
